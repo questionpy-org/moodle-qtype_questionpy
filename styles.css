@@ -1,0 +1,5 @@
+/* Remove question text and general feedback from edit form. */
+#page-question-type-questionpy #fitem_id_questiontext,
+#page-question-type-questionpy #fitem_id_generalfeedback {
+    display: none;
+}
