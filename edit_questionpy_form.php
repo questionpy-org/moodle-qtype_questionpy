@@ -40,7 +40,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
     }
 
     /**
-     * Perform an preprocessing needed on the data passed to {@link set_data()}
+     * Perform an preprocessing needed on the data passed to {@see set_data()}
      * before it is used to initialise the form.
      *
      * @param object $question the data being passed to the form.
@@ -62,7 +62,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param stdClass $question
      */
     public function set_data($question) {
-        // The question text will be provided by the qpy package. This field is hidden by CSS but we need
+        // The question text will be provided by the qpy package. This field is hidden by CSS, but we need
         // to define a default value to satisfy the base methods in question_edit_form.
         $question->questiontext = '.';
 
@@ -76,7 +76,9 @@ class qtype_questionpy_edit_form extends question_edit_form {
      *
      * note: $slashed param removed
      *
-     * @param stdClass|array $default_values object or array of default values
+     * @param $data
+     * @param $files
+     * @return array $errors
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
