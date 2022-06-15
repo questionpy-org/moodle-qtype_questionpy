@@ -76,8 +76,8 @@ class qtype_questionpy_edit_form extends question_edit_form {
      *
      * note: $slashed param removed
      *
-     * @param $data
-     * @param $files
+     * @param array $data
+     * @param array $files
      * @return array $errors
      */
     public function validation($data, $files) {

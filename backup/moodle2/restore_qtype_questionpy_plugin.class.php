@@ -50,7 +50,7 @@ class restore_qtype_questionpy_plugin extends restore_qtype_plugin {
     /**
      * Process the qtype/questionpy element
      *
-     * @param object data (undefined)
+     * @param object $data
      */
     public function process_questionpy($data) {
         global $DB;
