@@ -34,7 +34,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * this question in its current state?
      *
      * This information is used in calls to optional_param. The parameter name
-     * has {@link question_attempt::get_field_prefix()} automatically prepended.
+     * has {@see question_attempt::get_field_prefix()} automatically prepended.
      *
      * @return array|string variable name => PARAM_... constant, or, as a special case
      *      that should only be used in unavoidable, the constant question_attempt::USE_RAW_DATA
@@ -62,7 +62,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * should move to the COMPLETE or INCOMPLETE state.
      *
      * @param array $response responses, as returned by
-     *      {@link question_attempt_step::get_qt_data()}.
+     *      {@see question_attempt_step::get_qt_data()}.
      * @return bool whether this response is a complete answer to this question.
      */
     public function is_complete_response(array $response) {
@@ -75,7 +75,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * of responses can safely be discarded.
      *
      * @param array $prevresponse the responses previously recorded for this question,
-     *      as returned by {@link question_attempt_step::get_qt_data()}
+     *      as returned by {@see question_attempt_step::get_qt_data()}
      * @param array $newresponse the new responses, in the same format.
      * @return bool whether the two sets of responses are the same - that is
      *      whether the new set of responses can safely be discarded.
@@ -87,7 +87,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     /**
      * Produce a plain text summary of a response.
      *
-     * @param array $response a response, as might be passed to {@link grade_response()}.
+     * @param array $response a response, as might be passed to {@see grade_response()}.
      * @return string a plain text summary of that response, that could be used in reports.
      */
     public function summarise_response(array $response) {
@@ -98,6 +98,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * In situations where is_gradable_response() returns false, this method
      * should generate a description of what the problem is.
      *
+     * @param array $response responses
      * @return string the message.
      */
     public function get_validation_error(array $response) {
@@ -106,10 +107,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
     /**
      * Grade a response to the question, returning a fraction between
-     * get_min_fraction() and get_max_fraction(), and the corresponding {@link question_state}
+     * get_min_fraction() and get_max_fraction(), and the corresponding {@see question_state}
      * right, partial or wrong.
      * @param array $response responses, as returned by
-     *      {@link question_attempt_step::get_qt_data()}.
+     *      {@see question_attempt_step::get_qt_data()}.
      * @return array (float, integer) the fraction, and the state.
      */
     public function grade_response(array $response) {
@@ -121,7 +122,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * tries the student made.
      *
      * @param array $responses the response for each try. Each element of this
-     * array is a response array, as would be passed to {@link grade_response()}.
+     * array is a response array, as would be passed to {@see grade_response()}.
      * There may be between 1 and $totaltries responses.
      * @param int $totaltries The maximum number of tries allowed.
      * @return numeric the fraction that should be awarded for this

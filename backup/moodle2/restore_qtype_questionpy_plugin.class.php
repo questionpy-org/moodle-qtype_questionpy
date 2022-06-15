@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Restoring QuestionPy plugin class.
+ *
  * @package    qtype_questionpy
  * @copyright  2022 Martin Gauk, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -30,6 +32,8 @@ class restore_qtype_questionpy_plugin extends restore_qtype_plugin {
 
     /**
      * Returns the paths to be handled by the plugin at question level
+     *
+     * @return array paths
      */
     protected function define_question_plugin_structure() {
 
@@ -45,6 +49,8 @@ class restore_qtype_questionpy_plugin extends restore_qtype_plugin {
 
     /**
      * Process the qtype/questionpy element
+     *
+     * @param object $data
      */
     public function process_questionpy($data) {
         global $DB;
