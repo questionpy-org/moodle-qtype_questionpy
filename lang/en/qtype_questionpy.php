@@ -27,3 +27,7 @@ $string['pluginname_help'] = 'Create own question types in Python.';
 $string['pluginnameadding'] = 'Adding a QuestionPy question';
 $string['pluginnameediting'] = 'Editing a QuestionPy question';
 $string['pluginnamesummary'] = 'A comprehensive question type that allows you to create own question types in Python.';
+$string['applicationserverURL'] = 'QuestionPy Application Server URL';
+$string['applicationserverpassword'] = 'QuestionPy Application Server Password';
+$string['maxservertimeout'] = 'Server timeout time';
+$string['maxquestionsize'] = 'Maximum file size of a QuestionPy package';
