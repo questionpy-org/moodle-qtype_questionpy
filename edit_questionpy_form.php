@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die;
+
 /**
  * QuestionPy question editing form definition.
  *
@@ -36,28 +38,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param MoodleQuickForm $mform the form being built.
      */
     protected function definition_inner($mform) {
-        $mform->addElement('text', 'applicationserverURL', get_string('applicationserverURL', 'qtype_questionpy'),
-            array('size' => 50));
-        $mform->setType('applicationserverURL', PARAM_URL);
-        $mform->setDefault('applicationserverURL', $this->get_default_value('applicationserverURL', 'http://localhost:9020/helloworld'));
-        $mform->addRule('applicationserverURL', null, 'required', null, 'client');
-
-        $mform->addElement('text', 'applicationserverpassword', get_string('applicationserverpassword', 'qtype_questionpy'),
-            array('size' => 50));
-        $mform->setType('applicationserverpassword', PARAM_TEXT);
-
-        $mform->addElement('text', 'maxservertimeout', get_string('maxservertimeout', 'qtype_questionpy'),
-            array('size' => 50));
-        $mform->setType('maxservertimeout', PARAM_FLOAT);
-        $mform->setDefault('maxservertimeout', $this->get_default_value('maxservertimeout', '5.0'));
-
-        $mform->addElement('text', 'maxquestionsize', get_string('maxquestionsize', 'qtype_questionpy'),
-            array('size' => 50));
-        $mform->setType('maxquestionsize', PARAM_FLOAT);
-        $mform->setDefault('maxquestionsize', $this->get_default_value('maxquestionsize', '1.0'));
-        $mform->addRule('maxquestionsize', null, 'required', null, 'client');
-
-
+        // TODO
     }
 
     /**
