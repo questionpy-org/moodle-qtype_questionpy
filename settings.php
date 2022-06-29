@@ -22,6 +22,43 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+
 if ($ADMIN->fulltree) {
-    // TODO.
+
+    $settings->add(new admin_setting_configtext(
+        'qtype_questionpy/applicationserver_url',
+        new lang_string('applicationserverurl', 'qtype_questionpy'),
+        new lang_string('applicationserverurl', 'qtype_questionpy'),
+        'http://localhost:9020/helloworld',
+        PARAM_URL,
+        20
+    ));
+
+    $settings->add(new admin_setting_encryptedpassword(
+        'qtype_questionpy/applicationserver_password',
+        new lang_string('applicationserverpassword', 'qtype_questionpy'),
+        new lang_string('applicationserverpassword_description', 'qtype_questionpy')
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'qtype_questionpy/applicationserver_maxservertimeout',
+        new lang_string('maxservertimeout', 'qtype_questionpy'),
+        new lang_string('maxservertimeout_description', 'qtype_questionpy'),
+        5.0,
+        PARAM_FLOAT,
+        5
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'qtype_questionpy/applicationserver_maxquestionsize',
+        new lang_string('maxquestionsize', 'qtype_questionpy'),
+        new lang_string('maxquestionsize_description', 'qtype_questionpy'),
+        512.0,
+        PARAM_FLOAT,
+        5
+    ));
+
 }
+
