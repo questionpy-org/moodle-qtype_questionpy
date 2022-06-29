@@ -31,9 +31,21 @@
 class qtype_questionpy_question extends question_graded_automatically_with_countback {
 
 
-    public $applicationserverURL;
+    /**
+     * @var string
+     */
+    public $applicationserverurl;
+    /**
+     * @var string
+     */
     public $applicationserverpassword;
+    /**
+     * @var float
+     */
     public $maxservertimeout;
+    /**
+     * @var float
+     */
     public $maxquestionsize;
 
     /**
@@ -48,13 +60,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *      meaning take all the raw submitted data belonging to this question.
      */
     public function get_expected_data() {
-        $data = array(
-            'applicationserverURL' => PARAM_URL,
-            'applicationserverpassword' => PARAM_TEXT,
-            'maxservertimeout' => PARAM_FLOAT,
-            'maxquestionsize' => PARAM_FLOAT
-        );
-        return $data;
+        return null;
     }
 
     /**
