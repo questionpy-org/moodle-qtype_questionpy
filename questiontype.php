@@ -35,5 +35,35 @@ require_once($CFG->dirroot . '/question/type/questionpy/question.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy extends question_type {
-    // TODO.
+
+    /**
+     * @return bool true if this question type sometimes requires manual grading.
+     */
+    public function is_manual_graded() {
+        return true;
+    }
+
+    /**
+     * @param object $question a question of this type.
+     * @param string $otherquestionsinuse comma-separate list of other question ids in this attempt.
+     * @return bool true if a particular instance of this question requires manual grading.
+     */
+    public function is_question_manual_graded($question, $otherquestionsinuse) {
+        // TODO: could also return false, if $question can be automatically graded
+        return $this->is_manual_graded();
+    }
+
+
+
+    public function delete_question($questionid, $contextid) {
+        global $DB;
+        $DB->delete_records('question_questionpy', array('questionid' => $questionid));
+
+        parent::delete_question($questionid, $contextid);
+    }
+
+    public function get_random_guess_score($questiondata) {
+        // TODO: computing this has to be delegated to the question developer. This has to be requested at the application server
+        return 0;
+    }
 }
