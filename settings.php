@@ -46,8 +46,8 @@ if ($ADMIN->fulltree) {
         'qtype_questionpy/applicationserver_maxservertimeout',
         new lang_string('maxservertimeout', 'qtype_questionpy'),
         new lang_string('maxservertimeout_description', 'qtype_questionpy'),
-        5.0,
-        PARAM_FLOAT,
+        5,
+        PARAM_INT,
         5
     ));
 
