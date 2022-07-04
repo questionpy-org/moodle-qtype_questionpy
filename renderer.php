@@ -40,12 +40,19 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     public function formulation_and_controls(question_attempt $qa, question_display_options $options) {
+        $url = get_config('qtype_questionpy', 'applicationserver_url', );
+        $timeout = get_config('qtype_questionpy', 'applicationserver_maxservertimeout');
+
+        if (!$url || !$timeout) {
+            return 'parameter not found in config';
+        }
+
         $curlhandle = curl_init();
-        curl_setopt($curlhandle, CURLOPT_URL, 'http://localhost:9020/helloworld');
+        curl_setopt($curlhandle, CURLOPT_URL, $url);
         curl_setopt($curlhandle, CURLOPT_VERBOSE, false);
         curl_setopt($curlhandle, CURLOPT_FOLLOWLOCATION, false);
         curl_setopt($curlhandle, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curlhandle, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($curlhandle, CURLOPT_CONNECTTIMEOUT, $timeout);
         curl_setopt($curlhandle, CURLOPT_TIMEOUT, 30);
 
         $result = curl_exec($curlhandle);
