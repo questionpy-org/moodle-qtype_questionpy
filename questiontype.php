@@ -37,6 +37,7 @@ require_once($CFG->dirroot . '/question/type/questionpy/question.php');
 class qtype_questionpy extends question_type {
 
     /**
+     * Description
      * @return bool true if this question type sometimes requires manual grading.
      */
     public function is_manual_graded() {
@@ -44,17 +45,24 @@ class qtype_questionpy extends question_type {
     }
 
     /**
+     * Whether a quesiton instance has to be graded manually.
+     *
      * @param object $question a question of this type.
      * @param string $otherquestionsinuse comma-separate list of other question ids in this attempt.
      * @return bool true if a particular instance of this question requires manual grading.
      */
     public function is_question_manual_graded($question, $otherquestionsinuse) {
-        // TODO: could also return false, if $question can be automatically graded
+        // TODO: could also return false, if $question can be automatically graded.
         return $this->is_manual_graded();
     }
 
 
-
+    /**
+     * Deletes the question-type specific data when a question is deleted.
+     *
+     * @param int $questionid the question being deleted.
+     * @param int $contextid the context this question belongs to.
+     */
     public function delete_question($questionid, $contextid) {
         global $DB;
         $DB->delete_records('question_questionpy', array('questionid' => $questionid));
@@ -62,8 +70,16 @@ class qtype_questionpy extends question_type {
         parent::delete_question($questionid, $contextid);
     }
 
+    /**
+     * Calculate the score a monkey would get on a question by clicking randomly.
+     *
+     * @param stdClass $questiondata data defining a question, as returned by
+     *      question_bank::load_question_data().
+     * @return number|null either a fraction estimating what the student would
+     *      score by guessing, or null, if it is not possible to estimate.
+     */
     public function get_random_guess_score($questiondata) {
-        // TODO: computing this has to be delegated to the question developer. This has to be requested at the application server
+        // TODO: computing this has to be delegated to the question developer. This has to be requested at the application server.
         return 0;
     }
 }
