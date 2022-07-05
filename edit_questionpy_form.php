@@ -38,7 +38,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param MoodleQuickForm $mform the form being built.
      */
     protected function definition_inner($mform) {
-        // TODO
+        // TODO define form fields.
     }
 
     /**
