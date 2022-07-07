@@ -30,24 +30,6 @@
  */
 class qtype_questionpy_question extends question_graded_automatically_with_countback {
 
-
-    /**
-     * @var string
-     */
-    public $applicationserverurl;
-    /**
-     * @var string
-     */
-    public $applicationserverpassword;
-    /**
-     * @var float
-     */
-    public $maxservertimeout;
-    /**
-     * @var float
-     */
-    public $maxquestionsize;
-
     /**
      * What data may be included in the form submission when a student submits
      * this question in its current state?
