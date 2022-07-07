@@ -40,8 +40,8 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     public function formulation_and_controls(question_attempt $qa, question_display_options $options) {
-        $url = get_config('qtype_questionpy', 'applicationserver_url', );
-        $timeout = get_config('qtype_questionpy', 'applicationserver_maxservertimeout');
+        $url = get_config('qtype_questionpy', 'server_url', );
+        $timeout = get_config('qtype_questionpy', 'server_timeout');
 
         if (!$url || !$timeout) {
             return 'parameter not found in config';
