@@ -27,3 +27,10 @@ $string['pluginname_help'] = 'Create own question types in Python.';
 $string['pluginnameadding'] = 'Adding a QuestionPy question';
 $string['pluginnameediting'] = 'Editing a QuestionPy question';
 $string['pluginnamesummary'] = 'A comprehensive question type that allows you to create own question types in Python.';
+
+// QuestionPy Package Selection Modal
+$string['modal_opener'] = 'Select QuestionPy Package';
+$string['modal_title'] = 'Select QuestionPy Package';
+$string['modal_searchbar'] = 'Search...';
+$string['modal_load_package'] = 'Load';
+$string['modal_package_icon_missing'] = 'Could not load the icsdon.';

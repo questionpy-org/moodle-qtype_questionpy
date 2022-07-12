@@ -36,11 +36,14 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param MoodleQuickForm $mform the form being built.
      */
     protected function definition_inner($mform) {
-        // TODO.
+        global $PAGE;
+        $mform->addElement('button', 'modal_opener',
+            get_string('modal_opener', 'qtype_questionpy'), ['id' => 'open_question_type_modal']);
+        $PAGE->requires->js_call_amd('qtype_questionpy/main', 'init');
     }
 
     /**
-     * Perform an preprocessing needed on the data passed to {@see set_data()}
+     * Perform any preprocessing needed on the data passed to {@see set_data()}
      * before it is used to initialise the form.
      *
      * @param object $question the data being passed to the form.

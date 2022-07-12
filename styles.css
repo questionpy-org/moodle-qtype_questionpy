@@ -3,3 +3,22 @@
 #page-question-type-questionpy #fitem_id_generalfeedback {
     display: none;
 }
+
+.package-container {
+    overflow: scroll;
+    max-height: 400px;
+}
+
+.custom-radiobutton + .card {
+    border: 2px solid transparent;
+    background-color: var(--light);
+}
+
+.custom-radiobutton + .card:hover {
+    cursor: pointer;
+    border-color: var(--secondary);
+}
+
+.custom-radiobutton:checked + .card {
+    border-color: var(--primary);
+}
