@@ -42,31 +42,31 @@
     }
 }}
 <div>
-    <input type="text" class="form-control mb-1" placeholder="{{ #str }} modal_searchbar, qtype_questionpy {{ /str }}">
+    <input type="text" class="form-control mb-1" placeholder="{{#str}} modal_searchbar, qtype_questionpy {{/str}}">
     <form class="package-container">
-        {{ #questionpy_packages }}
+        {{#questionpy_packages}}
         <label class="mt-1 w-100">
-            <input type="radio" name="questionpy_package_id" class="custom-radiobutton d-none" value="{{ id }}">
+            <input type="radio" name="questionpy_package_id" class="custom-radiobutton d-none" value="{{id}}">
             <div class="card">
                 <div class="row no-gutters">
                     <div class="col-2 d-flex justify-content-center align-items-center">
-                        <img src="{{ icon }}" width="48" height="48" alt="{{ #str }} modal_package_icon_missing, qtype_questionpy {{ /str }}">
+                        <img src="{{icon}}" width="48" height="48" alt="{{#str}} modal_package_icon_missing, qtype_questionpy {{/str}}">
                     </div>
                     <div class="col-10">
                         <div class="card-body">
-                            <h5 class="card-title">{{ name }}
-                                <small class="text-muted">{{ version }}</small>
+                            <h5 class="card-title">{{name}}
+                                <small class="text-muted">{{version}}</small>
                             </h5>
-                            <p class="card-text">{{ #shortentext }} 80, {{ description }} {{ /shortentext }}</p>
+                            <p class="card-text">{{#shortentext}} 80, {{description}} {{/shortentext}}</p>
                             <div class="d-flex justify-content-between">
-                                <small class="text-muted">{{ author }}</small>
-                                <small class="text-muted">{{ license }}</small>
+                                <small class="text-muted">{{author}}</small>
+                                <small class="text-muted">{{license}}</small>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </label>
-        {{ /questionpy_packages }}
+        {{/questionpy_packages}}
     </form>
 </div>

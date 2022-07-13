@@ -1,7 +1,7 @@
 import ModalFactory from 'core/modal_factory';
 import ModalEvents from 'core/modal_events';
 import Templates from 'core/templates';
-import { get_strings as getStrings } from 'core/str';
+import {get_strings as getStrings} from 'core/str';
 
 
 /**
@@ -9,7 +9,7 @@ import { get_strings as getStrings } from 'core/str';
  *
  * @returns {[{name: string, icon: string, description: string, id: string, version: string}]} List of packages
  */
-const get_packages = () => {
+const getPackages = () => {
     // TODO:- retrieve packages from application server.
     //      - Add optional search parameter(s).
 
@@ -36,11 +36,11 @@ const get_packages = () => {
  * Initializes the package selection modal.
  */
 export const init = () => {
-    // fetch initial packages
-    const init_packages = get_packages();
+    // Fetch initial packages
+    const initPackages = getPackages();
 
-    // internationalisation
-    getStrings([
+    // Internationalisation
+    let strings = [
         {
             key: 'modal_title',
             component: 'qtype_questionpy'
@@ -49,18 +49,20 @@ export const init = () => {
             key: 'modal_load_package',
             component: 'qtype_questionpy'
         },
-        ])
-        .then(([modal_title, modal_load_package]) => {
-            const open_question_type_modal_btn = document.getElementById('open_question_type_modal');
-            open_question_type_modal_btn.onclick = () => {
+    ];
+
+    getStrings(strings)
+        .then(([modalTitle, modalLoadPackage]) => {
+            const openQuestionTypeModalBtn = document.getElementById('open_question_type_modal');
+            openQuestionTypeModalBtn.onclick = () => {
                 ModalFactory.create({
                     type: ModalFactory.types.SAVE_CANCEL,
-                    title: modal_title,
+                    title: modalTitle,
                     body: Templates.render('qtype_questionpy/select_package_modal', {
-                        'questionpy_packages': init_packages,
+                        'questionpy_packages': initPackages,
                     }),
-                }).then(function (modal) {
-                    modal.setSaveButtonText(modal_load_package);
+                }).done(modal => {
+                    modal.setSaveButtonText(modalLoadPackage);
                     modal.getRoot().on(ModalEvents.save, () => {
                         // TODO: check if a package was selected.
                         // const package_id = modal.getRoot().find('form').serialize();
@@ -68,5 +70,7 @@ export const init = () => {
                     modal.show();
                 });
             };
-        });
+            return;
+        })
+        .catch(/* TODO. */);
 };
