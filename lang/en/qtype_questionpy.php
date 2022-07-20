@@ -28,7 +28,7 @@ $string['pluginnameadding'] = 'Adding a QuestionPy question';
 $string['pluginnameediting'] = 'Editing a QuestionPy question';
 $string['pluginnamesummary'] = 'A comprehensive question type that allows you to create own question types in Python.';
 
-// QuestionPy Package Selection
+// QuestionPy Package Selection.
 $string['selection_title'] = 'Select QuestionPy Package';
 $string['selection_searchbar'] = 'Search...';
 $string['selection_no_icon'] = 'Could not load the icon.';

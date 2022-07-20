@@ -1,19 +1,38 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 namespace qtype_questionpy;
 
 /**
  * Helper class for communicating to the application server.
  *
  * @package    qtype_questionpy
- * @copyright  2022 Martin Gauk, TU Berlin, innoCampus - www.questionpy.org
+ * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class api {
 
-    // Host of the application server
+    /**
+     * Application server host.
+     */
     const HOST = 'http://localhost';
 
-    // Port of the application server
+    /**
+     * Application server port.
+     */
     const PORT = '9020';
 
     /**
@@ -23,7 +42,7 @@ class api {
      * @return false|string url on success or false on failure.
      */
     private static function create_url(string $path) {
-        $url = api::HOST . ':' . api::PORT . $path;
+        $url = self::HOST . ':' . self::PORT . $path;
 
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             return false;
@@ -40,14 +59,14 @@ class api {
      * @return bool|string result on success or false on failure.
      */
     public static function get(string $path = '', float $timeout = 30) {
-        // Create url to the endpoint
-        $url = api::create_url($path);
+        // Create url to the endpoint.
+        $url = self::create_url($path);
 
         if (!$url) {
             return false;
         }
 
-        // Prepare GET request
+        // Prepare GET request.
         $curlhandle = curl_init();
 
         curl_setopt($curlhandle, CURLOPT_URL, $url);
@@ -57,7 +76,7 @@ class api {
         curl_setopt($curlhandle, CURLOPT_CONNECTTIMEOUT, 5);
         curl_setopt($curlhandle, CURLOPT_TIMEOUT, $timeout);
 
-        // Execute GET request
+        // Execute GET request.
         $result = curl_exec($curlhandle);
         $statuscode = curl_getinfo($curlhandle, CURLINFO_RESPONSE_CODE);
 
@@ -76,14 +95,14 @@ class api {
      * @return bool|array packages on success or false on failure.
      */
     public static function get_packages() {
-        // Perform GET request
-        $result = api::get('/packages');
+        // Perform GET request.
+        $result = self::get('/packages');
 
         if (!$result) {
             return false;
         }
 
-        // Decode result and return array
+        // Decode result and return array.
         return json_decode($result, true);
     }
 }

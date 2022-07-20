@@ -42,10 +42,10 @@ class qtype_questionpy_edit_form extends question_edit_form {
     protected function definition_inner($mform) {
         global $OUTPUT;
 
-        // Retrieve packages from the application server
+        // Retrieve packages from the application server.
         $packages = api::get_packages();
 
-        // No packages received
+        // No packages received.
         if (!$packages) {
             $mform->addElement('static', 'questionpy_no_package',
                 get_string('selection_no_package_title', 'qtype_questionpy'),
@@ -54,26 +54,26 @@ class qtype_questionpy_edit_form extends question_edit_form {
             return;
         }
 
-        // Searchbar for QuestionPy packages
+        // Searchbar for QuestionPy packages.
         $mform->addElement('text', 'questionpy_package_search',
             get_string('selection_title', 'qtype_questionpy'),
             ['placeholder' => get_string('selection_searchbar', 'qtype_questionpy')]);
 
         $mform->setType('questionpy_package_search', PARAM_TEXT);
 
-        // Create group which contains selectable QuestionPy packages
-        $package_container = array();
+        // Create group which contains selectable QuestionPy packages.
+        $group = array();
 
         foreach ($packages as $package) {
-            // get localized package texts
-            $localized_package = package::localize($package);
+            // Get localized package texts.
+            $localizedpackage = package::localize($package);
 
-            $package_container[] = $mform->createElement('radio', 'questionpy_package_hash',
-                $OUTPUT->render_from_template('qtype_questionpy/package', $localized_package),
+            $group[] = $mform->createElement('radio', 'questionpy_package_hash',
+                $OUTPUT->render_from_template('qtype_questionpy/package', $localizedpackage),
                 '', $package['package_hash']);
         }
 
-        $mform->addGroup($package_container, 'questionpy_package_container', '', '</br>');
+        $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
     }
 
     /**
@@ -118,17 +118,11 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @return array $errors
      */
     public function validation($data, $files) {
-
-        echo "<pre>";
-        print_r($data);
-        exit;
-        /*
         $errors = parent::validation($data, $files);
 
         // TODO.
 
         return $errors;
-        */
     }
 
     /**
