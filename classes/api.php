@@ -11,7 +11,7 @@ namespace qtype_questionpy;
  */
 class api {
 
-    const HOST = 'http://host.docker.internal';
+    const HOST = 'http://localhost';
 
     const PORT = '9020';
 
