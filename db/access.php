@@ -14,25 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
-
 /**
- * Unit tests for the questionpy question type class.
+ * Capability definitions for the QuestionPy plugin.
+ *
+ * For naming conventions, see lib/db/access.php.
  *
  * @package    qtype_questionpy
- * @copyright  2022 Martin Gauk, TU Berlin, innoCampus - www.questionpy.org
+ * @copyright  2022 Alexander Schmitz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_type_test extends \advanced_testcase {
 
+defined('MOODLE_INTERNAL') || die();
 
-    /**
-     * Hello World Unit Test.
-     *
-     * @coversNothing
-     * @return void
-     */
-    public function test_hello_world() {
-        $this->assertTrue(true);
-    }
-}
+$capabilities = [
+    'qtype/questionpy:uploadpackages' => [
+        'riskbitmask' => RISK_SPAM | RISK_XSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ],
+    ],
+];

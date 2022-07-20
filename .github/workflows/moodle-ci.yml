@@ -76,10 +76,9 @@ jobs:
         if: ${{ always() }}
         run: moodle-plugin-ci phpmd
 
-      #uncomment when empty if-statements are removed
-      #- name: Moodle Code Checker
-      #  if: ${{ always() }}
-      #  run: moodle-plugin-ci codechecker --max-warnings 0
+      - name: Moodle Code Checker
+        if: ${{ always() }}
+        run: moodle-plugin-ci codechecker --max-warnings 0
 
       - name: Moodle PHPDoc Checker
         if: ${{ always() }}

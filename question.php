@@ -29,6 +29,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy_question extends question_graded_automatically_with_countback {
+
     /**
      * What data may be included in the form submission when a student submits
      * this question in its current state?
@@ -41,7 +42,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *      meaning take all the raw submitted data belonging to this question.
      */
     public function get_expected_data() {
-        return [];
+        return null;
     }
 
     /**

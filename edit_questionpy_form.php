@@ -85,7 +85,6 @@ class qtype_questionpy_edit_form extends question_edit_form {
      */
     public function data_preprocessing($question) {
         $question = parent::data_preprocessing($question);
-
         // TODO.
 
         return $question;
