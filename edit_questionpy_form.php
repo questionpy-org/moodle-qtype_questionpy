@@ -22,6 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\api;
+use qtype_questionpy\package;
+
+
 /**
  * QuestionPy question editing form definition.
  *
@@ -36,10 +40,40 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param MoodleQuickForm $mform the form being built.
      */
     protected function definition_inner($mform) {
-        global $PAGE;
-        $mform->addElement('button', 'modal_opener',
-            get_string('modal_opener', 'qtype_questionpy'), ['id' => 'open_question_type_modal']);
-        $PAGE->requires->js_call_amd('qtype_questionpy/main', 'init');
+        global $OUTPUT;
+
+        // Retrieve packages from the application server
+        $packages = api::get_packages();
+
+        // No packages received
+        if (!$packages) {
+            $mform->addElement('static', 'questionpy_no_package',
+                get_string('selection_no_package_title', 'qtype_questionpy'),
+                get_string('selection_no_package_text', 'qtype_questionpy'));
+
+            return;
+        }
+
+        // Searchbar for QuestionPy packages
+        $mform->addElement('text', 'questionpy_package_search',
+            get_string('selection_title', 'qtype_questionpy'),
+            ['placeholder' => get_string('selection_searchbar', 'qtype_questionpy')]);
+
+        $mform->setType('questionpy_package_search', PARAM_TEXT);
+
+        // Create group which contains selectable QuestionPy packages
+        $package_container = array();
+
+        foreach ($packages as $package) {
+            // get localized package texts
+            $localized_package = package::localize($package);
+
+            $package_container[] = $mform->createElement('radio', 'questionpy_package_hash',
+                $OUTPUT->render_from_template('qtype_questionpy/package', $localized_package),
+                '', $package['package_hash']);
+        }
+
+        $mform->addGroup($package_container, 'questionpy_package_container', '', '</br>');
     }
 
     /**
@@ -84,11 +118,17 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @return array $errors
      */
     public function validation($data, $files) {
+
+        echo "<pre>";
+        print_r($data);
+        exit;
+        /*
         $errors = parent::validation($data, $files);
 
         // TODO.
 
         return $errors;
+        */
     }
 
     /**
