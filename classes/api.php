@@ -1,5 +1,4 @@
 <?php
-
 namespace qtype_questionpy;
 
 /**
@@ -11,8 +10,10 @@ namespace qtype_questionpy;
  */
 class api {
 
+    // Host of the application server
     const HOST = 'http://localhost';
 
+    // Port of the application server
     const PORT = '9020';
 
     /**

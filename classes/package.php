@@ -1,5 +1,4 @@
 <?php
-
 namespace qtype_questionpy;
 
 /**
@@ -17,7 +16,7 @@ class package {
      * @param $package array QuestionPy package
      * @return array transformed QuestionPy package
      */
-    public static function localize(array $package, string $fallback = 'en'): array {
+    public static function localize(array $package): array {
         // Get current language
         $current_language = current_language();
 
@@ -35,7 +34,7 @@ class package {
                     break 2;
 
                 // Found fallback language - keep on looking for preferred language
-                case $fallback:
+                case 'en':
                     $selected_language = $language;
                     break;
 
