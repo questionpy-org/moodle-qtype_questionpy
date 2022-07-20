@@ -29,6 +29,7 @@ class question_type_test extends \advanced_testcase {
     /**
      * Hello World Unit Test.
      *
+     * @coversNothing
      * @return void
      */
     public function test_hello_world() {
