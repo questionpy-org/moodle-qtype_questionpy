@@ -34,3 +34,4 @@ $string['server_timeout'] = 'Server timeout time';
 $string['server_timeout_description'] = 'Server timeout time in seconds';
 $string['max_package_size_kb'] = 'Maximum file size of a QuestionPy package';
 $string['max_package_size_kb_description'] = 'Maximum file size in kB';
+$string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';

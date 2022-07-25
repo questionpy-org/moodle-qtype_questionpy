@@ -22,35 +22,39 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('/../../../config.php');
-require_once($CFG->libdir . '/questionlib.php');
+require_once(dirname(__FILE__).'/../../../config.php');
+require_once('classes/form/upload_questionpy_form.php');
 
-use \core\notification;
-use qbank_previewquestion\form\preview_options_form;
-use qbank_previewquestion\question_preview_options;
-use qbank_previewquestion\helper;
-$id = required_param('id', PARAM_INT);
-$question = question_bank::load_question($id);
+$courseid = optional_param('courseid', 0,  PARAM_INT);
 
-if ($cmid = optional_param('cmid', 0, PARAM_INT)) {
-    $cm = get_coursemodule_from_id(false, $cmid);
-    require_login($cm->course, false, $cm);
-    $context = context_module::instance($cmid);
-
-} else if ($courseid = optional_param('courseid', 0, PARAM_INT)) {
+if ($courseid) {
     require_login($courseid);
+    $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     $context = context_course::instance($courseid);
-
+    require_capability('qtype/questionpy:uploadpackages', $context);
 } else {
     require_login();
-    $category = $DB->get_record('question_categories', ['id' => $question->category], '*', MUST_EXIST);
-    $context = context::instance_by_id($category->contextid);
-    $PAGE->set_context($context);
-    // Note that in the other cases, require_login will set the correct page context.
+    $context = context_system::instance();
+    require_capability('qtype/questionpy:uploadpackages', $context);
 }
 
+$pagetitle = get_string('pluginname', 'qtype_questionpy');
+$PAGE->set_context($context);
+$PAGE->set_url(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
 $PAGE->set_pagelayout('popup');
+$PAGE->set_title($pagetitle);
 
-$PAGE->set_url(new moodle_url('/question/type/questionpy/upload_view.php', array('key' => 'value', 'id' => 1)));
-$PAGE->set_context($context);$PAGE->set_title('My modules page title');
-$PAGE->set_heading('My modules page heading');
+$output = $PAGE->get_renderer('core');
+echo $output->header($pagetitle);
+
+$mform = new qtype_questionpy_upload_form();
+if ($mform->is_cancelled()) {
+    die();
+
+} else if ($fromform = $mform->get_data()) {
+    redirect(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
+} else {
+    $mform->display();
+}
+
+echo $output->footer();
