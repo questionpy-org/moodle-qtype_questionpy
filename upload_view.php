@@ -43,17 +43,30 @@ $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
 $PAGE->set_pagelayout('popup');
 $PAGE->set_title($pagetitle);
-
 $output = $PAGE->get_renderer('core');
 echo $output->header($pagetitle);
 
 $mform = new qtype_questionpy_upload_form();
+$fs = get_file_storage();
+
 if ($mform->is_cancelled()) {
     die();
 
 } else if ($fromform = $mform->get_data()) {
+    // If there is a file save it, if it doesn't exist already.
+    $name = $mform->get_new_filename('qpy_package');
+    if (!$fs->file_exists($context->id, 'qtype_questionpy', 'package', 0, '/', $name )) {
+        $storedfile = $mform->save_stored_file('qpy_package', $context->id, 'qtype_questionpy', 'package', 0, '/', $name);
+    }
     redirect(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
 } else {
+    $files = $fs->get_area_files($context->id, 'qtype_questionpy', 'package');
+    foreach ($files as $file) {
+        $data = [
+            'name' => $file->get_filename()
+        ];
+        echo $output->render_from_template('qtype_questionpy/package_renderable', $data);
+    }
     $mform->display();
 }
 
