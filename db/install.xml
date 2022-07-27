@@ -15,7 +15,7 @@
         <KEY NAME="questionid" TYPE="foreign" FIELDS="questionid" REFTABLE="question" REFFIELDS="id" />
       </KEYS>
     </TABLE>
-    <TABLE NAME="package_questionpy" COMMENT="Available QuestionPy Packages on the Moodle Server">
+    <TABLE NAME="question_package_questionpy" COMMENT="Available QuestionPy Packages on the Moodle Server">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
