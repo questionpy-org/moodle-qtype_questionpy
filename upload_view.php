@@ -63,7 +63,12 @@ if ($mform->is_cancelled()) {
     $files = $fs->get_area_files($context->id, 'qtype_questionpy', 'package');
     foreach ($files as $file) {
         $data = [
-            'name' => $file->get_filename()
+            "name" => $file->get_filename(),
+            "description" => "This describes the package ExamplePackage.",
+            "author" => "Author",
+            "license" => "MIT",
+            "icon" => "https://placeimg.com/48/48/tech/grayscale",
+            "version" => "0.0.1"
         ];
         echo $output->render_from_template('qtype_questionpy/package_renderable', $data);
     }
