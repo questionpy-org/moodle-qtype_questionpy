@@ -15,5 +15,25 @@
         <KEY NAME="questionid" TYPE="foreign" FIELDS="questionid" REFTABLE="question" REFFIELDS="id" />
       </KEYS>
     </TABLE>
+    <TABLE NAME="package_questionpy" COMMENT="Available QuestionPy Packages on the Moodle Server">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="package_hash" TYPE="char" LENGTH="256" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="short_name" TYPE="char" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="version" TYPE="char" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="type" TYPE="char" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="author" TYPE="char" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="url" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="languages" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="icon" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="URL to the icon"/>
+        <FIELD NAME="license" TYPE="char" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="tags" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
   </TABLES>
 </XMLDB>
