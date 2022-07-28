@@ -26,39 +26,30 @@ namespace qtype_questionpy;
 class api {
 
     /**
-     * Application server host.
-     */
-    const HOST = 'http://localhost';
-
-    /**
-     * Application server port.
-     */
-    const PORT = '9020';
-
-    /**
      * Concatenates host url with path and validates the outcome.
      *
      * @param string $path
      * @return false|string url on success or false on failure.
      */
-    private static function create_url(string $path) {
-        $url = self::HOST . ':' . self::PORT . $path;
+    private static function create_url(string $path = '') {
+        $serverurl = get_config('qtype_questionpy', 'server_url');
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        $target = rtrim($serverurl, '/') . '/' . ltrim($path, '/');
+
+        if (!filter_var($target, FILTER_VALIDATE_URL)) {
             return false;
         }
 
-        return $url;
+        return $target;
     }
 
     /**
      * Performs a GET request to the given path on the application server.
      *
      * @param string $path
-     * @param float $timeout
      * @return bool|string result on success or false on failure.
      */
-    public static function get(string $path = '', float $timeout = 30) {
+    public static function get(string $path = '') {
         // Create url to the endpoint.
         $url = self::create_url($path);
 
@@ -67,6 +58,8 @@ class api {
         }
 
         // Prepare GET request.
+        $timeout = get_config('qtype_questionpy', 'server_timeout');
+
         $curlhandle = curl_init();
 
         curl_setopt($curlhandle, CURLOPT_URL, $url);
