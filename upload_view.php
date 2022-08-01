@@ -25,6 +25,8 @@
 require_once(dirname(__FILE__).'/../../../config.php');
 require_once('classes/form/upload_questionpy_form.php');
 
+global $DB;
+
 $courseid = optional_param('courseid', 0,  PARAM_INT);
 
 if ($courseid) {
@@ -49,29 +51,48 @@ echo $output->header($pagetitle);
 $mform = new qtype_questionpy_upload_form();
 $fs = get_file_storage();
 
+$packages = $DB->get_records('question_package_questionpy', ['courseid' => $courseid]);
+foreach ($packages as $package) {
+    $data = [
+        "name" => $package->name,
+        "description" => "This describes the package ExamplePackage stored in db",
+        "author" => "Author",
+        "license" => "MIT",
+        "icon" => "https://placeimg.com/48/48/tech/grayscale",
+        "version" => "0.0.1"
+    ];
+    echo $output->render_from_template('qtype_questionpy/package_renderable', $data);
+}
+
 if ($mform->is_cancelled()) {
     die();
 
 } else if ($fromform = $mform->get_data()) {
     // If there is a file save it, if it doesn't exist already.
+    // TODO: post request to server with the package file.
     $name = $mform->get_new_filename('qpy_package');
     if (!$fs->file_exists($context->id, 'qtype_questionpy', 'package', 0, '/', $name )) {
         $storedfile = $mform->save_stored_file('qpy_package', $context->id, 'qtype_questionpy', 'package', 0, '/', $name);
     }
+
+    // Placeholder.
+    $packagedata = [
+        "name" => $name,
+        "short_name" => "shortname",
+        "courseid" => $courseid,
+        "package_hash" => "abcde",
+        "type" => "testtype",
+        "description" => "This describes the package ExamplePackage.",
+        "author" => "Author",
+        "license" => "MIT",
+        "icon" => "https://placeimg.com/48/48/tech/grayscale",
+        "version" => "0.0.1"
+    ];
+    $recordid = $DB->insert_record('question_package_questionpy', $packagedata, $returnid = true, $bulk = false);
+
     redirect(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
 } else {
     $files = $fs->get_area_files($context->id, 'qtype_questionpy', 'package');
-    foreach ($files as $file) {
-        $data = [
-            "name" => $file->get_filename(),
-            "description" => "This describes the package ExamplePackage.",
-            "author" => "Author",
-            "license" => "MIT",
-            "icon" => "https://placeimg.com/48/48/tech/grayscale",
-            "version" => "0.0.1"
-        ];
-        echo $output->render_from_template('qtype_questionpy/package_renderable', $data);
-    }
     $mform->display();
 }
 
