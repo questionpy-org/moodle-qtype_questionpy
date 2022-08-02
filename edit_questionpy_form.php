@@ -23,7 +23,7 @@
  */
 
 use qtype_questionpy\api;
-use qtype_questionpy\package;
+use qtype_questionpy\localizer;
 
 
 /**
@@ -42,6 +42,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
     protected function definition_inner($mform) {
         global $OUTPUT;
 
+        // TODO: catch moodle_exception?
         // Retrieve packages from the application server.
         $packages = api::get_packages();
 
@@ -64,15 +65,16 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // Create group which contains selectable QuestionPy packages.
         $group = array();
 
+        $languages = localizer::get_preferred_languages();
+
         foreach ($packages as $package) {
             // Get localized package texts.
-            $localizedpackage = package::localize($package);
+            $packagearray = $package->as_localized_array($languages);
 
             $group[] = $mform->createElement('radio', 'questionpy_package_hash',
-                $OUTPUT->render_from_template('qtype_questionpy/package', $localizedpackage),
-                '', $package['package_hash']);
+                $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
+                '', $package->get_hash());
         }
-
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
         $mform->addRule('questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required');
     }

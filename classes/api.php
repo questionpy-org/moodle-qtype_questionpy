@@ -16,6 +16,9 @@
 
 namespace qtype_questionpy;
 
+use moodle_exception;
+use TypeError;
+
 /**
  * Helper class for communicating to the application server.
  *
@@ -26,76 +29,51 @@ namespace qtype_questionpy;
 class api {
 
     /**
-     * Concatenates host url with path and validates the outcome.
+     * Initializes new connector with current server url.
      *
-     * @param string $path
-     * @return false|string url on success or false on failure.
+     * @throws moodle_exception
      */
-    private static function create_url(string $path = '') {
+    private static function create_connector(): connector {
+        // Get server url.
         $serverurl = get_config('qtype_questionpy', 'server_url');
-
-        $target = rtrim($serverurl, '/') . '/' . ltrim($path, '/');
-
-        if (!filter_var($target, FILTER_VALIDATE_URL)) {
-            return false;
-        }
-
-        return $target;
+        return new connector($serverurl);
     }
 
     /**
-     * Performs a GET request to the given path on the application server.
+     * Retrieves QuestionPy packages from the application server.
      *
-     * @param string $path
-     * @return bool|string result on success or false on failure.
+     * @return package[]
+     * @throws moodle_exception
      */
-    public static function get(string $path = '') {
-        // Create url to the endpoint.
-        $url = self::create_url($path);
+    public static function get_packages(): array {
+        // Retrieve packages from server.
+        $connector = self::create_connector();
+        $data = $connector->get('/packages');
 
-        if (!$url) {
-            return false;
-        }
+        $packages = json_decode($data, true);
 
-        // Prepare GET request.
-        $timeout = get_config('qtype_questionpy', 'server_timeout');
+        $result = [];
 
-        $curlhandle = curl_init();
-
-        curl_setopt($curlhandle, CURLOPT_URL, $url);
-        curl_setopt($curlhandle, CURLOPT_VERBOSE, false);
-        curl_setopt($curlhandle, CURLOPT_FOLLOWLOCATION, false);
-        curl_setopt($curlhandle, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curlhandle, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($curlhandle, CURLOPT_TIMEOUT, $timeout);
-
-        // Execute GET request.
-        $result = curl_exec($curlhandle);
-        $statuscode = curl_getinfo($curlhandle, CURLINFO_RESPONSE_CODE);
-
-        curl_close($curlhandle);
-
-        if ($statuscode != 200) {
-            return false;
+        foreach ($packages as $package) {
+            try {
+                $result[] = package::from_array($package);
+            } catch (TypeError $e) {
+                // TODO: decide what to do with faulty package.
+                continue;
+            }
         }
 
         return $result;
     }
 
     /**
-     * Retrieves QuestionPy packages from the application server.
+     * Hello world example.
      *
-     * @return bool|array packages on success or false on failure.
+     * @throws moodle_exception
      */
-    public static function get_packages() {
-        // Perform GET request.
-        $result = self::get('/packages');
-
-        if (!$result) {
-            return false;
-        }
-
-        // Decode result and return array.
-        return json_decode($result, true);
+    public static function get_hello_world(): string {
+        $connector = self::create_connector();
+        return $connector->get('/helloworld');
     }
+
 }

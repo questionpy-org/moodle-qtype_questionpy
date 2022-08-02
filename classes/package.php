@@ -17,7 +17,7 @@
 namespace qtype_questionpy;
 
 /**
- * Helper class for QuestionPy packages.
+ * Represents a QuestionPy package.
  *
  * @package    qtype_questionpy
  * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
@@ -25,46 +25,139 @@ namespace qtype_questionpy;
  */
 class package {
 
+    private $packagehash;
+    private $shortname;
+    private $name;
+    private $version;
+    private $type;
+
+    private $author;
+    private $url;
+    private $languages;
+    private $description;
+    private $icon;
+    private $license;
+    private $tags;
+
+    public function __construct(string $packagehash, string $shortname, array $name, string $version, string $type,
+                                string $author = null, string $url = null, array $languages = null,
+                                array $description = null, string $icon = null, string $license = null,
+                                array $tags = null) {
+
+        $this->packagehash = $packagehash;
+        $this->shortname = $shortname;
+        $this->name = $name;
+        $this->version = $version;
+        $this->type = $type;
+
+        $this->author = $author;
+        $this->url = $url;
+        $this->languages = $languages;
+        $this->description = $description;
+        $this->icon = $icon;
+        $this->license = $license;
+        $this->tags = $tags;
+    }
+
     /**
-     * Replaces language arrays of a QuestionPy package with text in an appropriate language.
+     * Creates package object from array.
      *
-     * @param array $package QuestionPy package
-     * @return array transformed QuestionPy package
+     * @param array $package
+     * @return package
      */
-    public static function localize(array $package): array {
-        // Get current language.
-        $currentlanguage = current_language();
+    public static function from_array(array $package): package {
+        return new self(
+            $package['package_hash'],
+            $package['short_name'],
+            $package['name'],
+            $package['version'],
+            $package['type'],
 
-        // TODO: maybe check if 'languages' is populated -> if not, package is corrupt.
-        // Select first available language as initial value.
-        $selectedlanguage = $package['languages'][0];
+            $package['author'],
+            $package['url'],
+            $package['languages'],
+            $package['description'],
+            $package['icon'],
+            $package['license'],
+            $package['tags']
+        );
+    }
 
-        // Iterate over all available languages in the package.
-        foreach ($package['languages'] as $language) {
+    /**
+     * Creates a localized array representation of the package.
+     *
+     * @param array|null $languages
+     * @return array array representation of the package
+     */
+    public function as_localized_array(array $languages): array {
+        return [
+            'package_hash' => $this->packagehash,
+            'shortname' => $this->shortname,
+            'name' => $this->get_localized_name($languages),
+            'version' => $this->version,
+            'type' => $this->type,
 
-            switch ($language) {
-                // Found preferred language - exit loop.
-                case $currentlanguage:
-                    $selectedlanguage = $language;
-                    break 2;
+            'author' => $this->author,
+            'url' => $this->url,
+            'languages' => $this->languages,
+            'description' => $this->get_localized_description($languages),
+            'icon' => $this->icon,
+            'license' => $this->license,
+            'tags' => $this->tags
+        ];
+    }
 
-                // Found fallback language - keep on looking for preferred language.
-                case 'en':
-                    $selectedlanguage = $language;
-                    break;
+    /**
+     * Returns package hash.
+     *
+     * @return string package hash
+     */
+    public function get_hash(): string {
+        return $this->packagehash;
+    }
 
-                default:
-                    break;
-            }
-
+    /**
+     * Retrieves the best available localisation of a package property.
+     *
+     * @param string[] $property
+     * @param string[] $languages
+     * @return string
+     */
+    private function get_localized_property(array $property, array $languages): string {
+        // If property does not exist (e.g. description) return empty string.
+        if (!isset($property)) {
+            return '';
         }
 
-        // Copy package and replace language arrays with text.
-        $newpackage = $package;
+        // Return first (and therefore best) available localisation string.
+        foreach ($languages as $language) {
+            if (isset($property[$language])) {
+                return $property[$language];
+            }
+        }
 
-        $newpackage['description'] = $package['description'][$selectedlanguage];
-        $newpackage['name'] = $package['name'][$selectedlanguage];
-
-        return $newpackage;
+        // No preferred localisation found - retrieve first available string or return empty string.
+        return array_values($property)[0] ?? '';
     }
+
+    /**
+     * Retrieves the best available localized name of the package.
+     *
+     * @param array $languages preferred languages
+     * @return string localized package name
+     */
+    public function get_localized_name(array $languages): string {
+        return self::get_localized_property($this->name, $languages);
+    }
+
+    /**
+     * Retrieves the best available localized description of the package.
+     *
+     * @param array $languages preferred languages
+     * @return string localized package description
+     */
+    public function get_localized_description(array $languages): string {
+        return self::get_localized_property($this->description, $languages);
+    }
+
 }
