@@ -74,6 +74,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         }
 
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
+        $mform->addRule('questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required');
     }
 
     /**
