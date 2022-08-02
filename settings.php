@@ -31,7 +31,7 @@ if ($ADMIN->fulltree) {
         'qtype_questionpy/server_url',
         new lang_string('server_url', 'qtype_questionpy'),
         new lang_string('server_url', 'qtype_questionpy'),
-        'http://localhost:9020/helloworld',
+        'http://localhost:9020/',
         PARAM_URL,
         20
     ));
