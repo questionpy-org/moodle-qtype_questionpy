@@ -43,3 +43,9 @@ $string['selection_searchbar'] = 'Search...';
 $string['selection_no_icon'] = 'Could not load the icon.';
 $string['selection_no_package_title'] = 'QuestionPy';
 $string['selection_no_package_text'] = 'No packages available.';
+$string['selection_required'] = 'Please select a package.';
+
+// Connector.
+$string['curl_init_error'] = 'Could not initialize cURL.';
+$string['curl_exec_error'] = 'Error while fetching from server.';
+$string['curl_set_opt_error'] = 'Failed to set cURL option.';
