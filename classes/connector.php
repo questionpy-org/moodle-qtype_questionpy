@@ -28,14 +28,29 @@ use moodle_exception;
  */
 class connector {
 
+    /**
+     * @var string server url
+     */
     private $serverurl;
+
+    /**
+     * @var int cURL timeout
+     */
     private $timeout;
+
+    /**
+     * @var false|resource cURL handle
+     */
     private $curlhandle;
 
     /**
+     * Constructs connector class.
+     *
+     * @param string $serverurl
+     * @param int $timeout
      * @throws moodle_exception
      */
-    public function __construct(string $serverurl, $timeout = 30) {
+    public function __construct(string $serverurl, int $timeout = 30) {
         // Sanitize url.
         $this->serverurl = rtrim($serverurl, '/');
 
@@ -59,6 +74,9 @@ class connector {
         ]);
     }
 
+    /**
+     * Destructs connector class.
+     */
     public function __destruct() {
         curl_close($this->curlhandle);
     }
@@ -67,7 +85,7 @@ class connector {
      * Set an option for cURL transfer.
      *
      * @param int $option
-     * @param $value
+     * @param mixed $value
      * @return void
      * @throws moodle_exception
      */

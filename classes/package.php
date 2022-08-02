@@ -25,20 +25,82 @@ namespace qtype_questionpy;
  */
 class package {
 
+    /**
+     * @var string package hash
+     */
     private $packagehash;
+
+    /**
+     * @var string package shortname
+     */
     private $shortname;
+
+    /**
+     * @var array package name
+     */
     private $name;
+
+    /**
+     * @var string package version
+     */
     private $version;
+
+    /**
+     * @var string package type
+     */
     private $type;
 
+    /**
+     * @var string|null package author
+     */
     private $author;
+
+    /**
+     * @var string|null package url
+     */
     private $url;
+
+    /**
+     * @var array|null package languages
+     */
     private $languages;
+
+    /**
+     * @var array|null package description
+     */
     private $description;
+
+    /**
+     * @var string|null package icon
+     */
     private $icon;
+
+    /**
+     * @var string|null package license
+     */
     private $license;
+
+    /**
+     * @var array|null package tags
+     */
     private $tags;
 
+    /**
+     * Constructs package class.
+     *
+     * @param string $packagehash
+     * @param string $shortname
+     * @param array $name
+     * @param string $version
+     * @param string $type
+     * @param string|null $author
+     * @param string|null $url
+     * @param array|null $languages
+     * @param array|null $description
+     * @param string|null $icon
+     * @param string|null $license
+     * @param array|null $tags
+     */
     public function __construct(string $packagehash, string $shortname, array $name, string $version, string $type,
                                 string $author = null, string $url = null, array $languages = null,
                                 array $description = null, string $icon = null, string $license = null,

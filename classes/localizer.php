@@ -68,7 +68,7 @@ class localizer {
         if (!empty($SESSION->forcelang)) {
             self::populate_language_array($SESSION->forcelang, $languages);
         }
-        if (!empty($COURSE->id) and $COURSE->id != SITEID and !empty($COURSE->lang)) {
+        if (!empty($COURSE->id) && $COURSE->id != SITEID && !empty($COURSE->lang)) {
             self::populate_language_array($COURSE->lang, $languages);
         }
         if (!empty($SESSION->lang)) {
