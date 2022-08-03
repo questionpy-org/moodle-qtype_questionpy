@@ -22,8 +22,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace qtype_questionpy\form;
+
 defined('MOODLE_INTERNAL') || die;
 
+global $CFG;
 require_once($CFG->libdir. "/formslib.php");
 
 /**
@@ -32,7 +35,7 @@ require_once($CFG->libdir. "/formslib.php");
  * @copyright  2022 Alexander Schmitz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class qtype_questionpy_upload_form extends moodleform {
+class package_upload extends \moodleform {
 
 
     /**

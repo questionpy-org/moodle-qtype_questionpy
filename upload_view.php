@@ -23,7 +23,6 @@
  */
 
 require_once(dirname(__FILE__).'/../../../config.php');
-require_once('classes/form/upload_questionpy_form.php');
 
 global $DB;
 
@@ -33,13 +32,12 @@ if ($courseid) {
     require_login($courseid);
     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     $context = context_course::instance($courseid);
-    require_capability('qtype/questionpy:uploadpackages', $context);
 } else {
     require_login();
     $context = context_system::instance();
-    require_capability('qtype/questionpy:uploadpackages', $context);
 }
 
+require_capability('qtype/questionpy:uploadpackages', $context);
 $pagetitle = get_string('pluginname', 'qtype_questionpy');
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
@@ -48,7 +46,7 @@ $PAGE->set_title($pagetitle);
 $output = $PAGE->get_renderer('core');
 echo $output->header($pagetitle);
 
-$mform = new qtype_questionpy_upload_form();
+$mform = new \qtype_questionpy\form\package_upload();
 $fs = get_file_storage();
 
 $packages = $DB->get_records('question_package_questionpy', ['courseid' => $courseid]);
