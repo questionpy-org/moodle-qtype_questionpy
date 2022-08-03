@@ -66,7 +66,7 @@ class restore_qtype_questionpy_plugin extends restore_qtype_plugin {
         // If the question has been created by restore, we need to create its question_questionpy too.
         if ($questioncreated) {
             // Adjust some columns.
-            $data->question = $newquestionid;
+            $data->questionid = $newquestionid;
             // Insert record.
             $newitemid = $DB->insert_record('question_questionpy', $data);
             // Create mapping.
