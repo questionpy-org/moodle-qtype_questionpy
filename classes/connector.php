@@ -86,7 +86,6 @@ class connector {
      *
      * @param int $option
      * @param mixed $value
-     * @return void
      * @throws moodle_exception
      */
     private function set_opt(int $option, $value): void {
@@ -102,7 +101,6 @@ class connector {
      * Set multiple options for cURL transfer.
      *
      * @param array $options cURL options and values
-     * @return void
      * @throws moodle_exception
      */
     private function set_opts(array $options): void {
@@ -118,7 +116,6 @@ class connector {
      * Concatenates host url with path and sets the resulting url.
      *
      * @param string $path
-     * @return void
      * @throws moodle_exception
      */
     private function set_url(string $path = ''): void {
@@ -147,8 +144,8 @@ class connector {
      * Performs a GET request to the given path on the application server.
      *
      * @param string $path
-     * @return string data string received from server
      * @throws moodle_exception
+     * @return string data string received from server
      */
     public function get(string $path = ''): string {
         // Set url to the endpoint.
@@ -168,8 +165,8 @@ class connector {
      *
      * @param string $path
      * @param string $json
-     * @return string data string received from server
      * @throws moodle_exception
+     * @return string data string received from server
      */
     public function post(string $path = '', string $json = '{}'): string {
         // Set url to the endpoint.

@@ -45,7 +45,6 @@ class localizer {
      *
      * @param string $language the language to be added
      * @param array $languages
-     * @return void
      */
     private static function populate_language_array(string $language, array &$languages): void {
         $language = str_replace('_utf8', '', $language);

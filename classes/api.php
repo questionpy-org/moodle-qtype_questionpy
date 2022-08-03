@@ -42,8 +42,8 @@ class api {
     /**
      * Retrieves QuestionPy packages from the application server.
      *
-     * @return package[]
      * @throws moodle_exception
+     * @return package[]
      */
     public static function get_packages(): array {
         // Retrieve packages from server.
@@ -70,6 +70,7 @@ class api {
      * Hello world example.
      *
      * @throws moodle_exception
+     * @return string
      */
     public static function get_hello_world(): string {
         $connector = self::create_connector();
