@@ -49,9 +49,10 @@ class api {
     public static function get_packages(): array {
         // Retrieve packages from server.
         $connector = self::create_connector();
-        $data = $connector->get('/packages');
+        $response = $connector->get('/packages');
 
-        $packages = json_decode($data, true);
+        // TODO: check response code.
+        $packages = $response->get_data();
 
         $result = [];
 
@@ -75,7 +76,8 @@ class api {
      */
     public static function get_hello_world(): string {
         $connector = self::create_connector();
-        return $connector->get('/helloworld');
+        $response = $connector->get('/helloworld');
+        return $response->get_data(false);
     }
 
 }

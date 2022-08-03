@@ -49,3 +49,6 @@ $string['selection_required'] = 'Please select a package.';
 $string['curl_init_error'] = 'Could not initialize cURL.';
 $string['curl_exec_error'] = 'Error while fetching from server.';
 $string['curl_set_opt_error'] = 'Failed to set cURL option.';
+$string['json_parsing_error'] = 'Could not parse JSON.';
+
+

@@ -16,7 +16,6 @@
 
 namespace qtype_questionpy;
 
-
 use moodle_exception;
 
 /**
@@ -69,7 +68,6 @@ class connector {
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_FAILONERROR => true,
             CURLOPT_TIMEOUT => $this->timeout
         ]);
     }
@@ -127,17 +125,20 @@ class connector {
      * Perform cURL session.
      *
      * @throws moodle_exception
-     * @return string data string received from server
+     * @return response data string received from server
      */
-    private function exec(): string {
+    private function exec(): response {
         $data = curl_exec($this->curlhandle);
 
+        // Check for cURL failure.
         if ($data === false) {
             throw new moodle_exception(get_string('curl_exec_error', 'qtype_questionpy'),
                 "qtype_questionpy", '', curl_errno($this->curlhandle), curl_error($this->curlhandle));
         }
 
-        return $data;
+        // Create response.
+        $responsecode = curl_getinfo($this->curlhandle, CURLINFO_RESPONSE_CODE);
+        return new response($responsecode, $data);
     }
 
     /**
@@ -145,9 +146,9 @@ class connector {
      *
      * @param string $path
      * @throws moodle_exception
-     * @return string data string received from server
+     * @return response data received from server
      */
-    public function get(string $path = ''): string {
+    public function get(string $path = ''): response {
         // Set url to the endpoint.
         $this->set_url($path);
 
@@ -166,9 +167,9 @@ class connector {
      * @param string $path
      * @param string $json
      * @throws moodle_exception
-     * @return string data string received from server
+     * @return response data received from server
      */
-    public function post(string $path = '', string $json = '{}'): string {
+    public function post(string $path = '', string $json = '{}'): response {
         // Set url to the endpoint.
         $this->set_url($path);
 
