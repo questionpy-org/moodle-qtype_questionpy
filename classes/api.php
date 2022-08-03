@@ -34,9 +34,10 @@ class api {
      * @throws moodle_exception
      */
     private static function create_connector(): connector {
-        // Get server url.
+        // Get server configs.
         $serverurl = get_config('qtype_questionpy', 'server_url');
-        return new connector($serverurl);
+        $timeout = get_config('qtype_questionpy', 'server_timeout');
+        return new connector($serverurl, $timeout);
     }
 
     /**
