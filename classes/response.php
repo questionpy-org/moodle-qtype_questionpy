@@ -36,7 +36,13 @@ class response {
      */
     protected $data;
 
-    public function __construct($code, string $data = '') {
+    /**
+     * Constructs a response object.
+     *
+     * @param int $code response code
+     * @param string $data
+     */
+    public function __construct(int $code, string $data = '') {
         $this->code = $code;
         $this->data = $data;
     }
@@ -53,6 +59,7 @@ class response {
     /**
      * Returns data as string or parsed associative array.
      *
+     * @param bool $json if true, parse string to associative array
      * @throws moodle_exception
      * @return string|array
      */
