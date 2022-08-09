@@ -27,7 +27,7 @@ namespace qtype_questionpy\form;
 defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
-require_once($CFG->libdir. "/formslib.php");
+require_once($CFG->libdir . "/formslib.php");
 
 /**
  * QuestionPy package upload form definition.
@@ -37,13 +37,14 @@ require_once($CFG->libdir. "/formslib.php");
  */
 class package_upload extends \moodleform {
 
-
     /**
      * Build the form definition.
      */
     protected function definition() {
-        global $CFG;
         $mform = $this->_form;
+
+        $mform->addElement('hidden', 'courseid', 0);
+        $mform->setType('courseid', PARAM_INT);
 
         $maxbytes = get_config('qtype_questionpy', 'applicationserver_maxquestionsize');
         $mform->addElement('filepicker', 'qpy_package', get_string('file'), null,

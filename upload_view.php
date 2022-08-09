@@ -22,74 +22,62 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__).'/../../../config.php');
+require_once(dirname(__FILE__) . '/../../../config.php');
 
 global $DB;
+global $PAGE;
 
-$courseid = optional_param('courseid', 0,  PARAM_INT);
 
-if ($courseid) {
-    require_login($courseid);
-    $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-    $context = context_course::instance($courseid);
-} else {
-    require_login();
-    $context = context_system::instance();
-}
+$courseid = required_param('courseid', PARAM_INT);
+
+require_login($courseid);
+$context = context_course::instance($courseid);
 
 require_capability('qtype/questionpy:uploadpackages', $context);
-$pagetitle = get_string('pluginname', 'qtype_questionpy');
 $PAGE->set_context($context);
 $PAGE->set_url(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
 $PAGE->set_pagelayout('popup');
-$PAGE->set_title($pagetitle);
+$PAGE->set_title(get_string('pluginname', 'qtype_questionpy'));
 $output = $PAGE->get_renderer('core');
-echo $output->header($pagetitle);
+echo $output->header(get_string('pluginname', 'qtype_questionpy'));
 
 $mform = new \qtype_questionpy\form\package_upload();
 $fs = get_file_storage();
 
-$packages = $DB->get_records('question_package_questionpy', ['courseid' => $courseid]);
-foreach ($packages as $package) {
-    $data = [
-        "name" => $package->name,
-        "description" => "This describes the package ExamplePackage stored in db",
-        "author" => "Author",
-        "license" => "MIT",
-        "icon" => "https://placeimg.com/48/48/tech/grayscale",
-        "version" => "0.0.1"
-    ];
-    echo $output->render_from_template('qtype_questionpy/package_renderable', $data);
-}
-
 if ($mform->is_cancelled()) {
-    die();
-
+    // This redirect shows a warning, but should be ok (see: https://tracker.moodle.org/browse/CONTRIB-5857).
+    redirect(new moodle_url('/course/view.php', array('id' => $courseid)), 'Upload form cancelled.');
 } else if ($fromform = $mform->get_data()) {
-    // If there is a file save it, if it doesn't exist already.
+    // If there is a file and it doesn't exist already, save it.
     // TODO: post request to server with the package file.
     $name = $mform->get_new_filename('qpy_package');
-    if (!$fs->file_exists($context->id, 'qtype_questionpy', 'package', 0, '/', $name )) {
-        $storedfile = $mform->save_stored_file('qpy_package', $context->id, 'qtype_questionpy', 'package', 0, '/', $name);
+    $courseid = $fromform->courseid;
+    if (!$fs->file_exists($context->id, 'qtype_questionpy', 'package', 0, '/', $name)) {
+        $storedfile = $mform->save_stored_file('qpy_package', $context->id, 'qtype_questionpy',
+            'package', 0, '/', $name);
+
+        // Placeholder.
+        $packagedata = [
+            "name" => $name,
+            "short_name" => "shortname",
+            "courseid" => $courseid,
+            "package_hash" => "abcde",
+            "type" => "testtype",
+            "description" => "This describes the package ExamplePackage.",
+            "author" => "Author",
+            "license" => "MIT",
+            "icon" => "https://placeimg.com/48/48/tech/grayscale",
+            "version" => "0.0.1"
+        ];
+        $recordid = $DB->insert_record('question_package_questionpy', $packagedata, $returnid = true, $bulk = false);
     }
-
-    // Placeholder.
-    $packagedata = [
-        "name" => $name,
-        "short_name" => "shortname",
-        "courseid" => $courseid,
-        "package_hash" => "abcde",
-        "type" => "testtype",
-        "description" => "This describes the package ExamplePackage.",
-        "author" => "Author",
-        "license" => "MIT",
-        "icon" => "https://placeimg.com/48/48/tech/grayscale",
-        "version" => "0.0.1"
-    ];
-    $recordid = $DB->insert_record('question_package_questionpy', $packagedata, $returnid = true, $bulk = false);
-
     redirect(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
 } else {
+    $packages = $DB->get_records('question_package_questionpy', ['courseid' => $courseid]);
+    foreach ($packages as $package) {
+        echo $output->render_from_template('qtype_questionpy/package_renderable', $package);
+    }
+    $mform->set_data(array('courseid' => $courseid));
     $files = $fs->get_area_files($context->id, 'qtype_questionpy', 'package');
     $mform->display();
 }
