@@ -39,7 +39,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         global $PAGE;
         // TODO define form fields.
 
-        $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->question->id, $this->context);
+        $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
 
     }

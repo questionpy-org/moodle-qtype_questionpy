@@ -24,10 +24,6 @@
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
-global $DB;
-global $PAGE;
-
-
 $courseid = required_param('courseid', PARAM_INT);
 
 require_login($courseid);
@@ -60,7 +56,7 @@ if ($mform->is_cancelled()) {
         $packagedata = [
             "name" => $name,
             "short_name" => "shortname",
-            "courseid" => $courseid,
+            "contextid" => $context->id,
             "package_hash" => "abcde",
             "type" => "testtype",
             "description" => "This describes the package ExamplePackage.",
@@ -69,11 +65,11 @@ if ($mform->is_cancelled()) {
             "icon" => "https://placeimg.com/48/48/tech/grayscale",
             "version" => "0.0.1"
         ];
-        $recordid = $DB->insert_record('question_package_questionpy', $packagedata, $returnid = true, $bulk = false);
+        $recordid = $DB->insert_record('qtype_questionpy_package', $packagedata, $returnid = true, $bulk = false);
     }
     redirect(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
 } else {
-    $packages = $DB->get_records('question_package_questionpy', ['courseid' => $courseid]);
+    $packages = $DB->get_records('qtype_questionpy_package', ['contextid' => $context->id]);
     foreach ($packages as $package) {
         echo $output->render_from_template('qtype_questionpy/package_renderable', $package);
     }

@@ -15,11 +15,11 @@
         <KEY NAME="questionid" TYPE="foreign" FIELDS="questionid" REFTABLE="question" REFFIELDS="id" />
       </KEYS>
     </TABLE>
-    <TABLE NAME="question_package_questionpy" COMMENT="Available QuestionPy Packages on the Moodle Server">
+    <TABLE NAME="qtype_questionpy_package" COMMENT="Available QuestionPy Packages on the Moodle Server">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="package_hash" TYPE="char" LENGTH="256" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="short_name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
