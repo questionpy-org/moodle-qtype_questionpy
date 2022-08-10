@@ -31,7 +31,7 @@ $context = context_course::instance($courseid);
 
 require_capability('qtype/questionpy:uploadpackages', $context);
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
+$PAGE->set_url(new moodle_url('/question/type/questionpy/upload_view.php', ['courseid' => $courseid]));
 $PAGE->set_pagelayout('popup');
 $PAGE->set_title(get_string('pluginname', 'qtype_questionpy'));
 $output = $PAGE->get_renderer('core');
@@ -42,7 +42,7 @@ $fs = get_file_storage();
 
 if ($mform->is_cancelled()) {
     // This redirect shows a warning, but should be ok (see: https://tracker.moodle.org/browse/CONTRIB-5857).
-    redirect(new moodle_url('/course/view.php', array('id' => $courseid)), 'Upload form cancelled.');
+    redirect(new moodle_url('/course/view.php', ['id' => $courseid]), 'Upload form cancelled.');
 } else if ($fromform = $mform->get_data()) {
     // If there is a file and it doesn't exist already, save it.
     // TODO: post request to server with the package file.
@@ -67,13 +67,13 @@ if ($mform->is_cancelled()) {
         ];
         $recordid = $DB->insert_record('qtype_questionpy_package', $packagedata, $returnid = true, $bulk = false);
     }
-    redirect(new moodle_url('/question/type/questionpy/upload_view.php', array('courseid' => $courseid)));
+    redirect(new moodle_url('/question/type/questionpy/upload_view.php', ['courseid' => $courseid]));
 } else {
     $packages = $DB->get_records('qtype_questionpy_package', ['contextid' => $context->id]);
     foreach ($packages as $package) {
         echo $output->render_from_template('qtype_questionpy/package_renderable', $package);
     }
-    $mform->set_data(array('courseid' => $courseid));
+    $mform->set_data(['courseid' => $courseid]);
     $files = $fs->get_area_files($context->id, 'qtype_questionpy', 'package');
     $mform->display();
 }

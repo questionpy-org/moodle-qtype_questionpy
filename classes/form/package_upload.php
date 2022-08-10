@@ -47,7 +47,7 @@ class package_upload extends \moodleform {
 
         $maxbytes = get_config('qtype_questionpy', 'applicationserver_maxquestionsize');
         $mform->addElement('filepicker', 'qpy_package', get_string('file'), null,
-            array('maxbytes' => $maxbytes, 'accepted_types' => array('.qpy')));
+            ['maxbytes' => $maxbytes, 'accepted_types' => ['.qpy']]);
 
         $this->add_action_buttons();
 
