@@ -29,12 +29,12 @@ class response {
     /**
      * @var int response code
      */
-    protected $code;
+    private $code;
 
     /**
      * @var string data string
      */
-    protected $data;
+    private $data;
 
     /**
      * Constructs a response object.
