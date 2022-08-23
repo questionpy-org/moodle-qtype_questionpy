@@ -1,0 +1,13 @@
+{
+  "kind": "checkbox_group",
+  "checkboxes": [
+    {
+      "kind": "checkbox",
+      "name": "my_checkbox",
+      "left_label": "Left",
+      "right_label": "Right",
+      "required": true,
+      "selected": true
+    }
+  ]
+}

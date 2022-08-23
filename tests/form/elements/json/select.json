@@ -1,0 +1,19 @@
+{
+  "kind": "select",
+  "name": "my_select",
+  "label": "Label",
+  "options": [
+    {
+      "label": "Option 1",
+      "value": "opt1",
+      "selected": true
+    },
+    {
+      "label": "Option 2",
+      "value": "opt2",
+      "selected": false
+    }
+  ],
+  "multiple": true,
+  "required": true
+}

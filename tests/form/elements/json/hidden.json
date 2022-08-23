@@ -1,0 +1,5 @@
+{
+  "kind": "hidden",
+  "name": "my_hidden_value",
+  "value": "42"
+}

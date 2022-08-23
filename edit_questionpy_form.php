@@ -24,6 +24,20 @@
 
 use qtype_questionpy\api;
 use qtype_questionpy\localizer;
+use qtype_questionpy\form\elements\checkbox_element;
+use qtype_questionpy\form\elements\checkbox_group_element;
+use qtype_questionpy\form\elements\form_elements;
+use qtype_questionpy\form\elements\group_element;
+use qtype_questionpy\form\elements\option;
+use qtype_questionpy\form\elements\options;
+use qtype_questionpy\form\elements\radio_group_element;
+use qtype_questionpy\form\elements\select_element;
+use qtype_questionpy\form\elements\static_text_element;
+use qtype_questionpy\form\elements\text_input_element;
+use qtype_questionpy\form\form_section;
+use qtype_questionpy\form\form_sections;
+use qtype_questionpy\form\qpy_form;
+use qtype_questionpy\form\root_render_context;
 
 /**
  * QuestionPy question editing form definition.
@@ -70,15 +84,62 @@ class qtype_questionpy_edit_form extends question_edit_form {
             // Get localized package texts.
             $packagearray = $package->as_localized_array($languages);
 
-            $group[] = $mform->createElement('radio', 'questionpy_package_hash',
+            $group[] = $mform->createElement(
+                'radio', 'questionpy_package_hash',
                 $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
-                '', $package->hash);
+                '', $package->hash
+            );
         }
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
-        $mform->addRule('questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required');
+        $mform->addRule(
+            'questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required'
+        );
 
         $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
+
+        $form = new qpy_form(
+            new form_elements(
+                new static_text_element("Some blurb", "This is just for lookin' at"),
+                new text_input_element("some_text", "Enter some text", true, "default", "placeholder"),
+                new select_element(
+                    "select1", "A dropdown", new options(
+                    new option("Option 1", "opt1"),
+                    new option("Option 2", "opt2", true),
+                ), true, true
+                ),
+                new checkbox_group_element(
+                    new checkbox_element("chk1", "Option 1"),
+                    new checkbox_element("chk2", "Option 2"),
+                ),
+                new checkbox_group_element(
+                    new checkbox_element("chk3", "Option 3"),
+                    new checkbox_element("chk4", "Option 4"),
+                ),
+                new radio_group_element(
+                    "radio1", "Choose just one", new options(
+                    new option("Option 1", "opt1"),
+                    new option("Option 2", "opt2", true),
+                ), true
+                ),
+                new group_element(
+                    "grp1", "A group", new form_elements(
+                        new text_input_element("first_name", "First"),
+                        new text_input_element("last_name", "Last"),
+                    )
+                )
+            ),
+            new form_sections(
+                new form_section(
+                    "Custom Section",
+                    new form_elements(
+                        new text_input_element("more_text", "Enter some more text"),
+                        new checkbox_element("chk5", "Left Label", "Right Label")
+                    )
+                )
+            )
+        );
+        $form->render_to(new root_render_context($this, $mform));
     }
 
     /**

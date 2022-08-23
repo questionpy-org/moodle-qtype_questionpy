@@ -1,0 +1,23 @@
+{
+  "kind": "group",
+  "name": "my_group",
+  "label": "Name",
+  "elements": [
+    {
+      "kind": "text_input",
+      "name": "first_name",
+      "label": "",
+      "required": true,
+      "default": null,
+      "placeholder": "Vorname"
+    },
+    {
+      "kind": "text_input",
+      "name": "last_name",
+      "label": "",
+      "required": false,
+      "default": null,
+      "placeholder": "Nachname (optional)"
+    }
+  ]
+}
