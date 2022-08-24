@@ -73,7 +73,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
             $group[] = $mform->createElement('radio', 'questionpy_package_hash',
                 $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
-                '', $package->get_hash());
+                '', $package->hash);
         }
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
         $mform->addRule('questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required');

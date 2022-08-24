@@ -26,61 +26,21 @@ namespace qtype_questionpy;
 class localizer {
 
     /**
-     * Naive function to get the parent of a language.
-     * Possibly a useful alternative to `get_parent_language` of Moodle?
-     *
-     * @param string $language
-     * @return string parent language
-     */
-    private static function get_parent_language(string $language): string {
-        $position = strrpos($language, '_');
-        if (!$position) {
-            return '';
-        }
-        return substr($language, 0, $position) ?? '';
-    }
-
-    /**
-     * Populates language array and takes the parent language(s) into account.
-     *
-     * @param string $language the language to be added
-     * @param array $languages
-     */
-    private static function populate_language_array(string $language, array &$languages): void {
-        $language = str_replace('_utf8', '', $language);
-        $languages[] = $language;
-        while ($language = get_parent_language($language)) {
-            $languages[] = $language;
-        }
-    }
-
-    /**
      * Generates sorted list with languages from most to least preferred.
      *
      * @return array preferred languages
      */
     public static function get_preferred_languages(): array {
-        global $CFG, $USER, $SESSION, $COURSE;
-
         $languages = [];
 
-        if (!empty($SESSION->forcelang)) {
-            self::populate_language_array($SESSION->forcelang, $languages);
-        }
-        if (!empty($COURSE->id) && $COURSE->id != SITEID && !empty($COURSE->lang)) {
-            self::populate_language_array($COURSE->lang, $languages);
-        }
-        if (!empty($SESSION->lang)) {
-            self::populate_language_array($SESSION->lang, $languages);
-        }
-        if (!empty($USER->lang)) {
-            self::populate_language_array($USER->lang, $languages);
-        }
-        if (isset($CFG->lang)) {
-            self::populate_language_array($CFG->lang, $languages);
-        }
-        $languages[] = 'en';
+        // Get current language and every parent language.
+        $language = current_language();
+        do {
+            $languages[] = $language;
+        } while ($language = get_parent_language($language));
 
+        // Fallback is english - could be already inside the array, but that is okay.
+        $languages[] = 'en';
         return $languages;
     }
 }

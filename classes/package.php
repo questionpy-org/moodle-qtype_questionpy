@@ -28,7 +28,7 @@ class package {
     /**
      * @var string package hash
      */
-    private $packagehash;
+    public $hash;
 
     /**
      * @var string package shortname
@@ -88,7 +88,7 @@ class package {
     /**
      * Constructs package class.
      *
-     * @param string $packagehash
+     * @param string $hash
      * @param string $shortname
      * @param array $name
      * @param string $version
@@ -101,12 +101,12 @@ class package {
      * @param string|null $license
      * @param array|null $tags
      */
-    public function __construct(string $packagehash, string $shortname, array $name, string $version, string $type,
+    public function __construct(string $hash, string $shortname, array $name, string $version, string $type,
                                 string $author = null, string $url = null, array $languages = null,
                                 array $description = null, string $icon = null, string $license = null,
                                 array $tags = null) {
 
-        $this->packagehash = $packagehash;
+        $this->hash = $hash;
         $this->shortname = $shortname;
         $this->name = $name;
         $this->version = $version;
@@ -153,7 +153,7 @@ class package {
      */
     public function as_localized_array(array $languages): array {
         return [
-            'package_hash' => $this->packagehash,
+            'package_hash' => $this->hash,
             'shortname' => $this->shortname,
             'name' => $this->get_localized_name($languages),
             'version' => $this->version,
@@ -167,15 +167,6 @@ class package {
             'license' => $this->license,
             'tags' => $this->tags
         ];
-    }
-
-    /**
-     * Returns package hash.
-     *
-     * @return string package hash
-     */
-    public function get_hash(): string {
-        return $this->packagehash;
     }
 
     /**
