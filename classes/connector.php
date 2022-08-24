@@ -125,9 +125,9 @@ class connector {
      * Perform cURL session.
      *
      * @throws moodle_exception
-     * @return response data string received from server
+     * @return http_response_container data received from server
      */
-    private function exec(): response {
+    private function exec(): http_response_container {
         $data = curl_exec($this->curlhandle);
 
         // Check for cURL failure.
@@ -138,7 +138,7 @@ class connector {
 
         // Create response.
         $responsecode = curl_getinfo($this->curlhandle, CURLINFO_RESPONSE_CODE);
-        return new response($responsecode, $data);
+        return new http_response_container($responsecode, $data);
     }
 
     /**
@@ -146,9 +146,9 @@ class connector {
      *
      * @param string $path
      * @throws moodle_exception
-     * @return response data received from server
+     * @return http_response_container data received from server
      */
-    public function get(string $path = ''): response {
+    public function get(string $path = ''): http_response_container {
         // Set url to the endpoint.
         $this->set_url($path);
 
@@ -167,9 +167,9 @@ class connector {
      * @param string $path
      * @param string $json
      * @throws moodle_exception
-     * @return response data received from server
+     * @return http_response_container data received from server
      */
-    public function post(string $path = '', string $json = '{}'): response {
+    public function post(string $path = '', $json = '{}'): http_response_container {
         // Set url to the endpoint.
         $this->set_url($path);
 

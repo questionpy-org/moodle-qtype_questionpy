@@ -19,17 +19,17 @@ namespace qtype_questionpy;
 use moodle_exception;
 
 /**
- * Represents an HTTP response.
+ * Represents an HTTP cURL response.
  *
  * @package    qtype_questionpy
  * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class response {
+class http_response_container {
     /**
      * @var int response code
      */
-    private $code;
+    public $code;
 
     /**
      * @var string data string
@@ -45,15 +45,6 @@ class response {
     public function __construct(int $code, string $data = '') {
         $this->code = $code;
         $this->data = $data;
-    }
-
-    /**
-     * Returns the response code.
-     *
-     * @return int
-     */
-    public function get_code(): int {
-        return $this->code;
     }
 
     /**
