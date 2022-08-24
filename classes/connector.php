@@ -161,26 +161,29 @@ class connector {
 
     /**
      * Performs a POST request to the given path on the application server.
-     *
-     * TODO: allow multipart/form-data (and not only json).
+     * If `$data` is a string, the Content-Type will be set to application/json.
+     * If `$data` is an array, the Content-Type will be set to multipart/form-data.
      *
      * @param string $path
-     * @param string $json
+     * @param string|array|null $data
      * @throws moodle_exception
      * @return http_response_container data received from server
      */
-    public function post(string $path = '', $json = '{}'): http_response_container {
+    public function post(string $path = '', $data = null): http_response_container {
         // Set url to the endpoint.
         $this->set_url($path);
 
         // Setup POST request.
-        $this->set_opts([
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $json,
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json'
-            ]
-        ]);
+        $this->set_opt(CURLOPT_POST, true);
+
+        // Set data and content type if data is available.
+        if (!is_null($data)) {
+            $contenttype = is_string($data) ? 'application/json' : 'multipart/form-data';
+            $this->set_opts([
+                CURLOPT_POSTFIELDS => $data,
+                CURLOPT_HTTPHEADER => "Content-Type: $contenttype"
+            ]);
+        }
 
         // Execute POST request.
         return $this->exec();
