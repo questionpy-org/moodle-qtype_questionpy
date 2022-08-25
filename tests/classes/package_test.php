@@ -36,7 +36,7 @@ class package_test extends \advanced_testcase {
      * @throws \moodle_exception
      */
     private function get_packages_from_file(string $filename): array {
-        $myfile = fopen($filename, 'r') or die('Unable to open file!');
+        $myfile = fopen($filename, 'r') || die('Unable to open file!');
         $response = new http_response_container(200, fread($myfile, filesize($filename)));
         fclose($myfile);
         $packages = $response->get_data();
