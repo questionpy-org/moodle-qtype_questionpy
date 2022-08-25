@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy;
 
+use phpDocumentor\Reflection\Types\This;
+
 /**
  * Represents a QuestionPy package.
  *
@@ -211,6 +213,112 @@ class package {
      */
     public function get_localized_description(array $languages): string {
         return self::get_localized_property($this->description, $languages);
+    }
+
+    /**
+     * Persist this package in the database.
+     * Localized data is stored in qtype_questionpy_language.
+     * Tags are mapped hash->tag in the table  qtype_questionpy_tags.
+     * @param int $questionid
+     * @param int $contextid
+     * @return void
+     * @throws \dml_exception
+     */
+    public function store_in_db(int $questionid = 0, int $contextid = 0) {
+        global $DB;
+
+        // Store the language independent package data.
+        $packagedata = [
+            "questionid" => $questionid,
+            "contextid" => $contextid,
+            "package_hash" => $this->hash,
+            "short_name" => $this->shortname,
+            "version" => $this->version,
+            "type" => $this->type,
+            "author" => $this->author,
+            "url" => $this->url,
+            "icon" => $this->icon,
+            "license" => $this->license
+        ];
+        $DB->insert_record('qtype_questionpy_package', $packagedata);
+
+        // For each language store the localized package data as a separate record.
+        foreach ($this->languages as $language) {
+            $languagedata = [
+                "package_hash" => $this->hash,
+                "language" => $language,
+                "name" => $this->get_localized_property($this->name, [$language]),
+                "description" => $this->get_localized_property($this->description, [$language])
+            ];
+            $DB->insert_record('qtype_questionpy_language', $languagedata);
+        }
+
+        // Store each tag with the package hash in the tag table.
+        foreach ($this->tags as $tag) {
+            $tagsdata = [
+                "package_hash" => $this->hash,
+                "tag" => $tag,
+            ];
+            $DB->insert_record('qtype_questionpy_tags', $tagsdata);
+        }
+    }
+
+    /**
+     * Deletes the package including all related data from:
+     *  - qtype_questionpy_package
+     *  - qtype_questionpy_language
+     *  - qtype_questionpy_tags
+     * @return bool
+     * @throws \Throwable
+     * @throws \coding_exception
+     * @throws \dml_transaction_exception
+     */
+    public function delete_from_db(): boolean {
+        global $DB;
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $DB->delete_records('qtype_questionpy_package', ['package_hash' => $this->hash]);
+            $DB->delete_records('qtype_questionpy_language', ['package_hash' => $this->hash]);
+            $DB->delete_records('qtype_questionpy_tags', ['package_hash' => $this->hash]);
+        } catch (\dml_exception $e) {
+            $DB->rollback_delegated_transaction($transaction, $e);
+            return false;
+        }
+        $DB->commit_delegated_transaction($transaction);
+        return true;
+    }
+
+    /**
+     * Get a specific package by its hash from the db.
+     * @param string $hash
+     * @return package
+     * @throws \dml_exception
+     */
+    public static function get_from_db(string $hash): package {
+        global $DB;
+        $package = (array) $DB->get_record('qtype_questionpy_package', ['package_hash' => $hash]);
+        $languagedata = $DB->get_records('qtype_questionpy_language', ['package_hash' => $hash]);
+        $language = [];
+        $name = [];
+        $description = [];
+        foreach ($languagedata as $record) {
+            $language[] = $record->language;
+            $name[] = $record->name;
+            $description[] = $record->description;
+        }
+        $tagdata = $DB->get_records('qtype_questionpy_tags', ['package_hash' => $hash]);
+        $tags = [];
+        foreach ($tagdata as $record) {
+            $tags[] = $record->tag;
+        }
+        $temp = [
+            'languages' => $language,
+            'name' => $name,
+            'description' => $description,
+            'tags' => $tags
+        ];
+        $package = array_merge($package, $temp);
+        return self::from_array($package);
     }
 
 }
