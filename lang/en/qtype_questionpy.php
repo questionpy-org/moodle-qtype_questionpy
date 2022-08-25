@@ -27,6 +27,8 @@ $string['pluginname_help'] = 'Create own question types in Python.';
 $string['pluginnameadding'] = 'Adding a QuestionPy question';
 $string['pluginnameediting'] = 'Editing a QuestionPy question';
 $string['pluginnamesummary'] = 'A comprehensive question type that allows you to create own question types in Python.';
+
+// Application server settings.
 $string['server_url'] = 'QuestionPy Application Server URL';
 $string['server_password'] = 'QuestionPy Application Server Password';
 $string['server_password_description'] = 'The Password to access the Application Server';
@@ -40,3 +42,19 @@ $string['selection_searchbar'] = 'Search...';
 $string['selection_no_icon'] = 'Could not load the icon.';
 $string['selection_no_package_title'] = 'QuestionPy';
 $string['selection_no_package_text'] = 'No packages available.';
+
+// Package selection.
+$string['selection_title'] = 'Select QuestionPy Package';
+$string['selection_searchbar'] = 'Search...';
+$string['selection_no_icon'] = 'Could not load the icon.';
+$string['selection_no_package_title'] = 'QuestionPy';
+$string['selection_no_package_text'] = 'No packages available.';
+$string['selection_required'] = 'Please select a package.';
+
+// Connector.
+$string['curl_init_error'] = 'Could not initialize cURL.';
+$string['curl_exec_error'] = 'Error while fetching from server.';
+$string['curl_set_opt_error'] = 'Failed to set cURL option.';
+$string['json_parsing_error'] = 'Could not parse JSON.';
+
+

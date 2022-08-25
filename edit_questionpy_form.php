@@ -22,6 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\api;
+use qtype_questionpy\localizer;
+
+
 /**
  * QuestionPy question editing form definition.
  *
@@ -36,8 +40,43 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param MoodleQuickForm $mform the form being built.
      */
     protected function definition_inner($mform) {
-        global $PAGE;
-        // TODO define form fields.
+        global $OUTPUT;
+
+        // TODO: catch moodle_exception?
+        // Retrieve packages from the application server.
+        $packages = api::get_packages();
+
+        // No packages received.
+        if (!$packages) {
+            $mform->addElement('static', 'questionpy_no_package',
+                get_string('selection_no_package_title', 'qtype_questionpy'),
+                get_string('selection_no_package_text', 'qtype_questionpy'));
+
+            return;
+        }
+
+        // Searchbar for QuestionPy packages.
+        $mform->addElement('text', 'questionpy_package_search',
+            get_string('selection_title', 'qtype_questionpy'),
+            ['placeholder' => get_string('selection_searchbar', 'qtype_questionpy')]);
+
+        $mform->setType('questionpy_package_search', PARAM_TEXT);
+
+        // Create group which contains selectable QuestionPy packages.
+        $group = array();
+
+        $languages = localizer::get_preferred_languages();
+
+        foreach ($packages as $package) {
+            // Get localized package texts.
+            $packagearray = $package->as_localized_array($languages);
+
+            $group[] = $mform->createElement('radio', 'questionpy_package_hash',
+                $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
+                '', $package->hash);
+        }
+        $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
+        $mform->addRule('questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required');
 
         $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
@@ -45,7 +84,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
     }
 
     /**
-     * Perform an preprocessing needed on the data passed to {@see set_data()}
+     * Perform any preprocessing needed on the data passed to {@see set_data()}
      * before it is used to initialise the form.
      *
      * @param object $question the data being passed to the form.
@@ -86,6 +125,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+
         // TODO.
 
         return $errors;
