@@ -16,13 +16,17 @@
 
 namespace qtype_questionpy\form;
 
-use qtype_questionpy\form\elements\form_elements;
+use qtype_questionpy\form\elements\form_element;
 
 class form_section implements renderable {
     public string $header;
-    public form_elements $elements;
+    /** @var form_element[] */
+    public array $elements;
 
-    public function __construct(string $header, form_elements $elements) {
+    /**
+     * @param form_element[] $elements
+     */
+    public function __construct(string $header, array $elements) {
         $this->header = $header;
         $this->elements = $elements;
     }
@@ -30,7 +34,7 @@ class form_section implements renderable {
     public static function from_array(array $array): self {
         return new self(
             $array["header"],
-            form_elements::from_array($array["elements"])
+            array_map([form_element::class, "from_array_any"], $array["elements"])
         );
     }
 

@@ -19,7 +19,7 @@ namespace qtype_questionpy\form\elements;
 class element_json_test extends \advanced_testcase {
     /**
      * @dataProvider deserialize_provider
-     * @covers \qtype_questionpy\form\elements
+     * @covers       \qtype_questionpy\form\elements
      */
     public function test_deserialize(string $jsonfile, $expected): void {
         $json = file_get_contents(__DIR__ . "/json/" . $jsonfile);
@@ -32,7 +32,7 @@ class element_json_test extends \advanced_testcase {
 
     /**
      * @dataProvider serialize_provider
-     * @covers \qtype_questionpy\form\elements
+     * @covers       \qtype_questionpy\form\elements
      */
     public function test_serialize(string $expectedjsonfile, $value): void {
         $actualjson = json_encode($value);
@@ -56,25 +56,19 @@ class element_json_test extends \advanced_testcase {
                     true, true
                 )
             )],
-            ["group.json", new group_element(
-                "my_group", "Name", new form_elements(
-                    new text_input_element("first_name", "", true, null, "Vorname"),
-                    new text_input_element("last_name", "", false, null, "Nachname (optional)"),
-                )
-            )],
+            ["group.json", new group_element("my_group", "Name", [
+                new text_input_element("first_name", "", true, null, "Vorname"),
+                new text_input_element("last_name", "", false, null, "Nachname (optional)"),
+            ])],
             ["hidden.json", new hidden_element("my_hidden_value", "42")],
-            ["radio_group.json", new radio_group_element(
-                "my_radio", "Label", new options(
+            ["radio_group.json", new radio_group_element("my_radio", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
-            ), true
-            )],
-            ["select.json", new select_element(
-                "my_select", "Label", new options(
+            ], true)],
+            ["select.json", new select_element("my_select", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
-            ), true, true
-            )],
+            ], true, true)],
             ["static_text.json", new static_text_element("Label", "Lorem ipsum dolor sit amet.")],
             ["text_input.json", new text_input_element("my_field", "Label", true, "default", "placeholder")],
         ];

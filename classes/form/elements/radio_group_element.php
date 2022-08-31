@@ -19,10 +19,14 @@ namespace qtype_questionpy\form\elements;
 class radio_group_element extends form_element {
     public string $name;
     public string $label;
-    public options $options;
+    /** @var option[] */
+    public array $options;
     public bool $required = false;
 
-    public function __construct(string $name, string $label, options $options, bool $required = false) {
+    /**
+     * @param option[] $options
+     */
+    public function __construct(string $name, string $label, array $options, bool $required = false) {
         $this->name = $name;
         $this->label = $label;
         $this->options = $options;
@@ -37,7 +41,7 @@ class radio_group_element extends form_element {
         return new self(
             $array["name"],
             $array["label"],
-            options::from_array($array["options"]),
+            array_map([option::class, "from_array"], $array["options"]),
             $array["required"] ?? false,
         );
     }

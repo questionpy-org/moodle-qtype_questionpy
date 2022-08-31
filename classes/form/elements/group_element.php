@@ -21,9 +21,13 @@ use qtype_questionpy\form\group_render_context;
 class group_element extends form_element {
     public string $name;
     public string $label;
-    public form_elements $elements;
+    /** @var form_element[] */
+    public array $elements;
 
-    public function __construct(string $name, string $label, form_elements $elements) {
+    /**
+     * @param form_element[] $elements
+     */
+    public function __construct(string $name, string $label, array $elements) {
         $this->name = $name;
         $this->label = $label;
         $this->elements = $elements;
@@ -37,7 +41,7 @@ class group_element extends form_element {
         return new self(
             $array["name"],
             $array["label"],
-            form_elements::from_array($array["elements"])
+            array_map([form_element::class, "from_array_any"], $array["elements"])
         );
     }
 

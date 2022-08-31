@@ -22,11 +22,15 @@ use qtype_questionpy\form\render_context;
 class select_element extends form_element {
     public string $name;
     public string $label;
-    public options $options;
+    /** @var option[] */
+    public array $options;
     public bool $multiple = false;
     public bool $required = false;
 
-    public function __construct(string $name, string $label, options $options, bool $multiple = false,
+    /**
+     * @param option[] $options
+     */
+    public function __construct(string $name, string $label, array $options, bool $multiple = false,
                                 bool   $required = false) {
         $this->name = $name;
         $this->label = $label;
@@ -43,7 +47,7 @@ class select_element extends form_element {
         return new self(
             $array["name"],
             $array["label"],
-            options::from_array($array["options"]),
+            array_map([option::class, "from_array"], $array["options"]),
             $array["multiple"] ?? false,
             $array["required"] ?? false,
         );

@@ -87,25 +87,19 @@ class element_html_test extends \advanced_testcase {
                     true, true
                 )
             )],
-            ["group.html", new group_element(
-                "my_group", "Name", new form_elements(
-                    new text_input_element("first_name", "", true, null, "Vorname"),
-                    new text_input_element("last_name", "", false, null, "Nachname (optional)"),
-                )
-            )],
+            ["group.html", new group_element("my_group", "Name", [
+                new text_input_element("first_name", "", true, null, "Vorname"),
+                new text_input_element("last_name", "", false, null, "Nachname (optional)"),
+            ])],
             ["hidden.html", new hidden_element("my_hidden_value", "42")],
-            ["radio_group.html", new radio_group_element(
-                "my_radio", "Label", new options(
+            ["radio_group.html", new radio_group_element("my_radio", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
-            ), true
-            )],
-            ["select.html", new select_element(
-                "my_select", "Label", new options(
+            ], true)],
+            ["select.html", new select_element("my_select", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
-            ), true, true
-            )],
+            ], true, true)],
             ["static_text.html", new static_text_element("Label", "Lorem ipsum dolor sit amet.")],
             ["text_input.html", new text_input_element("my_field", "Label", true, "default", "placeholder")],
         ];
