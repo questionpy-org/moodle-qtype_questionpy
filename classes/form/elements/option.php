@@ -1,9 +1,7 @@
 <?php
-
 namespace qtype_questionpy\form\elements;
 
-class option
-{
+class option {
     public string $label;
     public string $value;
     public bool $selected = false;
@@ -12,15 +10,13 @@ class option
         string $label,
         string $value,
         bool   $selected = false
-    )
-    {
+    ) {
         $this->label = $label;
         $this->value = $value;
         $this->selected = $selected;
     }
 
-    public static function from_array(array $array): self
-    {
+    public static function from_array(array $array): self {
         return new self(
             $array["label"],
             $array["value"],

@@ -1,20 +1,18 @@
 <?php
-
 namespace qtype_questionpy\form\elements;
 
 use HTML_QuickForm_select;
 use qtype_questionpy\form\render_context;
 
-class select_element extends form_element
-{
+class select_element extends form_element {
     public string $name;
     public string $label;
     public options $options;
     public bool $multiple = false;
     public bool $required = false;
 
-    public function __construct(string $name, string $label, options $options, bool $multiple = false, bool $required = false)
-    {
+    public function __construct(string $name, string $label, options $options, bool $multiple = false,
+                                bool   $required = false) {
         $this->name = $name;
         $this->label = $label;
         $this->options = $options;
@@ -22,14 +20,11 @@ class select_element extends form_element
         $this->required = $required;
     }
 
-
-    protected static function kind(): string
-    {
+    protected static function kind(): string {
         return "select";
     }
 
-    public static function from_array(array $array): self
-    {
+    public static function from_array(array $array): self {
         return new self(
             $array["name"],
             $array["label"],
@@ -39,20 +34,20 @@ class select_element extends form_element
         );
     }
 
-    public function render_to(render_context $context): void
-    {
+    public function render_to(render_context $context): void {
         $selected = [];
-        $options_associative = [];
+        $optionsassociative = [];
         foreach ($this->options as $option) {
-            $options_associative[$option->value] = $option->label;
+            $optionsassociative[$option->value] = $option->label;
             if ($option->selected) {
                 $selected[] = $option->value;
             }
         }
 
-        /* @var $element HTML_QuickForm_select */
+        // phpcs:disable moodle.Commenting.InlineComment.DocBlock
+        /** @var $element HTML_QuickForm_select */
         $element = $context->add_element(
-            "select", $this->name, $this->label, $options_associative,
+            "select", $this->name, $this->label, $optionsassociative,
             ["required" => $this->required]
         );
 

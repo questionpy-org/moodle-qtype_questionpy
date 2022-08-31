@@ -117,10 +117,12 @@ class qtype_questionpy_edit_form extends question_edit_form {
                     new checkbox_element("chk4", "Option 4"),
                 ),
                 new radio_group_element(
-                    "radio1", "Choose just one", new options(
-                    new option("Option 1", "opt1"),
-                    new option("Option 2", "opt2", true),
-                ), true
+                    "radio1", "Choose just one",
+                    new options(
+                        new option("Option 1", "opt1"),
+                        new option("Option 2", "opt2", true),
+                    ),
+                    true
                 ),
                 new group_element(
                     "grp1", "A group", new form_elements(

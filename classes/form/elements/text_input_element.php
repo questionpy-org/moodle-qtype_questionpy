@@ -1,11 +1,9 @@
 <?php
-
 namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\form\render_context;
 
-class text_input_element extends form_element
-{
+class text_input_element extends form_element {
     public string $name;
     public string $label;
     public bool $required = false;
@@ -18,8 +16,7 @@ class text_input_element extends form_element
         bool    $required = false,
         ?string $default = null,
         ?string $placeholder = null
-    )
-    {
+    ) {
         $this->name = $name;
         $this->label = $label;
         $this->required = $required;
@@ -27,8 +24,7 @@ class text_input_element extends form_element
         $this->placeholder = $placeholder;
     }
 
-    public static function from_array(array $array): self
-    {
+    public static function from_array(array $array): self {
         return new self(
             $array["name"],
             $array["label"],
@@ -38,13 +34,11 @@ class text_input_element extends form_element
         );
     }
 
-    protected static function kind(): string
-    {
+    protected static function kind(): string {
         return "text_input";
     }
 
-    public function render_to(render_context $context): void
-    {
+    public function render_to(render_context $context): void {
         $attributes = [
             "required" => $this->required
         ];

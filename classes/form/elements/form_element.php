@@ -1,5 +1,4 @@
 <?php
-
 namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\form\renderable;
@@ -7,9 +6,8 @@ use qtype_questionpy\form\renderable;
 /**
  * Base class for QuestionPy form elements.
  */
-abstract class form_element implements \JsonSerializable, renderable
-{
-    private static array $element_classes = [
+abstract class form_element implements renderable, \JsonSerializable {
+    private static array $elementclasses = [
         checkbox_element::class,
         checkbox_group_element::class,
         group_element::class,
@@ -20,33 +18,41 @@ abstract class form_element implements \JsonSerializable, renderable
         text_input_element::class,
     ];
 
-    protected abstract static function kind(): string;
+    abstract protected static function kind(): string;
 
     /**
      * Convert the given array to the concrete element without checking the `kind` descriptor.
      * (Which is done by {@see from_array_any}.)
      */
-    public abstract static function from_array(array $array): self;
+    abstract public static function from_array(array $array): self;
+
+    /**
+     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
+     * The default implementation just casts to an array, which is suitable only if the json field names match the
+     * class property names.
+     */
+    public function to_array(): array {
+        return (array)$this;
+    }
 
     /**
      * Use the value of the `kind` descriptor to convert the given array to the correct concrete element,
      * delegating to the appropriate {@see from_array} implementation.
      */
-    public static final function from_array_any(array $array): self
-    {
+    final public static function from_array_any(array $array): self {
         $kind = $array["kind"];
-        foreach (self::$element_classes as $element_class) {
-            if ($element_class::kind() == $kind) {
-                return $element_class::from_array($array);
+        foreach (self::$elementclasses as $elementclass) {
+            if ($elementclass::kind() == $kind) {
+                return $elementclass::from_array($array);
             }
         }
         throw new \RuntimeException("Unknown form element kind: " . $kind);
     }
 
-    public function jsonSerialize(): array
-    {
-        $result = (array)$this;
-        $result["kind"] = $this::kind();
-        return $result;
+    public function jsonSerialize(): array {
+        return array_merge(
+            ["kind" => $this->kind()],
+            $this->to_array()
+        );
     }
 }

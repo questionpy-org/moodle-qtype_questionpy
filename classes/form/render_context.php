@@ -1,5 +1,4 @@
 <?php
-
 namespace qtype_questionpy\form;
 
 /**
@@ -7,22 +6,20 @@ namespace qtype_questionpy\form;
  * the group element) and outside of a group (where the element is added directly) while still allowing for checkbox
  * controllers, which use an entirely different method.
  */
-abstract class render_context
-{
+abstract class render_context {
     public \moodleform $moodleform;
-    public \MoodleQuickForm $moodle_quick_form;
+    public \MoodleQuickForm $mform;
 
-    public function __construct(\moodleform $moodleform, \MoodleQuickForm $moodle_quick_form)
-    {
+    public function __construct(\moodleform $moodleform, \MoodleQuickForm $mform) {
         $this->moodleform = $moodleform;
-        $this->moodle_quick_form = $moodle_quick_form;
+        $this->mform = $mform;
     }
 
-    abstract function add_element(string $type, string $name, ...$args): object;
+    abstract public function add_element(string $type, string $name, ...$args): object;
 
-    abstract function set_type(string $name, string $type): void;
+    abstract public function set_type(string $name, string $type): void;
 
-    abstract function next_unique_int(): int;
+    abstract public function next_unique_int(): int;
 
-    abstract function add_checkbox_controller(int $group_id): void;
+    abstract public function add_checkbox_controller(int $groupid): void;
 }

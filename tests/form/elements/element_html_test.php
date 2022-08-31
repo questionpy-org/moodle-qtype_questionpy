@@ -1,6 +1,7 @@
 <?php
-
 namespace qtype_questionpy\form\elements;
+
+defined('MOODLE_INTERNAL') || die();
 
 use qtype_questionpy\form\renderable;
 use qtype_questionpy\form\root_render_context;
@@ -8,25 +9,21 @@ use qtype_questionpy\form\root_render_context;
 /**
  * Stub {@see \moodleform} implementation for tests.
  */
-class test_moodleform extends \moodleform
-{
+class test_moodleform extends \moodleform {
     private renderable $element;
 
-    public function __construct(renderable $element)
-    {
+    public function __construct(renderable $element) {
         $this->element = $element;
         parent::__construct(null, null, "post", "", ["id" => "my_form"]);
     }
 
-    protected function definition()
-    {
+    protected function definition() {
         $context = new root_render_context($this, $this->_form);
         $this->element->render_to($context);
     }
 }
 
-class element_html_test extends \advanced_testcase
-{
+class element_html_test extends \advanced_testcase {
     /**
      * Implements a snapshot testing approach similar to that of {@link https://jestjs.io/docs/snapshot-testing Jest}.
      *
@@ -36,34 +33,37 @@ class element_html_test extends \advanced_testcase
      * `UPDATE_SNAPSHOTS=1`.
      *
      * @dataProvider data_provider
+     * @covers       \qtype_questionpy\form\elements
+     * @covers       \qtype_questionpy\form\render_context
+     * @covers       \qtype_questionpy\form\root_render_context
+     * @covers       \qtype_questionpy\form\group_render_context
+     * @covers       \qtype_questionpy\form\renderable
      */
-    public function test_rendered_html_should_match_snapshot(string $snapshot_file, renderable $element): void
-    {
-        $snapshot_file_absolute = __DIR__ . "/html/" . $snapshot_file;
+    public function test_rendered_html_should_match_snapshot(string $snapshotfilename, renderable $element): void {
+        $snapshotfilepath = __DIR__ . "/html/" . $snapshotfilename;
 
-        // sesskey is part of the form and therefore needs to be deterministic
+        // The sesskey is part of the form and therefore needs to be deterministic.
         $_SESSION['USER']->sesskey = "sesskey";
         $form = new test_moodleform($element);
 
-        $actual_html = $form->render();
+        $actualhtml = $form->render();
 
-        $actual_dom = new \DOMDocument();
-        $actual_dom->loadHTML($actual_html);
-        $actual_dom->preserveWhiteSpace = false;
+        $actualdom = new \DOMDocument();
+        $actualdom->loadHTML($actualhtml);
+        $actualdom->preserveWhiteSpace = false;
 
         if (getenv("UPDATE_SNAPSHOTS")) {
-            $actual_dom->saveHTMLFile($snapshot_file_absolute);
+            $actualdom->saveHTMLFile($snapshotfilepath);
         }
 
-        $expected_dom = new \DOMDocument();
-        $expected_dom->loadHTMLFile($snapshot_file_absolute);
-        $expected_dom->preserveWhiteSpace = false;
+        $expecteddom = new \DOMDocument();
+        $expecteddom->loadHTMLFile($snapshotfilepath);
+        $expecteddom->preserveWhiteSpace = false;
 
-        $this->assertEquals($expected_dom, $actual_dom);
+        $this->assertEquals($expecteddom, $actualdom);
     }
 
-    public function data_provider(): array
-    {
+    public function data_provider(): array {
         return [
             ["checkbox.html", new checkbox_element("my_checkbox", "Left", "Right", true, true)],
             ["checkbox_group.html", new checkbox_group_element(

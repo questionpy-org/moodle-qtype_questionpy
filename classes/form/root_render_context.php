@@ -2,27 +2,22 @@
 
 namespace qtype_questionpy\form;
 
-class root_render_context extends render_context
-{
-    private int $next_unique_int = 1;
+class root_render_context extends render_context {
+    private int $nextuniqueint = 1;
 
-    function add_element(string $type, string $name, ...$args): object
-    {
-        return $this->moodle_quick_form->addElement($type, $name, ...$args);
+    public function add_element(string $type, string $name, ...$args): object {
+        return $this->mform->addElement($type, $name, ...$args);
     }
 
-    function set_type(string $name, string $type): void
-    {
-        $this->moodle_quick_form->setType($name, $type);
+    public function set_type(string $name, string $type): void {
+        $this->mform->setType($name, $type);
     }
 
-    function next_unique_int(): int
-    {
-        return $this->next_unique_int++;
+    public function next_unique_int(): int {
+        return $this->nextuniqueint++;
     }
 
-    function add_checkbox_controller(int $group_id): void
-    {
-        $this->moodleform->add_checkbox_controller($group_id);
+    public function add_checkbox_controller(int $groupid): void {
+        $this->moodleform->add_checkbox_controller($groupid);
     }
 }
