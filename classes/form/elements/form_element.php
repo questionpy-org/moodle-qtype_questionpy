@@ -20,6 +20,11 @@ use qtype_questionpy\form\renderable;
 
 /**
  * Base class for QuestionPy form elements.
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class form_element implements renderable, \JsonSerializable {
     private static array $elementclasses = [
@@ -33,6 +38,12 @@ abstract class form_element implements renderable, \JsonSerializable {
         text_input_element::class,
     ];
 
+    /**
+     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
+     * it to determine the concrete class to use for deserialization.
+     *
+     * @return string the value of this element's `kind` field.
+     */
     abstract protected static function kind(): string;
 
     /**

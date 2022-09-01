@@ -18,6 +18,12 @@ namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\form\render_context;
 
+/**
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class hidden_element extends form_element {
     public string $name;
     public string $value;

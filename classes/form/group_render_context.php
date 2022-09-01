@@ -16,6 +16,19 @@
 
 namespace qtype_questionpy\form;
 
+use qtype_questionpy\form\elements\group_element;
+
+/**
+ * {@see render_context} for groups of elements ({@see group_element}s). Instead of adding elements to the
+ * {@see \MoodleQuickForm}, they are added to an array.
+ *
+ * @see root_render_context
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class group_render_context extends render_context {
     public array $elements = [];
 

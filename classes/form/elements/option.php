@@ -16,6 +16,12 @@
 
 namespace qtype_questionpy\form\elements;
 
+/**
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class option {
     public string $label;
     public string $value;

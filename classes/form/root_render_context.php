@@ -16,6 +16,16 @@
 
 namespace qtype_questionpy\form;
 
+/**
+ * Regular {@see render_context} which delegates to {@see \moodleform} and {@see \MoodleQuickForm}.
+ *
+ * @see        group_render_context
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class root_render_context extends render_context {
     private int $nextuniqueint = 1;
 

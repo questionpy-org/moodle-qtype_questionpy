@@ -16,6 +16,16 @@
 
 namespace qtype_questionpy\form;
 
+use qtype_questionpy\form\elements\form_element;
+
+/**
+ * Interface for things (mostly {@see form_element}s) that can be rendered using a {@see render_context}.
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 interface renderable {
     public function render_to(render_context $context): void;
 }

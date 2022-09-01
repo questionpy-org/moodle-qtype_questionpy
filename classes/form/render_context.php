@@ -20,6 +20,14 @@ namespace qtype_questionpy\form;
  * Abstracts away the differences in rendering elements in a group (where the element is created, and added as part of
  * the group element) and outside of a group (where the element is added directly) while still allowing for checkbox
  * controllers, which use an entirely different method.
+ *
+ * @see        root_render_context
+ * @see        group_render_context
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class render_context {
     public \moodleform $moodleform;
@@ -30,11 +38,38 @@ abstract class render_context {
         $this->mform = $mform;
     }
 
+    /**
+     * Create, add and return an element.
+     *
+     * @param string $type   the type name of the element, as per the Moodle docs.
+     * @param string $name   the name of the generated form element.
+     * @param mixed ...$args remaining arguments specific to the element type.
+     * @return object the created element. Really an instance of {@see \HTML_QuickForm_element}, but the return type of
+     *                       {@see \MoodleQuickForm::addElement()} is also an object.
+     * @see \MoodleQuickForm::addElement()
+     */
     abstract public function add_element(string $type, string $name, ...$args): object;
 
+    /**
+     * Sets the type of an element which has been (or will be) added independently.
+     *
+     * @param string $name the name of the target element.
+     * @param string $type one of the {@see PARAM_INT}, {@see PARAM_TEXT}, etc. constants.
+     * @see \MoodleQuickForm::setType()
+     */
     abstract public function set_type(string $name, string $type): void;
 
+    /**
+     * @return int a unique and deterministic integer for use in generated element names and IDs.
+     */
     abstract public function next_unique_int(): int;
 
+    /**
+     * Adds a `Select all/none` checkbox controller controlling all `advcheckboxes` with the given group id.
+     *
+     * @param int $groupid the group id matching the `group` attribute of the `advcheckboxes` which should be toggled
+     *                     by this controller.
+     * @see \moodleform::add_checkbox_controller()
+     */
     abstract public function add_checkbox_controller(int $groupid): void;
 }

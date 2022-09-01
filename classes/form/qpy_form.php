@@ -18,6 +18,12 @@ namespace qtype_questionpy\form;
 
 use qtype_questionpy\form\elements\form_element;
 
+/**
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class qpy_form implements renderable {
     /** @var form_element[] */
     public array $general;
