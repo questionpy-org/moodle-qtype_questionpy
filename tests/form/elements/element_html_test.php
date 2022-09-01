@@ -18,6 +18,9 @@ namespace qtype_questionpy\form\elements;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+require_once($CFG->libdir . "/formslib.php");
+
 use qtype_questionpy\form\renderable;
 use qtype_questionpy\form\root_render_context;
 
