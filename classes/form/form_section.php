@@ -39,7 +39,7 @@ class form_section implements renderable {
     }
 
     public function render_to($context): void {
-        $context->add_element("header", "qpy_section_" . spl_object_hash($this), $this->header);
+        $context->add_element("header", "qpy_section_" . $context->next_unique_int(), $this->header);
         foreach ($this->elements as $element) {
             $element->render_to($context);
         }

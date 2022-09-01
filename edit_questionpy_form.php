@@ -103,8 +103,8 @@ class qtype_questionpy_edit_form extends question_edit_form {
                 new option("Option 2", "opt2", true),
             ], true, true),
             new checkbox_group_element(
-                new checkbox_element("chk1", "Option 1"),
-                new checkbox_element("chk2", "Option 2"),
+                new checkbox_element("chk1", "Option 1", null, true, true),
+                new checkbox_element("chk2", "Option 2", null, false, true),
             ),
             new checkbox_group_element(
                 new checkbox_element("chk3", "Option 3"),

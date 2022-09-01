@@ -54,9 +54,10 @@ class text_input_element extends form_element {
     }
 
     public function render_to(render_context $context): void {
-        $attributes = [
-            "required" => $this->required
-        ];
+        $attributes = [];
+        if ($this->required) {
+            $attributes["required"] = "required";
+        }
         if ($this->default) {
             $attributes["value"] = $this->default;
         }

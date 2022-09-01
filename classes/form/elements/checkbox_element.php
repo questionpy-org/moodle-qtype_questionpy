@@ -60,9 +60,15 @@ class checkbox_element extends form_element {
 
     public function render_to(render_context $context, ?int $group = null): void {
         $attributes = [
-            "checked" => $this->selected,
-            "required" => $this->required
+            "value" => $this->selected,
         ];
+        if ($this->selected) {
+            // FIXME: this seems to be broken within moodle, as the checked attribute never makes it into the HTML.
+            $attributes["checked"] = "checked";
+        }
+        if ($this->required) {
+            $attributes["required"] = "required";
+        }
 
         if ($group) {
             $attributes["group"] = $group;
