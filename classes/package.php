@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy;
 
+use TypeError;
+
 /**
  * Represents a QuestionPy package.
  *
@@ -128,6 +130,15 @@ class package {
      * @return package
      */
     public static function from_array(array $package): package {
+        if (!(isset($package['package_hash'])
+            && isset($package['short_name'])
+            && isset($package['name'])
+            && isset($package['version'])
+            && isset($package['type'])))
+        {
+            throw new TypeError('Package array is missing required fields.');
+        }
+
         return new self(
             $package['package_hash'],
             $package['short_name'],
@@ -135,13 +146,13 @@ class package {
             $package['version'],
             $package['type'],
 
-            $package['author'],
-            $package['url'],
-            $package['languages'],
-            $package['description'],
-            $package['icon'],
-            $package['license'],
-            $package['tags']
+            $package['author'] ?? null,
+            $package['url'] ?? null,
+            $package['languages'] ?? null,
+            $package['description'] ?? null,
+            $package['icon'] ?? null,
+            $package['license'] ?? null,
+            $package['tags'] ?? null
         );
     }
 
@@ -172,11 +183,11 @@ class package {
     /**
      * Retrieves the best available localisation of a package property.
      *
-     * @param string[] $property
+     * @param string[]|null $property
      * @param string[] $languages
      * @return string
      */
-    private function get_localized_property(array $property, array $languages): string {
+    private function get_localized_property(?array $property, array $languages): string {
         // If property does not exist (e.g. description) return empty string.
         if (!isset($property)) {
             return '';
