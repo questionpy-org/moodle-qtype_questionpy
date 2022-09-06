@@ -37,6 +37,11 @@ class http_response_container {
     private $data;
 
     /**
+     * @var array|null cached array of data
+     */
+    private $json;
+
+    /**
      * Constructs a response object.
      *
      * @param int $code response code
@@ -45,6 +50,7 @@ class http_response_container {
     public function __construct(int $code, string $data = '') {
         $this->code = $code;
         $this->data = $data;
+        $this->json = null;
     }
 
     /**
@@ -59,12 +65,18 @@ class http_response_container {
             return $this->data;
         }
 
-        // Parse JSON.
-        $result = json_decode($this->data, true);
-        if (is_null($result)) {
+        // Check if data is already cached.
+        if (!is_null($this->json)) {
+            return $this->json;
+        }
+
+        // Parse data.
+        $this->json = json_decode($this->data, true);
+        if (is_null($this->json)) {
             throw new moodle_exception(get_string('json_parsing_error', 'qtype_questionpy'),
                 "qtype_questionpy", '', $this->data);
         }
-        return $result;
+
+        return $this->json;
     }
 }
