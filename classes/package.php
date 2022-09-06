@@ -134,8 +134,7 @@ class package {
             && isset($package['short_name'])
             && isset($package['name'])
             && isset($package['version'])
-            && isset($package['type'])))
-        {
+            && isset($package['type']))) {
             throw new TypeError('Package array is missing required fields.');
         }
 
