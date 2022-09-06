@@ -29,6 +29,8 @@ use TypeError;
 class package_test extends \advanced_testcase {
 
     /**
+     * Tests the function get_package.
+     *
      * @covers \package::from_array
      * @return void
      */
@@ -65,6 +67,8 @@ class package_test extends \advanced_testcase {
     }
 
     /**
+     * Tests the function as_localized_array.
+     *
      * @coversNothing
      * @return void
      */
@@ -73,6 +77,8 @@ class package_test extends \advanced_testcase {
     }
 
     /**
+     * Tests the function get_localized_name.
+     *
      * @covers \package::get_localized_name
      * @return void
      */
@@ -99,6 +105,8 @@ class package_test extends \advanced_testcase {
     }
 
     /**
+     * Tests the function get_localized_description.
+     *
      * @covers \package::get_localized_description
      * @return void
      */

@@ -29,6 +29,8 @@ use moodle_exception;
 class http_response_container_test extends \advanced_testcase {
 
     /**
+     * Tests the function get_data with json.
+     *
      * @covers \http_response_container::get_data
      * @return void
      * @throws moodle_exception
@@ -52,6 +54,8 @@ class http_response_container_test extends \advanced_testcase {
     }
 
     /**
+     * Tests the function get_data with a string.
+     *
      * @covers \http_response_container::get_data
      * @return void
      * @throws moodle_exception

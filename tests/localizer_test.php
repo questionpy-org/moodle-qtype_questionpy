@@ -27,7 +27,7 @@ namespace qtype_questionpy;
 class localizer_test extends \advanced_testcase {
 
     /**
-     * Hello World Unit Test.
+     * Test the default of the function get_preferred_language.
      *
      * @covers \localizer::get_preferred_language
      * @return void
@@ -39,6 +39,8 @@ class localizer_test extends \advanced_testcase {
     }
 
     /**
+     * Tests the function get_preferred_language.
+     *
      * @coversNothing
      * @return void
      */
