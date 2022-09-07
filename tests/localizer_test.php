@@ -32,22 +32,21 @@ class localizer_test extends \advanced_testcase {
      * @covers \localizer::get_preferred_language
      * @return void
      */
-    public function test_default_language(): void {
+    public function test_contains_default_language(): void {
         $result = localizer::get_preferred_languages();
         self::assertIsArray($result);
         self::assertContains('en', $result);
     }
 
     /**
-     * Tests the function get_preferred_language.
+     * Test if get_preferred_language returns current language.
      *
-     * @coversNothing
+     * @covers \localizer::get_preferred_language
      * @return void
      */
-    public function test_parent_language(): void {
-        /*
-        TODO: implement.
-              Install language packs and test if parent language is returned?
-        */
+    public function test_contains_current_language(): void {
+        $result = localizer::get_preferred_languages();
+        self::assertIsArray($result);
+        self::assertContains(current_language(), $result);
     }
 }
