@@ -27,5 +27,10 @@ use qtype_questionpy\form\elements\form_element;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 interface renderable {
+    /**
+     * Render this item to the given context.
+     *
+     * @package    qtype_questionpy
+     */
     public function render_to(render_context $context): void;
 }
