@@ -16,6 +16,14 @@
 
 namespace qtype_questionpy\form\elements;
 
+/**
+ * Tests of the (de)serialization of form elements.
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class element_json_test extends \advanced_testcase {
     /**
      * @dataProvider deserialize_provider

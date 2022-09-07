@@ -18,29 +18,18 @@ namespace qtype_questionpy\form\elements;
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-require_once($CFG->libdir . "/formslib.php");
+require_once(__DIR__ . "/test_moodleform.php");
 
 use qtype_questionpy\form\renderable;
-use qtype_questionpy\form\root_render_context;
 
 /**
- * Stub {@see \moodleform} implementation for tests.
+ * Tests of the HTML rendering of form elements.
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class test_moodleform extends \moodleform {
-    private renderable $element;
-
-    public function __construct(renderable $element) {
-        $this->element = $element;
-        parent::__construct(null, null, "post", "", ["id" => "my_form"]);
-    }
-
-    protected function definition() {
-        $context = new root_render_context($this, $this->_form);
-        $this->element->render_to($context);
-    }
-}
-
 class element_html_test extends \advanced_testcase {
     /**
      * Implements a snapshot testing approach similar to that of {@link https://jestjs.io/docs/snapshot-testing Jest}.
