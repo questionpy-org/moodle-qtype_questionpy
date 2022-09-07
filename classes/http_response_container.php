@@ -29,17 +29,17 @@ class http_response_container {
     /**
      * @var int response code
      */
-    public $code;
+    public int $code;
 
     /**
      * @var string data string
      */
-    private $data;
+    private string $data;
 
     /**
      * @var array|null cached array of data
      */
-    private $json;
+    private ?array $json;
 
     /**
      * Constructs a response object.
