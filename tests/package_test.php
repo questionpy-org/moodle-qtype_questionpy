@@ -67,16 +67,6 @@ class package_test extends \advanced_testcase {
     }
 
     /**
-     * Tests the function as_localized_array.
-     *
-     * @coversNothing
-     * @return void
-     */
-    public function test_as_localized_array(): void {
-        // TODO: implement.
-    }
-
-    /**
      * Tests the function get_localized_name.
      *
      * @covers \package::get_localized_name
@@ -87,21 +77,21 @@ class package_test extends \advanced_testcase {
         $package = new package('hash', 'shortname', $name, '1.0.0', 'question');
 
         // Every language in package exists in preferred language.
-        $preferred = ['en', 'de', 'fr'];
-        $this->assertEquals($name['en'], $package->get_localized_name($preferred));
+        $languages = ['en', 'de', 'fr'];
+        $this->assertEquals($name['en'], $package->get_localized_name($languages));
 
         // Only one language in package exists in preferred language.
-        $preferred = ['fi', 'eo', 'de'];
-        $this->assertEquals($name['de'], $package->get_localized_name($preferred));
+        $languages = ['fi', 'eo', 'de'];
+        $this->assertEquals($name['de'], $package->get_localized_name($languages));
 
         // No preferred language exists in package.
-        $preferred = ['fi', 'eo'];
-        $this->assertEquals($name['en'], $package->get_localized_name($preferred));
+        $languages = ['fi', 'eo'];
+        $this->assertEquals($name['en'], $package->get_localized_name($languages));
 
         // Preferred language and fallback language in package does not exist.
         $name = ['de' => 'german_name', 'fr' => 'french_name'];
         $package = new package('hash', 'shortname', $name, '1.0.0', 'question');
-        $this->assertEquals($name['de'], $package->get_localized_name($preferred));
+        $this->assertEquals($name['de'], $package->get_localized_name($languages));
     }
 
     /**
@@ -116,33 +106,33 @@ class package_test extends \advanced_testcase {
                         'author', 'url', [], $description);
 
         // Every language in package exists in preferred language.
-        $preferred = ['en', 'de', 'fr'];
-        $this->assertEquals($description['en'], $package->get_localized_description($preferred));
+        $languages = ['en', 'de', 'fr'];
+        $this->assertEquals($description['en'], $package->get_localized_description($languages));
 
         // Only one language in package exists in preferred language.
-        $preferred = ['fi', 'eo', 'de'];
-        $this->assertEquals($description['de'], $package->get_localized_description($preferred));
+        $languages = ['fi', 'eo', 'de'];
+        $this->assertEquals($description['de'], $package->get_localized_description($languages));
 
         // No preferred language exists in package.
-        $preferred = ['fi', 'eo'];
-        $this->assertEquals($description['en'], $package->get_localized_description($preferred));
+        $languages = ['fi', 'eo'];
+        $this->assertEquals($description['en'], $package->get_localized_description($languages));
 
         // Preferred language and fallback language in package does not exist.
         $description = ['de' => 'german_description', 'fr' => 'french_description'];
         $package = new package('hash', 'shortname', ['en' => 'english_name'], '1.0.0', 'question',
                         'author', 'url', [], $description);
-        $this->assertEquals($description['de'], $package->get_localized_description($preferred));
+        $this->assertEquals($description['de'], $package->get_localized_description($languages));
 
         // Description is empty.
         $description = [];
         $package = new package('hash', 'shortname', ['en' => 'english_name'], '1.0.0', 'question',
                         'author', 'url', [], $description);
-        $this->assertEquals('', $package->get_localized_description($preferred));
+        $this->assertEquals('', $package->get_localized_description($languages));
 
         // Description is not set.
         $description = null;
         $package = new package('hash', 'shortname', ['en' => 'english_name'], '1.0.0', 'question',
             'author', 'url', [], $description);
-        $this->assertEquals('', $package->get_localized_description($preferred));
+        $this->assertEquals('', $package->get_localized_description($languages));
     }
 }
