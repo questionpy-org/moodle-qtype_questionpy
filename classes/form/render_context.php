@@ -60,6 +60,33 @@ abstract class render_context {
     abstract public function set_type(string $name, string $type): void;
 
     /**
+     * Sets the default of an element which has been (or will be) added independently.
+     *
+     * @param string $name   the name of the target element.
+     * @param mixed $default default value for the element.
+     * @see \MoodleQuickForm::setDefault()
+     */
+    abstract public function set_default(string $name, $default): void;
+
+    /**
+     * Adds a validation rule an element which has been added independently.
+     *
+     * Must be called *after* the element was added using {@see add_element}.
+     *
+     * @param string $name        the name of the target element.
+     * @param ?string $message    message to display for invalid data.
+     * @param string $type        rule type, use getRegisteredRules() to get types.
+     * @param ?string $format     required for extra rule data.
+     * @param ?string $validation where to perform validation: "server", "client".
+     * @param bool $reset         client-side validation: reset the form element to its original value if there is an
+     *                            error?
+     * @param bool $force         force the rule to be applied, even if the target form element does not exist.
+     * @see \MoodleQuickForm::addRule()
+     */
+    abstract public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
+                                      ?string $validation = "server", bool $reset = false, bool $force = false): void;
+
+    /**
      * @return int a unique and deterministic integer for use in generated element names and IDs.
      */
     abstract public function next_unique_int(): int;

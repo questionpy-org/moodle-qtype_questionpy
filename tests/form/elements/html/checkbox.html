@@ -13,11 +13,14 @@
     <div class="col-md-9 checkbox">
         <div class="form-check d-flex">
                     <input type="hidden" name="my_checkbox" value="0">
-            <input type="checkbox" name="my_checkbox" class="form-check-input " value="1" id="id_my_checkbox" aria-describedby="id_my_checkbox_description" required="required">
+            <input type="checkbox" name="my_checkbox" class="form-check-input " value="1" id="id_my_checkbox" checked aria-describedby="id_my_checkbox_description">
                 <span id="id_my_checkbox_description">
                     Right
                 </span>
             <div class="ml-2 d-flex align-items-center align-self-start">
+                    <div class="text-danger" title="Required">
+                    <i class="icon fa fa-exclamation-circle text-danger fa-fw " title="Required" role="img" aria-label="Required"></i>
+                    </div>
                 
             </div>
         </div>
@@ -26,4 +29,5 @@
         </div>
     </div>
 </div>
+		<div class="fdescription required">There are required fields in this form marked <i class="icon fa fa-exclamation-circle text-danger fa-fw " title="Required field" role="img" aria-label="Required field"></i>.</div>
 </form></body></html>

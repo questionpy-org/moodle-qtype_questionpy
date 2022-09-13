@@ -112,16 +112,16 @@ class qtype_questionpy_edit_form extends question_edit_form {
             ),
             new radio_group_element("radio1", "Choose just one", [
                 new option("Option 1", "opt1"),
-                new option("Option 2", "opt2", true),
+                new option("Option 2", "opt2"),
             ], true),
             new group_element("grp1", "A group", [
-                new text_input_element("first_name", "First"),
+                new text_input_element("first_name", "First", true),
                 new text_input_element("last_name", "Last"),
             ]),
         ], [
             new form_section("Custom Section", [
                 new text_input_element("more_text", "Enter some more text"),
-                new checkbox_element("chk5", "Left Label", "Right Label"),
+                new checkbox_element("chk5", "Left Label", "Right Label", true, true),
             ]),
         ]);
         $form->render_to(new root_render_context($this, $mform));

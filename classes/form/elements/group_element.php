@@ -59,5 +59,14 @@ class group_element extends form_element {
         }
 
         $context->add_element("group", $this->name, $this->label, $groupcontext->elements, null, false);
+
+        foreach ($groupcontext->types as $name => $type) {
+            $context->set_type($name, $type);
+        }
+        foreach ($groupcontext->defaults as $name => $default) {
+            $context->set_default($name, $default);
+        }
+
+        $context->mform->addGroupRule($this->name, $groupcontext->rules);
     }
 }

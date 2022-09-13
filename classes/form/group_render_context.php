@@ -22,7 +22,7 @@ use qtype_questionpy\form\elements\group_element;
  * {@see render_context} for groups of elements ({@see group_element}s). Instead of adding elements to the
  * {@see \MoodleQuickForm}, they are added to an array.
  *
- * @see root_render_context
+ * @see        root_render_context
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
@@ -31,6 +31,9 @@ use qtype_questionpy\form\elements\group_element;
  */
 class group_render_context extends render_context {
     public array $elements = [];
+    public array $types = [];
+    public array $defaults = [];
+    public array $rules = [];
 
     private render_context $root;
 
@@ -46,7 +49,20 @@ class group_render_context extends render_context {
     }
 
     public function set_type(string $name, string $type): void {
-        $this->root->set_type($name, $type);
+        $this->types[$name] = $type;
+    }
+
+    public function set_default(string $name, $default): void {
+        $this->defaults[$name] = $default;
+    }
+
+    public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
+                             ?string $validation = "server", bool $reset = false, bool $force = false): void {
+        if (!isset($this->rules[$name])) {
+            $this->rules[$name] = [];
+        }
+
+        $this->rules[$name][] = [$message, $type, $format, $validation, $reset];
     }
 
     public function next_unique_int(): int {

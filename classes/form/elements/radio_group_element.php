@@ -53,22 +53,24 @@ class radio_group_element extends form_element {
     }
 
     public function render_to($context): void {
+        $default = null;
         $radioarray = [];
         foreach ($this->options as $option) {
-            $attributes = [];
-            if ($this->required) {
-                $attributes["required"] = "required";
-            }
             if ($option->selected) {
-                // FIXME: this seems to be broken within moodle, as the checked attribute never makes it into the HTML.
-                $attributes["checked"] = "checked";
+                $default = $option->value;
             }
 
-            $radioarray[] = $context->mform->createElement(
-                "radio", $this->name, null, $option->label, $option->value, $attributes
-            );
+            $radioarray[] = $context->mform->createElement("radio", $this->name, null, $option->label, $option->value);
         }
 
-        $context->add_element("group", "qpy_radio_group_" . $this->name, $this->label, $radioarray, null, false);
+        $groupname = "qpy_radio_group_" . $this->name;
+        $context->add_element("group", $groupname, $this->label, $radioarray, null, false);
+
+        if ($default) {
+            $context->set_default($this->name, $default);
+        }
+        if ($this->required) {
+            $context->add_rule($groupname, null, "required");
+        }
     }
 }

@@ -69,16 +69,16 @@ class select_element extends form_element {
             }
         }
 
-        $attributes = [];
-        if ($this->required) {
-            $attributes["required"] = "required";
-        }
-
         // phpcs:disable moodle.Commenting.InlineComment.DocBlock
         /** @var $element HTML_QuickForm_select */
-        $element = $context->add_element("select", $this->name, $this->label, $optionsassociative, $attributes);
+        $element = $context->add_element("select", $this->name, $this->label, $optionsassociative);
 
         $element->setMultiple($this->multiple);
-        $element->setSelected($selected);
+        $context->set_default($this->name, $selected);
+//        $element->setSelected($selected);
+
+        if ($this->required) {
+            $context->add_rule($this->name, null, "required");
+        }
     }
 }

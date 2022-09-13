@@ -65,23 +65,16 @@ class checkbox_element extends form_element {
     }
 
     public function render_to(render_context $context, ?int $group = null): void {
-        $attributes = [
-            "value" => $this->selected,
-        ];
+        $context->add_element(
+            "advcheckbox", $this->name, $this->leftlabel, $this->rightlabel,
+            $group ? ["group" => $group] : null
+        );
+
         if ($this->selected) {
-            // FIXME: this seems to be broken within moodle, as the checked attribute never makes it into the HTML.
-            $attributes["checked"] = "checked";
+            $context->set_default($this->name, "1");
         }
         if ($this->required) {
-            $attributes["required"] = "required";
+            $context->add_rule($this->name, get_string("required"), "required");
         }
-
-        if ($group) {
-            $attributes["group"] = $group;
-        }
-
-        $context->add_element(
-            "advcheckbox", $this->name, $this->leftlabel, $this->rightlabel, $attributes
-        );
     }
 }

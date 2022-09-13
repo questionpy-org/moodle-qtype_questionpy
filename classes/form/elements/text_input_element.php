@@ -60,18 +60,16 @@ class text_input_element extends form_element {
     }
 
     public function render_to(render_context $context): void {
-        $attributes = [];
-        if ($this->required) {
-            $attributes["required"] = "required";
-        }
-        if ($this->default) {
-            $attributes["value"] = $this->default;
-        }
-        if ($this->placeholder) {
-            $attributes["placeholder"] = $this->placeholder;
-        }
+        $attributes = $this->placeholder ? ["placeholder" => $this->placeholder] : [];
 
         $context->add_element("text", $this->name, $this->label, $attributes);
         $context->set_type($this->name, PARAM_TEXT);
+
+        if ($this->default) {
+            $context->set_default($this->name, $this->default);
+        }
+        if ($this->required) {
+            $context->add_rule($this->name, null, "required");
+        }
     }
 }

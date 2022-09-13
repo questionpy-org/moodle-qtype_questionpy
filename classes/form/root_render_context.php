@@ -37,6 +37,15 @@ class root_render_context extends render_context {
         $this->mform->setType($name, $type);
     }
 
+    public function set_default(string $name, $default): void {
+        $this->mform->setDefault($name, $default);
+    }
+
+    public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
+                             ?string $validation = "server", bool $reset = false, bool $force = false): void {
+        $this->mform->addRule($name, $message, $type, $format, $validation, $reset, $force);
+    }
+
     public function next_unique_int(): int {
         return $this->nextuniqueint++;
     }
