@@ -30,62 +30,62 @@ class package {
     /**
      * @var string package hash
      */
-    public string $hash;
+    public $hash;
 
     /**
      * @var string package shortname
      */
-    private string $shortname;
+    private $shortname;
 
     /**
      * @var array package name
      */
-    private array $name;
+    private $name;
 
     /**
      * @var string package version
      */
-    private string $version;
+    private $version;
 
     /**
      * @var string package type
      */
-    private string $type;
+    private $type;
 
     /**
      * @var string|null package author
      */
-    private ?string $author;
+    private $author;
 
     /**
      * @var string|null package url
      */
-    private ?string $url;
+    private $url;
 
     /**
      * @var array|null package languages
      */
-    private ?array $languages;
+    private $languages;
 
     /**
      * @var array|null package description
      */
-    private ?array $description;
+    private $description;
 
     /**
      * @var string|null package icon
      */
-    private ?string $icon;
+    private $icon;
 
     /**
      * @var string|null package license
      */
-    private ?string $license;
+    private $license;
 
     /**
      * @var array|null package tags
      */
-    private ?array $tags;
+    private $tags;
 
     /**
      * Constructs package class.

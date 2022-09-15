@@ -30,12 +30,12 @@ class connector {
     /**
      * @var string server url
      */
-    private string $serverurl;
+    private $serverurl;
 
     /**
      * @var int cURL timeout
      */
-    private int $timeout;
+    private $timeout;
 
     /**
      * @var false|resource cURL handle
