@@ -73,8 +73,7 @@ class http_response_container {
         // Parse data.
         $this->json = json_decode($this->data, true);
         if (is_null($this->json)) {
-            throw new moodle_exception(get_string('json_parsing_error', 'qtype_questionpy'),
-                "qtype_questionpy", '', $this->data);
+            throw new moodle_exception('json_parsing_error', 'qtype_questionpy', '');
         }
 
         return $this->json;
