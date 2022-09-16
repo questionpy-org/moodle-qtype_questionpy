@@ -36,7 +36,7 @@ class package_test extends \advanced_testcase {
      * @throws \moodle_exception
      */
     private function get_packages_from_file(string $filename): array {
-        $myfile = fopen($filename, 'r') || die('Unable to open file!');
+        $myfile = fopen($filename, 'r');
         $response = new http_response_container(200, fread($myfile, filesize($filename)));
         fclose($myfile);
         $packages = $response->get_data();
@@ -60,7 +60,8 @@ class package_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest(true);
 
-        $packages = $this->get_packages_from_file('question/type/questionpy/tests/classes/mock_packages.json');
+        $filename = __DIR__ . "/mock_packages.json";
+        $packages = $this->get_packages_from_file($filename);
         $initial = count($DB->get_records('qtype_questionpy_package'));
         if ($packages[0] instanceof package) {
             $packages[0]->store_in_db();
@@ -82,7 +83,8 @@ class package_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest(true);
 
-        $packages = $this->get_packages_from_file('question/type/questionpy/tests/classes/mock_packages.json');
+        $filename = __DIR__ . "/mock_packages.json";
+        $packages = $this->get_packages_from_file($filename);
         $initial = $packages[0];
         if ($initial instanceof package) {
             $initial->store_in_db();
