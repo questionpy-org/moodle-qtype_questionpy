@@ -240,12 +240,12 @@ class package {
             "icon" => $this->icon,
             "license" => $this->license
         ];
-        $package_id = $DB->insert_record('qtype_questionpy_package', $packagedata);
+        $packageid = $DB->insert_record('qtype_questionpy_package', $packagedata);
 
         // For each language store the localized package data as a separate record.
         foreach ($this->languages as $language) {
             $languagedata = [
-                "package_id" => $package_id,
+                "package_id" => $packageid,
                 "language" => $language,
                 "name" => $this->get_localized_property($this->name, [$language]),
                 "description" => $this->get_localized_property($this->description, [$language])
@@ -256,7 +256,7 @@ class package {
         // Store each tag with the package hash in the tag table.
         foreach ($this->tags as $tag) {
             $tagsdata = [
-                "package_id" => $package_id,
+                "package_id" => $packageid,
                 "tag" => $tag,
             ];
             $DB->insert_record('qtype_questionpy_tags', $tagsdata);
@@ -276,11 +276,11 @@ class package {
     public function delete_from_db(): boolean {
         global $DB;
         $transaction = $DB->start_delegated_transaction();
-        $package_id = $DB->get_field('qtype_questionpy_package', ['package_hash' => $this->hash]);
+        $packageid = $DB->get_field('qtype_questionpy_package', 'id', ['package_hash' => $this->hash]);
         try {
-            $DB->delete_records('qtype_questionpy_package', ['id' => $package_id,]);
-            $DB->delete_records('qtype_questionpy_language', ['package_id' => $package_id,]);
-            $DB->delete_records('qtype_questionpy_tags', ['package_id' => $package_id,]);
+            $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
+            $DB->delete_records('qtype_questionpy_language', ['package_id' => $packageid]);
+            $DB->delete_records('qtype_questionpy_tags', ['package_id' => $packageid]);
         } catch (\dml_exception $e) {
             $DB->rollback_delegated_transaction($transaction, $e);
             return false;
