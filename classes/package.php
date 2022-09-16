@@ -303,8 +303,8 @@ class package {
         $description = [];
         foreach ($languagedata as $record) {
             $language[] = $record->language;
-            $name[] = $record->name;
-            $description[] = $record->description;
+            $name[$record->language] = $record->name;
+            $description[$record->language] = $record->description;
         }
         $tagdata = $DB->get_records('qtype_questionpy_tags', ['package_hash' => $hash]);
         $tags = [];

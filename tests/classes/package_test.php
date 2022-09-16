@@ -94,9 +94,7 @@ class package_test extends \advanced_testcase {
         // Output data to the stderr (forbidden but good for debugging).
         // fwrite(STDERR, print_r($initial->hash, true));?
 
-        // Work in progress on how to check if two packages are equal.
-        // For now checking if the hashes are the same is redundant.
-        $this->assertEquals($initial->hash, $final->hash);
+        $this->assertEquals($initial, $final);
     }
 
 }
