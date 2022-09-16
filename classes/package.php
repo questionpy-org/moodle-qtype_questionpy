@@ -218,7 +218,7 @@ class package {
     /**
      * Persist this package in the database.
      * Localized data is stored in qtype_questionpy_language.
-     * Tags are mapped hash->tag in the table  qtype_questionpy_tags.
+     * Tags are mapped package_id->tag in the table  qtype_questionpy_tags.
      * @param int $questionid
      * @param int $contextid
      * @return void
@@ -240,12 +240,12 @@ class package {
             "icon" => $this->icon,
             "license" => $this->license
         ];
-        $DB->insert_record('qtype_questionpy_package', $packagedata);
+        $package_id = $DB->insert_record('qtype_questionpy_package', $packagedata);
 
         // For each language store the localized package data as a separate record.
         foreach ($this->languages as $language) {
             $languagedata = [
-                "package_hash" => $this->hash,
+                "package_id" => $package_id,
                 "language" => $language,
                 "name" => $this->get_localized_property($this->name, [$language]),
                 "description" => $this->get_localized_property($this->description, [$language])
@@ -256,7 +256,7 @@ class package {
         // Store each tag with the package hash in the tag table.
         foreach ($this->tags as $tag) {
             $tagsdata = [
-                "package_hash" => $this->hash,
+                "package_id" => $package_id,
                 "tag" => $tag,
             ];
             $DB->insert_record('qtype_questionpy_tags', $tagsdata);
@@ -276,10 +276,11 @@ class package {
     public function delete_from_db(): boolean {
         global $DB;
         $transaction = $DB->start_delegated_transaction();
+        $package_id = $DB->get_field('qtype_questionpy_package', ['package_hash' => $this->hash]);
         try {
-            $DB->delete_records('qtype_questionpy_package', ['package_hash' => $this->hash]);
-            $DB->delete_records('qtype_questionpy_language', ['package_hash' => $this->hash]);
-            $DB->delete_records('qtype_questionpy_tags', ['package_hash' => $this->hash]);
+            $DB->delete_records('qtype_questionpy_package', ['id' => $package_id,]);
+            $DB->delete_records('qtype_questionpy_language', ['package_id' => $package_id,]);
+            $DB->delete_records('qtype_questionpy_tags', ['package_id' => $package_id,]);
         } catch (\dml_exception $e) {
             $DB->rollback_delegated_transaction($transaction, $e);
             return false;
@@ -297,7 +298,7 @@ class package {
     public static function get_from_db(string $hash): package {
         global $DB;
         $package = (array) $DB->get_record('qtype_questionpy_package', ['package_hash' => $hash]);
-        $languagedata = $DB->get_records('qtype_questionpy_language', ['package_hash' => $hash]);
+        $languagedata = $DB->get_records('qtype_questionpy_language', ['package_id' => $package["id"]]);
         $language = [];
         $name = [];
         $description = [];
@@ -306,7 +307,7 @@ class package {
             $name[$record->language] = $record->name;
             $description[$record->language] = $record->description;
         }
-        $tagdata = $DB->get_records('qtype_questionpy_tags', ['package_hash' => $hash]);
+        $tagdata = $DB->get_records('qtype_questionpy_tags', ['package_id' => $package["id"]]);
         $tags = [];
         foreach ($tagdata as $record) {
             $tags[] = $record->tag;
