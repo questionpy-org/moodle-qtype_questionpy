@@ -37,25 +37,25 @@
     <TABLE NAME="qtype_questionpy_language" COMMENT="Table storing localized package data.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="package_hash" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="package_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="language" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="name" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="package_hash" TYPE="foreign" FIELDS="package_hash" REFTABLE="qtype_questionpy_package" REFFIELDS="package_hash"/>
+        <KEY NAME="package_id" TYPE="foreign" FIELDS="package_id" REFTABLE="qtype_questionpy_package" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="qtype_questionpy_tags" COMMENT="Table storing package tags.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="package_hash" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="package_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="tag" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="package_hash" TYPE="foreign" FIELDS="package_hash" REFTABLE="qtype_questionpy_package" REFFIELDS="package_hash"/>
+        <KEY NAME="package_id" TYPE="foreign" FIELDS="package_id" REFTABLE="qtype_questionpy_package" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>
