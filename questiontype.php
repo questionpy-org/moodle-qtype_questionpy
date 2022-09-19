@@ -65,7 +65,7 @@ class qtype_questionpy extends question_type {
      */
     public function delete_question($questionid, $contextid) {
         global $DB;
-        $DB->delete_records('question_questionpy', array('questionid' => $questionid));
+        $DB->delete_records('qtype_questionpy', array('questionid' => $questionid));
 
         parent::delete_question($questionid, $contextid);
     }
