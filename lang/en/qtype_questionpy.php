@@ -49,7 +49,7 @@ $string['selection_no_package_text'] = 'No packages available.';
 $string['selection_required'] = 'Please select a package.';
 
 // Connector.
-$string['curl_init_error'] = 'Could not initialize cURL. Error number: {a}';
-$string['curl_exec_error'] = 'Error while fetching from server. Error number: {a}';
-$string['curl_set_opt_error'] = 'Failed to set cURL option. Error number: {a}';
+$string['curl_init_error'] = 'Could not initialize cURL. Error number: {$a}';
+$string['curl_exec_error'] = 'Error while fetching from server. Error number: {$a}';
+$string['curl_set_opt_error'] = 'Failed to set cURL option. Error number: {$a}';
 $string['json_parsing_error'] = 'Could not parse data to JSON.';
