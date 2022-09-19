@@ -67,18 +67,4 @@ class qtype_questionpy_renderer extends qtype_renderer {
     public function correct_response(question_attempt $qa) {
         return '';
     }
-
-    /**
-     * Create a link for the upload page with given arguments
-     *
-     * @param context $context
-     * @return mixed html link with attached action
-     */
-    public function package_upload_link(context $context) {
-        $params['courseid'] = $context->instanceid;
-        $link = new moodle_url('/question/type/questionpy/upload_view.php', $params);
-        $action = new \popup_action('click', $link);
-
-        return $this->action_link($link, 'qpy_package_upload', $action, null);
-    }
 }

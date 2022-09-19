@@ -40,7 +40,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param MoodleQuickForm $mform the form being built.
      */
     protected function definition_inner($mform) {
-        global $OUTPUT, $PAGE;
+        global $OUTPUT;
 
         // TODO: catch moodle_exception?
         // Retrieve packages from the application server.
@@ -77,9 +77,6 @@ class qtype_questionpy_edit_form extends question_edit_form {
         }
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
         $mform->addRule('questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required');
-
-        $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
-        $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
     }
 
     /**
@@ -124,6 +121,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+
         // TODO.
 
         return $errors;
