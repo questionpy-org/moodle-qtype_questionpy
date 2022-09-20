@@ -26,26 +26,42 @@ namespace qtype_questionpy;
  */
 class package_test extends \advanced_testcase {
 
-
     /**
-     * Helper to get an array of packages from a json file.
+     * Data provider for {@see package}.
      *
-     * @coversNothing
-     * @param string $filename
-     * @return package[]
-     * @throws \moodle_exception
+     * @return package A sample package for the tests
      */
-    private function get_packages_from_file(string $filename): array {
-        $myfile = fopen($filename, 'r');
-        $response = new http_response_container(200, fread($myfile, filesize($filename)));
-        fclose($myfile);
-        $packages = $response->get_data();
-
-        $result = [];
-        foreach ($packages as $package) {
-            $result[] = package::from_array($package);
-        }
-        return $result;
+    public function package_provider(): package {
+        return package::from_array([
+            'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
+            'short_name' => 'adAqMNxOZNhuSUWflNui',
+            'name' => [
+                'en' => 'She piece local.',
+                'de' => 'Style important.'
+            ],
+            'version' => '865.7797993.0--.0',
+            'type' => 'questiontype',
+            'author' => 'Mario Hunt',
+            'url' => 'http://www.kane.com/',
+            'languages' => [
+                0 => 'en',
+                1 => 'de'
+            ],
+            'description' => [
+                'en' => 'en: Activity organization letter. Report alone why center.
+                    Real outside glass maintain right hear.
+                    Brother develop process work. Build ago north.
+                    Develop with defense understand garden recently work.',
+                'de' => 'de: Activity few enter medical side position. Safe need no guy price.
+                    Source necessary our me series month seven born.
+                    Anyone everything interest where accept apply. Expert great significant.'
+            ],
+            'icon' => 'https://placehold.jp/40e47e/598311/150x150.png',
+            'license' => '',
+            'tags' => [
+                0 => 'fXuprCRqsLnQQYzFZgAt'
+            ]
+        ]);
     }
 
     /**
@@ -60,12 +76,10 @@ class package_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest(true);
 
-        $filename = __DIR__ . "/mock_packages.json";
-        $packages = $this->get_packages_from_file($filename);
+        $package = $this->package_provider();
         $initial = count($DB->get_records('qtype_questionpy_package'));
-        if ($packages[0] instanceof package) {
-            $packages[0]->store_in_db();
-        }
+
+        $package->store_in_db();
         $final = count($DB->get_records('qtype_questionpy_package'));
 
         $this->assertEquals(1, $final - $initial);
@@ -83,18 +97,27 @@ class package_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest(true);
 
-        $filename = __DIR__ . "/mock_packages.json";
-        $packages = $this->get_packages_from_file($filename);
-        $initial = $packages[0];
-        if ($initial instanceof package) {
-            $initial->store_in_db();
-        }
+        $initial = $this->package_provider();
+        $initial->store_in_db();
         $final = package::get_from_db($initial->hash);
-
-        // Output data to the stderr (forbidden but good for debugging).
-        // fwrite(STDERR, print_r($initial->hash, true));?
 
         $this->assertEquals($initial, $final);
     }
 
+    /**
+     * Tests if an error is thrown when a package hash is queried which is not existent in the DB
+     *
+     * @return void
+     */
+    public function test_retrieving_nonexistent_package_from_db() {
+        global $DB;
+        $package = $this->package_provider();
+        try {
+            package::get_from_db($package->hash);
+            $this->fail('Package from data provider should not be in DB');
+        } catch (\Exception $e) {
+            return;
+        }
+
+    }
 }
