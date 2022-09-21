@@ -19,18 +19,34 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\form\render_context;
 
 /**
+ * Simple text input element.
+ *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_input_element extends form_element {
+    /** @var string */
     public string $name;
+    /** @var string */
     public string $label;
+    /** @var bool */
     public bool $required = false;
+    /** @var string|null */
     public ?string $default = null;
+    /** @var string|null */
     public ?string $placeholder = null;
 
+    /**
+     * Initializes the element.
+     *
+     * @param string $name
+     * @param string $label
+     * @param bool $required
+     * @param string|null $default
+     * @param string|null $placeholder
+     */
     public function __construct(
         string  $name,
         string  $label,
@@ -45,6 +61,12 @@ class text_input_element extends form_element {
         $this->placeholder = $placeholder;
     }
 
+    /**
+     * Convert the given array to the concrete element without checking the `kind` descriptor.
+     * (Which is done by {@see from_array_any}.)
+     *
+     * @param array $array source array, probably parsed from JSON
+     */
     public static function from_array(array $array): self {
         return new self(
             $array["name"],
@@ -55,10 +77,21 @@ class text_input_element extends form_element {
         );
     }
 
+    /**
+     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
+     * it to determine the concrete class to use for deserialization.
+     *
+     * @return string the value of this element's `kind` field.
+     */
     protected static function kind(): string {
         return "text_input";
     }
 
+    /**
+     * Render this item to the given context.
+     *
+     * @param render_context $context target context
+     */
     public function render_to(render_context $context): void {
         $attributes = $this->placeholder ? ["placeholder" => $this->placeholder] : [];
 

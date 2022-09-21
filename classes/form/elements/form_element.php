@@ -27,6 +27,9 @@ use qtype_questionpy\form\renderable;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class form_element implements renderable, \JsonSerializable {
+    /**
+     * @var string[] class names of all available concrete elements, for deserialization
+     */
     private static array $elementclasses = [
         checkbox_element::class,
         checkbox_group_element::class,
@@ -49,6 +52,8 @@ abstract class form_element implements renderable, \JsonSerializable {
     /**
      * Convert the given array to the concrete element without checking the `kind` descriptor.
      * (Which is done by {@see from_array_any}.)
+     *
+     * @param array $array source array, probably parsed from JSON
      */
     abstract public static function from_array(array $array): self;
 
@@ -64,6 +69,8 @@ abstract class form_element implements renderable, \JsonSerializable {
     /**
      * Use the value of the `kind` descriptor to convert the given array to the correct concrete element,
      * delegating to the appropriate {@see from_array} implementation.
+     *
+     * @param array $array source array, probably parsed from JSON
      */
     final public static function from_array_any(array $array): self {
         $kind = $array["kind"];
@@ -75,6 +82,9 @@ abstract class form_element implements renderable, \JsonSerializable {
         throw new \RuntimeException("Unknown form element kind: " . $kind);
     }
 
+    /**
+     * Serializes this element by calling {@see to_array} and adding its {@see kind} to the result.
+     */
     public function jsonSerialize(): array {
         return array_merge(
             ["kind" => $this->kind()],

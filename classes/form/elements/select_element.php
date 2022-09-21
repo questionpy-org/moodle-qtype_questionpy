@@ -20,21 +20,33 @@ use HTML_QuickForm_select;
 use qtype_questionpy\form\render_context;
 
 /**
+ * Select element, either a dropdown or a multi-select.
+ *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class select_element extends form_element {
+    /** @var string */
     public string $name;
+    /** @var string */
     public string $label;
     /** @var option[] */
     public array $options;
+    /** @var bool */
     public bool $multiple = false;
+    /** @var bool */
     public bool $required = false;
 
     /**
+     * Initializes the element.
+     *
+     * @param string $name
+     * @param string $label
      * @param option[] $options
+     * @param bool $multiple
+     * @param bool $required
      */
     public function __construct(string $name, string $label, array $options, bool $multiple = false,
                                 bool   $required = false) {
@@ -45,10 +57,22 @@ class select_element extends form_element {
         $this->required = $required;
     }
 
+    /**
+     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
+     * it to determine the concrete class to use for deserialization.
+     *
+     * @return string the value of this element's `kind` field.
+     */
     protected static function kind(): string {
         return "select";
     }
 
+    /**
+     * Convert the given array to the concrete element without checking the `kind` descriptor.
+     * (Which is done by {@see from_array_any}.)
+     *
+     * @param array $array source array, probably parsed from JSON
+     */
     public static function from_array(array $array): self {
         return new self(
             $array["name"],
@@ -59,6 +83,11 @@ class select_element extends form_element {
         );
     }
 
+    /**
+     * Render this item to the given context.
+     *
+     * @param render_context $context target context
+     */
     public function render_to(render_context $context): void {
         $selected = [];
         $optionsassociative = [];

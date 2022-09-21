@@ -19,24 +19,46 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\form\render_context;
 
 /**
+ * Element which is not displayed at all, but adds a fixed name/value pair to the form data upon submission.
+ *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class hidden_element extends form_element {
+    /** @var string */
     public string $name;
+    /** @var string */
     public string $value;
 
+    /**
+     * Initializes the element.
+     *
+     * @param string $name
+     * @param string $value
+     */
     public function __construct(string $name, string $value) {
         $this->name = $name;
         $this->value = $value;
     }
 
+    /**
+     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
+     * it to determine the concrete class to use for deserialization.
+     *
+     * @return string the value of this element's `kind` field.
+     */
     protected static function kind(): string {
         return "hidden";
     }
 
+    /**
+     * Convert the given array to the concrete element without checking the `kind` descriptor.
+     * (Which is done by {@see from_array_any}.)
+     *
+     * @param array $array source array, probably parsed from JSON
+     */
     public static function from_array(array $array): self {
         return new self(
             $array["name"],
@@ -44,6 +66,12 @@ class hidden_element extends form_element {
         );
     }
 
+    /**
+     * Render this item to the given context.
+     *
+     * @param render_context $context target context
+     * @package qtype_questionpy
+     */
     public function render_to(render_context $context): void {
         $context->add_element("hidden", $this->name, $this->value);
         $context->set_type($this->name, PARAM_TEXT);

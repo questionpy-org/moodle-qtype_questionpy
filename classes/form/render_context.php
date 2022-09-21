@@ -17,22 +17,36 @@
 namespace qtype_questionpy\form;
 
 /**
- * Abstracts away the differences in rendering elements in a group (where the element is created, and added as part of
- * the group element) and outside of a group (where the element is added directly) while still allowing for checkbox
- * controllers, which use an entirely different method.
+ * Abstracts away the differences in rendering elements in a group and outside of a group.
+ *
+ * In a group, the element is created, and added as part of the group element. Outside of a group, the element is added
+ * directly. This class abstracts away the differences so that {@see renderable::render_to} implementations needn't be
+ * aware of where they are being rendered. It does this while still allowing for checkbox controllers, which use an
+ * entirely different method.
  *
  * @see        root_render_context
  * @see        group_render_context
- *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class render_context {
+    /** @var \moodleform target {@see \moodleform} instance, such as {@see \qtype_questionpy_edit_form} */
     public \moodleform $moodleform;
+    /**
+     * @var \MoodleQuickForm target {@see \MoodleQuickForm} instance, as passed to
+     *      {@see \question_edit_form::definition_inner}
+     */
     public \MoodleQuickForm $mform;
 
+    /**
+     * Initializes a new render context.
+     *
+     * @param \moodleform $moodleform target {@see \moodleform} instance, such as {@see \qtype_questionpy_edit_form}
+     * @param \MoodleQuickForm $mform target {@see \MoodleQuickForm} instance, as passed to
+     *                                {@see \question_edit_form::definition_inner}
+     */
     public function __construct(\moodleform $moodleform, \MoodleQuickForm $mform) {
         $this->moodleform = $moodleform;
         $this->mform = $mform;
@@ -73,20 +87,22 @@ abstract class render_context {
      *
      * Must be called *after* the element was added using {@see add_element}.
      *
-     * @param string $name        the name of the target element.
-     * @param ?string $message    message to display for invalid data.
-     * @param string $type        rule type, use getRegisteredRules() to get types.
-     * @param ?string $format     required for extra rule data.
-     * @param ?string $validation where to perform validation: "server", "client".
-     * @param bool $reset         client-side validation: reset the form element to its original value if there is an
-     *                            error?
-     * @param bool $force         force the rule to be applied, even if the target form element does not exist.
+     * @param string $name            the name of the target element.
+     * @param string|null $message    message to display for invalid data.
+     * @param string $type            rule type, use getRegisteredRules() to get types.
+     * @param string|null $format     required for extra rule data.
+     * @param string|null $validation where to perform validation: "server", "client".
+     * @param bool $reset             client-side validation: reset the form element to its original value if there is
+     *                                an error?
+     * @param bool $force             force the rule to be applied, even if the target form element does not exist.
      * @see \MoodleQuickForm::addRule()
      */
     abstract public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                                       ?string $validation = "server", bool $reset = false, bool $force = false): void;
 
     /**
+     * Get a unique and deterministic integer for use in generated element names and IDs.
+     *
      * @return int a unique and deterministic integer for use in generated element names and IDs.
      */
     abstract public function next_unique_int(): int;

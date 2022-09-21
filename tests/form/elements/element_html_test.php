@@ -39,6 +39,9 @@ class element_html_test extends \advanced_testcase {
      * making intended changes instead of failing tests, re-run phpunit with the environment variable
      * `UPDATE_SNAPSHOTS=1`.
      *
+     * @param string $snapshotfilename filename relative to `./html/` where HTML snapshots should be read from and
+     *                                 written to
+     * @param renderable $element      element to render
      * @dataProvider data_provider
      * @covers       \qtype_questionpy\form\elements
      * @covers       \qtype_questionpy\form\render_context
@@ -70,6 +73,9 @@ class element_html_test extends \advanced_testcase {
         $this->assertEquals($expecteddom, $actualdom);
     }
 
+    /**
+     * Provides argument pairs for {@see test_rendered_html_should_match_snapshot}.
+     */
     public function data_provider(): array {
         return [
             ["checkbox.html", new checkbox_element("my_checkbox", "Left", "Right", true, true)],

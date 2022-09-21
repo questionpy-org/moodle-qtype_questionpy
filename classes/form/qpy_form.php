@@ -19,26 +19,36 @@ namespace qtype_questionpy\form;
 use qtype_questionpy\form\elements\form_element;
 
 /**
+ * Question edit form of a QuestionPy question.
+ *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qpy_form implements renderable {
-    /** @var form_element[] */
+    /** @var form_element[] elements to be appended to the default "General" section */
     public array $general;
-    /** @var form_section[] */
+    /** @var form_section[] additional custom sections */
     public array $sections;
 
     /**
-     * @param form_element[] $general
-     * @param form_section[] $sections
+     * Initialize a new form section.
+     *
+     * @param form_element[] $general  elements to be appended to the default "General" section
+     * @param form_section[] $sections additional custom sections
      */
     public function __construct(array $general = [], array $sections = []) {
         $this->general = $general;
         $this->sections = $sections;
     }
 
+    /**
+     * Convert the given array to the concrete element without checking the `kind` descriptor.
+     * (Which is done by {@see from_array_any}.)
+     *
+     * @param array $array source array, probably parsed from JSON
+     */
     public static function from_array(array $array): self {
         return new self(
             array_map([form_element::class, "from_array_any"], $array["general"]),
@@ -46,7 +56,12 @@ class qpy_form implements renderable {
         );
     }
 
-    public function render_to($context): void {
+    /**
+     * Render this item to the given context.
+     *
+     * @param render_context $context target context
+     */
+    public function render_to(render_context $context): void {
         foreach ($this->general as $element) {
             $element->render_to($context);
         }

@@ -30,7 +30,8 @@ interface renderable {
     /**
      * Render this item to the given context.
      *
-     * @package    qtype_questionpy
+     * @param render_context $context target context
+     * @package qtype_questionpy
      */
     public function render_to(render_context $context): void;
 }

@@ -19,18 +19,34 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\form\render_context;
 
 /**
+ * Element displaying a labelled checkbox.
+ *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class checkbox_element extends form_element {
+    /** @var string */
     public string $name;
+    /** @var string|null */
     public ?string $leftlabel = null;
+    /** @var string|null */
     public ?string $rightlabel = null;
+    /** @var bool */
     public bool $required = false;
+    /** @var bool */
     public bool $selected = false;
 
+    /**
+     * Initializes the element.
+     *
+     * @param string $name
+     * @param string|null $leftlabel
+     * @param string|null $rightlabel
+     * @param bool $required
+     * @param bool $selected
+     */
     public function __construct(string $name, ?string $leftlabel = null, ?string $rightlabel = null,
                                 bool   $required = false, bool $selected = false) {
         $this->name = $name;
@@ -40,6 +56,12 @@ class checkbox_element extends form_element {
         $this->selected = $selected;
     }
 
+    /**
+     * Convert the given array to the concrete element without checking the `kind` descriptor.
+     * (Which is done by {@see from_array_any}.)
+     *
+     * @param array $array source array, probably parsed from JSON
+     */
     public static function from_array(array $array): self {
         return new self(
             $array["name"],
@@ -50,6 +72,11 @@ class checkbox_element extends form_element {
         );
     }
 
+    /**
+     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
+     * The default implementation just casts to an array, which is suitable only if the json field names match the
+     * class property names.
+     */
     public function to_array(): array {
         return [
             "name" => $this->name,
@@ -60,10 +87,23 @@ class checkbox_element extends form_element {
         ];
     }
 
+    /**
+     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
+     * it to determine the concrete class to use for deserialization.
+     *
+     * @return string the value of this element's `kind` field.
+     */
     protected static function kind(): string {
         return "checkbox";
     }
 
+    /**
+     * Render this item to the given context.
+     *
+     * @param render_context $context target context
+     * @param int|null $group         passed by {@see checkbox_group_element::render_to} to the checkboxes belonging to
+     *                                it
+     */
     public function render_to(render_context $context, ?int $group = null): void {
         $context->add_element(
             "advcheckbox", $this->name, $this->leftlabel, $this->rightlabel,

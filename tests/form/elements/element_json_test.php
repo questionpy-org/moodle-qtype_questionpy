@@ -26,6 +26,10 @@ namespace qtype_questionpy\form\elements;
  */
 class element_json_test extends \advanced_testcase {
     /**
+     * Serializes values and compares resulting JSON to an expected file.
+     *
+     * @param string $jsonfile path relative to `./json/` containing the JSON that should be parsed
+     * @param mixed $expected  the value expected after deserialization
      * @dataProvider deserialize_provider
      * @covers       \qtype_questionpy\form\elements
      */
@@ -39,6 +43,10 @@ class element_json_test extends \advanced_testcase {
     }
 
     /**
+     * Deserializes values from files and compares resulting object to an expected value.
+     *
+     * @param string $expectedjsonfile path relative to `./json/` containing the JSON expected after serialization
+     * @param mixed $value             the value to serialize
      * @dataProvider serialize_provider
      * @covers       \qtype_questionpy\form\elements
      */
@@ -48,6 +56,9 @@ class element_json_test extends \advanced_testcase {
         $this->assertJsonStringEqualsJsonFile(__DIR__ . "/json/" . $expectedjsonfile, $actualjson);
     }
 
+    /**
+     * Provider of argument pairs for {@see test_deserialize}.
+     */
     public function deserialize_provider(): array {
         return [
             ...$this->serialize_provider(),
@@ -55,6 +66,9 @@ class element_json_test extends \advanced_testcase {
         ];
     }
 
+    /**
+     * Provider of argument pairs for {@see test_serialize}.
+     */
     public function serialize_provider(): array {
         return [
             ["checkbox.json", new checkbox_element("my_checkbox", "Left", "Right", true, true)],

@@ -19,17 +19,23 @@ namespace qtype_questionpy\form;
 use qtype_questionpy\form\elements\form_element;
 
 /**
+ * Collapsible form section introduced by a header.
+ *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class form_section implements renderable {
+    /** @var string */
     public string $header;
     /** @var form_element[] */
     public array $elements;
 
     /**
+     * Initialize a new form section.
+     *
+     * @param string $header
      * @param form_element[] $elements
      */
     public function __construct(string $header, array $elements) {
@@ -37,6 +43,12 @@ class form_section implements renderable {
         $this->elements = $elements;
     }
 
+    /**
+     * Convert the given array to the concrete element without checking the `kind` descriptor.
+     * (Which is done by {@see from_array_any}.)
+     *
+     * @param array $array source array, probably parsed from JSON
+     */
     public static function from_array(array $array): self {
         return new self(
             $array["header"],
@@ -44,7 +56,12 @@ class form_section implements renderable {
         );
     }
 
-    public function render_to($context): void {
+    /**
+     * Render this item to the given context.
+     *
+     * @param render_context $context target context
+     */
+    public function render_to(render_context $context): void {
         $context->add_element("header", "qpy_section_" . $context->next_unique_int(), $this->header);
         foreach ($this->elements as $element) {
             $element->render_to($context);

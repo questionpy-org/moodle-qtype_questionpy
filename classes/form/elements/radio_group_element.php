@@ -16,21 +16,33 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\form\render_context;
+
 /**
+ * Group of radio buttons, only at most one of which can  be selected at once.
+ *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class radio_group_element extends form_element {
+    /** @var string */
     public string $name;
+    /** @var string */
     public string $label;
     /** @var option[] */
     public array $options;
+    /** @var bool */
     public bool $required = false;
 
     /**
+     * Initializes the element.
+     *
+     * @param string $name
+     * @param string $label
      * @param option[] $options
+     * @param bool $required
      */
     public function __construct(string $name, string $label, array $options, bool $required = false) {
         $this->name = $name;
@@ -39,11 +51,23 @@ class radio_group_element extends form_element {
         $this->required = $required;
     }
 
+    /**
+     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
+     * it to determine the concrete class to use for deserialization.
+     *
+     * @return string the value of this element's `kind` field.
+     */
     protected static function kind(): string {
         return "radio_group";
     }
 
-    public static function from_array(array $array): form_element {
+    /**
+     * Convert the given array to the concrete element without checking the `kind` descriptor.
+     * (Which is done by {@see from_array_any}.)
+     *
+     * @param array $array source array, probably parsed from JSON
+     */
+    public static function from_array(array $array): self {
         return new self(
             $array["name"],
             $array["label"],
@@ -52,7 +76,12 @@ class radio_group_element extends form_element {
         );
     }
 
-    public function render_to($context): void {
+    /**
+     * Render this item to the given context.
+     *
+     * @param render_context $context target context
+     */
+    public function render_to(render_context $context): void {
         $default = null;
         $radioarray = [];
         foreach ($this->options as $option) {

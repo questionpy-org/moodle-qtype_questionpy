@@ -17,16 +17,28 @@
 namespace qtype_questionpy\form\elements;
 
 /**
+ * One option in a {@see radio_group_element} or a {@see select_element}.
+ *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class option {
+    /** @var string */
     public string $label;
+    /** @var string */
     public string $value;
+    /** @var bool whether this option is selected by default */
     public bool $selected = false;
 
+    /**
+     * Initialize a new option.
+     *
+     * @param string $label
+     * @param string $value
+     * @param bool $selected whether this option is selected by default
+     */
     public function __construct(
         string $label,
         string $value,
@@ -37,6 +49,11 @@ class option {
         $this->selected = $selected;
     }
 
+    /**
+     * Convert the given array to an option.
+     *
+     * @param array $array source array, probably parsed from JSON
+     */
     public static function from_array(array $array): self {
         return new self(
             $array["label"],
