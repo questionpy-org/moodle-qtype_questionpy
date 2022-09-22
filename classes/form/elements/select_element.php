@@ -104,7 +104,6 @@ class select_element extends form_element {
 
         $element->setMultiple($this->multiple);
         $context->set_default($this->name, $selected);
-//        $element->setSelected($selected);
 
         if ($this->required) {
             $context->add_rule($this->name, null, "required");
