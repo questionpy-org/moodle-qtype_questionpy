@@ -131,8 +131,8 @@ class package {
      */
     public static function from_array(array $package): package {
         return new self(
-            $package['package_hash'],
-            $package['short_name'],
+            $package[array_key_exists('package_hash', $package) ? 'package_hash' : 'hash'],
+            $package[array_key_exists('short_name', $package) ? 'short_name' : 'shortname'],
             $package['name'],
             $package['version'],
             $package['type'],
@@ -218,7 +218,7 @@ class package {
     /**
      * Persist this package in the database.
      * Localized data is stored in qtype_questionpy_language.
-     * Tags are mapped package_id->tag in the table  qtype_questionpy_tags.
+     * Tags are mapped packageid->tag in the table  qtype_questionpy_tags.
      * @param int $questionid
      * @param int $contextid
      * @return void
@@ -231,8 +231,8 @@ class package {
         $packagedata = [
             "questionid" => $questionid,
             "contextid" => $contextid,
-            "package_hash" => $this->hash,
-            "short_name" => $this->shortname,
+            "hash" => $this->hash,
+            "shortname" => $this->shortname,
             "version" => $this->version,
             "type" => $this->type,
             "author" => $this->author,
@@ -245,7 +245,7 @@ class package {
         // For each language store the localized package data as a separate record.
         foreach ($this->languages as $language) {
             $languagedata = [
-                "package_id" => $packageid,
+                "packageid" => $packageid,
                 "language" => $language,
                 "name" => $this->get_localized_property($this->name, [$language]),
                 "description" => $this->get_localized_property($this->description, [$language])
@@ -256,7 +256,7 @@ class package {
         // Store each tag with the package hash in the tag table.
         foreach ($this->tags as $tag) {
             $tagsdata = [
-                "package_id" => $packageid,
+                "packageid" => $packageid,
                 "tag" => $tag,
             ];
             $DB->insert_record('qtype_questionpy_tags', $tagsdata);
@@ -276,11 +276,11 @@ class package {
     public function delete_from_db(): boolean {
         global $DB;
         $transaction = $DB->start_delegated_transaction();
-        $packageid = $DB->get_field('qtype_questionpy_package', 'id', ['package_hash' => $this->hash]);
+        $packageid = $DB->get_field('qtype_questionpy_package', 'id', ['hash' => $this->hash]);
         try {
             $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
-            $DB->delete_records('qtype_questionpy_language', ['package_id' => $packageid]);
-            $DB->delete_records('qtype_questionpy_tags', ['package_id' => $packageid]);
+            $DB->delete_records('qtype_questionpy_language', ['packageid' => $packageid]);
+            $DB->delete_records('qtype_questionpy_tags', ['packageid' => $packageid]);
         } catch (\dml_exception $e) {
             $DB->rollback_delegated_transaction($transaction, $e);
             return false;
@@ -297,8 +297,8 @@ class package {
      */
     public static function get_from_db(string $hash): package {
         global $DB;
-        $package = (array) $DB->get_record('qtype_questionpy_package', ['package_hash' => $hash]);
-        $languagedata = $DB->get_records('qtype_questionpy_language', ['package_id' => $package["id"]]);
+        $package = (array) $DB->get_record('qtype_questionpy_package', ['hash' => $hash]);
+        $languagedata = $DB->get_records('qtype_questionpy_language', ['packageid' => $package["id"]]);
         $language = [];
         $name = [];
         $description = [];
@@ -307,7 +307,7 @@ class package {
             $name[$record->language] = $record->name;
             $description[$record->language] = $record->description;
         }
-        $tagdata = $DB->get_records('qtype_questionpy_tags', ['package_id' => $package["id"]]);
+        $tagdata = $DB->get_records('qtype_questionpy_tags', ['packageid' => $package["id"]]);
         $tags = [];
         foreach ($tagdata as $record) {
             $tags[] = $record->tag;
