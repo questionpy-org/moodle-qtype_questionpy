@@ -322,4 +322,44 @@ class package {
         return self::from_array($package);
     }
 
+    /**
+     * Provides the differences between two packages, i.e. an array with all the parameters which are different in the
+     * two objects.
+     * When retrieving packages from the DB, the values in the{@see package::$languages} array are sometimes swapped.
+     * Comparing equality with == is therefore not sufficient.
+     *
+     * @param package $package
+     * @return array
+     */
+    public function difference_from(package $package): array {
+        $difference = array();
+        $package = (array) $package;
+        foreach ((array) $this as $key => $value) {
+            if (array_key_exists($key, $package)) {
+                if (is_array($value)) {
+                    $temp = array_diff($value, $package[$key]);
+                    if (count($temp)) {
+                        $difference[$key] = $temp;
+                    }
+                } else if ($value != $package[$key]) {
+                    $difference[$key] = [$value, $package[$key]];
+                }
+            } else {
+                $difference[$key] = [$value, null];
+            }
+        }
+
+        return $difference;
+    }
+
+
+    /**
+     * Checks if two packages are semantically equal (==)
+     * .
+     * @param package $package
+     * @return bool true if equal, false otherwise
+     */
+    public function equals(package $package): bool {
+        return empty($this->difference_from($package));
+    }
 }
