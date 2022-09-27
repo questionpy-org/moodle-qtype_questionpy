@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\api;
+
 /**
  * Generates the output for QuestionPy questions.
  *
@@ -40,30 +42,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     public function formulation_and_controls(question_attempt $qa, question_display_options $options) {
-        $url = get_config('qtype_questionpy', 'server_url', );
-        $timeout = get_config('qtype_questionpy', 'server_timeout');
-
-        if (!$url || !$timeout) {
-            return 'parameter not found in config';
-        }
-
-        $curlhandle = curl_init();
-        curl_setopt($curlhandle, CURLOPT_URL, $url);
-        curl_setopt($curlhandle, CURLOPT_VERBOSE, false);
-        curl_setopt($curlhandle, CURLOPT_FOLLOWLOCATION, false);
-        curl_setopt($curlhandle, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curlhandle, CURLOPT_CONNECTTIMEOUT, $timeout);
-        curl_setopt($curlhandle, CURLOPT_TIMEOUT, 30);
-
-        $result = curl_exec($curlhandle);
-        $statuscode = curl_getinfo($curlhandle, CURLINFO_RESPONSE_CODE);
-        curl_close($curlhandle);
-
-        if (!$result || $statuscode != 200) {
-            return 'connection error';
-        }
-
-        return $result;
+        return api::get_hello_world();
     }
 
     /**

@@ -17,22 +17,30 @@
 namespace qtype_questionpy;
 
 /**
- * Unit tests for the questionpy question type class.
+ * Helper class for localisation.
  *
  * @package    qtype_questionpy
- * @copyright  2022 Martin Gauk, TU Berlin, innoCampus - www.questionpy.org
+ * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_type_test extends \advanced_testcase {
-
+class localizer {
 
     /**
-     * Hello World Unit Test.
+     * Generates sorted list with languages from most to least preferred.
      *
-     * @coversNothing
-     * @return void
+     * @return array preferred languages
      */
-    public function test_hello_world() {
-        $this->assertTrue(true);
+    public static function get_preferred_languages(): array {
+        $languages = [];
+
+        // Get current language and every parent language.
+        $language = current_language();
+        do {
+            $languages[] = $language;
+        } while ($language = get_parent_language($language));
+
+        // Fallback is english - could be already inside the array, but that is okay.
+        $languages[] = 'en';
+        return $languages;
     }
 }

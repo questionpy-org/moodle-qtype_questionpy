@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ if ($ADMIN->fulltree) {
         'qtype_questionpy/server_url',
         new lang_string('server_url', 'qtype_questionpy'),
         new lang_string('server_url', 'qtype_questionpy'),
-        'http://localhost:9020/helloworld',
+        'http://localhost:9020/',
         PARAM_URL,
         20
     ));

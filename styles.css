@@ -3,3 +3,29 @@
 #page-question-type-questionpy #fitem_id_generalfeedback {
     display: none;
 }
+
+/* Style package selection container */
+#fgroup_id_questionpy_package_container fieldset > div {
+    row-gap: 10px;
+    overflow-y: scroll;
+    max-height: 400px;
+}
+
+#fgroup_id_questionpy_package_container .card {
+    border: 1px solid transparent;
+    background-color: var(--light);
+    width: 515px;
+}
+
+#fgroup_id_questionpy_package_container .card:hover {
+    cursor: pointer;
+    border-color: var(--secondary);
+}
+
+#fgroup_id_questionpy_package_container input {
+    display: none;
+}
+
+#fgroup_id_questionpy_package_container input:checked + .card {
+    border-color: var(--primary);
+}
