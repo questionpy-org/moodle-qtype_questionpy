@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy\form;
 
+use qtype_questionpy\form\conditions\condition;
+
 /**
  * Abstracts away the differences in rendering elements in a group and outside of a group.
  *
@@ -99,6 +101,24 @@ abstract class render_context {
      */
     abstract public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                                       ?string $validation = "server", bool $reset = false, bool $force = false): void;
+
+    /**
+     * Adds a condition which will disable the named element if met.
+     *
+     * @param string $dependant name of the element which has the dependency on another element
+     * @param condition $condition
+     * @see \MoodleQuickForm::disabledIf()
+     */
+    abstract public function disable_if(string $dependant, condition $condition);
+
+    /**
+     * Adds a condition which will hide the named element if met.
+     *
+     * @param string $dependant name of the element which has the dependency on another element
+     * @param condition $condition
+     * @see \MoodleQuickForm::hideIf()
+     */
+    abstract public function hide_if(string $dependant, condition $condition);
 
     /**
      * Get a unique and deterministic integer for use in generated element names and IDs.

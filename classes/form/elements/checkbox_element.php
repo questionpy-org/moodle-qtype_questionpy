@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
 
 /**
@@ -37,6 +38,8 @@ class checkbox_element extends form_element {
     public bool $required = false;
     /** @var bool */
     public bool $selected = false;
+
+    use form_conditions;
 
     /**
      * Initializes the element.
@@ -63,13 +66,13 @@ class checkbox_element extends form_element {
      * @param array $array source array, probably parsed from JSON
      */
     public static function from_array(array $array): self {
-        return new self(
+        return (new self(
             $array["name"],
             $array["left_label"] ?? null,
             $array["right_label"] ?? null,
             $array["required"] ?? false,
             $array["selected"] ?? false,
-        );
+        ))->deserialize_conditions($array);
     }
 
     /**
@@ -78,23 +81,13 @@ class checkbox_element extends form_element {
      * class property names.
      */
     public function to_array(): array {
-        return [
+        return $this->serialize_conditions([
             "name" => $this->name,
             "left_label" => $this->leftlabel,
             "right_label" => $this->rightlabel,
             "required" => $this->required,
             "selected" => $this->selected,
-        ];
-    }
-
-    /**
-     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
-     * it to determine the concrete class to use for deserialization.
-     *
-     * @return string the value of this element's `kind` field.
-     */
-    protected static function kind(): string {
-        return "checkbox";
+        ]);
     }
 
     /**
@@ -116,5 +109,7 @@ class checkbox_element extends form_element {
         if ($this->required) {
             $context->add_rule($this->name, get_string("required"), "required");
         }
+
+        $this->render_conditions($context, $this->name);
     }
 }

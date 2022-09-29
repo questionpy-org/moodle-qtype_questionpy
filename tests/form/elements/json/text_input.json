@@ -4,5 +4,7 @@
   "label": "Label",
   "default": "default",
   "placeholder": "placeholder",
-  "required": true
+  "required": true,
+  "disable_if": [],
+  "hide_if": []
 }

@@ -14,54 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\form\elements;
-
-use qtype_questionpy\form\render_context;
+namespace qtype_questionpy;
 
 /**
- * Element grouping one or more checkboxes with a `Select all/none` button.
+ * Interface for classes which can be deserialized from an array.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class checkbox_group_element extends form_element {
-    /** @var checkbox_element[] */
-    public array $checkboxes = [];
-
-    /**
-     * Initializes the element.
-     *
-     * @param checkbox_element ...$checkboxes
-     */
-    public function __construct(checkbox_element...$checkboxes) {
-        $this->checkboxes = $checkboxes;
-    }
-
-    /**
-     * Render this item to the given context.
-     *
-     * @param render_context $context target context
-     * @package qtype_questionpy
-     */
-    public function render_to(render_context $context): void {
-        $groupid = $context->next_unique_int();
-
-        foreach ($this->checkboxes as $checkbox) {
-            $checkbox->render_to($context, $groupid);
-        }
-
-        $context->add_checkbox_controller($groupid);
-    }
-
+interface deserializable {
     /**
      * Convert the given array to the concrete element without checking the `kind` descriptor.
      * (Which is done by {@see from_array_any}.)
      *
      * @param array $array source array, probably parsed from JSON
      */
-    public static function from_array(array $array): self {
-        return new self(...array_map([checkbox_element::class, "from_array"], $array["checkboxes"]));
-    }
+    public static function from_array(array $array): self;
 }

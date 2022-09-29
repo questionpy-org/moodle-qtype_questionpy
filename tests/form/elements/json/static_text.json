@@ -1,5 +1,8 @@
 {
   "kind": "static_text",
+  "name": "my_text",
   "label": "Label",
-  "text": "Lorem ipsum dolor sit amet."
+  "text": "Lorem ipsum dolor sit amet.",
+  "disable_if": [],
+  "hide_if": []
 }

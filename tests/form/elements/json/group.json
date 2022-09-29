@@ -9,7 +9,9 @@
       "label": "",
       "required": true,
       "default": null,
-      "placeholder": "Vorname"
+      "placeholder": "Vorname",
+      "disable_if": [],
+      "hide_if": []
     },
     {
       "kind": "text_input",
@@ -17,7 +19,16 @@
       "label": "",
       "required": false,
       "default": null,
-      "placeholder": "Nachname (optional)"
+      "placeholder": "Nachname (optional)",
+      "disable_if": [],
+      "hide_if": []
+    }
+  ],
+  "disable_if": [],
+  "hide_if": [
+    {
+      "kind": "is_not_checked",
+      "name": "chk1"
     }
   ]
 }

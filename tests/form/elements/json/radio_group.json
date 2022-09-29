@@ -14,5 +14,13 @@
       "selected": false
     }
   ],
-  "required": true
+  "required": true,
+  "disable_if": [
+    {
+      "kind": "does_not_equal",
+      "name": "input1",
+      "value": ""
+    }
+  ],
+  "hide_if": []
 }

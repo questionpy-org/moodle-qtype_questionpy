@@ -1,5 +1,13 @@
 {
   "kind": "hidden",
   "name": "my_hidden_value",
-  "value": "42"
+  "value": "42",
+  "disable_if": [
+    {
+      "kind": "equals",
+      "name": "input1",
+      "value": 7
+    }
+  ],
+  "hide_if": []
 }

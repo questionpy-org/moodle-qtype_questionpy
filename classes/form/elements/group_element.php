@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\group_render_context;
 use qtype_questionpy\form\render_context;
 
@@ -36,6 +37,8 @@ class group_element extends form_element {
     /** @var form_element[] */
     public array $elements;
 
+    use form_conditions;
+
     /**
      * Initializes the element.
      *
@@ -50,27 +53,27 @@ class group_element extends form_element {
     }
 
     /**
-     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
-     * it to determine the concrete class to use for deserialization.
-     *
-     * @return string the value of this element's `kind` field.
-     */
-    protected static function kind(): string {
-        return "group";
-    }
-
-    /**
      * Convert the given array to the concrete element without checking the `kind` descriptor.
      * (Which is done by {@see from_array_any}.)
      *
      * @param array $array source array, probably parsed from JSON
      */
     public static function from_array(array $array): self {
-        return new self(
+        return (new self(
             $array["name"],
             $array["label"],
             array_map([form_element::class, "from_array_any"], $array["elements"])
-        );
+        ))->deserialize_conditions($array);
+    }
+
+    /**
+     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
+     *
+     * The default implementation just casts to an array, which is suitable only if the json field names match the
+     * class property names.
+     */
+    public function to_array(): array {
+        return $this->serialize_conditions(parent::to_array());
     }
 
     /**
@@ -94,7 +97,15 @@ class group_element extends form_element {
         foreach ($groupcontext->defaults as $name => $default) {
             $context->set_default($name, $default);
         }
+        foreach ($groupcontext->disableifs as $name => $condition) {
+            $context->disable_if($name, $condition);
+        }
+        foreach ($groupcontext->hideifs as $name => $condition) {
+            $context->hide_if($name, $condition);
+        }
 
         $context->mform->addGroupRule($this->name, $groupcontext->rules);
+
+        $this->render_conditions($context, $this->name);
     }
 }
