@@ -15,5 +15,16 @@
     }
   ],
   "multiple": true,
-  "required": true
+  "required": true,
+  "disable_if": [
+    {
+      "kind": "in",
+      "name": "input1",
+      "value": [
+        "valid",
+        "also valid"
+      ]
+    }
+  ],
+  "hide_if": []
 }

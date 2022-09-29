@@ -23,7 +23,8 @@
  */
 
 use qtype_questionpy\api;
-use qtype_questionpy\localizer;
+use qtype_questionpy\form\conditions\equals;
+use qtype_questionpy\form\conditions\is_not_checked;
 use qtype_questionpy\form\elements\checkbox_element;
 use qtype_questionpy\form\elements\checkbox_group_element;
 use qtype_questionpy\form\elements\group_element;
@@ -35,6 +36,7 @@ use qtype_questionpy\form\elements\text_input_element;
 use qtype_questionpy\form\form_section;
 use qtype_questionpy\form\qpy_form;
 use qtype_questionpy\form\root_render_context;
+use qtype_questionpy\localizer;
 
 /**
  * QuestionPy question editing form definition.
@@ -58,17 +60,21 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
         // No packages received.
         if (!$packages) {
-            $mform->addElement('static', 'questionpy_no_package',
+            $mform->addElement(
+                'static', 'questionpy_no_package',
                 get_string('selection_no_package_title', 'qtype_questionpy'),
-                get_string('selection_no_package_text', 'qtype_questionpy'));
+                get_string('selection_no_package_text', 'qtype_questionpy')
+            );
 
             return;
         }
 
         // Searchbar for QuestionPy packages.
-        $mform->addElement('text', 'questionpy_package_search',
+        $mform->addElement(
+            'text', 'questionpy_package_search',
             get_string('selection_title', 'qtype_questionpy'),
-            ['placeholder' => get_string('selection_searchbar', 'qtype_questionpy')]);
+            ['placeholder' => get_string('selection_searchbar', 'qtype_questionpy')]
+        );
 
         $mform->setType('questionpy_package_search', PARAM_TEXT);
 
@@ -96,11 +102,11 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
 
         $form = new qpy_form([
-            new static_text_element("Some blurb", "This is just for lookin' at"),
+            new static_text_element("my_static_text", "Some blurb", "This is just for lookin' at"),
             new text_input_element("some_text", "Enter some text", true, "default", "placeholder"),
             new select_element("select1", "A dropdown", [
                 new option("Option 1", "opt1"),
-                new option("Option 2", "opt2", true),
+                new option("Option 2", "opt2"),
             ], true, true),
             new checkbox_group_element(
                 new checkbox_element("chk1", "Option 1", null, true, true),
@@ -114,14 +120,16 @@ class qtype_questionpy_edit_form extends question_edit_form {
                 new option("Option 1", "opt1"),
                 new option("Option 2", "opt2"),
             ], true),
-            new group_element("grp1", "A group", [
-                new text_input_element("first_name", "First", true),
-                new text_input_element("last_name", "Last"),
-            ]),
         ], [
-            new form_section("Custom Section", [
-                new text_input_element("more_text", "Enter some more text"),
-                new checkbox_element("chk5", "Left Label", "Right Label", true, true),
+            new form_section("Conditional Element Demo", [
+                new checkbox_element("show_all", null, "Check me to show some more elements"),
+                (new group_element("name_group", "Your Name", [
+                    new text_input_element("first_name", "First", true),
+                    new text_input_element("last_name", "Last"),
+                ]))->hide_if(new is_not_checked("show_all")),
+                (new checkbox_element("last_name_public", null, "Show my last name on my public profile"))
+                    ->hide_if(new is_not_checked("show_all"))
+                    ->disable_if(new equals("last_name", ""))
             ]),
         ]);
         $form->render_to(new root_render_context($this, $mform));

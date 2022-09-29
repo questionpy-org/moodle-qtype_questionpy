@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form;
 
+use qtype_questionpy\deserializable;
 use qtype_questionpy\form\elements\form_element;
 
 /**
@@ -26,7 +27,7 @@ use qtype_questionpy\form\elements\form_element;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class form_section implements renderable {
+class form_section implements renderable, deserializable {
     /** @var string */
     public string $header;
     /** @var form_element[] */

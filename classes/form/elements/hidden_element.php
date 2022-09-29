@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
 
 /**
@@ -32,6 +33,8 @@ class hidden_element extends form_element {
     /** @var string */
     public string $value;
 
+    use form_conditions;
+
     /**
      * Initializes the element.
      *
@@ -44,26 +47,26 @@ class hidden_element extends form_element {
     }
 
     /**
-     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
-     * it to determine the concrete class to use for deserialization.
-     *
-     * @return string the value of this element's `kind` field.
-     */
-    protected static function kind(): string {
-        return "hidden";
-    }
-
-    /**
      * Convert the given array to the concrete element without checking the `kind` descriptor.
      * (Which is done by {@see from_array_any}.)
      *
      * @param array $array source array, probably parsed from JSON
      */
     public static function from_array(array $array): self {
-        return new self(
+        return (new self(
             $array["name"],
             $array["value"]
-        );
+        ))->deserialize_conditions($array);
+    }
+
+    /**
+     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
+     *
+     * The default implementation just casts to an array, which is suitable only if the json field names match the
+     * class property names.
+     */
+    public function to_array(): array {
+        return $this->serialize_conditions(parent::to_array());
     }
 
     /**
@@ -75,5 +78,7 @@ class hidden_element extends form_element {
     public function render_to(render_context $context): void {
         $context->add_element("hidden", $this->name, $this->value);
         $context->set_type($this->name, PARAM_TEXT);
+
+        $this->render_conditions($context, $this->name);
     }
 }

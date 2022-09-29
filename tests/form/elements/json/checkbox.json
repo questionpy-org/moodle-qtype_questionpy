@@ -4,5 +4,12 @@
   "left_label": "Left",
   "right_label": "Right",
   "required": true,
-  "selected": true
+  "selected": true,
+  "disable_if": [
+    {
+      "kind": "is_checked",
+      "name": "chk1"
+    }
+  ],
+  "hide_if": []
 }

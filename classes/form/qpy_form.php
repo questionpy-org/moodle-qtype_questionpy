@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form;
 
+use qtype_questionpy\deserializable;
 use qtype_questionpy\form\elements\form_element;
 
 /**
@@ -26,7 +27,7 @@ use qtype_questionpy\form\elements\form_element;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class qpy_form implements renderable {
+class qpy_form implements renderable, deserializable {
     /** @var form_element[] elements to be appended to the default "General" section */
     public array $general;
     /** @var form_section[] additional custom sections */

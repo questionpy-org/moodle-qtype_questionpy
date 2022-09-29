@@ -98,7 +98,7 @@ class element_html_test extends \advanced_testcase {
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
             ], true, true)],
-            ["static_text.html", new static_text_element("Label", "Lorem ipsum dolor sit amet.")],
+            ["static_text.html", new static_text_element("my_text", "Label", "Lorem ipsum dolor sit amet.")],
             ["text_input.html", new text_input_element("my_field", "Label", true, "default", "placeholder")],
         ];
     }

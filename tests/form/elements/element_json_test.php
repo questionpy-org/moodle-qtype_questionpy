@@ -16,6 +16,12 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\form\conditions\does_not_equal;
+use qtype_questionpy\form\conditions\equals;
+use qtype_questionpy\form\conditions\in;
+use qtype_questionpy\form\conditions\is_checked;
+use qtype_questionpy\form\conditions\is_not_checked;
+
 /**
  * Tests of the (de)serialization of form elements.
  *
@@ -71,27 +77,29 @@ class element_json_test extends \advanced_testcase {
      */
     public function serialize_provider(): array {
         return [
-            ["checkbox.json", new checkbox_element("my_checkbox", "Left", "Right", true, true)],
+            ["checkbox.json", (new checkbox_element("my_checkbox", "Left", "Right", true, true))->disable_if(
+                new is_checked("chk1")
+            )],
             ["checkbox_group.json", new checkbox_group_element(
                 new checkbox_element(
                     "my_checkbox", "Left", "Right",
                     true, true
                 )
             )],
-            ["group.json", new group_element("my_group", "Name", [
+            ["group.json", (new group_element("my_group", "Name", [
                 new text_input_element("first_name", "", true, null, "Vorname"),
                 new text_input_element("last_name", "", false, null, "Nachname (optional)"),
-            ])],
-            ["hidden.json", new hidden_element("my_hidden_value", "42")],
-            ["radio_group.json", new radio_group_element("my_radio", "Label", [
+            ]))->hide_if(new is_not_checked("chk1"))],
+            ["hidden.json", (new hidden_element("my_hidden_value", "42"))->disable_if(new equals("input1", 7))],
+            ["radio_group.json", (new radio_group_element("my_radio", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
-            ], true)],
-            ["select.json", new select_element("my_select", "Label", [
+            ], true))->disable_if(new does_not_equal("input1", ""))],
+            ["select.json", (new select_element("my_select", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
-            ], true, true)],
-            ["static_text.json", new static_text_element("Label", "Lorem ipsum dolor sit amet.")],
+            ], true, true))->disable_if(new in("input1", ["valid", "also valid"])) ],
+            ["static_text.json", new static_text_element("my_text", "Label", "Lorem ipsum dolor sit amet.")],
             ["text_input.json", new text_input_element("my_field", "Label", true, "default", "placeholder")],
         ];
     }

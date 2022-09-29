@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form;
 
+use qtype_questionpy\form\conditions\condition;
 use qtype_questionpy\form\elements\group_element;
 
 /**
@@ -49,6 +50,14 @@ class group_render_context extends render_context {
      *      of arguments passed to {@see \MoodleQuickForm::addRule()} not including the element name
      */
     public array $rules = [];
+    /**
+     * @var array associative array of element names to conditions which should disable the named element
+     */
+    public array $disableifs = [];
+    /**
+     * @var array associative array of element names to conditions which should hide the named element
+     */
+    public array $hideifs = [];
 
     /**
      * @var render_context context containing this group
@@ -120,11 +129,29 @@ class group_render_context extends render_context {
      */
     public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
-        if (!isset($this->rules[$name])) {
-            $this->rules[$name] = [];
-        }
+        self::ensure_exists($this->rules, $name)[] = [$message, $type, $format, $validation, $reset];
+    }
 
-        $this->rules[$name][] = [$message, $type, $format, $validation, $reset];
+    /**
+     * Adds a condition which will disable the named element if met.
+     *
+     * @param string $dependant name of the element which has the dependency on another element
+     * @param condition $condition
+     * @see \MoodleQuickForm::disabledIf()
+     */
+    public function disable_if(string $dependant, condition $condition) {
+        self::ensure_exists($this->disableifs, $dependant)[] = $condition;
+    }
+
+    /**
+     * Adds a condition which will hide the named element if met.
+     *
+     * @param string $dependant name of the element which has the dependency on another element
+     * @param condition $condition
+     * @see \MoodleQuickForm::hideIf()
+     */
+    public function hide_if(string $dependant, condition $condition) {
+        self::ensure_exists($this->hideifs, $dependant)[] = $condition;
     }
 
     /**
@@ -145,5 +172,20 @@ class group_render_context extends render_context {
      */
     public function add_checkbox_controller(int $groupid): void {
         $this->root->add_checkbox_controller($groupid);
+    }
+
+    /**
+     * Returns `$array[$key]`, setting it to a new array if it does not exist.
+     *
+     * @param array $array
+     * @param string $key
+     * @return array
+     */
+    private static function &ensure_exists(array &$array, string $key): array {
+        if (!isset($array[$key])) {
+            $array[$key] = [];
+        }
+
+        return $array[$key];
     }
 }

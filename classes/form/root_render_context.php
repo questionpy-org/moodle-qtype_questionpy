@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy\form;
 
+use qtype_questionpy\form\conditions\condition;
+
 /**
  * Regular {@see render_context} which delegates to {@see \moodleform} and {@see \MoodleQuickForm}.
  *
@@ -86,6 +88,28 @@ class root_render_context extends render_context {
     public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
         $this->mform->addRule($name, $message, $type, $format, $validation, $reset, $force);
+    }
+
+    /**
+     * Adds a condition which will disable the named element if met.
+     *
+     * @param string $dependant name of the element which has the dependency on another element
+     * @param condition $condition
+     * @see \MoodleQuickForm::disabledIf()
+     */
+    public function disable_if(string $dependant, condition $condition) {
+        $this->mform->disabledIf($dependant, $condition->name, ...$condition->to_mform_args());
+    }
+
+    /**
+     * Adds a condition which will hide the named element if met.
+     *
+     * @param string $dependant name of the element which has the dependency on another element
+     * @param condition $condition
+     * @see \MoodleQuickForm::hideIf()
+     */
+    public function hide_if(string $dependant, condition $condition) {
+        $this->mform->hideIf($dependant, $condition->name, ...$condition->to_mform_args());
     }
 
     /**

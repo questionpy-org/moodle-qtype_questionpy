@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\deserializable;
+
 /**
  * One option in a {@see radio_group_element} or a {@see select_element}.
  *
@@ -24,7 +26,7 @@ namespace qtype_questionpy\form\elements;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class option {
+class option implements deserializable {
     /** @var string */
     public string $label;
     /** @var string */

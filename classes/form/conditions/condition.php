@@ -14,21 +14,41 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\form\elements;
+namespace qtype_questionpy\form\conditions;
 
 use qtype_questionpy\deserializable;
-use qtype_questionpy\form\renderable;
 use qtype_questionpy\kind_deserialize;
 
 /**
- * Base class for QuestionPy form elements.
+ * Base class for QuestionPy form element conditions.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class form_element implements renderable, \JsonSerializable, deserializable {
+abstract class condition implements deserializable, \JsonSerializable {
+
+    /** @var string $name name of the target element */
+    public string $name;
+
+    /**
+     * Initializes the condition.
+     *
+     * @param string $name name of the target element
+     */
+    public function __construct(string $name) {
+        $this->name = $name;
+    }
+
+    /**
+     * Return the `[$condition]` or `[$condition, $value]` tuple  to pass to {@see \MoodleQuickForm::disabledIf()} or
+     * {@see \MoodleQuickForm::hideIf()} after the depended on element's name.
+     *
+     * @return array
+     */
+    abstract public function to_mform_args(): array;
+
     use kind_deserialize;
 
     /**
@@ -38,16 +58,13 @@ abstract class form_element implements renderable, \JsonSerializable, deserializ
      * it to determine the concrete class to use for deserialization. This method should be implemented by the base
      * class of the hierarchy.
      */
-    final protected static function kinds(): array {
+    protected static function kinds(): array {
         return [
-            "checkbox" => checkbox_element::class,
-            "checkbox_group" => checkbox_group_element::class,
-            "group" => group_element::class,
-            "hidden" => hidden_element::class,
-            "radio_group" => radio_group_element::class,
-            "select" => select_element::class,
-            "static_text" => static_text_element::class,
-            "text_input" => text_input_element::class,
+            "is_checked" => is_checked::class,
+            "is_not_checked" => is_not_checked::class,
+            "equals" => equals::class,
+            "does_not_equal" => does_not_equal::class,
+            "in" => in::class,
         ];
     }
 }

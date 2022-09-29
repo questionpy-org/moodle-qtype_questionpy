@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
 
 /**
@@ -37,6 +38,8 @@ class text_input_element extends form_element {
     public ?string $default = null;
     /** @var string|null */
     public ?string $placeholder = null;
+
+    use form_conditions;
 
     /**
      * Initializes the element.
@@ -68,23 +71,23 @@ class text_input_element extends form_element {
      * @param array $array source array, probably parsed from JSON
      */
     public static function from_array(array $array): self {
-        return new self(
+        return (new self(
             $array["name"],
             $array["label"],
             $array["required"] ?? false,
             $array["default"] ?? null,
             $array["placeholder"] ?? null,
-        );
+        ))->deserialize_conditions($array);
     }
 
     /**
-     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
-     * it to determine the concrete class to use for deserialization.
+     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
      *
-     * @return string the value of this element's `kind` field.
+     * The default implementation just casts to an array, which is suitable only if the json field names match the
+     * class property names.
      */
-    protected static function kind(): string {
-        return "text_input";
+    public function to_array(): array {
+        return $this->serialize_conditions(parent::to_array());
     }
 
     /**
@@ -104,5 +107,7 @@ class text_input_element extends form_element {
         if ($this->required) {
             $context->add_rule($this->name, null, "required");
         }
+
+        $this->render_conditions($context, $this->name);
     }
 }
