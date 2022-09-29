@@ -295,23 +295,11 @@ class package {
      * @return package
      * @throws \dml_exception
      */
-    public static function get_from_db(string $hash): package {
+    public static function get_record_by_hash(string $hash): package {
         global $DB;
         $package = (array) $DB->get_record('qtype_questionpy_package', ['hash' => $hash]);
-        $languagedata = $DB->get_records('qtype_questionpy_language', ['packageid' => $package["id"]]);
-        $language = [];
-        $name = [];
-        $description = [];
-        foreach ($languagedata as $record) {
-            $language[] = $record->language;
-            $name[$record->language] = $record->name;
-            $description[$record->language] = $record->description;
-        }
-        $tagdata = $DB->get_records('qtype_questionpy_tags', ['packageid' => $package["id"]]);
-        $tags = [];
-        foreach ($tagdata as $record) {
-            $tags[] = $record->tag;
-        }
+        list($language, $name, $description) = self::get_languagedata($package["id"]);
+        $tags = self::get_tagdata($package["id"]);
         $temp = [
             'languages' => $language,
             'name' => $name,
@@ -320,6 +308,69 @@ class package {
         ];
         $package = array_merge($package, $temp);
         return self::from_array($package);
+    }
+
+    /**
+     * Get packages from the db matching given conditions. Note: only conditions stored in the package table
+     * are applicable.
+     * @param array $conditions
+     * @return array
+     * @throws \dml_exception
+     */
+    public static function get_records(array $conditions = null) : array {
+        global $DB;
+        $records = $DB->get_records('qtype_questionpy_package', $conditions);
+        $packages = array();
+        foreach ($records as $package) {
+            $package = (array) $package;
+            list($language, $name, $description) = self::get_languagedata($package["id"]);
+            $tags = self::get_tagdata($package["id"]);
+            $temp = [
+                'languages' => $language,
+                'name' => $name,
+                'description' => $description,
+                'tags' => $tags
+            ];
+            $package = array_merge($package, $temp);
+            $packages[] = self::from_array($package);
+        }
+        return $packages;
+    }
+
+    /**
+     * Get the records from the qtype_questionpy_language table given the foreign key packageid.
+     * @param int $packageid
+     * @return array
+     * @throws \dml_exception
+     */
+    private static function get_languagedata(int $packageid) {
+        global $DB;
+        $languagedata = $DB->get_records('qtype_questionpy_language', ['packageid' => $packageid]);
+        $language = [];
+        $name = [];
+        $description = [];
+        foreach ($languagedata as $record) {
+            $language[] = $record->language;
+            $name[$record->language] = $record->name;
+            $description[$record->language] = $record->description;
+        }
+        return array($language, $name, $description);
+    }
+
+    /**
+     * Get the records from the qtype_questionpy_tags table given the foreign key packageid.
+     * @param int $packageid
+     * @return array
+     * @throws \dml_exception
+     */
+    private static function get_tagdata(int $packageid) {
+        global $DB;
+        $tagdata = $DB->get_records('qtype_questionpy_tags', ['packageid' => $packageid]);
+        $tags = [];
+        foreach ($tagdata as $record) {
+            $tags[] = $record->tag;
+        }
+        return $tags;
     }
 
     /**

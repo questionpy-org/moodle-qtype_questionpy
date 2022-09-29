@@ -126,7 +126,7 @@ class package_test extends \advanced_testcase {
     /**
      * Adds one Package to db, then retrieves it. Tests if the retrieved package is the same as the original.
      *
-     * @covers \qtype_questionpy\package::get_from_db
+     * @covers \qtype_questionpy\package::get_record_by_hash
      * @return void
      * @throws \dml_exception
      * @throws \moodle_exception
@@ -137,7 +137,7 @@ class package_test extends \advanced_testcase {
 
         $initial = $this->package_provider1();
         $initial->store_in_db();
-        $final = package::get_from_db($initial->hash);
+        $final = package::get_record_by_hash($initial->hash);
 
         $difference = $initial->difference_from($final);
         $this->assertEmpty($difference);
@@ -152,7 +152,7 @@ class package_test extends \advanced_testcase {
         global $DB;
         $package = $this->package_provider1();
         try {
-            package::get_from_db($package->hash);
+            package::get_record_by_hash($package->hash);
             $this->fail('Package from data provider should not be in DB');
         } catch (\Exception $e) {
             return;
@@ -176,5 +176,27 @@ class package_test extends \advanced_testcase {
         $this->assertNotEquals($package1, $package2, "Values in languages array should be swapped.");
         $this->assertEmpty($difference);
         $this->assertTrue($package1->equals($package2));
+    }
+
+
+    /**
+     * Stores two packages in the DB.
+     * Queries the two packages by the hash and tests if the original package is in the query result.
+     *
+     * @covers \qtype_questionpy\package::get_records
+     * @return void
+     * @throws \dml_exception
+     */
+    public function test_get_records() {
+        global $DB;
+        $this->resetAfterTest();
+
+        $package1 = $this->package_provider1();
+        $package2 = $this->package_provider2();
+        $package1->store_in_db();
+        $package2->store_in_db();
+
+        $packages = package::get_records(["hash" => "dkZZGAOgHTpBOSZMBGNM"]);
+        $this->assertTrue($package1->equals($packages[0]));
     }
 }
