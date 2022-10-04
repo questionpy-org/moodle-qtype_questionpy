@@ -20,19 +20,32 @@ namespace qtype_questionpy;
  * Unit tests for the questionpy question type class.
  *
  * @package    qtype_questionpy
- * @copyright  2022 Martin Gauk, TU Berlin, innoCampus - www.questionpy.org
+ * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_type_test extends \advanced_testcase {
-
+class localizer_test extends \advanced_testcase {
 
     /**
-     * Hello World Unit Test.
+     * Test the default of the function get_preferred_language.
      *
-     * @coversNothing
+     * @covers \localizer::get_preferred_language
      * @return void
      */
-    public function test_hello_world() {
-        $this->assertTrue(true);
+    public function test_contains_default_language(): void {
+        $result = localizer::get_preferred_languages();
+        self::assertIsArray($result);
+        self::assertContains('en', $result);
+    }
+
+    /**
+     * Test if get_preferred_language returns current language.
+     *
+     * @covers \localizer::get_preferred_language
+     * @return void
+     */
+    public function test_contains_current_language(): void {
+        $result = localizer::get_preferred_languages();
+        self::assertIsArray($result);
+        self::assertContains(current_language(), $result);
     }
 }

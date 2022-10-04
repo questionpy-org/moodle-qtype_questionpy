@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 
 namespace qtype_questionpy;
 
-use phpDocumentor\Reflection\Types\This;
+use TypeError;
 
 /**
  * Represents a QuestionPy package.
@@ -130,6 +130,14 @@ class package {
      * @return package
      */
     public static function from_array(array $package): package {
+        if (!((isset($package['package_hash']) || isset($package['hash']))
+            && (isset($package['short_name']) || isset($package['shortname']))
+            && isset($package['name'])
+            && isset($package['version'])
+            && isset($package['type']))) {
+            throw new TypeError('Package array is missing required fields.');
+        }
+
         return new self(
             $package[array_key_exists('package_hash', $package) ? 'package_hash' : 'hash'],
             $package[array_key_exists('short_name', $package) ? 'short_name' : 'shortname'],
@@ -137,13 +145,13 @@ class package {
             $package['version'],
             $package['type'],
 
-            $package['author'],
-            $package['url'],
-            $package['languages'],
-            $package['description'],
-            $package['icon'],
-            $package['license'],
-            $package['tags']
+            $package['author'] ?? null,
+            $package['url'] ?? null,
+            $package['languages'] ?? null,
+            $package['description'] ?? null,
+            $package['icon'] ?? null,
+            $package['license'] ?? null,
+            $package['tags'] ?? null
         );
     }
 
@@ -174,11 +182,11 @@ class package {
     /**
      * Retrieves the best available localisation of a package property.
      *
-     * @param string[] $property
+     * @param string[]|null $property
      * @param string[] $languages
      * @return string
      */
-    private function get_localized_property(array $property, array $languages): string {
+    private function get_localized_property(?array $property, array $languages): string {
         // If property does not exist (e.g. description) return empty string.
         if (!isset($property)) {
             return '';

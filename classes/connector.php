@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -59,8 +59,8 @@ class connector {
         $this->curlhandle = curl_init();
 
         if (!$this->curlhandle) {
-            throw new moodle_exception(get_string('curl_init_error', 'qtype_questionpy'),
-                "qtype_questionpy", '', curl_errno($this->curlhandle), curl_error($this->curlhandle));
+            throw new moodle_exception('curl_init_error', 'qtype_questionpy', '',
+                    curl_errno($this->curlhandle), curl_error($this->curlhandle));
         }
 
         $this->set_opts([
@@ -90,8 +90,8 @@ class connector {
         $success = curl_setopt($this->curlhandle, $option, $value);
 
         if (!$success) {
-            throw new moodle_exception(get_string('curl_set_opt_error', 'qtype_questionpy'),
-                "qtype_questionpy", '', curl_errno($this->curlhandle), curl_error($this->curlhandle));
+            throw new moodle_exception('curl_set_opt_error', 'qtype_questionpy', '',
+                    curl_errno($this->curlhandle), curl_error($this->curlhandle));
         }
     }
 
@@ -105,8 +105,8 @@ class connector {
         $success = curl_setopt_array($this->curlhandle, $options);
 
         if (!$success) {
-            throw new moodle_exception(get_string('curl_set_opt_error', 'qtype_questionpy'),
-                "qtype_questionpy", '', curl_errno($this->curlhandle), curl_error($this->curlhandle));
+            throw new moodle_exception('curl_set_opt_error', 'qtype_questionpy', '',
+                    curl_errno($this->curlhandle), curl_error($this->curlhandle));
         }
     }
 
@@ -132,8 +132,8 @@ class connector {
 
         // Check for cURL failure.
         if ($data === false) {
-            throw new moodle_exception(get_string('curl_exec_error', 'qtype_questionpy'),
-                "qtype_questionpy", '', curl_errno($this->curlhandle), curl_error($this->curlhandle));
+            throw new moodle_exception('curl_exec_error', 'qtype_questionpy', '',
+                    curl_errno($this->curlhandle), curl_error($this->curlhandle));
         }
 
         // Create response.

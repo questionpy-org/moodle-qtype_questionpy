@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,12 +36,9 @@ $string['server_timeout'] = 'Server timeout time';
 $string['server_timeout_description'] = 'Server timeout time in seconds';
 $string['max_package_size_kb'] = 'Maximum file size of a QuestionPy package';
 $string['max_package_size_kb_description'] = 'Maximum file size in kB';
+
+// Package upload.
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
-$string['selection_title'] = 'Select QuestionPy Package';
-$string['selection_searchbar'] = 'Search...';
-$string['selection_no_icon'] = 'Could not load the icon.';
-$string['selection_no_package_title'] = 'QuestionPy';
-$string['selection_no_package_text'] = 'No packages available.';
 
 // Package selection.
 $string['selection_title'] = 'Select QuestionPy Package';
@@ -52,9 +49,7 @@ $string['selection_no_package_text'] = 'No packages available.';
 $string['selection_required'] = 'Please select a package.';
 
 // Connector.
-$string['curl_init_error'] = 'Could not initialize cURL.';
-$string['curl_exec_error'] = 'Error while fetching from server.';
-$string['curl_set_opt_error'] = 'Failed to set cURL option.';
-$string['json_parsing_error'] = 'Could not parse JSON.';
-
-
+$string['curl_init_error'] = 'Could not initialize cURL. Error number: {$a}';
+$string['curl_exec_error'] = 'Error while fetching from server. Error number: {$a}';
+$string['curl_set_opt_error'] = 'Failed to set cURL option. Error number: {$a}';
+$string['json_parsing_error'] = 'Could not parse data to JSON.';

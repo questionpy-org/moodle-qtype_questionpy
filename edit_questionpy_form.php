@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 use qtype_questionpy\api;
 use qtype_questionpy\localizer;
 
-
 /**
  * QuestionPy question editing form definition.
  *
@@ -40,7 +39,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param MoodleQuickForm $mform the form being built.
      */
     protected function definition_inner($mform) {
-        global $OUTPUT;
+        global $OUTPUT, $PAGE;
 
         // TODO: catch moodle_exception?
         // Retrieve packages from the application server.
@@ -80,7 +79,6 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
         $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
-
     }
 
     /**
@@ -125,7 +123,6 @@ class qtype_questionpy_edit_form extends question_edit_form {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-
         // TODO.
 
         return $errors;

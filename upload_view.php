@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
  */
 
 use qtype_questionpy\package;
+use qtype_questionpy\localizer;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
@@ -59,8 +60,8 @@ if ($mform->is_cancelled()) {
             'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
             'short_name' => 'adAqMNxOZNhuSUWflNui',
             'name' => [
-                'en' => 'She piece local.',
-                'de' => 'Style important.'
+                'en' => $name,
+                'de' => 'de' . $name
             ],
             'version' => '865.7797993.0--.0',
             'type' => 'questiontype',
@@ -89,10 +90,11 @@ if ($mform->is_cancelled()) {
     }
     redirect(new moodle_url('/question/type/questionpy/upload_view.php', ['courseid' => $courseid]));
 } else {
+    $languages = localizer::get_preferred_languages();
     $packages = package::get_records(['contextid' => $context->id]);
     foreach ($packages as $package) {
-        $package = (array) $package;
-        echo $output->render_from_template('qtype_questionpy/package_renderable', $package);
+        $packagearray = $package->as_localized_array($languages);
+        echo $output->render_from_template('qtype_questionpy/package', $packagearray);
     }
     $mform->set_data(['courseid' => $courseid]);
     $files = $fs->get_area_files($context->id, 'qtype_questionpy', 'package');
