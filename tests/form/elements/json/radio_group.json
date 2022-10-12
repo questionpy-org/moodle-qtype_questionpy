@@ -1,0 +1,18 @@
+{
+  "kind": "radio_group",
+  "name": "my_radio",
+  "label": "Label",
+  "options": [
+    {
+      "label": "Option 1",
+      "value": "opt1",
+      "selected": true
+    },
+    {
+      "label": "Option 2",
+      "value": "opt2",
+      "selected": false
+    }
+  ],
+  "required": true
+}

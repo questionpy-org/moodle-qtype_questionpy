@@ -1,6 +1,11 @@
 name: Moodle Plugin CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    # We don't run on PR synchronize, because that would duplicate the push-Build
+    types:
+      - opened
 
 jobs:
   test:
@@ -8,7 +13,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:10
+        image: postgres:12
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -30,8 +35,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.3', '7.4', '8.0']
-        moodle-branch: ['MOODLE_400_STABLE']
+        php: ['7.4', '8.0']
+        moodle-branch: ['MOODLE_400_STABLE', 'master']
         database: [pgsql, mariadb]
 
     steps:
