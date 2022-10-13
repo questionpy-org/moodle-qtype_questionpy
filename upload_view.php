@@ -22,6 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\package;
+use qtype_questionpy\localizer;
+
 require_once(dirname(__FILE__) . '/../../../config.php');
 
 $courseid = required_param('courseid', PARAM_INT);
@@ -53,25 +56,45 @@ if ($mform->is_cancelled()) {
             'package', 0, '/', $name);
 
         // Placeholder.
-        $packagedata = [
-            "name" => $name,
-            "short_name" => "shortname",
-            "contextid" => $context->id,
-            "package_hash" => "abcde",
-            "type" => "testtype",
-            "description" => "This describes the package ExamplePackage.",
-            "author" => "Author",
-            "license" => "MIT",
-            "icon" => "https://placeimg.com/48/48/tech/grayscale",
-            "version" => "0.0.1"
-        ];
-        $recordid = $DB->insert_record('qtype_questionpy_package', $packagedata, $returnid = true, $bulk = false);
+        $package = package::from_array([
+            'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
+            'short_name' => 'adAqMNxOZNhuSUWflNui',
+            'name' => [
+                'en' => $name,
+                'de' => 'de' . $name
+            ],
+            'version' => '865.7797993.0--.0',
+            'type' => 'questiontype',
+            'author' => 'Mario Hunt',
+            'url' => 'http://www.kane.com/',
+            'languages' => [
+                0 => 'en',
+                1 => 'de'
+            ],
+            'description' => [
+                'en' => 'en: Activity organization letter. Report alone why center.
+                    Real outside glass maintain right hear.
+                    Brother develop process work. Build ago north.
+                    Develop with defense understand garden recently work.',
+                'de' => 'de: Activity few enter medical side position. Safe need no guy price.
+                    Source necessary our me series month seven born.
+                    Anyone everything interest where accept apply. Expert great significant.'
+            ],
+            'icon' => 'https://placehold.jp/40e47e/598311/150x150.png',
+            'license' => '',
+            'tags' => [
+                0 => 'fXuprCRqsLnQQYzFZgAt'
+            ]
+        ]);
+        $package->store_in_db($context->id);
     }
     redirect(new moodle_url('/question/type/questionpy/upload_view.php', ['courseid' => $courseid]));
 } else {
-    $packages = $DB->get_records('qtype_questionpy_package', ['contextid' => $context->id]);
+    $languages = localizer::get_preferred_languages();
+    $packages = package::get_records(['contextid' => $context->id]);
     foreach ($packages as $package) {
-        echo $output->render_from_template('qtype_questionpy/package_renderable', $package);
+        $packagearray = $package->as_localized_array($languages);
+        echo $output->render_from_template('qtype_questionpy/package', $packagearray);
     }
     $mform->set_data(['courseid' => $courseid]);
     $files = $fs->get_area_files($context->id, 'qtype_questionpy', 'package');

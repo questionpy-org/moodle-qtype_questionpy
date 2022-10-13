@@ -130,8 +130,8 @@ class package {
      * @return package
      */
     public static function from_array(array $package): package {
-        if (!(isset($package['package_hash'])
-            && isset($package['short_name'])
+        if (!((isset($package['package_hash']) || isset($package['hash']))
+            && (isset($package['short_name']) || isset($package['shortname']))
             && isset($package['name'])
             && isset($package['version'])
             && isset($package['type']))) {
@@ -139,8 +139,8 @@ class package {
         }
 
         return new self(
-            $package['package_hash'],
-            $package['short_name'],
+            $package[array_key_exists('package_hash', $package) ? 'package_hash' : 'hash'],
+            $package[array_key_exists('short_name', $package) ? 'short_name' : 'shortname'],
             $package['name'],
             $package['version'],
             $package['type'],
@@ -223,4 +223,207 @@ class package {
         return self::get_localized_property($this->description, $languages);
     }
 
+    /**
+     * Persist this package in the database.
+     * Localized data is stored in qtype_questionpy_language.
+     * Tags are mapped packageid->tag in the table  qtype_questionpy_tags.
+     * @param int $contextid
+     * @return void
+     * @throws \dml_exception
+     */
+    public function store_in_db(int $contextid = 0) {
+        global $DB;
+
+        // Store the language independent package data.
+        $packagedata = [
+            "contextid" => $contextid,
+            "hash" => $this->hash,
+            "shortname" => $this->shortname,
+            "version" => $this->version,
+            "type" => $this->type,
+            "author" => $this->author,
+            "url" => $this->url,
+            "icon" => $this->icon,
+            "license" => $this->license
+        ];
+        $packageid = $DB->insert_record('qtype_questionpy_package', $packagedata);
+
+        // For each language store the localized package data as a separate record.
+        $languagedata = array();
+        foreach ($this->languages as $language) {
+            $languagedata[] = [
+                "packageid" => $packageid,
+                "language" => $language,
+                "name" => $this->get_localized_property($this->name, [$language]),
+                "description" => $this->get_localized_property($this->description, [$language])
+            ];
+        }
+
+        // Store each tag with the package hash in the tag table.
+        $tagsdata = array();
+        foreach ($this->tags as $tag) {
+            $tagsdata[] = [
+                "packageid" => $packageid,
+                "tag" => $tag,
+            ];
+        }
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $DB->insert_records('qtype_questionpy_tags', $tagsdata);
+            $DB->insert_records('qtype_questionpy_language', $languagedata);
+        } catch (\dml_exception $e) {
+            $DB->rollback_delegated_transaction($transaction, $e);
+        }
+        $DB->commit_delegated_transaction($transaction);
+    }
+
+    /**
+     * Deletes the package including all related data from:
+     *  - qtype_questionpy_package
+     *  - qtype_questionpy_language
+     *  - qtype_questionpy_tags
+     * @return bool
+     * @throws \Throwable
+     * @throws \coding_exception
+     * @throws \dml_transaction_exception
+     */
+    public function delete_from_db(): boolean {
+        global $DB;
+        $transaction = $DB->start_delegated_transaction();
+        $packageid = $DB->get_field('qtype_questionpy_package', 'id', ['hash' => $this->hash]);
+        try {
+            $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
+            $DB->delete_records('qtype_questionpy_language', ['packageid' => $packageid]);
+            $DB->delete_records('qtype_questionpy_tags', ['packageid' => $packageid]);
+        } catch (\dml_exception $e) {
+            $DB->rollback_delegated_transaction($transaction, $e);
+            return false;
+        }
+        $DB->commit_delegated_transaction($transaction);
+        return true;
+    }
+
+    /**
+     * Get a specific package by its hash from the db.
+     * @param string $hash
+     * @return package
+     * @throws \dml_exception
+     */
+    public static function get_record_by_hash(string $hash): package {
+        global $DB;
+        $package = (array) $DB->get_record('qtype_questionpy_package', ['hash' => $hash]);
+        list($language, $name, $description) = self::get_languagedata($package["id"]);
+        $tags = self::get_tagdata($package["id"]);
+        $temp = [
+            'languages' => $language,
+            'name' => $name,
+            'description' => $description,
+            'tags' => $tags
+        ];
+        $package = array_merge($package, $temp);
+        return self::from_array($package);
+    }
+
+    /**
+     * Get packages from the db matching given conditions. Note: only conditions stored in the package table
+     * are applicable.
+     * @param array $conditions
+     * @return array
+     * @throws \dml_exception
+     */
+    public static function get_records(array $conditions = null) : array {
+        global $DB;
+        $records = $DB->get_records('qtype_questionpy_package', $conditions);
+        $packages = array();
+        foreach ($records as $package) {
+            $package = (array) $package;
+            list($language, $name, $description) = self::get_languagedata($package["id"]);
+            $tags = self::get_tagdata($package["id"]);
+            $temp = [
+                'languages' => $language,
+                'name' => $name,
+                'description' => $description,
+                'tags' => $tags
+            ];
+            $package = array_merge($package, $temp);
+            $packages[] = self::from_array($package);
+        }
+        return $packages;
+    }
+
+    /**
+     * Get the records from the qtype_questionpy_language table given the foreign key packageid.
+     * @param int $packageid
+     * @return array
+     * @throws \dml_exception
+     */
+    private static function get_languagedata(int $packageid) {
+        global $DB;
+        $languagedata = $DB->get_records('qtype_questionpy_language', ['packageid' => $packageid]);
+        $language = [];
+        $name = [];
+        $description = [];
+        foreach ($languagedata as $record) {
+            $language[] = $record->language;
+            $name[$record->language] = $record->name;
+            $description[$record->language] = $record->description;
+        }
+        return array($language, $name, $description);
+    }
+
+    /**
+     * Get the records from the qtype_questionpy_tags table given the foreign key packageid.
+     * @param int $packageid
+     * @return array
+     * @throws \dml_exception
+     */
+    private static function get_tagdata(int $packageid) {
+        global $DB;
+        $tagdata = $DB->get_records('qtype_questionpy_tags', ['packageid' => $packageid]);
+        $tags = [];
+        foreach ($tagdata as $record) {
+            $tags[] = $record->tag;
+        }
+        return $tags;
+    }
+
+    /**
+     * Provides the differences between two packages, i.e. an array with all the parameters which are different in the
+     * two objects.
+     * When retrieving packages from the DB, the values in the{@see package::$languages} array are sometimes swapped.
+     * Comparing equality with == is therefore not sufficient.
+     *
+     * @param package $package
+     * @return array
+     */
+    public function difference_from(package $package): array {
+        $difference = array();
+        $package = (array) $package;
+        foreach ((array) $this as $key => $value) {
+            if (array_key_exists($key, $package)) {
+                if (is_array($value)) {
+                    $temp = array_diff($value, $package[$key]);
+                    if (count($temp)) {
+                        $difference[$key] = $temp;
+                    }
+                } else if ($value != $package[$key]) {
+                    $difference[$key] = [$value, $package[$key]];
+                }
+            } else {
+                $difference[$key] = [$value, null];
+            }
+        }
+        return $difference;
+    }
+
+
+    /**
+     * Checks if two packages are semantically equal (==)
+     * .
+     * @param package $package
+     * @return bool true if equal, false otherwise
+     */
+    public function equals(package $package): bool {
+        return empty($this->difference_from($package));
+    }
 }

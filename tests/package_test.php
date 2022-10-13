@@ -18,6 +18,10 @@ namespace qtype_questionpy;
 
 use TypeError;
 
+defined('MOODLE_INTERNAL') || die;
+require(__DIR__ . '/data_provider.php');
+
+
 /**
  * Unit tests for the questionpy question type class.
  *
@@ -133,5 +137,103 @@ class package_test extends \advanced_testcase {
         $package = new package('hash', 'shortname', ['en' => 'english_name'], '1.0.0', 'question',
             'author', 'url', [], $description);
         $this->assertEquals('', $package->get_localized_description($languages));
+    }
+
+    /**
+     * Test if after adding a package to the db, there is indeed one more record present.
+     *
+     * @covers \qtype_questionpy\package::store_in_db
+     * @return void
+     * @throws \dml_exception
+     * @throws \moodle_exception
+     */
+    public function test_storing_one_package_in_db() {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        $package = package_provider1();
+        $initial = count($DB->get_records('qtype_questionpy_package'));
+
+        $package->store_in_db();
+        $final = count($DB->get_records('qtype_questionpy_package'));
+
+        $this->assertEquals(1, $final - $initial);
+    }
+
+    /**
+     * Adds one Package to db, then retrieves it. Tests if the retrieved package is the same as the original.
+     *
+     * @covers \qtype_questionpy\package::get_record_by_hash
+     * @return void
+     * @throws \dml_exception
+     * @throws \moodle_exception
+     */
+    public function test_storing_and_retrieving_one_package_from_db() {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        $initial = package_provider1();
+        $initial->store_in_db();
+        $final = package::get_record_by_hash($initial->hash);
+
+        $difference = $initial->difference_from($final);
+        $this->assertEmpty($difference);
+    }
+
+    /**
+     * Tests if an error is thrown when a package hash is queried which is not existent in the DB
+     *
+     * @covers \qtype_questionpy\package::get_record_by_hash
+     * @return void
+     */
+    public function test_retrieving_nonexistent_package_from_db() {
+        global $DB;
+        $package = package_provider1();
+        try {
+            package::get_record_by_hash($package->hash);
+            $this->fail('Package from data provider should not be in DB');
+        } catch (\Exception $e) {
+            return;
+        }
+
+    }
+
+    /**
+     * Tests if the difference between two semantically equal packages is empty.
+     *
+     * @covers \qtype_questionpy\package::difference_from
+     * @covers \qtype_questionpy\package::equals
+     * @return void
+     */
+    public function test_difference_from() {
+        $package1 = package_provider1();
+        $package2 = package_provider2();
+
+        $difference = $package1->difference_from($package2);
+        $this->assertNotEquals($package1, $package2, "Values in languages array should be swapped.");
+        $this->assertEmpty($difference);
+        $this->assertTrue($package1->equals($package2));
+    }
+
+
+    /**
+     * Stores two packages in the DB.
+     * Queries the two packages by the hash and tests if the original package is in the query result.
+     *
+     * @covers \qtype_questionpy\package::get_records
+     * @return void
+     * @throws \dml_exception
+     */
+    public function test_get_records() {
+        global $DB;
+        $this->resetAfterTest();
+
+        $package1 = package_provider1();
+        $package2 = package_provider2();
+        $package1->store_in_db();
+        $package2->store_in_db();
+
+        $packages = package::get_records(["hash" => "dkZZGAOgHTpBOSZMBGNM"]);
+        $this->assertTrue($package1->equals($packages[0]));
     }
 }
