@@ -227,17 +227,15 @@ class package {
      * Persist this package in the database.
      * Localized data is stored in qtype_questionpy_language.
      * Tags are mapped packageid->tag in the table  qtype_questionpy_tags.
-     * @param int $questionid
      * @param int $contextid
      * @return void
      * @throws \dml_exception
      */
-    public function store_in_db(int $questionid = 0, int $contextid = 0) {
+    public function store_in_db(int $contextid = 0) {
         global $DB;
 
         // Store the language independent package data.
         $packagedata = [
-            "questionid" => $questionid,
             "contextid" => $contextid,
             "hash" => $this->hash,
             "shortname" => $this->shortname,
@@ -251,24 +249,32 @@ class package {
         $packageid = $DB->insert_record('qtype_questionpy_package', $packagedata);
 
         // For each language store the localized package data as a separate record.
+        $languagedata = array();
         foreach ($this->languages as $language) {
-            $languagedata = [
+            $languagedata[] = [
                 "packageid" => $packageid,
                 "language" => $language,
                 "name" => $this->get_localized_property($this->name, [$language]),
                 "description" => $this->get_localized_property($this->description, [$language])
             ];
-            $DB->insert_record('qtype_questionpy_language', $languagedata);
         }
 
         // Store each tag with the package hash in the tag table.
+        $tagsdata = array();
         foreach ($this->tags as $tag) {
-            $tagsdata = [
+            $tagsdata[] = [
                 "packageid" => $packageid,
                 "tag" => $tag,
             ];
-            $DB->insert_record('qtype_questionpy_tags', $tagsdata);
         }
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $DB->insert_records('qtype_questionpy_tags', $tagsdata);
+            $DB->insert_records('qtype_questionpy_language', $languagedata);
+        } catch (\dml_exception $e) {
+            $DB->rollback_delegated_transaction($transaction, $e);
+        }
+        $DB->commit_delegated_transaction($transaction);
     }
 
     /**
@@ -407,7 +413,6 @@ class package {
                 $difference[$key] = [$value, null];
             }
         }
-
         return $difference;
     }
 

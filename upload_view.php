@@ -86,7 +86,7 @@ if ($mform->is_cancelled()) {
                 0 => 'fXuprCRqsLnQQYzFZgAt'
             ]
         ]);
-        $package->store_in_db($courseid, $context->id);
+        $package->store_in_db($context->id);
     }
     redirect(new moodle_url('/question/type/questionpy/upload_view.php', ['courseid' => $courseid]));
 } else {
