@@ -16,9 +16,11 @@
 
 namespace qtype_questionpy\form;
 
-use qtype_questionpy\deserializable;
+use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\conditions\condition;
-use qtype_questionpy\form\elements\form_element;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * Trait for elements which can have conditions on other elements.
@@ -51,31 +53,6 @@ trait form_conditions {
     }
 
     /**
-     * Deserializes the conditions from an array, mutating this instance and returning it for chaining.
-     *
-     * @param array $array source array, probably parsed from JSON
-     * @see deserializable::from_array()
-     */
-    private function deserialize_conditions(array $array): self {
-        $this->disableif = array_map([condition::class, "from_array_any"], $array["disable_if"]) ?? [];
-        $this->hideif = array_map([condition::class, "from_array_any"], $array["hide_if"]) ?? [];
-        return $this;
-    }
-
-    /**
-     * Adds the conditions of this element to the given array and return it.
-     *
-     * @param array $array incomplete array representation of this element
-     * @see form_element::to_array()
-     */
-    private function serialize_conditions(array $array): array {
-        unset($array["disableif"], $array["hideif"]);
-        $array["disable_if"] = $this->disableif;
-        $array["hide_if"] = $this->hideif;
-        return $array;
-    }
-
-    /**
      * Adds the given condition to {@see disableif} and returns this instance for chaining.
      *
      * @param condition $condition the condition to add
@@ -97,3 +74,11 @@ trait form_conditions {
         return $this;
     }
 }
+
+array_converter::configure(form_conditions::class, function (converter_config $config) {
+    $config
+        ->rename("disableif", "disable_if")
+        ->array_elements("disableif", condition::class)
+        ->rename("hideif", "hide_if")
+        ->array_elements("hideif", condition::class);
+});

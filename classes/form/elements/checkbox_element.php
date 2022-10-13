@@ -16,8 +16,12 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * Element displaying a labelled checkbox.
@@ -51,43 +55,12 @@ class checkbox_element extends form_element {
      * @param bool $selected
      */
     public function __construct(string $name, ?string $leftlabel = null, ?string $rightlabel = null,
-                                bool   $required = false, bool $selected = false) {
+                                bool $required = false, bool $selected = false) {
         $this->name = $name;
         $this->leftlabel = $leftlabel;
         $this->rightlabel = $rightlabel;
         $this->required = $required;
         $this->selected = $selected;
-    }
-
-    /**
-     * Convert the given array to the concrete element without checking the `kind` descriptor.
-     * (Which is done by {@see from_array_any}.)
-     *
-     * @param array $array source array, probably parsed from JSON
-     */
-    public static function from_array(array $array): self {
-        return (new self(
-            $array["name"],
-            $array["left_label"] ?? null,
-            $array["right_label"] ?? null,
-            $array["required"] ?? false,
-            $array["selected"] ?? false,
-        ))->deserialize_conditions($array);
-    }
-
-    /**
-     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
-     * The default implementation just casts to an array, which is suitable only if the json field names match the
-     * class property names.
-     */
-    public function to_array(): array {
-        return $this->serialize_conditions([
-            "name" => $this->name,
-            "left_label" => $this->leftlabel,
-            "right_label" => $this->rightlabel,
-            "required" => $this->required,
-            "selected" => $this->selected,
-        ]);
     }
 
     /**
@@ -113,3 +86,8 @@ class checkbox_element extends form_element {
         $this->render_conditions($context, $this->name);
     }
 }
+
+array_converter::configure(checkbox_element::class, function (converter_config $config) {
+    $config->rename("leftlabel", "left_label")
+        ->rename("rightlabel", "right_label");
+});

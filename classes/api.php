@@ -17,6 +17,7 @@
 namespace qtype_questionpy;
 
 use moodle_exception;
+use qtype_questionpy\array_converter\array_converter;
 use TypeError;
 
 /**
@@ -58,7 +59,7 @@ class api {
 
         foreach ($packages as $package) {
             try {
-                $result[] = package::from_array($package);
+                $result[] = array_converter::from_array(package::class, $package);
             } catch (TypeError $e) {
                 // TODO: decide what to do with faulty package.
                 continue;

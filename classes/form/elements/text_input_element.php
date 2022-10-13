@@ -19,6 +19,8 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
 
+defined('MOODLE_INTERNAL') || die;
+
 /**
  * Simple text input element.
  *
@@ -62,32 +64,6 @@ class text_input_element extends form_element {
         $this->required = $required;
         $this->default = $default;
         $this->placeholder = $placeholder;
-    }
-
-    /**
-     * Convert the given array to the concrete element without checking the `kind` descriptor.
-     * (Which is done by {@see from_array_any}.)
-     *
-     * @param array $array source array, probably parsed from JSON
-     */
-    public static function from_array(array $array): self {
-        return (new self(
-            $array["name"],
-            $array["label"],
-            $array["required"] ?? false,
-            $array["default"] ?? null,
-            $array["placeholder"] ?? null,
-        ))->deserialize_conditions($array);
-    }
-
-    /**
-     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
-     *
-     * The default implementation just casts to an array, which is suitable only if the json field names match the
-     * class property names.
-     */
-    public function to_array(): array {
-        return $this->serialize_conditions(parent::to_array());
     }
 
     /**

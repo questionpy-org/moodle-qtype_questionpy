@@ -16,7 +16,7 @@
 
 namespace qtype_questionpy\form\elements;
 
-use qtype_questionpy\deserializable;
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * One option in a {@see radio_group_element} or a {@see select_element}.
@@ -26,7 +26,7 @@ use qtype_questionpy\deserializable;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class option implements deserializable {
+class option {
     /** @var string */
     public string $label;
     /** @var string */
@@ -49,18 +49,5 @@ class option implements deserializable {
         $this->label = $label;
         $this->value = $value;
         $this->selected = $selected;
-    }
-
-    /**
-     * Convert the given array to an option.
-     *
-     * @param array $array source array, probably parsed from JSON
-     */
-    public static function from_array(array $array): self {
-        return new self(
-            $array["label"],
-            $array["value"],
-            $array["selected"] ?? false
-        );
     }
 }

@@ -17,8 +17,12 @@
 namespace qtype_questionpy\form\elements;
 
 use HTML_QuickForm_select;
+use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
+use qtype_questionpy\array_converter\converter_config;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * Select element, either a dropdown or a multi-select.
@@ -61,32 +65,6 @@ class select_element extends form_element {
     }
 
     /**
-     * Convert the given array to the concrete element without checking the `kind` descriptor.
-     * (Which is done by {@see from_array_any}.)
-     *
-     * @param array $array source array, probably parsed from JSON
-     */
-    public static function from_array(array $array): self {
-        return (new self(
-            $array["name"],
-            $array["label"],
-            array_map([option::class, "from_array"], $array["options"]),
-            $array["multiple"] ?? false,
-            $array["required"] ?? false,
-        ))->deserialize_conditions($array);
-    }
-
-    /**
-     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
-     *
-     * The default implementation just casts to an array, which is suitable only if the json field names match the
-     * class property names.
-     */
-    public function to_array(): array {
-        return $this->serialize_conditions(parent::to_array());
-    }
-
-    /**
      * Render this item to the given context.
      *
      * @param render_context $context target context
@@ -115,3 +93,7 @@ class select_element extends form_element {
         $this->render_conditions($context, $this->name);
     }
 }
+
+array_converter::configure(select_element::class, function (converter_config $config) {
+    $config->array_elements("options", option::class);
+});

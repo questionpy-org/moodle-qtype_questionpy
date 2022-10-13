@@ -16,9 +16,11 @@
 
 namespace qtype_questionpy\form\elements;
 
-use qtype_questionpy\deserializable;
+use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\renderable;
-use qtype_questionpy\kind_deserialize;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * Base class for QuestionPy form elements.
@@ -28,26 +30,18 @@ use qtype_questionpy\kind_deserialize;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class form_element implements renderable, \JsonSerializable, deserializable {
-    use kind_deserialize;
-
-    /**
-     * Returns an array mapping each possible kind value to the associated concrete class name.
-     *
-     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
-     * it to determine the concrete class to use for deserialization. This method should be implemented by the base
-     * class of the hierarchy.
-     */
-    final protected static function kinds(): array {
-        return [
-            "checkbox" => checkbox_element::class,
-            "checkbox_group" => checkbox_group_element::class,
-            "group" => group_element::class,
-            "hidden" => hidden_element::class,
-            "radio_group" => radio_group_element::class,
-            "select" => select_element::class,
-            "static_text" => static_text_element::class,
-            "text_input" => text_input_element::class,
-        ];
-    }
+abstract class form_element implements renderable {
 }
+
+array_converter::configure(form_element::class, function (converter_config $config) {
+    $config
+        ->discriminate_by("kind")
+        ->variant("checkbox", checkbox_element::class)
+        ->variant("checkbox_group", checkbox_group_element::class)
+        ->variant("group", group_element::class)
+        ->variant("hidden", hidden_element::class)
+        ->variant("radio_group", radio_group_element::class)
+        ->variant("select", select_element::class)
+        ->variant("static_text", static_text_element::class)
+        ->variant("text_input", text_input_element::class);
+});
