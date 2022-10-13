@@ -35,16 +35,4 @@ class is_checked extends condition {
     public function to_mform_args(): array {
         return ["checked"];
     }
-
-    /**
-     * Convert the given array to the concrete instance without checking the `kind` descriptor.
-     * (Which is done by {@see from_array_any}.)
-     *
-     * This method should be implemented by the concrete implementations.
-     *
-     * @param array $array source array, probably parsed from JSON
-     */
-    public static function from_array(array $array): self {
-        return new self($array["name"]);
-    }
 }

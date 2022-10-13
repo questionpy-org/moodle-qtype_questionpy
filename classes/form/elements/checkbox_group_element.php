@@ -16,7 +16,11 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\render_context;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * Element grouping one or more checkboxes with a `Select all/none` button.
@@ -54,14 +58,8 @@ class checkbox_group_element extends form_element {
 
         $context->add_checkbox_controller($groupid);
     }
-
-    /**
-     * Convert the given array to the concrete element without checking the `kind` descriptor.
-     * (Which is done by {@see from_array_any}.)
-     *
-     * @param array $array source array, probably parsed from JSON
-     */
-    public static function from_array(array $array): self {
-        return new self(...array_map([checkbox_element::class, "from_array"], $array["checkboxes"]));
-    }
 }
+
+array_converter::configure(checkbox_group_element::class, function (converter_config $config) {
+    $config->array_elements("checkboxes", checkbox_element::class);
+});

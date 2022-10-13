@@ -21,6 +21,7 @@ use qtype_questionpy\form\conditions\equals;
 use qtype_questionpy\form\conditions\in;
 use qtype_questionpy\form\conditions\is_checked;
 use qtype_questionpy\form\conditions\is_not_checked;
+use qtype_questionpy\array_converter\array_converter;
 
 /**
  * Tests of the (de)serialization of form elements.
@@ -43,7 +44,7 @@ class element_json_test extends \advanced_testcase {
         $json = file_get_contents(__DIR__ . "/json/" . $jsonfile);
 
         $array = json_decode($json, true);
-        $actual = form_element::from_array_any($array);
+        $actual = array_converter::from_array(form_element::class, $array);
 
         $this->assertEquals($expected, $actual);
     }
@@ -57,7 +58,8 @@ class element_json_test extends \advanced_testcase {
      * @covers       \qtype_questionpy\form\elements
      */
     public function test_serialize(string $expectedjsonfile, $value): void {
-        $actualjson = json_encode($value);
+        $array = array_converter::to_array($value);
+        $actualjson = json_encode($array);
 
         $this->assertJsonStringEqualsJsonFile(__DIR__ . "/json/" . $expectedjsonfile, $actualjson);
     }

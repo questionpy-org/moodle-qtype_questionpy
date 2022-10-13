@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy;
 
+use moodle_exception;
+use qtype_questionpy\array_converter\array_converter;
 use TypeError;
 
 defined('MOODLE_INTERNAL') || die;
@@ -36,6 +38,7 @@ class package_test extends \advanced_testcase {
      *
      * @covers \package::from_array
      * @return void
+     * @throws moodle_exception
      */
     public function test_from_array(): void {
         $minimum = [
@@ -45,7 +48,7 @@ class package_test extends \advanced_testcase {
             'version' => '1.0.0',
             'type' => 'question',
         ];
-        package::from_array($minimum);
+        array_converter::from_array(package::class, $minimum);
 
         $maximum = [
             'package_hash' => 'hash',
@@ -62,11 +65,11 @@ class package_test extends \advanced_testcase {
             'license' => 'license',
             'tags' => []
         ];
-        package::from_array($maximum);
+        array_converter::from_array(package::class, $maximum);
 
-        $this->expectException(TypeError::class);
+        $this->expectException(moodle_exception::class);
         $faulty = ['faulty' => 'hash'];
-        package::from_array($faulty);
+        array_converter::from_array(package::class, $faulty);
     }
 
     /**

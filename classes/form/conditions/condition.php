@@ -16,8 +16,10 @@
 
 namespace qtype_questionpy\form\conditions;
 
-use qtype_questionpy\deserializable;
-use qtype_questionpy\kind_deserialize;
+use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * Base class for QuestionPy form element conditions.
@@ -27,7 +29,7 @@ use qtype_questionpy\kind_deserialize;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class condition implements deserializable, \JsonSerializable {
+abstract class condition {
 
     /** @var string $name name of the target element */
     public string $name;
@@ -48,23 +50,14 @@ abstract class condition implements deserializable, \JsonSerializable {
      * @return array
      */
     abstract public function to_mform_args(): array;
-
-    use kind_deserialize;
-
-    /**
-     * Returns an array mapping each possible kind value to the associated concrete class name.
-     *
-     * The `kind` field of an element's JSON representation serves as a descriptor field. {@see from_array_any()} uses
-     * it to determine the concrete class to use for deserialization. This method should be implemented by the base
-     * class of the hierarchy.
-     */
-    protected static function kinds(): array {
-        return [
-            "is_checked" => is_checked::class,
-            "is_not_checked" => is_not_checked::class,
-            "equals" => equals::class,
-            "does_not_equal" => does_not_equal::class,
-            "in" => in::class,
-        ];
-    }
 }
+
+array_converter::configure(condition::class, function (converter_config $config) {
+    $config
+        ->discriminate_by("kind")
+        ->variant("is_checked", is_checked::class)
+        ->variant("is_not_checked", is_not_checked::class)
+        ->variant("equals", equals::class)
+        ->variant("does_not_equal", does_not_equal::class)
+        ->variant("in", in::class);
+});

@@ -16,7 +16,10 @@
 
 namespace qtype_questionpy;
 
-use TypeError;
+use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * Represents a QuestionPy package.
@@ -105,9 +108,8 @@ class package {
      */
     public function __construct(string $hash, string $shortname, array $name, string $version, string $type,
                                 string $author = null, string $url = null, array $languages = null,
-                                array $description = null, string $icon = null, string $license = null,
-                                array $tags = null) {
-
+                                array  $description = null, string $icon = null, string $license = null,
+                                array  $tags = null) {
         $this->hash = $hash;
         $this->shortname = $shortname;
         $this->name = $name;
@@ -124,59 +126,19 @@ class package {
     }
 
     /**
-     * Creates package object from array.
-     *
-     * @param array $package
-     * @return package
-     */
-    public static function from_array(array $package): package {
-        if (!((isset($package['package_hash']) || isset($package['hash']))
-            && (isset($package['short_name']) || isset($package['shortname']))
-            && isset($package['name'])
-            && isset($package['version'])
-            && isset($package['type']))) {
-            throw new TypeError('Package array is missing required fields.');
-        }
-
-        return new self(
-            $package[array_key_exists('package_hash', $package) ? 'package_hash' : 'hash'],
-            $package[array_key_exists('short_name', $package) ? 'short_name' : 'shortname'],
-            $package['name'],
-            $package['version'],
-            $package['type'],
-
-            $package['author'] ?? null,
-            $package['url'] ?? null,
-            $package['languages'] ?? null,
-            $package['description'] ?? null,
-            $package['icon'] ?? null,
-            $package['license'] ?? null,
-            $package['tags'] ?? null
-        );
-    }
-
-    /**
      * Creates a localized array representation of the package.
      *
      * @param array|null $languages
      * @return array array representation of the package
      */
     public function as_localized_array(array $languages): array {
-        return [
-            'package_hash' => $this->hash,
-            'shortname' => $this->shortname,
-            'name' => $this->get_localized_name($languages),
-            'version' => $this->version,
-            'type' => $this->type,
-
-            'author' => $this->author,
-            'url' => $this->url,
-            'languages' => $this->languages,
-            'description' => $this->get_localized_description($languages),
-            'icon' => $this->icon,
-            'license' => $this->license,
-            'tags' => $this->tags
-        ];
+        return array_merge(
+            array_converter::to_array($this),
+            [
+                'name' => $this->get_localized_name($languages),
+                'description' => $this->get_localized_description($languages),
+            ]
+        );
     }
 
     /**
@@ -227,6 +189,7 @@ class package {
      * Persist this package in the database.
      * Localized data is stored in qtype_questionpy_language.
      * Tags are mapped packageid->tag in the table  qtype_questionpy_tags.
+     *
      * @param int $contextid
      * @return void
      * @throws \dml_exception
@@ -282,6 +245,7 @@ class package {
      *  - qtype_questionpy_package
      *  - qtype_questionpy_language
      *  - qtype_questionpy_tags
+     *
      * @return bool
      * @throws \Throwable
      * @throws \coding_exception
@@ -305,13 +269,14 @@ class package {
 
     /**
      * Get a specific package by its hash from the db.
+     *
      * @param string $hash
      * @return package
      * @throws \dml_exception
      */
     public static function get_record_by_hash(string $hash): package {
         global $DB;
-        $package = (array) $DB->get_record('qtype_questionpy_package', ['hash' => $hash]);
+        $package = (array)$DB->get_record('qtype_questionpy_package', ['hash' => $hash]);
         list($language, $name, $description) = self::get_languagedata($package["id"]);
         $tags = self::get_tagdata($package["id"]);
         $temp = [
@@ -321,22 +286,23 @@ class package {
             'tags' => $tags
         ];
         $package = array_merge($package, $temp);
-        return self::from_array($package);
+        return array_converter::from_array(self::class, $package);
     }
 
     /**
      * Get packages from the db matching given conditions. Note: only conditions stored in the package table
      * are applicable.
+     *
      * @param array $conditions
      * @return array
      * @throws \dml_exception
      */
-    public static function get_records(array $conditions = null) : array {
+    public static function get_records(array $conditions = null): array {
         global $DB;
         $records = $DB->get_records('qtype_questionpy_package', $conditions);
         $packages = array();
         foreach ($records as $package) {
-            $package = (array) $package;
+            $package = (array)$package;
             list($language, $name, $description) = self::get_languagedata($package["id"]);
             $tags = self::get_tagdata($package["id"]);
             $temp = [
@@ -346,13 +312,14 @@ class package {
                 'tags' => $tags
             ];
             $package = array_merge($package, $temp);
-            $packages[] = self::from_array($package);
+            $packages[] = array_converter::from_array(self::class, $package);
         }
         return $packages;
     }
 
     /**
      * Get the records from the qtype_questionpy_language table given the foreign key packageid.
+     *
      * @param int $packageid
      * @return array
      * @throws \dml_exception
@@ -373,6 +340,7 @@ class package {
 
     /**
      * Get the records from the qtype_questionpy_tags table given the foreign key packageid.
+     *
      * @param int $packageid
      * @return array
      * @throws \dml_exception
@@ -398,8 +366,8 @@ class package {
      */
     public function difference_from(package $package): array {
         $difference = array();
-        $package = (array) $package;
-        foreach ((array) $this as $key => $value) {
+        $package = (array)$package;
+        foreach ((array)$this as $key => $value) {
             if (array_key_exists($key, $package)) {
                 if (is_array($value)) {
                     $temp = array_diff($value, $package[$key]);
@@ -416,10 +384,9 @@ class package {
         return $difference;
     }
 
-
     /**
-     * Checks if two packages are semantically equal (==)
-     * .
+     * Checks if two packages are semantically equal (==).
+     *
      * @param package $package
      * @return bool true if equal, false otherwise
      */
@@ -427,3 +394,12 @@ class package {
         return empty($this->difference_from($package));
     }
 }
+
+array_converter::configure(package::class, function (converter_config $config) {
+    $config
+        ->rename("hash", "package_hash")
+        ->rename("shortname", "short_name")
+        # The DB rows are also read using array_converter, but their columns are named differently to the json fields.
+        ->alias("hash", "hash")
+        ->alias("shortname", "shortname");
+});

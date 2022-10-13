@@ -24,13 +24,15 @@
 
 namespace qtype_questionpy;
 
+use qtype_questionpy\array_converter\array_converter;
+
 /**
  * Data provider for {@see package}.
  *
  * @return package A sample package for the tests
  */
 function package_provider1(): package {
-    return package::from_array([
+    return array_converter::from_array(package::class, [
         'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
         'short_name' => 'adAqMNxOZNhuSUWflNui',
         'name' => [
@@ -68,7 +70,7 @@ function package_provider1(): package {
  * @return package Same package as {@see package_provider1} but values in languages array are swapped.
  */
 function package_provider2(): package {
-    return package::from_array([
+    return array_converter::from_array(package::class, [
         'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
         'short_name' => 'adAqMNxOZNhuSUWflNui',
         'name' => [

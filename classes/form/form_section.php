@@ -16,8 +16,11 @@
 
 namespace qtype_questionpy\form;
 
-use qtype_questionpy\deserializable;
+use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\elements\form_element;
+
+defined('MOODLE_INTERNAL') || die;
 
 /**
  * Collapsible form section introduced by a header.
@@ -27,7 +30,7 @@ use qtype_questionpy\form\elements\form_element;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class form_section implements renderable, deserializable {
+class form_section implements renderable {
     /** @var string */
     public string $header;
     /** @var form_element[] */
@@ -45,19 +48,6 @@ class form_section implements renderable, deserializable {
     }
 
     /**
-     * Convert the given array to the concrete element without checking the `kind` descriptor.
-     * (Which is done by {@see from_array_any}.)
-     *
-     * @param array $array source array, probably parsed from JSON
-     */
-    public static function from_array(array $array): self {
-        return new self(
-            $array["header"],
-            array_map([form_element::class, "from_array_any"], $array["elements"])
-        );
-    }
-
-    /**
      * Render this item to the given context.
      *
      * @param render_context $context target context
@@ -69,3 +59,7 @@ class form_section implements renderable, deserializable {
         }
     }
 }
+
+array_converter::configure(form_section::class, function (converter_config $config) {
+    $config->array_elements("elements", form_element::class);
+});

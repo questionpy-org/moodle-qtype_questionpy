@@ -19,6 +19,8 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
 
+defined('MOODLE_INTERNAL') || die;
+
 /**
  * Element which is not displayed at all, but adds a fixed name/value pair to the form data upon submission.
  *
@@ -44,29 +46,6 @@ class hidden_element extends form_element {
     public function __construct(string $name, string $value) {
         $this->name = $name;
         $this->value = $value;
-    }
-
-    /**
-     * Convert the given array to the concrete element without checking the `kind` descriptor.
-     * (Which is done by {@see from_array_any}.)
-     *
-     * @param array $array source array, probably parsed from JSON
-     */
-    public static function from_array(array $array): self {
-        return (new self(
-            $array["name"],
-            $array["value"]
-        ))->deserialize_conditions($array);
-    }
-
-    /**
-     * Convert this element except for the `kind` descriptor to an array suitable for json encoding.
-     *
-     * The default implementation just casts to an array, which is suitable only if the json field names match the
-     * class property names.
-     */
-    public function to_array(): array {
-        return $this->serialize_conditions(parent::to_array());
     }
 
     /**
