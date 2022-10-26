@@ -55,7 +55,7 @@ class checkbox_element extends form_element {
      * @param bool $selected
      */
     public function __construct(string $name, ?string $leftlabel = null, ?string $rightlabel = null,
-                                bool $required = false, bool $selected = false) {
+                                bool   $required = false, bool $selected = false) {
         $this->name = $name;
         $this->leftlabel = $leftlabel;
         $this->rightlabel = $rightlabel;

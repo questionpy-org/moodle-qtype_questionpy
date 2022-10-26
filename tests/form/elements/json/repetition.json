@@ -1,0 +1,18 @@
+{
+  "kind": "repetition",
+  "initial_elements": 3,
+  "increment": 2,
+  "button_label": "",
+  "elements": [
+    {
+      "kind": "text_input",
+      "name": "item",
+      "label": "",
+      "placeholder": null,
+      "required": false,
+      "default": null,
+      "disable_if": [],
+      "hide_if": []
+    }
+  ]
+}

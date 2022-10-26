@@ -41,6 +41,7 @@ array_converter::configure(form_element::class, function (converter_config $conf
         ->variant("group", group_element::class)
         ->variant("hidden", hidden_element::class)
         ->variant("radio_group", radio_group_element::class)
+        ->variant("repetition", repetition_element::class)
         ->variant("select", select_element::class)
         ->variant("static_text", static_text_element::class)
         ->variant("text_input", text_input_element::class);

@@ -94,6 +94,9 @@ class element_html_test extends \advanced_testcase {
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
             ], true)],
+            ["repetition.html", new repetition_element(3, 2, "Add {no} more", [
+                new text_input_element("item", "Item {no}"),
+            ])],
             ["select.html", new select_element("my_select", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),

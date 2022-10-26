@@ -17,10 +17,10 @@
 namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\group_render_context;
 use qtype_questionpy\form\render_context;
-use qtype_questionpy\array_converter\converter_config;
 
 defined('MOODLE_INTERNAL') || die;
 

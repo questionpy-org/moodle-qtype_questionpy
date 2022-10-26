@@ -30,6 +30,7 @@ use qtype_questionpy\form\elements\checkbox_group_element;
 use qtype_questionpy\form\elements\group_element;
 use qtype_questionpy\form\elements\option;
 use qtype_questionpy\form\elements\radio_group_element;
+use qtype_questionpy\form\elements\repetition_element;
 use qtype_questionpy\form\elements\select_element;
 use qtype_questionpy\form\elements\static_text_element;
 use qtype_questionpy\form\elements\text_input_element;
@@ -131,6 +132,11 @@ class qtype_questionpy_edit_form extends question_edit_form {
                     ->hide_if(new is_not_checked("show_all"))
                     ->disable_if(new equals("last_name", ""))
             ]),
+            new form_section("Repeated", [
+                new repetition_element(5, 2, "Add {no} more repetitions", [
+                    new text_input_element("repeated_element", "Repetition {no}")
+                ])
+            ])
         ]);
         $form->render_to(new root_render_context($this, $mform));
     }
