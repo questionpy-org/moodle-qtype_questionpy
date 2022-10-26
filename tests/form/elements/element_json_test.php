@@ -16,12 +16,12 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\form\conditions\does_not_equal;
 use qtype_questionpy\form\conditions\equals;
 use qtype_questionpy\form\conditions\in;
 use qtype_questionpy\form\conditions\is_checked;
 use qtype_questionpy\form\conditions\is_not_checked;
-use qtype_questionpy\array_converter\array_converter;
 
 /**
  * Tests of the (de)serialization of form elements.
@@ -97,10 +97,13 @@ class element_json_test extends \advanced_testcase {
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
             ], true))->disable_if(new does_not_equal("input1", ""))],
+            ["repetition.json", new repetition_element(3, 2, "", [
+                new text_input_element("item", ""),
+            ])],
             ["select.json", (new select_element("my_select", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
-            ], true, true))->disable_if(new in("input1", ["valid", "also valid"])) ],
+            ], true, true))->disable_if(new in("input1", ["valid", "also valid"]))],
             ["static_text.json", new static_text_element("my_text", "Label", "Lorem ipsum dolor sit amet.")],
             ["text_input.json", new text_input_element("my_field", "Label", true, "default", "placeholder")],
         ];

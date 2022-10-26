@@ -17,10 +17,11 @@
 namespace qtype_questionpy\form;
 
 use qtype_questionpy\form\conditions\condition;
-use qtype_questionpy\form\elements\group_element;
+use qtype_questionpy\form\elements\repetition_element;
+use qtype_questionpy\utils;
 
 /**
- * A {@see render_context} for groups of elements ({@see group_element}s).
+ * A {@see render_context} for groups of elements ({@see repetition_element}s).
  *
  * Instead of adding elements to the {@see \MoodleQuickForm}, they are added to an array which is later used to create
  * the group.
@@ -51,11 +52,11 @@ class group_render_context extends render_context {
      */
     public array $rules = [];
     /**
-     * @var array associative array of element names to conditions which should disable the named element
+     * @var condition[] associative array of element names to conditions which should disable the named element
      */
     public array $disableifs = [];
     /**
-     * @var array associative array of element names to conditions which should hide the named element
+     * @var condition[] associative array of element names to conditions which should hide the named element
      */
     public array $hideifs = [];
 
@@ -129,7 +130,7 @@ class group_render_context extends render_context {
      */
     public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
-        self::ensure_exists($this->rules, $name)[] = [$message, $type, $format, $validation, $reset];
+        utils::ensure_exists($this->rules, $name)[] = [$message, $type, $format, $validation, $reset];
     }
 
     /**
@@ -140,7 +141,7 @@ class group_render_context extends render_context {
      * @see \MoodleQuickForm::disabledIf()
      */
     public function disable_if(string $dependant, condition $condition) {
-        self::ensure_exists($this->disableifs, $dependant)[] = $condition;
+        utils::ensure_exists($this->disableifs, $dependant)[] = $condition;
     }
 
     /**
@@ -151,7 +152,7 @@ class group_render_context extends render_context {
      * @see \MoodleQuickForm::hideIf()
      */
     public function hide_if(string $dependant, condition $condition) {
-        self::ensure_exists($this->hideifs, $dependant)[] = $condition;
+        utils::ensure_exists($this->hideifs, $dependant)[] = $condition;
     }
 
     /**
@@ -172,20 +173,5 @@ class group_render_context extends render_context {
      */
     public function add_checkbox_controller(int $groupid): void {
         $this->root->add_checkbox_controller($groupid);
-    }
-
-    /**
-     * Returns `$array[$key]`, setting it to a new array if it does not exist.
-     *
-     * @param array $array
-     * @param string $key
-     * @return array
-     */
-    private static function &ensure_exists(array &$array, string $key): array {
-        if (!isset($array[$key])) {
-            $array[$key] = [];
-        }
-
-        return $array[$key];
     }
 }
