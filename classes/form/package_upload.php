@@ -26,6 +26,9 @@ namespace qtype_questionpy\form;
 
 defined('MOODLE_INTERNAL') || die;
 
+use qtype_questionpy\package;
+use qtype_questionpy\localizer;
+
 require_once($CFG->libdir . "/formslib.php");
 
 /**
@@ -40,10 +43,29 @@ class package_upload extends \moodleform {
      * Build the form definition.
      */
     protected function definition() {
-        $mform = $this->_form;
+        global $OUTPUT;
 
-        $mform->addElement('hidden', 'courseid', 0);
-        $mform->setType('courseid', PARAM_INT);
+        $mform = $this->_form;
+        $courseid = $this->_customdata['courseid'];
+        $contextid = $this->_customdata['contextid'];
+
+        // Create group which contains selectable QuestionPy packages.
+        $group = array();
+
+        $languages = localizer::get_preferred_languages();
+        $packages = package::get_records(['contextid' => $contextid]);
+
+        foreach ($packages as $package) {
+            // Get localized package texts.
+            $packagearray = $package->as_localized_array($languages);
+
+            $group[] = $mform->createElement('text', 'questionpy_package_hash',
+                $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
+                '', $package->hash
+            );
+        }
+        $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
+        $mform->setType('questionpy_package_container', 'PARAM_RAW');
 
         $maxbytes = get_config('qtype_questionpy', 'applicationserver_maxquestionsize');
         $mform->addElement('filepicker', 'qpy_package', get_string('file'), null,

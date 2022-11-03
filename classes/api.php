@@ -109,4 +109,23 @@ class api {
         return $response->get_data(false);
     }
 
+    /**
+     * Post a .qpy QuestionPy package to the server.
+     *
+     * @param string $filename
+     * @param string $filepath
+     * @return http_response_container
+     */
+    public static function post_package(string $filename, string $filepath): http_response_container {
+        $curlfile = curl_file_create($filepath, $filename);
+        $data = [
+            "hash" => hash_file('sha256', $filepath),
+            "package" => $curlfile
+        ];
+
+        $connector = self::create_connector();
+        $response = $connector->post("/package", $data);
+
+        return $response;
+    }
 }

@@ -24,6 +24,7 @@
 
 use qtype_questionpy\package;
 use qtype_questionpy\localizer;
+use qtype_questionpy\api;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
@@ -40,64 +41,42 @@ $PAGE->set_title(get_string('pluginname', 'qtype_questionpy'));
 $output = $PAGE->get_renderer('core');
 echo $output->header(get_string('pluginname', 'qtype_questionpy'));
 
-$mform = new \qtype_questionpy\form\package_upload();
+$customdata = [
+    'courseid' => $courseid,
+    'contextid' => $context->id
+];
+$mform = new \qtype_questionpy\form\package_upload(null, $customdata);
 $fs = get_file_storage();
 
 if ($mform->is_cancelled()) {
     // This redirect shows a warning, but should be ok (see: https://tracker.moodle.org/browse/CONTRIB-5857).
     redirect(new moodle_url('/course/view.php', ['id' => $courseid]), 'Upload form cancelled.');
 } else if ($fromform = $mform->get_data()) {
-    // If there is a file and it doesn't exist already, save it.
-    // TODO: post request to server with the package file.
-    $name = $mform->get_new_filename('qpy_package');
-    $courseid = $fromform->courseid;
-    if (!$fs->file_exists($context->id, 'qtype_questionpy', 'package', 0, '/', $name)) {
-        $storedfile = $mform->save_stored_file('qpy_package', $context->id, 'qtype_questionpy',
-            'package', 0, '/', $name);
+    $thisurl = new moodle_url('/question/type/questionpy/upload_view.php', ['courseid' => $fromform->courseid]);
 
-        // Placeholder.
-        $package = package::from_array([
-            'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
-            'short_name' => 'adAqMNxOZNhuSUWflNui',
-            'name' => [
-                'en' => $name,
-                'de' => 'de' . $name
-            ],
-            'version' => '865.7797993.0--.0',
-            'type' => 'questiontype',
-            'author' => 'Mario Hunt',
-            'url' => 'http://www.kane.com/',
-            'languages' => [
-                0 => 'en',
-                1 => 'de'
-            ],
-            'description' => [
-                'en' => 'en: Activity organization letter. Report alone why center.
-                    Real outside glass maintain right hear.
-                    Brother develop process work. Build ago north.
-                    Develop with defense understand garden recently work.',
-                'de' => 'de: Activity few enter medical side position. Safe need no guy price.
-                    Source necessary our me series month seven born.
-                    Anyone everything interest where accept apply. Expert great significant.'
-            ],
-            'icon' => 'https://placehold.jp/40e47e/598311/150x150.png',
-            'license' => '',
-            'tags' => [
-                0 => 'fXuprCRqsLnQQYzFZgAt'
-            ]
-        ]);
+    $name = $mform->get_new_filename('qpy_package');
+    if ($fs->file_exists($context->id, 'qtype_questionpy', 'package', 0, '/', $name)) {
+         redirect($thisurl, "File with this name already exists in this context.",
+             500, \core\output\notification::NOTIFY_WARNING);
+    }
+
+    $storedfile = $mform->save_stored_file('qpy_package', $context->id, 'qtype_questionpy',
+        'package', 0, '/', $name);
+
+    $filesystem = $fs->get_file_system();
+    $path = $filesystem->get_local_path_from_storedfile($storedfile, true);
+    $response = api::post_package($name, $path);
+    if ($response->code != http_response_code(200)) {
+        $storedfile->delete();
+        redirect($thisurl, "HTTP Response code: " . $response->code,
+          500, \core\output\notification::NOTIFY_ERROR);
+    } else {
+        $package = package::from_array($response->get_data());
         $package->store_in_db($context->id);
     }
-    redirect(new moodle_url('/question/type/questionpy/upload_view.php', ['courseid' => $courseid]));
+
+    redirect($thisurl, "Package saved.", 500, \core\output\notification::NOTIFY_SUCCESS);
 } else {
-    $languages = localizer::get_preferred_languages();
-    $packages = package::get_records(['contextid' => $context->id]);
-    foreach ($packages as $package) {
-        $packagearray = $package->as_localized_array($languages);
-        echo $output->render_from_template('qtype_questionpy/package', $packagearray);
-    }
-    $mform->set_data(['courseid' => $courseid]);
-    $files = $fs->get_area_files($context->id, 'qtype_questionpy', 'package');
     $mform->display();
 }
 
