@@ -65,7 +65,7 @@ class package_upload extends \moodleform {
             );
         }
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
-        $mform->setType('questionpy_package_container', 'PARAM_RAW');
+        $mform->setType('questionpy_package_container', PARAM_TEXT);
 
         $maxbytes = get_config('qtype_questionpy', 'applicationserver_maxquestionsize');
         $mform->addElement('filepicker', 'qpy_package', get_string('file'), null,

@@ -119,13 +119,12 @@ class api {
     public static function post_package(string $filename, string $filepath): http_response_container {
         $curlfile = curl_file_create($filepath, $filename);
         $data = [
-            "hash" => hash_file('sha256', $filepath),
-            "package" => $curlfile
+            'main' => 'main',
+            'hash' => hash_file('sha256', $filepath),
+            'package' => $curlfile
         ];
 
         $connector = self::create_connector();
-        $response = $connector->post("/package", $data);
-
-        return $response;
+        return $connector->post('/package', $data);
     }
 }
