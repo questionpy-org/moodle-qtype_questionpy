@@ -24,6 +24,7 @@
 
 use qtype_questionpy\package;
 use qtype_questionpy\api;
+use core\output\notification;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
@@ -54,8 +55,10 @@ if ($mform->is_cancelled()) {
 } else if ($fromform = $mform->get_data()) {
     // File has been submitted in the form. Check if a file with this name already exists in this context.
     $filename = $mform->get_new_filename('qpy_package');
-    if ($fs->file_exists($context->id, 'qtype_questionpy', 'package', 0, '/', $filename)) {
-         redirect($thisurl, "File with this name already exists in this context.", 500, \core\output\notification::NOTIFY_WARNING);
+    if ($fs->file_exists($context->id, 'qtype_questionpy', 'package',
+        0, '/', $filename)) {
+        redirect($thisurl, "File with this name already exists in this context.", 500,
+            notification::NOTIFY_WARNING);
     }
 
     // Store file locally with the File API.
@@ -70,14 +73,15 @@ if ($mform->is_cancelled()) {
     if ($response->code != http_response_code(201)) {
         // If the file could not be saved on the server, also delete it in the file API.
         $storedfile->delete();
-        redirect($thisurl, "HTTP Response code: " . $response->code, 500, \core\output\notification::NOTIFY_ERROR);
+        redirect($thisurl, "HTTP Response code: " . $response->code, 500,
+            notification::NOTIFY_ERROR);
     }
 
     // Store package_info in the DB.
     $package = package::from_array($response->get_data());
     $package->store_in_db($context->id);
 
-    redirect($thisurl, "Package saved.", 500, \core\output\notification::NOTIFY_SUCCESS);
+     redirect($thisurl, "Package saved.", 500, notification::NOTIFY_SUCCESS);
 } else {
     $mform->display();
 }

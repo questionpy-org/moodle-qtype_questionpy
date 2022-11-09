@@ -110,21 +110,23 @@ class api {
     }
 
     /**
-     * Post a .qpy QuestionPy package to the server.
+     * Get the Package information from the server.
      *
      * @param string $filename
      * @param string $filepath
+     * @param bool $withhash if true: calculates the package hash and sends it with the request
      * @return http_response_container
      */
-    public static function post_package(string $filename, string $filepath): http_response_container {
+    public static function post_package(string $filename, string $filepath, bool $withhash = false): http_response_container {
         $curlfile = curl_file_create($filepath, $filename);
         $data = [
-            'main' => 'main',
-            'hash' => hash_file('sha256', $filepath),
             'package' => $curlfile
         ];
-
+        $path = "/packages/";
+        if ($withhash) {
+            $path = $path . hash_file('sha256', $filepath);
+        }
         $connector = self::create_connector();
-        return $connector->post('/package', $data);
+        return $connector->post($path, $data);
     }
 }
