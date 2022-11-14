@@ -19,8 +19,6 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Element which is not displayed at all, but adds a fixed name/value pair to the form data upon submission.
  *

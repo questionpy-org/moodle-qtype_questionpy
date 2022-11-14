@@ -19,8 +19,6 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\render_context;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Element displaying static text and a label.
  *
