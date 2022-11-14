@@ -399,7 +399,7 @@ array_converter::configure(package::class, function (converter_config $config) {
     $config
         ->rename("hash", "package_hash")
         ->rename("shortname", "short_name")
-        # The DB rows are also read using array_converter, but their columns are named differently to the json fields.
+        // The DB rows are also read using array_converter, but their columns are named differently to the json fields.
         ->alias("hash", "hash")
         ->alias("shortname", "shortname");
 });

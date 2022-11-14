@@ -16,8 +16,6 @@
 
 namespace qtype_questionpy\form\elements;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * One option in a {@see radio_group_element} or a {@see select_element}.
  *
