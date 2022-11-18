@@ -94,11 +94,9 @@ if ($mform->is_cancelled()) {
                 $errormessage = $errormessage . $ex->getMessage();
             }
         }
-        // redirect($thisurl, $errormessage, 500, notification::NOTIFY_ERROR);
         notice($errormessage, $thisurl);
     }
     notice("Package saved.", $thisurl);
-    // redirect($thisurl, "Package saved.", 500, notification::NOTIFY_SUCCESS);
 } else {
     $mform->display();
 }
