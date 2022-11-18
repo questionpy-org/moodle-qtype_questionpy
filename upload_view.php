@@ -25,6 +25,7 @@
 use qtype_questionpy\package;
 use qtype_questionpy\api;
 use core\output\notification;
+use qtype_questionpy\array_converter\array_converter;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
@@ -64,22 +65,36 @@ if ($mform->is_cancelled()) {
     // Store file locally with the File API.
     $storedfile = $mform->save_stored_file('qpy_package', $context->id, 'qtype_questionpy',
         'package', 0, '/', $filename);
+    $package = null;
 
-    // Try to post the file to the server.
-    $filesystem = $fs->get_file_system();
-    $path = $filesystem->get_local_path_from_storedfile($storedfile, true);
-    $response = api::post_package($filename, $path);
+    try {
+        // Try to post the file to the server.
+        $filesystem = $fs->get_file_system();
+        $path = $filesystem->get_local_path_from_storedfile($storedfile, true);
+        $response = api::post_package($filename, $path);
 
-    if ($response->code != http_response_code(201)) {
-        // If the file could not be saved on the server, also delete it in the file API.
+        if ($response->code != http_response_code(201)) {
+            throw new moodle_exception("serverconnection", "error", "", null,
+                "Server response code: $response->code \n Server response: {$response->get_data()}");
+        }
+
+        // Save package info in the DB.
+        $package = array_converter::from_array(package::class, $response->get_data());
+        $package->store_in_db($context->id);
+
+    } catch (moodle_exception $e) {
+        // If anything goes wrong while saving the file, rollback.
         $storedfile->delete();
-        redirect($thisurl, "HTTP Response code: " . $response->code, 500,
-            notification::NOTIFY_ERROR);
+        $errormessage = $e->getMessage();
+        if ($package) {
+            try {
+                $package->delete_from_db();
+            } catch (moodle_exception $ex) {
+                $errormessage = $errormessage . $ex->getMessage();
+            }
+        }
+        redirect($thisurl, $errormessage, 500, notification::NOTIFY_ERROR);
     }
-
-    // Store package_info in the DB.
-    $package = package::from_array($response->get_data());
-    $package->store_in_db($context->id);
 
      redirect($thisurl, "Package saved.", 500, notification::NOTIFY_SUCCESS);
 } else {

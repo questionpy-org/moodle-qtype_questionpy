@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy;
 
+use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 
@@ -192,7 +193,7 @@ class package {
      *
      * @param int $contextid
      * @return void
-     * @throws \dml_exception
+     * @throws moodle_exception
      */
     public function store_in_db(int $contextid = 0) {
         global $DB;
@@ -232,10 +233,21 @@ class package {
         }
         $transaction = $DB->start_delegated_transaction();
         try {
-            $DB->insert_records('qtype_questionpy_tags', $tagsdata);
-            $DB->insert_records('qtype_questionpy_language', $languagedata);
-        } catch (\dml_exception $e) {
-            $DB->rollback_delegated_transaction($transaction, $e);
+            try {
+                $DB->insert_records('qtype_questionpy_tags', $tagsdata);
+                $DB->insert_records('qtype_questionpy_language', $languagedata);
+            } catch (\dml_exception $e) {
+                $DB->rollback_delegated_transaction($transaction, $e);
+            }
+        } catch (\coding_exception | \dml_transaction_exception | \Throwable $e) {
+            throw new moodle_exception("dmltransactionexception", "error", "", null,
+                "Cannot delete records from DB. Transaction rollback failed.");
+        }
+
+        if ($transaction->is_disposed()) {
+            // Transaction was rolled back earlier.
+            throw new moodle_exception("invalidrecordunknown", "error", "", null,
+                "Cannot insert $tagsdata or $languagedata into table. Transaction rollback.");
         }
         $DB->commit_delegated_transaction($transaction);
     }
@@ -246,25 +258,31 @@ class package {
      *  - qtype_questionpy_language
      *  - qtype_questionpy_tags
      *
-     * @return bool
-     * @throws \Throwable
-     * @throws \coding_exception
-     * @throws \dml_transaction_exception
+     * @throws moodle_exception
      */
-    public function delete_from_db(): boolean {
+    public function delete_from_db() {
         global $DB;
         $transaction = $DB->start_delegated_transaction();
         $packageid = $DB->get_field('qtype_questionpy_package', 'id', ['hash' => $this->hash]);
         try {
-            $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
-            $DB->delete_records('qtype_questionpy_language', ['packageid' => $packageid]);
-            $DB->delete_records('qtype_questionpy_tags', ['packageid' => $packageid]);
-        } catch (\dml_exception $e) {
-            $DB->rollback_delegated_transaction($transaction, $e);
-            return false;
+            try {
+                $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
+                $DB->delete_records('qtype_questionpy_language', ['packageid' => $packageid]);
+                $DB->delete_records('qtype_questionpy_tags', ['packageid' => $packageid]);
+            } catch (\dml_exception $e) {
+                $DB->rollback_delegated_transaction($transaction, $e);
+            }
+        } catch (\coding_exception | \dml_transaction_exception | \Throwable $e) {
+            throw new moodle_exception("dmltransactionexception", "error", "", null,
+                    "Cannot delete records from DB. Transaction rollback failed: $e->debuginfo");
+        }
+
+        if ($transaction->is_disposed()) {
+            // Transaction was rolled back earlier.
+            throw new moodle_exception("invalidrecordunknown", "error", "", null,
+                "Cannot delete records from DB. Transaction rollback.");
         }
         $DB->commit_delegated_transaction($transaction);
-        return true;
     }
 
     /**
