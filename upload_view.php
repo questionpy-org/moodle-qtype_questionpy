@@ -29,6 +29,7 @@ use qtype_questionpy\array_converter\array_converter;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
+global $PAGE;
 $courseid = optional_param('courseid', 2, PARAM_INT);
 
 require_login($courseid);
@@ -71,7 +72,7 @@ if ($mform->is_cancelled()) {
         // Try to post the file to the server.
         $filesystem = $fs->get_file_system();
         $path = $filesystem->get_local_path_from_storedfile($storedfile, true);
-        $response = api::post_package($filename, $path);
+        $response = api::package_extract_info($filename, $path);
 
         if ($response->code != http_response_code(201)) {
             throw new moodle_exception("serverconnection", "error", "", null,
@@ -93,10 +94,11 @@ if ($mform->is_cancelled()) {
                 $errormessage = $errormessage . $ex->getMessage();
             }
         }
-        redirect($thisurl, $errormessage, 500, notification::NOTIFY_ERROR);
+        // redirect($thisurl, $errormessage, 500, notification::NOTIFY_ERROR);
+        notice($errormessage, $thisurl);
     }
-
-     redirect($thisurl, "Package saved.", 500, notification::NOTIFY_SUCCESS);
+    notice("Package saved.", $thisurl);
+    // redirect($thisurl, "Package saved.", 500, notification::NOTIFY_SUCCESS);
 } else {
     $mform->display();
 }
