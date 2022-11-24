@@ -5,7 +5,7 @@
   "button_label": "",
   "elements": [
     {
-      "kind": "text_input",
+      "kind": "input",
       "name": "item",
       "label": "",
       "placeholder": null,

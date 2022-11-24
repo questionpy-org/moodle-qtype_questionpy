@@ -53,3 +53,4 @@ $string['curl_init_error'] = 'Could not initialize cURL. Error number: {$a}';
 $string['curl_exec_error'] = 'Error while fetching from server. Error number: {$a}';
 $string['curl_set_opt_error'] = 'Failed to set cURL option. Error number: {$a}';
 $string['json_parsing_error'] = 'Could not parse data to JSON.';
+$string['server_bad_status'] = 'The QuestionPy server could not successfully complete our request. Status code: {$a}';

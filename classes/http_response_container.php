@@ -57,8 +57,8 @@ class http_response_container {
      * Returns data as string or parsed associative array.
      *
      * @param bool $json if true, parse string to associative array
-     * @throws moodle_exception
      * @return string|array
+     * @throws moodle_exception
      */
     public function get_data(bool $json = true) {
         if (!$json) {
@@ -77,5 +77,16 @@ class http_response_container {
         }
 
         return $this->json;
+    }
+
+    /**
+     * Throws a {@see moodle_exception} if the response status code is not 2xx (successful).
+     *
+     * @throws moodle_exception if the response status code is not 2xx (successful).
+     */
+    public function assert_2xx(): void {
+        if ($this->code < 200 || $this->code >= 300) {
+            throw new moodle_exception('server_bad_status', 'qtype_questionpy', '', $this->code);
+        }
     }
 }

@@ -18,6 +18,7 @@ namespace qtype_questionpy;
 
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\form\qpy_form;
 use TypeError;
 
 /**
@@ -44,8 +45,8 @@ class api {
     /**
      * Retrieves QuestionPy packages from the application server.
      *
-     * @throws moodle_exception
      * @return package[]
+     * @throws moodle_exception
      */
     public static function get_packages(): array {
         // Retrieve packages from server.
@@ -70,10 +71,37 @@ class api {
     }
 
     /**
+     * Retrieve the question edit form definition for a given package.
+     *
+     * @param string $packagehash  package whose form should be requested
+     * @param array $questionstate current question state, or an empty array for new questions
+     * @return qpy_form
+     * @throws moodle_exception
+     */
+    public static function get_question_edit_form(string $packagehash, array $questionstate): qpy_form {
+        $connector = self::create_connector();
+
+        // TODO: Don't send the question state unconditionally, try the hash first.
+        $statestr = json_encode($questionstate);
+        $statehash = hash("sha256", $statestr);
+
+        $response = $connector->post("/packages/$packagehash/options", [
+            "main" => json_encode([
+                "question_state_hash" => $statehash,
+                // TODO: Send an actual context.
+                "context" => 1
+            ]),
+            "question_state" => $statestr
+        ]);
+        $response->assert_2xx();
+        return array_converter::from_array(qpy_form::class, $response->get_data());
+    }
+
+    /**
      * Hello world example.
      *
-     * @throws moodle_exception
      * @return string
+     * @throws moodle_exception
      */
     public static function get_hello_world(): string {
         $connector = self::create_connector();

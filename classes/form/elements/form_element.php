@@ -44,5 +44,5 @@ array_converter::configure(form_element::class, function (converter_config $conf
         ->variant("repetition", repetition_element::class)
         ->variant("select", select_element::class)
         ->variant("static_text", static_text_element::class)
-        ->variant("text_input", text_input_element::class);
+        ->variant("input", text_input_element::class);
 });

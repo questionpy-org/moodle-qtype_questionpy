@@ -23,19 +23,6 @@
  */
 
 use qtype_questionpy\api;
-use qtype_questionpy\form\conditions\equals;
-use qtype_questionpy\form\conditions\is_not_checked;
-use qtype_questionpy\form\elements\checkbox_element;
-use qtype_questionpy\form\elements\checkbox_group_element;
-use qtype_questionpy\form\elements\group_element;
-use qtype_questionpy\form\elements\option;
-use qtype_questionpy\form\elements\radio_group_element;
-use qtype_questionpy\form\elements\repetition_element;
-use qtype_questionpy\form\elements\select_element;
-use qtype_questionpy\form\elements\static_text_element;
-use qtype_questionpy\form\elements\text_input_element;
-use qtype_questionpy\form\form_section;
-use qtype_questionpy\form\qpy_form;
 use qtype_questionpy\form\root_render_context;
 use qtype_questionpy\localizer;
 
@@ -102,43 +89,26 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
 
-        $form = new qpy_form([
-            new static_text_element("my_static_text", "Some blurb", "This is just for lookin' at"),
-            new text_input_element("some_text", "Enter some text", true, "default", "placeholder"),
-            new select_element("select1", "A dropdown", [
-                new option("Option 1", "opt1"),
-                new option("Option 2", "opt2"),
-            ], true, true),
-            new checkbox_group_element(
-                new checkbox_element("chk1", "Option 1", null, true, true),
-                new checkbox_element("chk2", "Option 2", null, false, true),
-            ),
-            new checkbox_group_element(
-                new checkbox_element("chk3", "Option 3"),
-                new checkbox_element("chk4", "Option 4"),
-            ),
-            new radio_group_element("radio1", "Choose just one", [
-                new option("Option 1", "opt1"),
-                new option("Option 2", "opt2"),
-            ], true),
-        ], [
-            new form_section("Conditional Element Demo", [
-                new checkbox_element("show_all", null, "Check me to show some more elements"),
-                (new group_element("name_group", "Your Name", [
-                    new text_input_element("first_name", "First", true),
-                    new text_input_element("last_name", "Last"),
-                ]))->hide_if(new is_not_checked("show_all")),
-                (new checkbox_element("last_name_public", null, "Show my last name on my public profile"))
-                    ->hide_if(new is_not_checked("show_all"))
-                    ->disable_if(new equals("last_name", ""))
-            ]),
-            new form_section("Repeated", [
-                new repetition_element(5, 2, "Add {no} more repetitions", [
-                    new text_input_element("repeated_element", "Repetition {no}")
-                ])
-            ])
-        ]);
-        $form->render_to(new root_render_context($this, $mform));
+        // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
+        // package has simply been changed. The hidden element is enabled from JS when changing packages.
+        $mform->registerNoSubmitButton("package_changed");
+        $mform->addElement("hidden", "package_changed", "true", ["disabled" => "disabled"]);
+        $mform->setType("package_changed", PARAM_RAW);
+
+        // Accessing the global $_REQUEST here probably isn't the best. Unfortunately, we only have non-global access
+        // to the previous state of the question at this point. Sometime after definition() returns, we are provided
+        // with the newly submitted data using updateSubmission(). (See the end of the moodleform constructor.)
+        //
+        // The method definition_after_data() is intended for this case, however it is called after the default form
+        // elements (tags, action buttons) have already been added, so we would need to add the package's form into the
+        // middle of the existing elements. QuickForm supports this via insertElementBefore(), but moodleform's
+        // repeat_elements and add_checkbox_controller do not.
+        $packagehash = ($_REQUEST["questionpy_package_container"] ?? null)["questionpy_package_hash"] ?? null;
+        if ($packagehash) {
+            // A package is selected -> render its form.
+            $packageform = api::get_question_edit_form($packagehash, []);
+            $packageform->render_to(new root_render_context($this, $mform));
+        }
     }
 
     /**
