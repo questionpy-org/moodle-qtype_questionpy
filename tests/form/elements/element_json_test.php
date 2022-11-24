@@ -105,7 +105,7 @@ class element_json_test extends \advanced_testcase {
                 new option("Option 2", "opt2"),
             ], true, true))->disable_if(new in("input1", ["valid", "also valid"]))],
             ["static_text.json", new static_text_element("my_text", "Label", "Lorem ipsum dolor sit amet.")],
-            ["text_input.json", new text_input_element("my_field", "Label", true, "default", "placeholder")],
+            ["input.json", new text_input_element("my_field", "Label", true, "default", "placeholder")],
         ];
     }
 }

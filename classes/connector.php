@@ -181,7 +181,7 @@ class connector {
             $contenttype = is_string($data) ? 'application/json' : 'multipart/form-data';
             $this->set_opts([
                 CURLOPT_POSTFIELDS => $data,
-                CURLOPT_HTTPHEADER => "Content-Type: $contenttype"
+                CURLOPT_HTTPHEADER => ["Content-Type: $contenttype"]
             ]);
         }
 

@@ -1,5 +1,5 @@
 {
-  "kind": "text_input",
+  "kind": "input",
   "name": "my_field",
   "label": "Label",
   "default": "default",

@@ -38,6 +38,7 @@ class qtype_questionpy extends question_type {
 
     /**
      * Description
+     *
      * @return bool true if this question type sometimes requires manual grading.
      */
     public function is_manual_graded() {
@@ -47,7 +48,7 @@ class qtype_questionpy extends question_type {
     /**
      * Whether a quesiton instance has to be graded manually.
      *
-     * @param object $question a question of this type.
+     * @param object $question            a question of this type.
      * @param string $otherquestionsinuse comma-separate list of other question ids in this attempt.
      * @return bool true if a particular instance of this question requires manual grading.
      */
@@ -56,12 +57,11 @@ class qtype_questionpy extends question_type {
         return $this->is_manual_graded();
     }
 
-
     /**
      * Deletes the question-type specific data when a question is deleted.
      *
      * @param int $questionid the question being deleted.
-     * @param int $contextid the context this question belongs to.
+     * @param int $contextid  the context this question belongs to.
      */
     public function delete_question($questionid, $contextid) {
         global $DB;
@@ -74,12 +74,26 @@ class qtype_questionpy extends question_type {
      * Calculate the score a monkey would get on a question by clicking randomly.
      *
      * @param stdClass $questiondata data defining a question, as returned by
-     *      question_bank::load_question_data().
+     *                               question_bank::load_question_data().
      * @return number|null either a fraction estimating what the student would
-     *      score by guessing, or null, if it is not possible to estimate.
+     *                               score by guessing, or null, if it is not possible to estimate.
      */
     public function get_random_guess_score($questiondata) {
         // TODO: computing this has to be delegated to the question developer. This has to be requested at the application server.
         return 0;
+    }
+
+    /**
+     * Adds the `edit_question` JS module to the requires before rendering the question edit form.
+     *
+     * @param qtype_questionpy_edit_form $mform the {@see qtype_questionpy_edit_form form} to be rendered
+     * @param object $question                  probably {@see qtype_questionpy_question}?
+     * @param string $wizardnow
+     * @return void
+     */
+    public function display_question_editing_page($mform, $question, $wizardnow) {
+        global $PAGE;
+        $PAGE->requires->js_call_amd("qtype_questionpy/edit_question", "init");
+        parent::display_question_editing_page($mform, $question, $wizardnow);
     }
 }

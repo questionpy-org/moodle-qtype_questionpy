@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "grunt": "^1.5.3",
+    "grunt-contrib-less": "^3.0.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-load-gruntfile": "^0.0.2"
+  }
+}

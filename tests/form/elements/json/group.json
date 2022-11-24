@@ -4,7 +4,7 @@
   "label": "Name",
   "elements": [
     {
-      "kind": "text_input",
+      "kind": "input",
       "name": "first_name",
       "label": "",
       "required": true,
@@ -14,7 +14,7 @@
       "hide_if": []
     },
     {
-      "kind": "text_input",
+      "kind": "input",
       "name": "last_name",
       "label": "",
       "required": false,
