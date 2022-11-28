@@ -1,4 +1,5 @@
 {
+  "name": "moodle-qtype_questionpy",
   "devDependencies": {
     "grunt": "^1.5.3",
     "grunt-contrib-less": "^3.0.0",
