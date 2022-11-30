@@ -23,7 +23,7 @@
  * question, while still re-rendering the form with access to the new selected package hash.
  */
 export function init() {
-    document.getElementsByName("questionpy_package_container[questionpy_package_hash]")
+    document.getElementsByName("qpy_package_hash")
         .forEach(radio => radio.addEventListener("change", e => {
             document.getElementsByName("package_changed").forEach(hidden => {
                 hidden.removeAttribute("disabled");

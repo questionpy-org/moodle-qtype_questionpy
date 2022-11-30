@@ -45,7 +45,7 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::addElement()
      */
     public function add_element(string $type, string $name, ...$args): object {
-        return $this->mform->addElement($type, $name, ...$args);
+        return $this->mform->addElement($type, form_name_mangler::mangle($name), ...$args);
     }
 
     /**
@@ -56,7 +56,7 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::setType()
      */
     public function set_type(string $name, string $type): void {
-        $this->mform->setType($name, $type);
+        $this->mform->setType(form_name_mangler::mangle($name), $type);
     }
 
     /**
@@ -67,7 +67,7 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::setDefault()
      */
     public function set_default(string $name, $default): void {
-        $this->mform->setDefault($name, $default);
+        $this->mform->setDefault(form_name_mangler::mangle($name), $default);
     }
 
     /**
@@ -87,7 +87,7 @@ class root_render_context extends render_context {
      */
     public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
-        $this->mform->addRule($name, $message, $type, $format, $validation, $reset, $force);
+        $this->mform->addRule(form_name_mangler::mangle($name), $message, $type, $format, $validation, $reset, $force);
     }
 
     /**
@@ -98,7 +98,11 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::disabledIf()
      */
     public function disable_if(string $dependant, condition $condition) {
-        $this->mform->disabledIf($dependant, $condition->name, ...$condition->to_mform_args());
+        $this->mform->disabledIf(
+            form_name_mangler::mangle($dependant),
+            form_name_mangler::mangle($condition->name),
+            ...$condition->to_mform_args()
+        );
     }
 
     /**
@@ -109,7 +113,11 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::hideIf()
      */
     public function hide_if(string $dependant, condition $condition) {
-        $this->mform->hideIf($dependant, $condition->name, ...$condition->to_mform_args());
+        $this->mform->hideIf(
+            form_name_mangler::mangle($dependant),
+            form_name_mangler::mangle($condition->name),
+            ...$condition->to_mform_args()
+        );
     }
 
     /**
