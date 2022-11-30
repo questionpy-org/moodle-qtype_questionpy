@@ -22,6 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\package;
+use qtype_questionpy\question_db_utils;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/questionlib.php');
@@ -64,9 +67,7 @@ class qtype_questionpy extends question_type {
      * @param int $contextid  the context this question belongs to.
      */
     public function delete_question($questionid, $contextid) {
-        global $DB;
-        $DB->delete_records('qtype_questionpy', array('questionid' => $questionid));
-
+        question_db_utils::delete_question($questionid);
         parent::delete_question($questionid, $contextid);
     }
 
@@ -95,5 +96,31 @@ class qtype_questionpy extends question_type {
         global $PAGE;
         $PAGE->requires->js_call_amd("qtype_questionpy/edit_question", "init");
         parent::display_question_editing_page($mform, $question, $wizardnow);
+    }
+
+    /**
+     * @param object $question this holds the information from the editing form, it is not a standard question object
+     * @return void
+     * @throws moodle_exception
+     */
+    public function save_question_options($question) {
+        if (!isset($question->qpy_package_hash)) {
+            // A package has not yet been selected, so there is no package-specific data to save.
+            return;
+        }
+
+        question_db_utils::upsert_question($question);
+    }
+
+    public function get_question_options($question): bool {
+        if (!parent::get_question_options($question)) {
+            return false;
+        }
+
+        foreach (question_db_utils::get_question($question->id) as $key => $value) {
+            $question->{$key} = $value;
+        }
+
+        return true;
     }
 }

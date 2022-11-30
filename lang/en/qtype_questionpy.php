@@ -48,6 +48,9 @@ $string['selection_no_package_title'] = 'QuestionPy';
 $string['selection_no_package_text'] = 'No packages available.';
 $string['selection_required'] = 'Please select a package.';
 
+// Question management.
+$string['package_not_found'] = 'The requested package {$a->packagehash} does not exist.';
+
 // Connector.
 $string['curl_init_error'] = 'Could not initialize cURL. Error number: {$a}';
 $string['curl_exec_error'] = 'Error while fetching from server. Error number: {$a}';

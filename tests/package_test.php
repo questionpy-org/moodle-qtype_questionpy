@@ -177,7 +177,7 @@ class package_test extends \advanced_testcase {
 
         $initial = package_provider1();
         $initial->store_in_db();
-        $final = package::get_record_by_hash($initial->hash);
+        list(,$final) = package::get_record_by_hash($initial->hash);
 
         $difference = $initial->difference_from($final);
         $this->assertEmpty($difference);

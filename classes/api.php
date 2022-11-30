@@ -71,27 +71,45 @@ class api {
     }
 
     /**
+     * Retrieves the package with the given hash, returns null if not found.
+     *
+     * @param string $hash the hash of the package to get
+     * @return ?package the package with the given hash or null if not found
+     * @throws moodle_exception
+     */
+    public static function get_package(string $hash): ?package {
+        $connector = self::create_connector();
+        $response = $connector->get("/packages/$hash");
+
+        if ($response->code === 404) {
+            return null;
+        }
+        $response->assert_2xx();
+
+        return array_converter::from_array(package::class, $response->get_data());
+    }
+
+    /**
      * Retrieve the question edit form definition for a given package.
      *
-     * @param string $packagehash  package whose form should be requested
-     * @param array $questionstate current question state, or an empty array for new questions
+     * @param string $packagehash   package whose form should be requested
+     * @param string $questionstate current question state
      * @return qpy_form
      * @throws moodle_exception
      */
-    public static function get_question_edit_form(string $packagehash, array $questionstate): qpy_form {
+    public static function get_question_edit_form(string $packagehash, string $questionstate): qpy_form {
         $connector = self::create_connector();
 
-        // TODO: Don't send the question state unconditionally, try the hash first.
-        $statestr = json_encode($questionstate);
-        $statehash = hash("sha256", $statestr);
+        $statehash = hash("sha256", $questionstate);
 
         $response = $connector->post("/packages/$packagehash/options", [
             "main" => json_encode([
                 "question_state_hash" => $statehash,
                 // TODO: Send an actual context.
-                "context" => 1
+                "context" => 1,
             ]),
-            "question_state" => $statestr
+            // TODO: Don't send the question state unconditionally, try the hash first.
+            "question_state" => $questionstate,
         ]);
         $response->assert_2xx();
         return array_converter::from_array(qpy_form::class, $response->get_data());

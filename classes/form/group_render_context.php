@@ -47,8 +47,8 @@ class group_render_context extends render_context {
      */
     public array $defaults = [];
     /**
-     * @var array associative array of element names to arrays of rules for that element, where each rule is the array
-     *      of arguments passed to {@see \MoodleQuickForm::addRule()} not including the element name
+     * @var array associative array of mangled element names to arrays of rules for that element, where each rule is
+     *      the array of arguments passed to {@see \MoodleQuickForm::addRule()} not including the element name
      */
     public array $rules = [];
     /**
@@ -86,7 +86,7 @@ class group_render_context extends render_context {
      * @see \MoodleQuickForm::addElement()
      */
     public function add_element(string $type, string $name, ...$args): object {
-        $element = $this->root->mform->createElement($type, $name, ...$args);
+        $element = $this->root->mform->createElement($type, form_name_mangler::mangle($name), ...$args);
         $this->elements[] = $element;
         return $element;
     }
@@ -130,7 +130,9 @@ class group_render_context extends render_context {
      */
     public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
-        utils::ensure_exists($this->rules, $name)[] = [$message, $type, $format, $validation, $reset];
+        utils::ensure_exists($this->rules, form_name_mangler::mangle($name))[] = [
+            $message, $type, $format, $validation, $reset
+        ];
     }
 
     /**

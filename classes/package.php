@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy;
 
+use dml_exception;
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
@@ -192,14 +193,17 @@ class package {
      * Tags are mapped packageid->tag in the table  qtype_questionpy_tags.
      *
      * @param int $contextid
-     * @return void
-     * @throws moodle_exception
+     * @return int the ID of the inserted record in the DB
+     * @throws \coding_exception
+     * @throws dml_exception
      */
-    public function store_in_db(int $contextid = 0) {
+    public function store_in_db(int $contextid = 0): int {
         global $DB;
 
+        $transaction = $DB->start_delegated_transaction();
+
         // Store the language independent package data.
-        $packagedata = [
+        $packageid = $DB->insert_record('qtype_questionpy_package', [
             "contextid" => $contextid,
             "hash" => $this->hash,
             "shortname" => $this->shortname,
@@ -209,34 +213,36 @@ class package {
             "url" => $this->url,
             "icon" => $this->icon,
             "license" => $this->license
-        ];
+        ]);
 
-        $transaction = $DB->start_delegated_transaction();
-        $packageid = $DB->insert_record('qtype_questionpy_package', $packagedata);
-
-        // For each language store the localized package data as a separate record.
-        $languagedata = array();
-        foreach ($this->languages as $language) {
-            $languagedata[] = [
-                "packageid" => $packageid,
-                "language" => $language,
-                "name" => $this->get_localized_property($this->name, [$language]),
-                "description" => $this->get_localized_property($this->description, [$language])
-            ];
+        if ($this->languages) {
+            // For each language store the localized package data as a separate record.
+            $languagedata = [];
+            foreach ($this->languages as $language) {
+                $languagedata[] = [
+                    "packageid" => $packageid,
+                    "language" => $language,
+                    "name" => $this->get_localized_property($this->name, [$language]),
+                    "description" => $this->get_localized_property($this->description, [$language])
+                ];
+            }
+            $DB->insert_records('qtype_questionpy_language', $languagedata);
         }
 
-        // Store each tag with the package hash in the tag table.
-        $tagsdata = array();
-        foreach ($this->tags as $tag) {
-            $tagsdata[] = [
-                "packageid" => $packageid,
-                "tag" => $tag,
-            ];
+        if ($this->tags) {
+            // Store each tag with the package hash in the tag table.
+            $tagsdata = [];
+            foreach ($this->tags as $tag) {
+                $tagsdata[] = [
+                    "packageid" => $packageid,
+                    "tag" => $tag,
+                ];
+            }
+            $DB->insert_records('qtype_questionpy_tags', $tagsdata);
         }
 
-        $DB->insert_records('qtype_questionpy_tags', $tagsdata);
-        $DB->insert_records('qtype_questionpy_language', $languagedata);
         $transaction->allow_commit();
+        return $packageid;
     }
 
     /**
@@ -262,33 +268,33 @@ class package {
      * Get a specific package by its hash from the db.
      *
      * @param string $hash
-     * @return package
-     * @throws \dml_exception
+     * @return ?array [id of database record, package instance] or null if not found
+     * @throws dml_exception
+     * @throws moodle_exception
      */
-    public static function get_record_by_hash(string $hash): package {
+    public static function get_record_by_hash(string $hash): ?array {
         global $DB;
-        $package = (array)$DB->get_record('qtype_questionpy_package', ['hash' => $hash]);
-        list($language, $name, $description) = self::get_languagedata($package["id"]);
-        $tags = self::get_tagdata($package["id"]);
-        $temp = [
-            'languages' => $language,
-            'name' => $name,
-            'description' => $description,
-            'tags' => $tags
-        ];
-        $package = array_merge($package, $temp);
-        return array_converter::from_array(self::class, $package);
+        $package = $DB->get_record('qtype_questionpy_package', ['hash' => $hash]);
+        if (!$package) {
+            return null;
+        }
+
+        list($package->language, $package->name, $package->description) = self::get_languagedata($package->id);
+        $package->tags = self::get_tagdata($package->id);
+
+        return [$package->id, array_converter::from_array(self::class, (array)$package)];
     }
 
     /**
      * Get packages from the db matching given conditions. Note: only conditions stored in the package table
      * are applicable.
      *
-     * @param array $conditions
+     * @param ?array $conditions
      * @return array
-     * @throws \dml_exception
+     * @throws dml_exception
+     * @throws moodle_exception
      */
-    public static function get_records(array $conditions = null): array {
+    public static function get_records(?array $conditions = null): array {
         global $DB;
         $records = $DB->get_records('qtype_questionpy_package', $conditions);
         $packages = array();
@@ -313,7 +319,7 @@ class package {
      *
      * @param int $packageid
      * @return array
-     * @throws \dml_exception
+     * @throws dml_exception
      */
     private static function get_languagedata(int $packageid) {
         global $DB;
@@ -334,7 +340,7 @@ class package {
      *
      * @param int $packageid
      * @return array
-     * @throws \dml_exception
+     * @throws dml_exception
      */
     private static function get_tagdata(int $packageid) {
         global $DB;

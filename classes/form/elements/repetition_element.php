@@ -18,6 +18,7 @@ namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\form\form_name_mangler;
 use qtype_questionpy\form\group_render_context;
 use qtype_questionpy\form\render_context;
 use qtype_questionpy\utils;
@@ -75,20 +76,20 @@ class repetition_element extends form_element {
         $options = [];
 
         foreach ($groupcontext->types as $name => $type) {
-            utils::ensure_exists($options, $name)["type"] = $type;
+            utils::ensure_exists($options, form_name_mangler::mangle($name))["type"] = $type;
         }
         foreach ($groupcontext->defaults as $name => $default) {
-            utils::ensure_exists($options, $name)["default"] = $default;
+            utils::ensure_exists($options, form_name_mangler::mangle($name))["default"] = $default;
         }
         foreach ($groupcontext->disableifs as $name => $condition) {
-            utils::ensure_exists($options, $name)["disabledif"] = [
-                $condition->name,
+            utils::ensure_exists($options, form_name_mangler::mangle($name))["disabledif"] = [
+                form_name_mangler::mangle($condition->name),
                 ...$condition->to_mform_args()
             ];
         }
         foreach ($groupcontext->hideifs as $name => $condition) {
-            utils::ensure_exists($options, $name)["hideif"] = [
-                $condition->name,
+            utils::ensure_exists($options, form_name_mangler::mangle($name))["hideif"] = [
+                form_name_mangler::mangle($condition->name),
                 ...$condition->to_mform_args()
             ];
         }
@@ -96,6 +97,7 @@ class repetition_element extends form_element {
         foreach ($groupcontext->rules as $name => $rules) {
             // There is only room for at most one rule in the options array, so for now we just ignore others.
             if ($rules) {
+                // The rules array is already mangled in group_render_context, so we don't do that here.
                 utils::ensure_exists($options, $name)["rule"] = $rules[0];
             }
         }

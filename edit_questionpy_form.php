@@ -38,6 +38,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * Add any question-type specific form fields.
      *
      * @param MoodleQuickForm $mform the form being built.
+     * @throws moodle_exception
      */
     protected function definition_inner($mform) {
         global $OUTPUT, $PAGE;
@@ -79,14 +80,15 @@ class qtype_questionpy_edit_form extends question_edit_form {
             $packagearray = $package->as_localized_array($languages);
 
             $group[] = $mform->createElement(
-                'radio', 'questionpy_package_hash',
+                'radio', 'qpy_package_hash',
                 $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
                 '', $package->hash
             );
         }
-        $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
+        $mform->addGroup($group, 'questionpy_package_container', '', '</br>', false);
         $mform->addRule(
-            'questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required'
+            'questionpy_package_container',
+            get_string('selection_required', 'qtype_questionpy'), 'required'
         );
 
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
@@ -105,10 +107,10 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // elements (tags, action buttons) have already been added, so we would need to add the package's form into the
         // middle of the existing elements. QuickForm supports this via insertElementBefore(), but moodleform's
         // repeat_elements and add_checkbox_controller do not.
-        $packagehash = ($_REQUEST["questionpy_package_container"] ?? null)["questionpy_package_hash"] ?? null;
+        $packagehash = $_REQUEST["qpy_package_hash"] ?? $this->question->qpy_package_hash ?? null;
         if ($packagehash) {
             // A package is selected -> render its form.
-            $packageform = api::get_question_edit_form($packagehash, []);
+            $packageform = api::get_question_edit_form($packagehash, $this->question->qpy_state ?? "{}");
             $packageform->render_to(new root_render_context($this, $mform));
         }
     }

@@ -19,6 +19,7 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\form_conditions;
+use qtype_questionpy\form\form_name_mangler;
 use qtype_questionpy\form\group_render_context;
 use qtype_questionpy\form\render_context;
 
@@ -84,7 +85,7 @@ class group_element extends form_element {
             $context->hide_if($name, $condition);
         }
 
-        $context->mform->addGroupRule($this->name, $groupcontext->rules);
+        $context->mform->addGroupRule(form_name_mangler::mangle($this->name), $groupcontext->rules);
 
         $this->render_conditions($context, $this->name);
     }
