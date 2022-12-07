@@ -43,9 +43,11 @@ class qtype_questionpy_edit_form extends question_edit_form {
     protected function definition_inner($mform) {
         global $OUTPUT, $PAGE;
 
+        $api = new api();
+
         // TODO: catch moodle_exception?
         // Retrieve packages from the application server.
-        $packages = api::get_packages();
+        $packages = $api->get_packages();
 
         $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
 
@@ -110,7 +112,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $packagehash = $_REQUEST["qpy_package_hash"] ?? $this->question->qpy_package_hash ?? null;
         if ($packagehash) {
             // A package is selected -> render its form.
-            $packageform = api::get_question_edit_form($packagehash, $this->question->qpy_state ?? "{}");
+            $packageform = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? "{}");
             $packageform->render_to(new root_render_context($this, $mform));
         }
     }

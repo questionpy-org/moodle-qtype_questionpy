@@ -279,7 +279,7 @@ class package {
             return null;
         }
 
-        list($package->language, $package->name, $package->description) = self::get_languagedata($package->id);
+        list($package->languages, $package->name, $package->description) = self::get_languagedata($package->id);
         $package->tags = self::get_tagdata($package->id);
 
         return [$package->id, array_converter::from_array(self::class, (array)$package)];
@@ -366,7 +366,7 @@ class package {
         $package = (array)$package;
         foreach ((array)$this as $key => $value) {
             if (array_key_exists($key, $package)) {
-                if (is_array($value)) {
+                if (is_array($value) && is_array($package[$key])) {
                     $temp = array_diff($value, $package[$key]);
                     if (count($temp)) {
                         $difference[$key] = $temp;

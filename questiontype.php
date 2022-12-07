@@ -22,8 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\package;
-use qtype_questionpy\question_db_utils;
+use qtype_questionpy\api;
+use qtype_questionpy\question_db_helper;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -38,6 +38,17 @@ require_once($CFG->dirroot . '/question/type/questionpy/question.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy extends question_type {
+
+    /** @var question_db_helper */
+    private question_db_helper $questiondb;
+
+    /**
+     * Initializes the instance. Called by Moodle.
+     */
+    public function __construct() {
+        parent::__construct();
+        $this->questiondb = new question_db_helper(new api());
+    }
 
     /**
      * Description
@@ -67,7 +78,7 @@ class qtype_questionpy extends question_type {
      * @param int $contextid  the context this question belongs to.
      */
     public function delete_question($questionid, $contextid) {
-        question_db_utils::delete_question($questionid);
+        question_db_helper::delete_question($questionid);
         parent::delete_question($questionid, $contextid);
     }
 
@@ -99,6 +110,8 @@ class qtype_questionpy extends question_type {
     }
 
     /**
+     * Saves QuestionPy-specific options.
+     *
      * @param object $question this holds the information from the editing form, it is not a standard question object
      * @return void
      * @throws moodle_exception
@@ -109,15 +122,22 @@ class qtype_questionpy extends question_type {
             return;
         }
 
-        question_db_utils::upsert_question($question);
+        $this->questiondb->upsert_question($question);
     }
 
+    /**
+     * Loads QuestionPy-specific options for the question.
+     *
+     * @param object $question question object to which QuestionPy-specific options should be added
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public function get_question_options($question): bool {
         if (!parent::get_question_options($question)) {
             return false;
         }
 
-        foreach (question_db_utils::get_question($question->id) as $key => $value) {
+        foreach ($this->questiondb->get_question($question->id) as $key => $value) {
             $question->{$key} = $value;
         }
 

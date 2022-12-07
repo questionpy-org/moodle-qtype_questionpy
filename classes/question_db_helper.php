@@ -29,7 +29,19 @@ use stdClass;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_db_utils {
+class question_db_helper {
+
+    /** @var api */
+    private api $api;
+
+    /**
+     * Initializes the instance to use the given {@see api}.
+     *
+     * @param api $api
+     */
+    public function __construct(api $api) {
+        $this->api = $api;
+    }
 
     /** @var string table containing our question data, 0-1 record per question */
     private const QUESTION_TABLE = "qtype_questionpy";
@@ -42,7 +54,7 @@ class question_db_utils {
      * @throws dml_exception
      * @throws \coding_exception
      */
-    public static function get_question(int $questionid): object {
+    public function get_question(int $questionid): object {
         global $DB;
 
         $result = new stdClass();
@@ -75,10 +87,10 @@ class question_db_utils {
      * @throws dml_exception
      * @throws moodle_exception
      */
-    public static function upsert_question(object $question): void {
+    public function upsert_question(object $question): void {
         global $DB;
 
-        list($packageid) = self::get_package($question->qpy_package_hash);
+        list($packageid) = $this->get_package($question->qpy_package_hash);
         if (!$packageid) {
             throw new moodle_exception(
                 "package_not_found", "qtype_questionpy", "", (object)[
@@ -94,7 +106,7 @@ class question_db_utils {
             // Question record already exists, update it if necessary.
             $update = ["id" => $existingrecord->id];
             $oldstate = json_decode($existingrecord->state, true);
-            $newstate = self::options_to_state($question, $oldstate);
+            $newstate = $this->options_to_state($question, $oldstate);
 
             if ($oldstate !== $newstate) {
                 $update["state"] = json_encode($newstate);
@@ -103,12 +115,12 @@ class question_db_utils {
                 $update["packageid"] = $packageid;
             }
 
-            if (count($update) > 0) {
+            if (count($update) > 1) {
                 $DB->update_record(self::QUESTION_TABLE, (object)$update);
             }
         } else {
             // Insert a new record with the question state only containing the options.
-            $state = self::options_to_state($question, []);
+            $state = $this->options_to_state($question, []);
             $DB->insert_record(self::QUESTION_TABLE, [
                 "questionid" => $question->id,
                 "feedback" => "",
@@ -121,9 +133,10 @@ class question_db_utils {
     /**
      * Deletes all QuestionPy-specific data for the given question.
      *
+     * @param int $questionid
      * @throws dml_exception
      */
-    public static function delete_question(int $questionid) {
+    public function delete_question(int $questionid) {
         global $DB;
         $DB->delete_records(self::QUESTION_TABLE, ['questionid' => $questionid]);
         // TODO: Also delete packages when they are no longer used by any question.
@@ -140,7 +153,7 @@ class question_db_utils {
      * @param array $state     previous state of the question
      * @return array new state of the question, with the form options added or updated
      */
-    private static function options_to_state(object $question, array $state): array {
+    private function options_to_state(object $question, array $state): array {
         foreach ($question as $key => $value) {
             $unmangled = form_name_mangler::unmangle($key);
             if (!$unmangled) {
@@ -165,13 +178,13 @@ class question_db_utils {
      * @throws dml_exception
      * @throws moodle_exception
      */
-    private static function get_package(string $hash): ?array {
+    private function get_package(string $hash): ?array {
         $result = package::get_record_by_hash($hash);
         if ($result) {
             return $result;
         }
 
-        $package = api::get_package($hash);
+        $package = $this->api->get_package($hash);
         if (!$package) {
             return null;
         }
