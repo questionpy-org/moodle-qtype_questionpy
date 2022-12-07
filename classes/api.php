@@ -35,7 +35,7 @@ class api {
      *
      * @throws moodle_exception
      */
-    private static function create_connector(): connector {
+    private function create_connector(): connector {
         // Get server configs.
         $serverurl = get_config('qtype_questionpy', 'server_url');
         $timeout = get_config('qtype_questionpy', 'server_timeout');
@@ -48,9 +48,9 @@ class api {
      * @return package[]
      * @throws moodle_exception
      */
-    public static function get_packages(): array {
+    public function get_packages(): array {
         // Retrieve packages from server.
-        $connector = self::create_connector();
+        $connector = $this->create_connector();
         $response = $connector->get('/packages');
 
         // TODO: check response code.
@@ -77,8 +77,8 @@ class api {
      * @return ?package the package with the given hash or null if not found
      * @throws moodle_exception
      */
-    public static function get_package(string $hash): ?package {
-        $connector = self::create_connector();
+    public function get_package(string $hash): ?package {
+        $connector = $this->create_connector();
         $response = $connector->get("/packages/$hash");
 
         if ($response->code === 404) {
@@ -97,8 +97,8 @@ class api {
      * @return qpy_form
      * @throws moodle_exception
      */
-    public static function get_question_edit_form(string $packagehash, string $questionstate): qpy_form {
-        $connector = self::create_connector();
+    public function get_question_edit_form(string $packagehash, string $questionstate): qpy_form {
+        $connector = $this->create_connector();
 
         $statehash = hash("sha256", $questionstate);
 
@@ -121,8 +121,8 @@ class api {
      * @return string
      * @throws moodle_exception
      */
-    public static function get_hello_world(): string {
-        $connector = self::create_connector();
+    public function get_hello_world(): string {
+        $connector = $this->create_connector();
         $response = $connector->get('/helloworld');
         return $response->get_data(false);
     }
