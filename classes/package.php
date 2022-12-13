@@ -213,7 +213,6 @@ class package {
 
         $transaction = $DB->start_delegated_transaction();
         $packageid = $DB->insert_record('qtype_questionpy_package', $packagedata);
-        $transaction->allow_commit();
 
         // For each language store the localized package data as a separate record.
         $languagedata = array();
@@ -235,7 +234,6 @@ class package {
             ];
         }
 
-        $transaction = $DB->start_delegated_transaction();
         $DB->insert_records('qtype_questionpy_tags', $tagsdata);
         $DB->insert_records('qtype_questionpy_language', $languagedata);
         $transaction->allow_commit();
