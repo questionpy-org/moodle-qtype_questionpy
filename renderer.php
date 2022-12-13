@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\api;
+use qtype_questionpy\api\api;
 
 /**
  * Generates the output for QuestionPy questions.

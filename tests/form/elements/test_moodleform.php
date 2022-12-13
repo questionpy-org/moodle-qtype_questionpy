@@ -54,7 +54,7 @@ class test_moodleform extends \moodleform {
      * Output can be retrieved using {@see render}, which calls this method.
      */
     protected function definition() {
-        $context = new root_render_context($this, $this->_form);
+        $context = new root_render_context($this, $this->_form, "qpy_form");
         $this->element->render_to($context);
     }
 }

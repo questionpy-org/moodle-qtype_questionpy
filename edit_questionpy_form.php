@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\api;
+use qtype_questionpy\api\api;
 use qtype_questionpy\form\root_render_context;
 use qtype_questionpy\localizer;
 
@@ -113,7 +113,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         if ($packagehash) {
             // A package is selected -> render its form.
             $packageform = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? "{}");
-            $packageform->render_to(new root_render_context($this, $mform));
+            $packageform->render_to(new root_render_context($this, $mform, "qpy_form"));
         }
     }
 

@@ -64,6 +64,7 @@ class radio_group_element extends form_element {
      * @param render_context $context target context
      */
     public function render_to(render_context $context): void {
+        $mangledname = $context->mangle_name($this->name);
         $default = null;
         $radioarray = [];
         foreach ($this->options as $option) {
@@ -71,17 +72,16 @@ class radio_group_element extends form_element {
                 $default = $option->value;
             }
 
-            $radioarray[] = $context->mform->createElement("radio", $this->name, null, $option->label, $option->value);
+            $radioarray[] = $context->mform->createElement("radio", $mangledname, null, $option->label, $option->value);
         }
 
-        $groupname = "qpy_radio_group_" . $this->name;
-        $context->add_element("group", $groupname, $this->label, $radioarray, null, false);
+        $context->add_element("group", "radio_group_" . $this->name, $this->label, $radioarray, null, false);
 
         if ($default) {
             $context->set_default($this->name, $default);
         }
         if ($this->required) {
-            $context->add_rule($groupname, null, "required");
+            $context->add_rule("radio_group_" . $this->name, null, "required");
         }
 
         $this->render_conditions($context, $this->name);

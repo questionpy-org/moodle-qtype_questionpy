@@ -16,7 +16,10 @@
 
 namespace qtype_questionpy\form;
 
+use moodleform;
+use MoodleQuickForm;
 use qtype_questionpy\form\conditions\condition;
+use qtype_questionpy\utils;
 
 /**
  * Abstracts away the differences in rendering elements in a group and outside of a group.
@@ -27,31 +30,44 @@ use qtype_questionpy\form\conditions\condition;
  * entirely different method.
  *
  * @see        root_render_context
- * @see        group_render_context
+ * @see        array_render_context
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class render_context {
-    /** @var \moodleform target {@see \moodleform} instance, such as {@see \qtype_questionpy_edit_form} */
-    public \moodleform $moodleform;
+    /** @var moodleform target {@see moodleform} instance, such as {@see \qtype_questionpy_edit_form} */
+    public moodleform $moodleform;
     /**
-     * @var \MoodleQuickForm target {@see \MoodleQuickForm} instance, as passed to
+     * @var MoodleQuickForm target {@see MoodleQuickForm} instance, as passed to
      *      {@see \question_edit_form::definition_inner}
      */
-    public \MoodleQuickForm $mform;
+    public MoodleQuickForm $mform;
+
+    /** @var string prefix for rendered element names */
+    public string $prefix;
+
+    /**
+     * @var int the next int which will be returned by {@see next_unique_int}
+     */
+    public int $nextuniqueint;
 
     /**
      * Initializes a new render context.
      *
-     * @param \moodleform $moodleform target {@see \moodleform} instance, such as {@see \qtype_questionpy_edit_form}
-     * @param \MoodleQuickForm $mform target {@see \MoodleQuickForm} instance, as passed to
+     * @param moodleform $moodleform  target {@see moodleform} instance, such as {@see \qtype_questionpy_edit_form}
+     * @param MoodleQuickForm $mform  target {@see MoodleQuickForm} instance, as passed to
      *                                {@see \question_edit_form::definition_inner}
+     * @param string $prefix          prefix for the names of elements in this context
+     * @param int $nextuniqueint      the starting value for {@see next_unique_int}
      */
-    public function __construct(\moodleform $moodleform, \MoodleQuickForm $mform) {
+    public function __construct(moodleform $moodleform, MoodleQuickForm $mform, string $prefix,
+                                int        $nextuniqueint = 1) {
         $this->moodleform = $moodleform;
         $this->mform = $mform;
+        $this->prefix = $prefix;
+        $this->nextuniqueint = $nextuniqueint;
     }
 
     /**
@@ -61,8 +77,8 @@ abstract class render_context {
      * @param string $name   the name of the generated form element.
      * @param mixed ...$args remaining arguments specific to the element type.
      * @return object the created element. Really an instance of {@see \HTML_QuickForm_element}, but the return type of
-     *                       {@see \MoodleQuickForm::addElement()} is also an object.
-     * @see \MoodleQuickForm::addElement()
+     *                       {@see MoodleQuickForm::addElement} is also an object.
+     * @see MoodleQuickForm::addElement
      */
     abstract public function add_element(string $type, string $name, ...$args): object;
 
@@ -71,7 +87,7 @@ abstract class render_context {
      *
      * @param string $name the name of the target element.
      * @param string $type one of the {@see PARAM_INT}, {@see PARAM_TEXT}, etc. constants.
-     * @see \MoodleQuickForm::setType()
+     * @see MoodleQuickForm::setType
      */
     abstract public function set_type(string $name, string $type): void;
 
@@ -80,7 +96,7 @@ abstract class render_context {
      *
      * @param string $name   the name of the target element.
      * @param mixed $default default value for the element.
-     * @see \MoodleQuickForm::setDefault()
+     * @see MoodleQuickForm::setDefault
      */
     abstract public function set_default(string $name, $default): void;
 
@@ -97,7 +113,7 @@ abstract class render_context {
      * @param bool $reset             client-side validation: reset the form element to its original value if there is
      *                                an error?
      * @param bool $force             force the rule to be applied, even if the target form element does not exist.
-     * @see \MoodleQuickForm::addRule()
+     * @see MoodleQuickForm::addRule
      */
     abstract public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                                       ?string $validation = "server", bool $reset = false, bool $force = false): void;
@@ -107,7 +123,7 @@ abstract class render_context {
      *
      * @param string $dependant name of the element which has the dependency on another element
      * @param condition $condition
-     * @see \MoodleQuickForm::disabledIf()
+     * @see MoodleQuickForm::disabledIf
      */
     abstract public function disable_if(string $dependant, condition $condition);
 
@@ -116,23 +132,40 @@ abstract class render_context {
      *
      * @param string $dependant name of the element which has the dependency on another element
      * @param condition $condition
-     * @see \MoodleQuickForm::hideIf()
+     * @see MoodleQuickForm::hideIf
      */
     abstract public function hide_if(string $dependant, condition $condition);
-
-    /**
-     * Get a unique and deterministic integer for use in generated element names and IDs.
-     *
-     * @return int a unique and deterministic integer for use in generated element names and IDs.
-     */
-    abstract public function next_unique_int(): int;
 
     /**
      * Adds a `Select all/none` checkbox controller controlling all `advcheckboxes` with the given group id.
      *
      * @param int $groupid the group id matching the `group` attribute of the `advcheckboxes` which should be toggled
      *                     by this controller.
-     * @see \moodleform::add_checkbox_controller()
+     * @see moodleform::add_checkbox_controller
      */
     abstract public function add_checkbox_controller(int $groupid): void;
+
+    /**
+     * Append the given local name to the prefix of this context.
+     *
+     * @param string $name local / unqualified name of the element
+     * @return string name of the element qualified by this context's prefix
+     */
+    public function mangle_name(string $name): string {
+        if (utils::str_starts_with($name, $this->prefix)) {
+            // Already mangled, perhaps by an array_render_context.
+            return $name;
+        }
+
+        return $this->prefix . "[$name]";
+    }
+
+    /**
+     * Get a unique and deterministic integer for use in generated element names and IDs.
+     *
+     * @return int a unique and deterministic integer for use in generated element names and IDs.
+     */
+    public function next_unique_int(): int {
+        return $this->nextuniqueint++;
+    }
 }

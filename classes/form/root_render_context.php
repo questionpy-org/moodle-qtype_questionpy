@@ -21,7 +21,7 @@ use qtype_questionpy\form\conditions\condition;
 /**
  * Regular {@see render_context} which delegates to {@see \moodleform} and {@see \MoodleQuickForm}.
  *
- * @see        group_render_context
+ * @see        array_render_context
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
@@ -29,11 +29,6 @@ use qtype_questionpy\form\conditions\condition;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class root_render_context extends render_context {
-    /**
-     * @var int the next int which will be returned by {@see next_unique_int}
-     */
-    private int $nextuniqueint = 1;
-
     /**
      * Create, add and return an element.
      *
@@ -45,7 +40,7 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::addElement()
      */
     public function add_element(string $type, string $name, ...$args): object {
-        return $this->mform->addElement($type, form_name_mangler::mangle($name), ...$args);
+        return $this->mform->addElement($type, $this->mangle_name($name), ...$args);
     }
 
     /**
@@ -56,7 +51,7 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::setType()
      */
     public function set_type(string $name, string $type): void {
-        $this->mform->setType(form_name_mangler::mangle($name), $type);
+        $this->mform->setType($this->mangle_name($name), $type);
     }
 
     /**
@@ -67,7 +62,7 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::setDefault()
      */
     public function set_default(string $name, $default): void {
-        $this->mform->setDefault(form_name_mangler::mangle($name), $default);
+        $this->mform->setDefault($this->mangle_name($name), $default);
     }
 
     /**
@@ -87,7 +82,7 @@ class root_render_context extends render_context {
      */
     public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
-        $this->mform->addRule(form_name_mangler::mangle($name), $message, $type, $format, $validation, $reset, $force);
+        $this->mform->addRule($this->mangle_name($name), $message, $type, $format, $validation, $reset, $force);
     }
 
     /**
@@ -98,11 +93,7 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::disabledIf()
      */
     public function disable_if(string $dependant, condition $condition) {
-        $this->mform->disabledIf(
-            form_name_mangler::mangle($dependant),
-            form_name_mangler::mangle($condition->name),
-            ...$condition->to_mform_args()
-        );
+        $this->mform->disabledIf($this->mangle_name($dependant), $condition->name, ...$condition->to_mform_args());
     }
 
     /**
@@ -113,20 +104,7 @@ class root_render_context extends render_context {
      * @see \MoodleQuickForm::hideIf()
      */
     public function hide_if(string $dependant, condition $condition) {
-        $this->mform->hideIf(
-            form_name_mangler::mangle($dependant),
-            form_name_mangler::mangle($condition->name),
-            ...$condition->to_mform_args()
-        );
-    }
-
-    /**
-     * Get a unique and deterministic integer for use in generated element names and IDs.
-     *
-     * @return int a unique and deterministic integer for use in generated element names and IDs.
-     */
-    public function next_unique_int(): int {
-        return $this->nextuniqueint++;
+        $this->mform->hideIf($this->mangle_name($dependant), $condition->name, ...$condition->to_mform_args());
     }
 
     /**

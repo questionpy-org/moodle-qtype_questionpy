@@ -19,10 +19,12 @@ namespace qtype_questionpy;
 use coding_exception;
 use dml_exception;
 use moodle_exception;
+use qtype_questionpy\api\api;
+use qtype_questionpy\api\question_response;
 use stdClass;
 
 /**
- * Unit tests for {@see question_db_helper}.
+ * Unit tests for {@see question_service}.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
@@ -31,23 +33,26 @@ use stdClass;
  */
 class question_db_helper_test extends \advanced_testcase {
 
-    /** @var question_db_helper */
-    private question_db_helper $questiondb;
+    /** @var api */
+    private api $api;
+
+    /** @var question_service */
+    private question_service $questiondb;
 
     protected function setUp(): void {
-        $mockapi = $this->createMock(api::class);
-        $mockapi->method("get_package")
+        $this->api = $this->createMock(api::class);
+        $this->api->method("get_package")
             ->willReturn(null);
 
-        $this->questiondb = new question_db_helper($mockapi);
+        $this->questiondb = new question_service($this->api);
     }
 
     /**
-     * Tests {@see question_db_helper::get_question()} happy path.
+     * Tests {@see question_service::get_question()} happy path.
      *
      * @throws dml_exception
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_db_helper::get_question
+     * @covers \qtype_questionpy\question_service::get_question
      */
     public function test_get_question_should_load_options() {
         [$packageid, $package] = $this->setup_package();
@@ -59,128 +64,124 @@ class question_db_helper_test extends \advanced_testcase {
             (object)[
                 "qpy_package_hash" => $package->hash,
                 "qpy_state" => $statestr,
-                "qpy_form_opt1" => "opt 1 value",
+                "qpy_form[opt1]" => "opt 1 value",
             ], $result
         );
     }
 
     /**
-     * Tests {@see question_db_helper::get_question()} for a question which doesn't have a record in
+     * Tests {@see question_service::get_question()} for a question which doesn't have a record in
      * <code>qtype_questionpy</code> yet.
      *
      * @throws dml_exception
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_db_helper::get_question
+     * @covers \qtype_questionpy\question_service::get_question
      */
     public function test_get_question_should_return_empty_object_when_no_record() {
         $this->assertEquals(new stdClass(), $this->questiondb->get_question(42));
     }
 
     /**
-     * Tests {@see question_db_helper::upsert_question()} for update.
+     * Tests {@see question_service::upsert_question()} for update.
      *
      * @throws coding_exception
      * @throws dml_exception
      * @throws moodle_exception
-     * @covers \qtype_questionpy\question_db_helper::upsert_question
+     * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_update_existing_record_if_changed() {
         [$oldpackageid] = $this->setup_package();
-        $statestr = $this->setup_question($oldpackageid);
+        $oldstate = $this->setup_question($oldpackageid);
         [$newpackageid, $newpackage] = $this->setup_package();
+
+        $newstate = json_encode(["this is" => "new state"]);
+        $formdata = ["this is" => "form data"];
+
+        $this->api
+            ->expects($this->once())
+            ->method("create_question")
+            ->with($newpackage->hash, $oldstate, (object) $formdata)
+            ->willReturn(new question_response($newstate, "", ""));
 
         $this->questiondb->upsert_question(
             (object)[
                 "id" => 1,
                 "qpy_package_hash" => $newpackage->hash,
-                "qpy_form_something" => "a different value!",
+                "qpy_form" => $formdata,
             ]
         );
 
-        global $DB;
-        $records = $DB->get_records("qtype_questionpy");
-        $this->assertCount(1, $records);
-        $record = current($records);
-
-        $this->assertEquals("1", $record->questionid);
-        $this->assertEquals($newpackageid, $record->packageid);
-        $this->assertEquals(
-            json_encode([
-                "opt1" => "opt 1 value", // Old, but shouldn't be removed.
-                "something" => "a different value!", // New.
-            ]), $record->state
-        );
+        $this->assert_single_question(1, $newpackageid, $newstate);
     }
 
     /**
-     * Tests {@see question_db_helper::upsert_question()} for no change.
+     * Tests {@see question_service::upsert_question()} for no change.
      *
      * @throws moodle_exception
      * @throws coding_exception
      * @throws dml_exception
-     * @covers \qtype_questionpy\question_db_helper::upsert_question
+     * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_do_nothing_if_unchanged() {
         [$packageid, $package] = $this->setup_package();
-        $statestr = $this->setup_question($packageid);
+        $oldstate = $this->setup_question($packageid);
+
+        $formdata = ["this is" => "form data"];
+
+        $this->api
+            ->expects($this->once())
+            ->method("create_question")
+            ->with($package->hash, $oldstate, (object) $formdata)
+            ->willReturn(new question_response($oldstate, "", ""));
 
         $this->questiondb->upsert_question(
             (object)[
                 "id" => 1,
                 "qpy_package_hash" => $package->hash,
-                "qpy_form_opt1" => "opt 1 value",
+                "qpy_form" => $formdata,
             ]
         );
 
-        global $DB;
-        $records = $DB->get_records("qtype_questionpy");
-        $this->assertCount(1, $records);
-        $record = current($records);
-
-        $this->assertEquals("1", $record->questionid);
-        $this->assertEquals($packageid, $record->packageid);
-        $this->assertEquals($statestr, $record->state);
+        $this->assert_single_question(1, $packageid, $oldstate);
     }
 
     /**
-     * Tests {@see question_db_helper::upsert_question()} for for a question which doesn't have a record in
+     * Tests {@see question_service::upsert_question()} for a question which doesn't have a record in
      * <code>qtype_questionpy</code> yet.
      *
      * @throws moodle_exception
      * @throws coding_exception
      * @throws dml_exception
-     * @covers \qtype_questionpy\question_db_helper::upsert_question
+     * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_insert_record() {
         [$packageid, $package] = $this->setup_package();
+
+        $newstate = json_encode(["this is" => "new state"]);
+        $formdata = ["this is" => "form data"];
+
+        $this->api
+            ->expects($this->once())
+            ->method("create_question")
+            ->with($package->hash, null, (object) $formdata)
+            ->willReturn(new question_response($newstate, "", ""));
 
         $this->questiondb->upsert_question(
             (object)[
                 "id" => 42, // Does not exist in the qtype_questionpy table yet.
                 "qpy_package_hash" => $package->hash,
-                "qpy_form_something" => "a value",
+                "qpy_form" => $formdata,
             ]
         );
 
-        global $DB;
-        $records = $DB->get_records("qtype_questionpy");
-        $this->assertCount(1, $records);
-        $record = current($records);
-
-        $this->assertEquals("42", $record->questionid);
-        $this->assertEquals($packageid, $record->packageid);
-        $this->assertEquals(
-            json_encode([
-                "something" => "a value",
-            ]), $record->state
-        );
+        $this->assert_single_question(42, $packageid, $newstate);
     }
 
     /**
-     * Tests {@see question_db_helper::upsert_question()} with a nonexistent package hash.
+     * Tests {@see question_service::upsert_question()} with a nonexistent package hash.
      *
      * @throws dml_exception
-     * @covers \qtype_questionpy\question_db_helper::upsert_question
+     * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_throw_when_package_does_not_exist() {
         $hash = hash("sha256", rand());
@@ -197,11 +198,11 @@ class question_db_helper_test extends \advanced_testcase {
     }
 
     /**
-     * Tests that {@see question_db_helper::delete_question()} does what it says on the tin.
+     * Tests that {@see question_service::delete_question()} does what it says on the tin.
      *
      * @throws dml_exception
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_db_helper::upsert_question
+     * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_delete_question() {
         [$packageid] = $this->setup_package();
@@ -258,5 +259,25 @@ class question_db_helper_test extends \advanced_testcase {
         );
         $packageid = $package->store_in_db();
         return [$packageid, $package];
+    }
+
+    /**
+     * Asserts that a single question exists in `qtype_questionpy` and it matches the given arguments.
+     *
+     * @param int $id expected question id
+     * @param int $packageid expected package id
+     * @param string $state expected state
+     * @return void
+     * @throws dml_exception
+     */
+    private function assert_single_question(int $id, int $packageid, string $state) {
+        global $DB;
+        $records = $DB->get_records("qtype_questionpy");
+        $this->assertCount(1, $records);
+        $record = current($records);
+
+        $this->assertEquals((string) $id, $record->questionid);
+        $this->assertEquals((string) $packageid, $record->packageid);
+        $this->assertEquals($state, $record->state);
     }
 }

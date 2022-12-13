@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
+namespace qtype_questionpy\api;
 
 use moodle_exception;
 
@@ -59,8 +59,10 @@ class connector {
         $this->curlhandle = curl_init();
 
         if (!$this->curlhandle) {
-            throw new moodle_exception('curl_init_error', 'qtype_questionpy', '',
-                    curl_errno($this->curlhandle), curl_error($this->curlhandle));
+            throw new moodle_exception(
+                'curl_init_error', 'qtype_questionpy', '',
+                curl_errno($this->curlhandle), curl_error($this->curlhandle)
+            );
         }
 
         $this->set_opts([
@@ -90,8 +92,10 @@ class connector {
         $success = curl_setopt($this->curlhandle, $option, $value);
 
         if (!$success) {
-            throw new moodle_exception('curl_set_opt_error', 'qtype_questionpy', '',
-                    curl_errno($this->curlhandle), curl_error($this->curlhandle));
+            throw new moodle_exception(
+                'curl_set_opt_error', 'qtype_questionpy', '',
+                curl_errno($this->curlhandle), curl_error($this->curlhandle)
+            );
         }
     }
 
@@ -105,8 +109,10 @@ class connector {
         $success = curl_setopt_array($this->curlhandle, $options);
 
         if (!$success) {
-            throw new moodle_exception('curl_set_opt_error', 'qtype_questionpy', '',
-                    curl_errno($this->curlhandle), curl_error($this->curlhandle));
+            throw new moodle_exception(
+                'curl_set_opt_error', 'qtype_questionpy', '',
+                curl_errno($this->curlhandle), curl_error($this->curlhandle)
+            );
         }
     }
 
@@ -124,16 +130,18 @@ class connector {
     /**
      * Perform cURL session.
      *
-     * @throws moodle_exception
      * @return http_response_container data received from server
+     * @throws moodle_exception
      */
     private function exec(): http_response_container {
         $data = curl_exec($this->curlhandle);
 
         // Check for cURL failure.
         if ($data === false) {
-            throw new moodle_exception('curl_exec_error', 'qtype_questionpy', '',
-                    curl_errno($this->curlhandle), curl_error($this->curlhandle));
+            throw new moodle_exception(
+                'curl_exec_error', 'qtype_questionpy', '',
+                curl_errno($this->curlhandle), curl_error($this->curlhandle)
+            );
         }
 
         // Create response.
@@ -145,8 +153,8 @@ class connector {
      * Performs a GET request to the given path on the application server.
      *
      * @param string $path
-     * @throws moodle_exception
      * @return http_response_container data received from server
+     * @throws moodle_exception
      */
     public function get(string $path = ''): http_response_container {
         // Set url to the endpoint.
@@ -166,8 +174,8 @@ class connector {
      *
      * @param string $path
      * @param string|array|null $data
-     * @throws moodle_exception
      * @return http_response_container data received from server
+     * @throws moodle_exception
      */
     public function post(string $path = '', $data = null): http_response_container {
         // Set url to the endpoint.

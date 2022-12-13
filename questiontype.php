@@ -22,8 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\api;
-use qtype_questionpy\question_db_helper;
+use qtype_questionpy\api\api;
+use qtype_questionpy\question_service;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -39,15 +39,19 @@ require_once($CFG->dirroot . '/question/type/questionpy/question.php');
  */
 class qtype_questionpy extends question_type {
 
-    /** @var question_db_helper */
-    private question_db_helper $questiondb;
+    /** @var question_service */
+    private question_service $questiondb;
+
+    /** @var api */
+    private api $api;
 
     /**
      * Initializes the instance. Called by Moodle.
      */
     public function __construct() {
         parent::__construct();
-        $this->questiondb = new question_db_helper(new api());
+        $this->api = new api();
+        $this->questiondb = new question_service($this->api);
     }
 
     /**
@@ -78,7 +82,7 @@ class qtype_questionpy extends question_type {
      * @param int $contextid  the context this question belongs to.
      */
     public function delete_question($questionid, $contextid) {
-        question_db_helper::delete_question($questionid);
+        question_service::delete_question($questionid);
         parent::delete_question($questionid, $contextid);
     }
 
