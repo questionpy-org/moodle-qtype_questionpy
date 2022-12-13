@@ -18,9 +18,8 @@ namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\form\array_render_context;
 use qtype_questionpy\form\form_conditions;
-use qtype_questionpy\form\form_name_mangler;
-use qtype_questionpy\form\group_render_context;
 use qtype_questionpy\form\render_context;
 
 defined('MOODLE_INTERNAL') || die;
@@ -64,30 +63,33 @@ class group_element extends form_element {
      * @package qtype_questionpy
      */
     public function render_to(render_context $context): void {
-        $groupcontext = new group_render_context($context);
+        $groupname = $context->mangle_name($this->name);
+        $innercontext = new array_render_context($context, $groupname);
 
         foreach ($this->elements as $element) {
-            $element->render_to($groupcontext);
+            $element->render_to($innercontext);
         }
 
-        $context->add_element("group", $this->name, $this->label, $groupcontext->elements, null, false);
+        $context->add_element("group", $groupname, $this->label, $innercontext->elements, null, false);
 
-        foreach ($groupcontext->types as $name => $type) {
+        foreach ($innercontext->types as $name => $type) {
             $context->set_type($name, $type);
         }
-        foreach ($groupcontext->defaults as $name => $default) {
+        foreach ($innercontext->defaults as $name => $default) {
             $context->set_default($name, $default);
         }
-        foreach ($groupcontext->disableifs as $name => $condition) {
+        foreach ($innercontext->disableifs as $name => $condition) {
             $context->disable_if($name, $condition);
         }
-        foreach ($groupcontext->hideifs as $name => $condition) {
+        foreach ($innercontext->hideifs as $name => $condition) {
             $context->hide_if($name, $condition);
         }
 
-        $context->mform->addGroupRule(form_name_mangler::mangle($this->name), $groupcontext->rules);
+        $context->mform->addGroupRule($groupname, $innercontext->rules);
 
-        $this->render_conditions($context, $this->name);
+        $this->render_conditions($context, $groupname);
+
+        $context->nextuniqueint = $innercontext->nextuniqueint;
     }
 }
 

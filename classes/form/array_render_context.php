@@ -17,11 +17,12 @@
 namespace qtype_questionpy\form;
 
 use qtype_questionpy\form\conditions\condition;
+use qtype_questionpy\form\elements\group_element;
 use qtype_questionpy\form\elements\repetition_element;
 use qtype_questionpy\utils;
 
 /**
- * A {@see render_context} for groups of elements ({@see repetition_element}s).
+ * A {@see render_context} for {@see group_element groups} and {@see repetition_element repetitions}.
  *
  * Instead of adding elements to the {@see \MoodleQuickForm}, they are added to an array which is later used to create
  * the group.
@@ -33,7 +34,7 @@ use qtype_questionpy\utils;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class group_render_context extends render_context {
+class array_render_context extends render_context {
     /**
      * @var array elements so far added to this group
      */
@@ -61,18 +62,13 @@ class group_render_context extends render_context {
     public array $hideifs = [];
 
     /**
-     * @var render_context context containing this group
-     */
-    private render_context $root;
-
-    /**
-     * Initializes a new group context.
+     * Initializes a new array-based context.
      *
      * @param render_context $root context containing this group
+     * @param string $prefix prefix for the names of elements in this context
      */
-    public function __construct(render_context $root) {
-        parent::__construct($root->moodleform, $root->mform);
-        $this->root = $root;
+    public function __construct(render_context $root, string $prefix) {
+        parent::__construct($root->moodleform, $root->mform, $prefix, $root->nextuniqueint);
     }
 
     /**
@@ -86,7 +82,7 @@ class group_render_context extends render_context {
      * @see \MoodleQuickForm::addElement()
      */
     public function add_element(string $type, string $name, ...$args): object {
-        $element = $this->root->mform->createElement($type, form_name_mangler::mangle($name), ...$args);
+        $element = $this->mform->createElement($type, $this->mangle_name($name), ...$args);
         $this->elements[] = $element;
         return $element;
     }
@@ -99,7 +95,7 @@ class group_render_context extends render_context {
      * @see \MoodleQuickForm::setType()
      */
     public function set_type(string $name, string $type): void {
-        $this->types[$name] = $type;
+        $this->types[$this->mangle_name($name)] = $type;
     }
 
     /**
@@ -110,7 +106,7 @@ class group_render_context extends render_context {
      * @see \MoodleQuickForm::setDefault()
      */
     public function set_default(string $name, $default): void {
-        $this->defaults[$name] = $default;
+        $this->defaults[$this->mangle_name($name)] = $default;
     }
 
     /**
@@ -130,9 +126,9 @@ class group_render_context extends render_context {
      */
     public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
-        utils::ensure_exists($this->rules, form_name_mangler::mangle($name))[] = [
-            $message, $type, $format, $validation, $reset, $force
-        ];
+        utils::ensure_exists(
+            $this->rules, $this->mangle_name($name)
+        )[] = [$message, $type, $format, $validation, $reset, $force];
     }
 
     /**
@@ -143,7 +139,7 @@ class group_render_context extends render_context {
      * @see \MoodleQuickForm::disabledIf()
      */
     public function disable_if(string $dependant, condition $condition) {
-        utils::ensure_exists($this->disableifs, $dependant)[] = $condition;
+        utils::ensure_exists($this->disableifs, $this->mangle_name($dependant))[] = $condition;
     }
 
     /**
@@ -154,16 +150,7 @@ class group_render_context extends render_context {
      * @see \MoodleQuickForm::hideIf()
      */
     public function hide_if(string $dependant, condition $condition) {
-        utils::ensure_exists($this->hideifs, $dependant)[] = $condition;
-    }
-
-    /**
-     * Get a unique and deterministic integer for use in generated element names and IDs.
-     *
-     * @return int a unique and deterministic integer for use in generated element names and IDs.
-     */
-    public function next_unique_int(): int {
-        return $this->root->next_unique_int();
+        utils::ensure_exists($this->hideifs, $this->mangle_name($dependant))[] = $condition;
     }
 
     /**
@@ -174,6 +161,6 @@ class group_render_context extends render_context {
      * @see \moodleform::add_checkbox_controller()
      */
     public function add_checkbox_controller(int $groupid): void {
-        $this->root->add_checkbox_controller($groupid);
+        $this->moodleform->add_checkbox_controller($groupid);
     }
 }

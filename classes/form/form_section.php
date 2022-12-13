@@ -31,18 +31,25 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class form_section implements renderable {
+
+    /** @var string */
+    public string $name;
+
     /** @var string */
     public string $header;
+
     /** @var form_element[] */
     public array $elements;
 
     /**
      * Initialize a new form section.
      *
+     * @param string $name
      * @param string $header
      * @param form_element[] $elements
      */
-    public function __construct(string $header, array $elements) {
+    public function __construct(string $name, string $header, array $elements) {
+        $this->name = $name;
         $this->header = $header;
         $this->elements = $elements;
     }
@@ -53,10 +60,14 @@ class form_section implements renderable {
      * @param render_context $context target context
      */
     public function render_to(render_context $context): void {
-        $context->add_element("header", "qpy_section_" . $context->next_unique_int(), $this->header);
+        $mangled = $context->mangle_name($this->name);
+        $context->add_element("header", $mangled, $this->header);
+        $innercontext = new root_render_context($context->moodleform, $context->mform, $mangled,
+                                                $context->nextuniqueint);
         foreach ($this->elements as $element) {
-            $element->render_to($context);
+            $element->render_to($innercontext);
         }
+        $context->nextuniqueint = $innercontext->nextuniqueint;
     }
 }
 

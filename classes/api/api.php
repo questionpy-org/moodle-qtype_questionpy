@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
+namespace qtype_questionpy\api;
 
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\form\qpy_form;
+use qtype_questionpy\package;
 use TypeError;
 
 /**
@@ -113,6 +114,39 @@ class api {
         ]);
         $response->assert_2xx();
         return array_converter::from_array(qpy_form::class, $response->get_data());
+    }
+
+    /**
+     * Create or update a question from form data and current state, if any.
+     *
+     * @param string $packagehash
+     * @param string|null $currentstate current state string if the question already exists, null otherwise
+     * @param object $formdata data from the question edit form
+     * @return question_response
+     * @throws moodle_exception
+     */
+    public function create_question(string $packagehash, ?string $currentstate, object $formdata): question_response {
+        $connector = $this->create_connector();
+
+        $main = [
+            "form_data" => $formdata,
+            // TODO: Send an actual context.
+            "context" => 1,
+        ];
+        $parts = [];
+
+        if ($currentstate !== null) {
+            $statehash = hash("sha256", $currentstate);
+            $main["question_state_hash"] = $statehash;
+            // TODO: Don't send the question state unconditionally, try the hash first.
+            $parts["question_state"] = $currentstate;
+        }
+
+        $parts["main"] = json_encode($main);
+
+        $response = $connector->post("/packages/$packagehash/question", $parts);
+        $response->assert_2xx();
+        return array_converter::from_array(question_response::class, $response->get_data());
     }
 
     /**

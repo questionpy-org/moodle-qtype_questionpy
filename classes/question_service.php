@@ -18,7 +18,7 @@ namespace qtype_questionpy;
 
 use dml_exception;
 use moodle_exception;
-use qtype_questionpy\form\form_name_mangler;
+use qtype_questionpy\api\api;
 use stdClass;
 
 /**
@@ -29,7 +29,7 @@ use stdClass;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_db_helper {
+class question_service {
 
     /** @var api */
     private api $api;
@@ -70,9 +70,11 @@ class question_db_helper {
             $result->qpy_package_hash = $package->hash;
 
             $result->qpy_state = $record->state;
+            // TODO: Don't read options from state, let package include them in form response.
             $state = json_decode($record->state, true);
-            foreach ($state as $name => $value) {
-                $result->{form_name_mangler::mangle($name)} = $value;
+            // While moodle automagically parses names containing [] into objects, we have to do the reverse ourselves.
+            foreach (utils::flatten($state, "qpy_form") as $name => $value) {
+                $result->{$name} = $value;
             }
         }
 
@@ -93,23 +95,27 @@ class question_db_helper {
         [$packageid] = $this->get_package($question->qpy_package_hash);
         if (!$packageid) {
             throw new moodle_exception(
-                "package_not_found", "qtype_questionpy", "", (object)[
-                    "packagehash" => $question->qpy_package_hash
-                ]
+                "package_not_found", "qtype_questionpy", "",
+                (object)["packagehash" => $question->qpy_package_hash]
             );
         }
 
         $existingrecord = $DB->get_record(self::QUESTION_TABLE, [
             "questionid" => $question->id,
         ]);
+
+        $response = $this->api->create_question(
+            $question->qpy_package_hash,
+            $existingrecord ? $existingrecord->state : null,
+            (object)$question->qpy_form ?? new stdClass()
+        );
+
         if ($existingrecord) {
             // Question record already exists, update it if necessary.
             $update = ["id" => $existingrecord->id];
-            $oldstate = json_decode($existingrecord->state, true);
-            $newstate = $this->options_to_state($question, $oldstate);
 
-            if ($oldstate !== $newstate) {
-                $update["state"] = json_encode($newstate);
+            if ($existingrecord->state !== $response->state) {
+                $update["state"] = $response->state;
             }
             if ($packageid !== $existingrecord->packageid) {
                 $update["packageid"] = $packageid;
@@ -120,12 +126,11 @@ class question_db_helper {
             }
         } else {
             // Insert a new record with the question state only containing the options.
-            $state = $this->options_to_state($question, []);
             $DB->insert_record(self::QUESTION_TABLE, [
                 "questionid" => $question->id,
                 "feedback" => "",
                 "packageid" => $packageid,
-                "state" => json_encode($state),
+                "state" => $response->state,
             ]);
         }
     }
@@ -140,31 +145,6 @@ class question_db_helper {
         global $DB;
         $DB->delete_records(self::QUESTION_TABLE, ['questionid' => $questionid]);
         // TODO: Also delete packages when they are no longer used by any question.
-    }
-
-    /**
-     * Updates the state to contain all package-specific form options in the given question or creates a new state.
-     *
-     * TODO: Eventually, the question state will be an opaque string or JSON string whose content we don't directly
-     * access, but which we send to the package and which it uses to generate the new form definition for us. For now,
-     * however, we assume that the state contains the options and access them directly.
-     *
-     * @param object $question question data, NOT an instance of {@see \question_definition}
-     * @param array $state     previous state of the question
-     * @return array new state of the question, with the form options added or updated
-     */
-    private function options_to_state(object $question, array $state): array {
-        foreach ($question as $key => $value) {
-            $unmangled = form_name_mangler::unmangle($key);
-            if (!$unmangled) {
-                // Not a package-specific form option.
-                continue;
-            }
-
-            $state[$unmangled] = $value;
-        }
-
-        return $state;
     }
 
     /**

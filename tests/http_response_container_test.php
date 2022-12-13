@@ -17,6 +17,7 @@
 namespace qtype_questionpy;
 
 use moodle_exception;
+use qtype_questionpy\api\http_response_container;
 
 /**
  * Unit tests for the questionpy question type class.

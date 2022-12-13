@@ -18,8 +18,7 @@ namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
-use qtype_questionpy\form\form_name_mangler;
-use qtype_questionpy\form\group_render_context;
+use qtype_questionpy\form\array_render_context;
 use qtype_questionpy\form\render_context;
 use qtype_questionpy\utils;
 
@@ -67,46 +66,54 @@ class repetition_element extends form_element {
      * @package qtype_questionpy
      */
     public function render_to(render_context $context): void {
-        $groupcontext = new group_render_context($context);
+        $innercontext = new array_render_context(
+            $context,
+            $context->mangle_name("repetition_" . $context->next_unique_int())
+        );
 
         foreach ($this->elements as $element) {
-            $element->render_to($groupcontext);
+            $element->render_to($innercontext);
         }
 
         $options = [];
 
-        foreach ($groupcontext->types as $name => $type) {
-            utils::ensure_exists($options, form_name_mangler::mangle($name))["type"] = $type;
+        foreach ($innercontext->types as $name => $type) {
+            utils::ensure_exists($options, $name)["type"] = $type;
         }
-        foreach ($groupcontext->defaults as $name => $default) {
-            utils::ensure_exists($options, form_name_mangler::mangle($name))["default"] = $default;
+        foreach ($innercontext->defaults as $name => $default) {
+            utils::ensure_exists($options, $name)["default"] = $default;
         }
-        foreach ($groupcontext->disableifs as $name => $condition) {
-            utils::ensure_exists($options, form_name_mangler::mangle($name))["disabledif"] = [
-                form_name_mangler::mangle($condition->name),
-                ...$condition->to_mform_args()
+        foreach ($innercontext->disableifs as $name => $condition) {
+            utils::ensure_exists($options, $name)["disabledif"] = [
+                $condition->name,
+                ...$condition->to_mform_args(),
             ];
         }
-        foreach ($groupcontext->hideifs as $name => $condition) {
-            utils::ensure_exists($options, form_name_mangler::mangle($name))["hideif"] = [
-                form_name_mangler::mangle($condition->name),
-                ...$condition->to_mform_args()
+        foreach ($innercontext->hideifs as $name => $condition) {
+            utils::ensure_exists($options, $name)["hideif"] = [
+                $condition->name,
+                ...$condition->to_mform_args(),
             ];
         }
 
-        foreach ($groupcontext->rules as $name => $rules) {
+        foreach ($innercontext->rules as $name => $rules) {
             // There is only room for at most one rule in the options array, so for now we just ignore others.
             if ($rules) {
-                // The rules array is already mangled in group_render_context, so we don't do that here.
                 utils::ensure_exists($options, $name)["rule"] = $rules[0];
             }
         }
 
+        /*
+         * FIXME: repeat_elements generates elements with names like qpy_form[repetition_1][name][0],
+         * but uses qpy_form[0][repetition_1][name] when setting their type.
+         */
         $context->moodleform->repeat_elements(
-            $groupcontext->elements, $this->initialelements,
+            $innercontext->elements, $this->initialelements,
             $options, "repeats", "add_repeats",
             $this->increment, $this->buttonlabel, true
         );
+
+        $context->nextuniqueint = $innercontext->nextuniqueint;
     }
 }
 

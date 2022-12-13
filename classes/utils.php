@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy;
 
+use Generator;
+
 /**
  * Utility functions used in multiple places.
  *
@@ -39,5 +41,35 @@ class utils {
         }
 
         return $array[$key];
+    }
+
+    /**
+     * Determines whether a string starts with another.
+     *
+     * @param string $haystack
+     * @param string $needle
+     * @return bool
+     */
+    public static function str_starts_with(string $haystack, string $needle): bool {
+        // From https://stackoverflow.com/a/10473026.
+        return substr_compare($haystack, $needle, 0, strlen($needle)) === 0;
+    }
+
+    /**
+     * Given an array with possible nested arrays, generates flat entries keys reflect the paths in the input array.
+     *
+     * @param array $source input array which might contain nested arrays
+     * @param string $prefix prefix for all returned keys, as if `$source` where nested in an array with that key
+     * @return Generator<string, mixed> flat generator of entries
+     */
+    public static function flatten(array $source, string $prefix): Generator {
+        foreach ($source as $key => $value) {
+            $fullkey = "{$prefix}[$key]";
+            if (is_array($value)) {
+                yield from self::flatten($value, $fullkey);
+            } else {
+                yield $fullkey => $value;
+            }
+        }
     }
 }
