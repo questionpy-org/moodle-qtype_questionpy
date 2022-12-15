@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy;
 
+use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 
@@ -192,7 +193,7 @@ class package {
      *
      * @param int $contextid
      * @return void
-     * @throws \dml_exception
+     * @throws moodle_exception
      */
     public function store_in_db(int $contextid = 0) {
         global $DB;
@@ -209,6 +210,8 @@ class package {
             "icon" => $this->icon,
             "license" => $this->license
         ];
+
+        $transaction = $DB->start_delegated_transaction();
         $packageid = $DB->insert_record('qtype_questionpy_package', $packagedata);
 
         // For each language store the localized package data as a separate record.
@@ -230,14 +233,10 @@ class package {
                 "tag" => $tag,
             ];
         }
-        $transaction = $DB->start_delegated_transaction();
-        try {
-            $DB->insert_records('qtype_questionpy_tags', $tagsdata);
-            $DB->insert_records('qtype_questionpy_language', $languagedata);
-        } catch (\dml_exception $e) {
-            $DB->rollback_delegated_transaction($transaction, $e);
-        }
-        $DB->commit_delegated_transaction($transaction);
+
+        $DB->insert_records('qtype_questionpy_tags', $tagsdata);
+        $DB->insert_records('qtype_questionpy_language', $languagedata);
+        $transaction->allow_commit();
     }
 
     /**
@@ -246,25 +245,17 @@ class package {
      *  - qtype_questionpy_language
      *  - qtype_questionpy_tags
      *
-     * @return bool
-     * @throws \Throwable
-     * @throws \coding_exception
-     * @throws \dml_transaction_exception
+     * @throws moodle_exception
      */
-    public function delete_from_db(): boolean {
+    public function delete_from_db() {
         global $DB;
+
         $transaction = $DB->start_delegated_transaction();
         $packageid = $DB->get_field('qtype_questionpy_package', 'id', ['hash' => $this->hash]);
-        try {
-            $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
-            $DB->delete_records('qtype_questionpy_language', ['packageid' => $packageid]);
-            $DB->delete_records('qtype_questionpy_tags', ['packageid' => $packageid]);
-        } catch (\dml_exception $e) {
-            $DB->rollback_delegated_transaction($transaction, $e);
-            return false;
-        }
-        $DB->commit_delegated_transaction($transaction);
-        return true;
+        $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
+        $DB->delete_records('qtype_questionpy_language', ['packageid' => $packageid]);
+        $DB->delete_records('qtype_questionpy_tags', ['packageid' => $packageid]);
+        $transaction->allow_commit();
     }
 
     /**

@@ -109,4 +109,22 @@ class api {
         return $response->get_data(false);
     }
 
+    /**
+     * Get the Package information from the server.
+     *
+     * @param string $filename
+     * @param string $filepath
+     * @return http_response_container
+     * @throws moodle_exception
+     */
+    public static function package_extract_info(string $filename, string $filepath): http_response_container {
+        $curlfile = curl_file_create($filepath, $filename);
+        $data = [
+            'package' => $curlfile
+        ];
+        $connector = self::create_connector();
+        return $connector->post("/package-extract-info", $data);
+    }
 }
+
+

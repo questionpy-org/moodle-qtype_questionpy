@@ -46,6 +46,8 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // Retrieve packages from the application server.
         $packages = api::get_packages();
 
+        $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
+
         // No packages received.
         if (!$packages) {
             $mform->addElement(
@@ -54,6 +56,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
                 get_string('selection_no_package_text', 'qtype_questionpy')
             );
 
+            $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
             return;
         }
 
@@ -86,7 +89,6 @@ class qtype_questionpy_edit_form extends question_edit_form {
             'questionpy_package_container', get_string('selection_required', 'qtype_questionpy'), 'required'
         );
 
-        $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
 
         // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
