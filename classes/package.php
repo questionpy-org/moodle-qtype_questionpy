@@ -289,7 +289,7 @@ class package {
      * Get packages from the db matching given conditions. Note: only conditions stored in the package table
      * are applicable.
      *
-     * @param ?array $conditions
+     * @param array|null $conditions
      * @return array
      * @throws dml_exception
      * @throws moodle_exception
