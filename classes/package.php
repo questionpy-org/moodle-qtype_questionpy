@@ -222,8 +222,8 @@ class package {
                 $languagedata[] = [
                     "packageid" => $packageid,
                     "language" => $language,
-                    "name" => $this->get_localized_property($this->name, [$language]),
-                    "description" => $this->get_localized_property($this->description, [$language])
+                    "name" => $this->get_localized_name([$language]),
+                    "description" => $this->get_localized_description([$language])
                 ];
             }
             $DB->insert_records('qtype_questionpy_language', $languagedata);
