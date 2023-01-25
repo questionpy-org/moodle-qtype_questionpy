@@ -90,7 +90,7 @@ class question_db_helper {
     public function upsert_question(object $question): void {
         global $DB;
 
-        list($packageid) = $this->get_package($question->qpy_package_hash);
+        [$packageid] = $this->get_package($question->qpy_package_hash);
         if (!$packageid) {
             throw new moodle_exception(
                 "package_not_found", "qtype_questionpy", "", (object)[
