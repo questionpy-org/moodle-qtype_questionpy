@@ -50,7 +50,7 @@ class question_db_helper_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_db_helper::get_question
      */
     public function test_get_question_should_load_options() {
-        list($packageid, $package) = $this->setup_package();
+        [$packageid, $package] = $this->setup_package();
         $statestr = $this->setup_question($packageid);
 
         $result = $this->questiondb->get_question(1);
@@ -85,9 +85,9 @@ class question_db_helper_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_db_helper::upsert_question
      */
     public function test_upsert_question_should_update_existing_record_if_changed() {
-        list($oldpackageid) = $this->setup_package();
+        [$oldpackageid] = $this->setup_package();
         $statestr = $this->setup_question($oldpackageid);
-        list($newpackageid, $newpackage) = $this->setup_package();
+        [$newpackageid, $newpackage] = $this->setup_package();
 
         $this->questiondb->upsert_question(
             (object)[
@@ -121,7 +121,7 @@ class question_db_helper_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_db_helper::upsert_question
      */
     public function test_upsert_question_should_do_nothing_if_unchanged() {
-        list($packageid, $package) = $this->setup_package();
+        [$packageid, $package] = $this->setup_package();
         $statestr = $this->setup_question($packageid);
 
         $this->questiondb->upsert_question(
@@ -152,7 +152,7 @@ class question_db_helper_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_db_helper::upsert_question
      */
     public function test_upsert_question_should_insert_record() {
-        list($packageid, $package) = $this->setup_package();
+        [$packageid, $package] = $this->setup_package();
 
         $this->questiondb->upsert_question(
             (object)[
@@ -204,7 +204,7 @@ class question_db_helper_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_db_helper::upsert_question
      */
     public function test_delete_question() {
-        list($packageid) = $this->setup_package();
+        [$packageid] = $this->setup_package();
         $this->setup_question($packageid);
 
         global $DB;

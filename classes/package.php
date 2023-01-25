@@ -279,7 +279,7 @@ class package {
             return null;
         }
 
-        list($package->languages, $package->name, $package->description) = self::get_languagedata($package->id);
+        [$package->languages, $package->name, $package->description] = self::get_languagedata($package->id);
         $package->tags = self::get_tagdata($package->id);
 
         return [$package->id, array_converter::from_array(self::class, (array)$package)];
@@ -300,7 +300,7 @@ class package {
         $packages = array();
         foreach ($records as $package) {
             $package = (array)$package;
-            list($language, $name, $description) = self::get_languagedata($package["id"]);
+            [$language, $name, $description] = self::get_languagedata($package["id"]);
             $tags = self::get_tagdata($package["id"]);
             $temp = [
                 'languages' => $language,
