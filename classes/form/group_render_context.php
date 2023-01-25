@@ -131,7 +131,7 @@ class group_render_context extends render_context {
     public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
         utils::ensure_exists($this->rules, form_name_mangler::mangle($name))[] = [
-            $message, $type, $format, $validation, $reset
+            $message, $type, $format, $validation, $reset, $force
         ];
     }
 
