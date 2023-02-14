@@ -35,6 +35,7 @@ function package_provider1(): package {
     return array_converter::from_array(package::class, [
         'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
         'short_name' => 'adAqMNxOZNhuSUWflNui',
+        'namespace' => 'default',
         'name' => [
             'en' => 'She piece local.',
             'de' => 'Style important.'
@@ -73,6 +74,7 @@ function package_provider2(): package {
     return array_converter::from_array(package::class, [
         'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
         'short_name' => 'adAqMNxOZNhuSUWflNui',
+        'namespace' => 'default',
         'name' => [
             'en' => 'She piece local.',
             'de' => 'Style important.'
