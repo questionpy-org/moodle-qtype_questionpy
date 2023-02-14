@@ -254,7 +254,7 @@ class question_db_helper_test extends \advanced_testcase {
 
         $hash = hash("sha256", rand());
         $package = new package(
-            $hash, "test", ["en" => "Test"],
+            $hash, "test", "default", ["en" => "Test"],
             "0.1.0", "QUESTION_TYPE"
         );
         $packageid = $package->store_in_db();

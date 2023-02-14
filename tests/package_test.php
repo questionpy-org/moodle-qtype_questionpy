@@ -43,6 +43,7 @@ class package_test extends \advanced_testcase {
         $minimum = [
             'package_hash' => 'hash',
             'short_name' => 'shortname',
+            'namespace' => 'namespace',
             'name' => [],
             'version' => '1.0.0',
             'type' => 'question',
@@ -52,6 +53,7 @@ class package_test extends \advanced_testcase {
         $maximum = [
             'package_hash' => 'hash',
             'short_name' => 'shortname',
+            'namespace' => 'namespace',
             'name' => [],
             'version' => '1.0.0',
             'type' => 'question',
@@ -79,7 +81,7 @@ class package_test extends \advanced_testcase {
      */
     public function test_get_localized_name(): void {
         $name = ['en' => 'english_name', 'de' => 'german_name', 'fr' => 'french_name'];
-        $package = new package('hash', 'shortname', $name, '1.0.0', 'question');
+        $package = new package('hash', 'shortname', 'default', $name, '1.0.0', 'question');
 
         // Every language in package exists in preferred language.
         $languages = ['en', 'de', 'fr'];
@@ -95,7 +97,7 @@ class package_test extends \advanced_testcase {
 
         // Preferred language and fallback language in package does not exist.
         $name = ['de' => 'german_name', 'fr' => 'french_name'];
-        $package = new package('hash', 'shortname', $name, '1.0.0', 'question');
+        $package = new package('hash', 'shortname', 'default', $name, '1.0.0', 'question');
         $this->assertEquals($name['de'], $package->get_localized_name($languages));
     }
 
@@ -107,8 +109,8 @@ class package_test extends \advanced_testcase {
      */
     public function test_get_localized_description(): void {
         $description = ['en' => 'english_description', 'de' => 'german_description', 'fr' => 'french_description'];
-        $package = new package('hash', 'shortname', ['en' => 'english_name'], '1.0.0', 'question',
-                        'author', 'url', [], $description);
+        $package = new package('hash', 'shortname', 'default', ['en' => 'english_name'], '1.0.0',
+            'question', 'author', 'url', [], $description);
 
         // Every language in package exists in preferred language.
         $languages = ['en', 'de', 'fr'];
@@ -124,20 +126,20 @@ class package_test extends \advanced_testcase {
 
         // Preferred language and fallback language in package does not exist.
         $description = ['de' => 'german_description', 'fr' => 'french_description'];
-        $package = new package('hash', 'shortname', ['en' => 'english_name'], '1.0.0', 'question',
-                        'author', 'url', [], $description);
+        $package = new package('hash', 'shortname', 'default', ['en' => 'english_name'], '1.0.0',
+            'question', 'author', 'url', [], $description);
         $this->assertEquals($description['de'], $package->get_localized_description($languages));
 
         // Description is empty.
         $description = [];
-        $package = new package('hash', 'shortname', ['en' => 'english_name'], '1.0.0', 'question',
-                        'author', 'url', [], $description);
+        $package = new package('hash', 'shortname', 'default', ['en' => 'english_name'], '1.0.0',
+            'question', 'author', 'url', [], $description);
         $this->assertEquals('', $package->get_localized_description($languages));
 
         // Description is not set.
         $description = null;
-        $package = new package('hash', 'shortname', ['en' => 'english_name'], '1.0.0', 'question',
-            'author', 'url', [], $description);
+        $package = new package('hash', 'shortname', 'default', ['en' => 'english_name'], '1.0.0',
+            'question', 'author', 'url', [], $description);
         $this->assertEquals('', $package->get_localized_description($languages));
     }
 

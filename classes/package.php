@@ -43,6 +43,11 @@ class package {
     private $shortname;
 
     /**
+     * @var string package namespace
+     */
+    private $namespace;
+
+    /**
      * @var array package name
      */
     private $name;
@@ -97,6 +102,7 @@ class package {
      *
      * @param string $hash
      * @param string $shortname
+     * @param string $namespace
      * @param array $name
      * @param string $version
      * @param string $type
@@ -108,12 +114,13 @@ class package {
      * @param string|null $license
      * @param array|null $tags
      */
-    public function __construct(string $hash, string $shortname, array $name, string $version, string $type,
+    public function __construct(string $hash, string $shortname, string $namespace, array $name, string $version, string $type,
                                 string $author = null, string $url = null, array $languages = null,
                                 array  $description = null, string $icon = null, string $license = null,
                                 array  $tags = null) {
         $this->hash = $hash;
         $this->shortname = $shortname;
+        $this->namespace = $namespace;
         $this->name = $name;
         $this->version = $version;
         $this->type = $type;
@@ -207,6 +214,7 @@ class package {
             "contextid" => $contextid,
             "hash" => $this->hash,
             "shortname" => $this->shortname,
+            "namespace" => $this->namespace,
             "version" => $this->version,
             "type" => $this->type,
             "author" => $this->author,
