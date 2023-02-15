@@ -101,15 +101,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $mform->addElement("hidden", "package_changed", "true", ["disabled" => "disabled"]);
         $mform->setType("package_changed", PARAM_RAW);
 
-        // Accessing the global $_REQUEST here probably isn't the best. Unfortunately, we only have non-global access
-        // to the previous state of the question at this point. Sometime after definition() returns, we are provided
-        // with the newly submitted data using updateSubmission(). (See the end of the moodleform constructor.)
-        //
-        // The method definition_after_data() is intended for this case, however it is called after the default form
-        // elements (tags, action buttons) have already been added, so we would need to add the package's form into the
-        // middle of the existing elements. QuickForm supports this via insertElementBefore(), but moodleform's
-        // repeat_elements and add_checkbox_controller do not.
-        $packagehash = $_REQUEST["qpy_package_hash"] ?? $this->question->qpy_package_hash ?? null;
+        $packagehash = $this->optional_param("qpy_package_hash", $this->question->qpy_package_hash ?? null, PARAM_ALPHANUM);
         if ($packagehash) {
             // A package is selected -> render its form.
             $packageform = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? "{}");
