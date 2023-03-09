@@ -31,20 +31,20 @@ use stdClass;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_db_helper_test extends \advanced_testcase {
+class question_service_test extends \advanced_testcase {
 
     /** @var api */
     private api $api;
 
     /** @var question_service */
-    private question_service $questiondb;
+    private question_service $questionservice;
 
     protected function setUp(): void {
         $this->api = $this->createMock(api::class);
         $this->api->method("get_package")
             ->willReturn(null);
 
-        $this->questiondb = new question_service($this->api);
+        $this->questionservice = new question_service($this->api);
     }
 
     /**
@@ -54,17 +54,16 @@ class question_db_helper_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_service::get_question
      */
-    public function test_get_question_should_load_options() {
+    public function test_get_question_should_load_package_and_state() {
         [$packageid, $package] = $this->setup_package();
         $statestr = $this->setup_question($packageid);
 
-        $result = $this->questiondb->get_question(1);
+        $result = $this->questionservice->get_question(1);
 
         $this->assertEquals(
             (object)[
                 "qpy_package_hash" => $package->hash,
                 "qpy_state" => $statestr,
-                "qpy_form[opt1]" => "opt 1 value",
             ], $result
         );
     }
@@ -78,7 +77,7 @@ class question_db_helper_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::get_question
      */
     public function test_get_question_should_return_empty_object_when_no_record() {
-        $this->assertEquals(new stdClass(), $this->questiondb->get_question(42));
+        $this->assertEquals(new stdClass(), $this->questionservice->get_question(42));
     }
 
     /**
@@ -103,7 +102,7 @@ class question_db_helper_test extends \advanced_testcase {
             ->with($newpackage->hash, $oldstate, (object) $formdata)
             ->willReturn(new question_response($newstate, "", ""));
 
-        $this->questiondb->upsert_question(
+        $this->questionservice->upsert_question(
             (object)[
                 "id" => 1,
                 "qpy_package_hash" => $newpackage->hash,
@@ -134,7 +133,7 @@ class question_db_helper_test extends \advanced_testcase {
             ->with($package->hash, $oldstate, (object) $formdata)
             ->willReturn(new question_response($oldstate, "", ""));
 
-        $this->questiondb->upsert_question(
+        $this->questionservice->upsert_question(
             (object)[
                 "id" => 1,
                 "qpy_package_hash" => $package->hash,
@@ -166,7 +165,7 @@ class question_db_helper_test extends \advanced_testcase {
             ->with($package->hash, null, (object) $formdata)
             ->willReturn(new question_response($newstate, "", ""));
 
-        $this->questiondb->upsert_question(
+        $this->questionservice->upsert_question(
             (object)[
                 "id" => 42, // Does not exist in the qtype_questionpy table yet.
                 "qpy_package_hash" => $package->hash,
@@ -189,7 +188,7 @@ class question_db_helper_test extends \advanced_testcase {
         $this->expectException(moodle_exception::class);
         $this->expectExceptionMessageMatches("/package $hash does not exist/");
 
-        $this->questiondb->upsert_question(
+        $this->questionservice->upsert_question(
             (object)[
                 "id" => 1,
                 "qpy_package_hash" => $hash,
@@ -211,7 +210,7 @@ class question_db_helper_test extends \advanced_testcase {
         global $DB;
         $this->assertEquals(1, $DB->count_records("qtype_questionpy"));
 
-        $this->questiondb->delete_question(1);
+        $this->questionservice->delete_question(1);
 
         $this->assertEquals(0, $DB->count_records("qtype_questionpy"));
     }

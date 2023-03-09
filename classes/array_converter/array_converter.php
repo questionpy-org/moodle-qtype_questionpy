@@ -183,7 +183,7 @@ class array_converter {
                 } else if (!$parameter->isVariadic()) {
                     throw new moodle_exception(
                         "cannotgetdata", "error", "", null,
-                        "No value provided for required field '$parameter->name'"
+                        "No value provided for required field '$parameter->name' of '{$reflect->getName()}'"
                     );
                 }
             }
