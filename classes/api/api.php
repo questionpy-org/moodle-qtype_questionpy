@@ -94,26 +94,28 @@ class api {
      * Retrieve the question edit form definition for a given package.
      *
      * @param string $packagehash   package whose form should be requested
-     * @param string $questionstate current question state
+     * @param string|null $questionstate current question state
      * @return qpy_form
      * @throws moodle_exception
      */
-    public function get_question_edit_form(string $packagehash, string $questionstate): qpy_form {
+    public function get_question_edit_form(string $packagehash, ?string $questionstate): question_edit_form_response {
         $connector = $this->create_connector();
 
-        $statehash = hash("sha256", $questionstate);
+        $main = [];
+        $parts = [];
 
-        $response = $connector->post("/packages/$packagehash/options", [
-            "main" => json_encode([
-                "question_state_hash" => $statehash,
-                // TODO: Send an actual context.
-                "context" => 1,
-            ]),
+        if ($questionstate !== null) {
+            $statehash = hash("sha256", $questionstate);
+            $main["question_state_hash"] = $statehash;
             // TODO: Don't send the question state unconditionally, try the hash first.
-            "question_state" => $questionstate,
-        ]);
+            $parts["question_state"] = $questionstate;
+        }
+
+        $parts["main"] = json_encode($main);
+
+        $response = $connector->post("/packages/$packagehash/options", $parts);
         $response->assert_2xx();
-        return array_converter::from_array(qpy_form::class, $response->get_data());
+        return array_converter::from_array(question_edit_form_response::class, $response->get_data());
     }
 
     /**

@@ -22,7 +22,7 @@ use qtype_questionpy\api\api;
 use stdClass;
 
 /**
- * Utility class for managing QuestionPy-specific question options in the DB.
+ * Manages QuestionPy-specific question options in the DB.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
@@ -51,8 +51,7 @@ class question_service {
      *
      * @param int $questionid ID of the question (`question.id`, not `qtype_questionpy.id`)
      * @return object QuestionPy-specific question fields in an associative array
-     * @throws dml_exception
-     * @throws \coding_exception
+     * @throws moodle_exception
      */
     public function get_question(int $questionid): object {
         global $DB;
@@ -67,15 +66,9 @@ class question_service {
                     " question {$questionid}"
                 );
             }
-            $result->qpy_package_hash = $package->hash;
 
+            $result->qpy_package_hash = $package->hash;
             $result->qpy_state = $record->state;
-            // TODO: Don't read options from state, let package include them in form response.
-            $state = json_decode($record->state, true);
-            // While moodle automagically parses names containing [] into objects, we have to do the reverse ourselves.
-            foreach (utils::flatten($state, "qpy_form") as $name => $value) {
-                $result->{$name} = $value;
-            }
         }
 
         return $result;

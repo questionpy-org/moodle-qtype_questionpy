@@ -25,6 +25,7 @@
 use qtype_questionpy\api\api;
 use qtype_questionpy\form\root_render_context;
 use qtype_questionpy\localizer;
+use qtype_questionpy\utils;
 
 /**
  * QuestionPy question editing form definition.
@@ -33,6 +34,9 @@ use qtype_questionpy\localizer;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy_edit_form extends question_edit_form {
+
+    /** @var array current form data set in {@see definition_inner} and added to the question in {@see set_data}. */
+    private array $currentdata = [];
 
     /**
      * Add any question-type specific form fields.
@@ -101,26 +105,16 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $mform->addElement("hidden", "package_changed", "true", ["disabled" => "disabled"]);
         $mform->setType("package_changed", PARAM_RAW);
 
-        $packagehash = $this->optional_param("qpy_package_hash", $this->question->qpy_package_hash ?? null, PARAM_ALPHANUM);
+        $packagehash = $this->optional_param("qpy_package_hash", $this->question->qpy_package_hash ?? null,
+            PARAM_ALPHANUM);
         if ($packagehash) {
             // A package is selected -> render its form.
-            $packageform = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? "{}");
-            $packageform->render_to(new root_render_context($this, $mform, "qpy_form"));
+            $response = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? null);
+            $response->definition->render_to(new root_render_context($this, $mform, "qpy_form"));
+
+            // Used by set_data.
+            $this->currentdata = $response->formdata;
         }
-    }
-
-    /**
-     * Perform any preprocessing needed on the data passed to {@see set_data()}
-     * before it is used to initialise the form.
-     *
-     * @param object $question the data being passed to the form.
-     * @return object $question the modified data.
-     */
-    public function data_preprocessing($question) {
-        $question = parent::data_preprocessing($question);
-        // TODO.
-
-        return $question;
     }
 
     /**
@@ -130,10 +124,15 @@ class qtype_questionpy_edit_form extends question_edit_form {
      *
      * @param stdClass $question
      */
-    public function set_data($question) {
+    public function set_data($question): void {
         // The question text will be provided by the qpy package. This field is hidden by CSS, but we need
         // to define a default value to satisfy the base methods in question_edit_form.
         $question->questiontext = '.';
+
+        // Current form data was returned by the server along with the form definition in definition_inner.
+        foreach (utils::flatten($this->currentdata, "qpy_form") as $name => $value) {
+            $this->question->{$name} = $value;
+        }
 
         parent::set_data($question);
     }
