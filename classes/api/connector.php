@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\api;
 
+use dml_exception;
 use moodle_exception;
 
 /**
@@ -79,6 +80,18 @@ class connector {
      */
     public function __destruct() {
         curl_close($this->curlhandle);
+    }
+
+    /**
+     * Initializes new connector with current server url.
+     *
+     * @throws moodle_exception
+     */
+    public static function default(): self {
+        // Get server configs.
+        $serverurl = get_config('qtype_questionpy', 'server_url');
+        $timeout = get_config('qtype_questionpy', 'server_timeout');
+        return new connector($serverurl, $timeout);
     }
 
     /**

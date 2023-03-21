@@ -16,18 +16,27 @@
  */
 
 /**
- * This function is required by <code>qtype_questionpy::display_question_editing_page()</code>.
+ * Event handler to be called when the user selects or uploads a package.
  *
- * When the package is changed, this function enables the hidden form element <code>package_changed</code> and submits the form.
- * Since <code>package_changed</code> is registered as a no-submit button, it prevents the form data from being saved to the
- * question, while still re-rendering the form with access to the new selected package hash.
+ * Enables the hidden form element <code>package_changed</code> and submits the form.
+ * Since <code>package_changed</code> is registered as a no-submit button, it prevents the form data from being saved to
+ * the question, while still re-rendering the form with access to the new selected package hash.
+ *
+ * @param {Event} e
+ */
+function onPackageChange(e) {
+    document.getElementsByName("package_changed")[0]
+        .removeAttribute("disabled");
+    e.target.form.submit();
+}
+
+/**
+ * This function is required by <code>qtype_questionpy::display_question_editing_page()</code>.
  */
 export function init() {
     document.getElementsByName("qpy_package_hash")
-        .forEach(radio => radio.addEventListener("change", e => {
-            document.getElementsByName("package_changed").forEach(hidden => {
-                hidden.removeAttribute("disabled");
-            });
-            e.target.form.submit();
-        }));
+        .forEach(radio => radio.addEventListener("change", onPackageChange));
+
+    document.getElementsByName("qpy_package")[0]
+        .addEventListener("change", onPackageChange);
 }

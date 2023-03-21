@@ -44,9 +44,11 @@ $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
 $string['selection_title'] = 'Select QuestionPy Package';
 $string['selection_searchbar'] = 'Search...';
 $string['selection_no_icon'] = 'Could not load the icon.';
-$string['selection_no_package_title'] = 'QuestionPy';
-$string['selection_no_package_text'] = 'No packages available.';
+$string['selection_no_package'] = 'There are no available packages, but you can still upload your own!';
 $string['selection_required'] = 'Please select a package.';
+
+$string['question_package_search'] = 'Select an existing packages';
+$string['question_package_upload'] = 'Upload your own';
 
 // Question management.
 $string['package_not_found'] = 'The requested package {$a->packagehash} does not exist.';

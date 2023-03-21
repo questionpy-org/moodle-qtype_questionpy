@@ -23,6 +23,7 @@
  */
 
 use qtype_questionpy\api\api;
+use qtype_questionpy\package_service;
 use qtype_questionpy\question_service;
 
 defined('MOODLE_INTERNAL') || die();
@@ -40,7 +41,7 @@ require_once($CFG->dirroot . '/question/type/questionpy/question.php');
 class qtype_questionpy extends question_type {
 
     /** @var question_service */
-    private question_service $questiondb;
+    private question_service $questionservice;
 
     /** @var api */
     private api $api;
@@ -51,7 +52,8 @@ class qtype_questionpy extends question_type {
     public function __construct() {
         parent::__construct();
         $this->api = new api();
-        $this->questiondb = new question_service($this->api);
+        $packageservice = new package_service($this->api);
+        $this->questionservice = new question_service($this->api, $packageservice);
     }
 
     /**
@@ -120,13 +122,8 @@ class qtype_questionpy extends question_type {
      * @return void
      * @throws moodle_exception
      */
-    public function save_question_options($question) {
-        if (!isset($question->qpy_package_hash)) {
-            // A package has not yet been selected, so there is no package-specific data to save.
-            return;
-        }
-
-        $this->questiondb->upsert_question($question);
+    public function save_question_options($question): void {
+        $this->questionservice->upsert_question($question);
     }
 
     /**
@@ -135,13 +132,14 @@ class qtype_questionpy extends question_type {
      * @param object $question question object to which QuestionPy-specific options should be added
      * @throws coding_exception
      * @throws dml_exception
+     * @throws moodle_exception
      */
     public function get_question_options($question): bool {
         if (!parent::get_question_options($question)) {
             return false;
         }
 
-        foreach ($this->questiondb->get_question($question->id) as $key => $value) {
+        foreach ($this->questionservice->get_question($question->id) as $key => $value) {
             $question->{$key} = $value;
         }
 

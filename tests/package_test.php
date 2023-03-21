@@ -20,8 +20,7 @@ use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 
 defined('MOODLE_INTERNAL') || die;
-require(__DIR__ . '/data_provider.php');
-
+require_once(__DIR__ . '/data_provider.php');
 
 /**
  * Unit tests for the questionpy question type class.
@@ -199,7 +198,6 @@ class package_test extends \advanced_testcase {
         } catch (\Exception $e) {
             return;
         }
-
     }
 
     /**
@@ -218,7 +216,6 @@ class package_test extends \advanced_testcase {
         $this->assertEmpty($difference);
         $this->assertTrue($package1->equals($package2));
     }
-
 
     /**
      * Stores two packages in the DB.

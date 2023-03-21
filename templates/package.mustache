@@ -40,7 +40,9 @@
 <div class="card">
     <div class="row no-gutters">
         <div class="col-2 d-flex justify-content-center align-items-center">
-            <img src="{{icon}}" width="48" height="48" alt="{{#str}} selection_no_icon, qtype_questionpy {{/str}}">
+            {{#icon}}
+                <img src="{{icon}}" width="48" height="48" alt="{{#str}} selection_no_icon, qtype_questionpy {{/str}}">
+            {{/icon}}
         </div>
         <div class="col-10">
             <div class="card-body">

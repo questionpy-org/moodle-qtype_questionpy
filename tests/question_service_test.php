@@ -20,6 +20,7 @@ use coding_exception;
 use dml_exception;
 use moodle_exception;
 use qtype_questionpy\api\api;
+use qtype_questionpy\api\package_api;
 use qtype_questionpy\api\question_response;
 use stdClass;
 
@@ -36,6 +37,9 @@ class question_service_test extends \advanced_testcase {
     /** @var api */
     private api $api;
 
+    /** @var package_api */
+    private package_api $packageapi;
+
     /** @var question_service */
     private question_service $questionservice;
 
@@ -43,8 +47,12 @@ class question_service_test extends \advanced_testcase {
         $this->api = $this->createMock(api::class);
         $this->api->method("get_package")
             ->willReturn(null);
+        $this->packageapi = $this->createMock(package_api::class);
+        $this->api->method("package")
+            ->willReturn($this->packageapi);
 
-        $this->questionservice = new question_service($this->api);
+        $packageservice = new package_service($this->api);
+        $this->questionservice = new question_service($this->api, $packageservice);
     }
 
     /**
@@ -96,15 +104,16 @@ class question_service_test extends \advanced_testcase {
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
 
-        $this->api
+        $this->packageapi
             ->expects($this->once())
             ->method("create_question")
-            ->with($newpackage->hash, $oldstate, (object) $formdata)
+            ->with($oldstate, (object)$formdata)
             ->willReturn(new question_response($newstate, "", ""));
 
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 1,
+                "qpy_package_source" => "search",
                 "qpy_package_hash" => $newpackage->hash,
                 "qpy_form" => $formdata,
             ]
@@ -127,15 +136,16 @@ class question_service_test extends \advanced_testcase {
 
         $formdata = ["this is" => "form data"];
 
-        $this->api
+        $this->packageapi
             ->expects($this->once())
             ->method("create_question")
-            ->with($package->hash, $oldstate, (object) $formdata)
+            ->with($oldstate, (object)$formdata)
             ->willReturn(new question_response($oldstate, "", ""));
 
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 1,
+                "qpy_package_source" => "search",
                 "qpy_package_hash" => $package->hash,
                 "qpy_form" => $formdata,
             ]
@@ -159,15 +169,16 @@ class question_service_test extends \advanced_testcase {
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
 
-        $this->api
+        $this->packageapi
             ->expects($this->once())
             ->method("create_question")
-            ->with($package->hash, null, (object) $formdata)
+            ->with(null, (object)$formdata)
             ->willReturn(new question_response($newstate, "", ""));
 
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 42, // Does not exist in the qtype_questionpy table yet.
+                "qpy_package_source" => "search",
                 "qpy_package_hash" => $package->hash,
                 "qpy_form" => $formdata,
             ]
@@ -191,6 +202,7 @@ class question_service_test extends \advanced_testcase {
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 1,
+                "qpy_package_source" => "search",
                 "qpy_package_hash" => $hash,
             ]
         );
@@ -263,9 +275,9 @@ class question_service_test extends \advanced_testcase {
     /**
      * Asserts that a single question exists in `qtype_questionpy` and it matches the given arguments.
      *
-     * @param int $id expected question id
+     * @param int $id        expected question id
      * @param int $packageid expected package id
-     * @param string $state expected state
+     * @param string $state  expected state
      * @return void
      * @throws dml_exception
      */
@@ -275,8 +287,8 @@ class question_service_test extends \advanced_testcase {
         $this->assertCount(1, $records);
         $record = current($records);
 
-        $this->assertEquals((string) $id, $record->questionid);
-        $this->assertEquals((string) $packageid, $record->packageid);
+        $this->assertEquals((string)$id, $record->questionid);
+        $this->assertEquals((string)$packageid, $record->packageid);
         $this->assertEquals($state, $record->state);
     }
 }

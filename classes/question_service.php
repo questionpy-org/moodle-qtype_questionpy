@@ -34,13 +34,18 @@ class question_service {
     /** @var api */
     private api $api;
 
+    /** @var package_service */
+    private package_service $packageservice;
+
     /**
-     * Initializes the instance to use the given {@see api}.
+     * Initializes the instance.
      *
      * @param api $api
+     * @param package_service $packageservice
      */
-    public function __construct(api $api) {
+    public function __construct(api $api, package_service $packageservice) {
         $this->api = $api;
+        $this->packageservice = $packageservice;
     }
 
     /** @var string table containing our question data, 0-1 record per question */
@@ -77,7 +82,7 @@ class question_service {
     /**
      * Inserts or updates the QuestionPy-specific data for this question in the database.
      *
-     * @param object $question question data, NOT an instance of {@see \question_definition}
+     * @param object $question question form data, NOT an instance of {@see \question_definition}
      * @return void
      * @throws dml_exception
      * @throws moodle_exception
@@ -85,23 +90,31 @@ class question_service {
     public function upsert_question(object $question): void {
         global $DB;
 
-        [$packageid] = $this->get_package($question->qpy_package_hash);
-        if (!$packageid) {
-            throw new moodle_exception(
-                "package_not_found", "qtype_questionpy", "",
-                (object)["packagehash" => $question->qpy_package_hash]
-            );
+        if ($question->qpy_package_source === "upload") {
+            // A package has been uploaded. qpy_package contains the draft id of the file.
+            [$packageid, $package, $file] =
+                $this->packageservice->save_uploaded_draft($question->qpy_package, $question->context->id);
+            $question->qpy_package_hash = $package->hash;
+        } else {
+            [$packageid] = $this->packageservice->get_package($question->qpy_package_hash);
+            if (!$packageid) {
+                throw new moodle_exception(
+                    "package_not_found", "qtype_questionpy", "",
+                    (object)["packagehash" => $question->qpy_package_hash]
+                );
+            }
         }
 
         $existingrecord = $DB->get_record(self::QUESTION_TABLE, [
             "questionid" => $question->id,
         ]);
 
-        $response = $this->api->create_question(
-            $question->qpy_package_hash,
-            $existingrecord ? $existingrecord->state : null,
-            (object)$question->qpy_form ?? new stdClass()
-        );
+        $response = $this->api
+            ->package($question->qpy_package_hash, $file ?? null)
+            ->create_question(
+                $existingrecord ? $existingrecord->state : null,
+                (object)($question->qpy_form ?? new stdClass())
+            );
 
         if ($existingrecord) {
             // Question record already exists, update it if necessary.
@@ -138,29 +151,5 @@ class question_service {
         global $DB;
         $DB->delete_records(self::QUESTION_TABLE, ['questionid' => $questionid]);
         // TODO: Also delete packages when they are no longer used by any question.
-    }
-
-    /**
-     * Get the package with the given hash from the DB or the QuestionPy server API.
-     *
-     * If the package isn't found in the DB, then it is retrieved from the API and stored in the DB. If it isn't found
-     * by the API either, `null` is returned.
-     *
-     * @param string $hash hash of the package to look for
-     * @return ?array [id of database record, package instance] or null if package not found in DB or API
-     * @throws dml_exception
-     * @throws moodle_exception
-     */
-    private function get_package(string $hash): ?array {
-        $result = package::get_record_by_hash($hash);
-        if ($result) {
-            return $result;
-        }
-
-        $package = $this->api->get_package($hash);
-        if (!$package) {
-            return null;
-        }
-        return [$package->store_in_db(), $package];
     }
 }

@@ -18,9 +18,8 @@ namespace qtype_questionpy\api;
 
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\form\qpy_form;
 use qtype_questionpy\package;
-use TypeError;
+use stored_file;
 
 /**
  * Helper class for communicating to the application server.
@@ -32,18 +31,6 @@ use TypeError;
 class api {
 
     /**
-     * Initializes new connector with current server url.
-     *
-     * @throws moodle_exception
-     */
-    private function create_connector(): connector {
-        // Get server configs.
-        $serverurl = get_config('qtype_questionpy', 'server_url');
-        $timeout = get_config('qtype_questionpy', 'server_timeout');
-        return new connector($serverurl, $timeout);
-    }
-
-    /**
      * Retrieves QuestionPy packages from the application server.
      *
      * @return package[]
@@ -51,10 +38,10 @@ class api {
      */
     public function get_packages(): array {
         // Retrieve packages from server.
-        $connector = $this->create_connector();
+        $connector = connector::default();
         $response = $connector->get('/packages');
 
-        // TODO: check response code.
+        $response->assert_2xx();
         $packages = $response->get_data();
 
         $result = [];
@@ -62,9 +49,9 @@ class api {
         foreach ($packages as $package) {
             try {
                 $result[] = array_converter::from_array(package::class, $package);
-            } catch (TypeError $e) {
+            } catch (moodle_exception $e) {
                 // TODO: decide what to do with faulty package.
-                continue;
+                debugging($e->getMessage());
             }
         }
 
@@ -79,7 +66,7 @@ class api {
      * @throws moodle_exception
      */
     public function get_package(string $hash): ?package {
-        $connector = $this->create_connector();
+        $connector = connector::default();
         $response = $connector->get("/packages/$hash");
 
         if ($response->code === 404) {
@@ -91,64 +78,17 @@ class api {
     }
 
     /**
-     * Retrieve the question edit form definition for a given package.
+     * Returns the {@see package_api} which contains operations on the given package.
      *
-     * @param string $packagehash   package whose form should be requested
-     * @param string|null $questionstate current question state
-     * @return qpy_form
-     * @throws moodle_exception
-     */
-    public function get_question_edit_form(string $packagehash, ?string $questionstate): question_edit_form_response {
-        $connector = $this->create_connector();
-
-        $main = [];
-        $parts = [];
-
-        if ($questionstate !== null) {
-            $statehash = hash("sha256", $questionstate);
-            $main["question_state_hash"] = $statehash;
-            // TODO: Don't send the question state unconditionally, try the hash first.
-            $parts["question_state"] = $questionstate;
-        }
-
-        $parts["main"] = json_encode($main);
-
-        $response = $connector->post("/packages/$packagehash/options", $parts);
-        $response->assert_2xx();
-        return array_converter::from_array(question_edit_form_response::class, $response->get_data());
-    }
-
-    /**
-     * Create or update a question from form data and current state, if any.
+     * {@see package_api} takes care of transparently sending the package when it is not cached by the server,
      *
-     * @param string $packagehash
-     * @param string|null $currentstate current state string if the question already exists, null otherwise
-     * @param object $formdata data from the question edit form
-     * @return question_response
-     * @throws moodle_exception
+     * @param string $hash           package hash
+     * @param stored_file|null $file package file or null. If this is not provided and the package is not available to
+     *                               the server, operations will fail
+     * @return package_api
      */
-    public function create_question(string $packagehash, ?string $currentstate, object $formdata): question_response {
-        $connector = $this->create_connector();
-
-        $main = [
-            "form_data" => $formdata,
-            // TODO: Send an actual context.
-            "context" => 1,
-        ];
-        $parts = [];
-
-        if ($currentstate !== null) {
-            $statehash = hash("sha256", $currentstate);
-            $main["question_state_hash"] = $statehash;
-            // TODO: Don't send the question state unconditionally, try the hash first.
-            $parts["question_state"] = $currentstate;
-        }
-
-        $parts["main"] = json_encode($main);
-
-        $response = $connector->post("/packages/$packagehash/question", $parts);
-        $response->assert_2xx();
-        return array_converter::from_array(question_response::class, $response->get_data());
+    public function package(string $hash, ?stored_file $file = null): package_api {
+        return new package_api($hash, $file);
     }
 
     /**
@@ -158,26 +98,33 @@ class api {
      * @throws moodle_exception
      */
     public function get_hello_world(): string {
-        $connector = $this->create_connector();
+        $connector = connector::default();
         $response = $connector->get('/helloworld');
+        $response->assert_2xx();
         return $response->get_data(false);
     }
 
     /**
      * Get the Package information from the server.
      *
-     * @param string $filename
-     * @param string $filepath
-     * @return http_response_container
+     * @param stored_file $file the package file
+     * @return package
      * @throws moodle_exception
      */
-    public static function package_extract_info(string $filename, string $filepath): http_response_container {
-        $curlfile = curl_file_create($filepath, $filename);
+    public function package_extract_info(stored_file $file): package {
+        $fs = get_file_storage();
+        $filepath = $fs->get_file_system()->get_local_path_from_storedfile($file);
+
+        $connector = connector::default();
+
+        $curlfile = curl_file_create($filepath, "application/zip");
         $data = [
             'package' => $curlfile
         ];
-        $connector = self::create_connector();
-        return $connector->post("/package-extract-info", $data);
+
+        $response = $connector->post("/package-extract-info", $data);
+        $response->assert_2xx();
+        return array_converter::from_array(package::class, $response->get_data());
     }
 }
 
