@@ -97,7 +97,7 @@ class element_json_test extends \advanced_testcase {
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
             ], true))->disable_if(new does_not_equal("input1", ""))],
-            ["repetition.json", new repetition_element(3, 2, "", [
+            ["repetition.json", new repetition_element("my_repetition", 3, 2, "", [
                 new text_input_element("item", ""),
             ])],
             ["select.json", (new select_element("my_select", "Label", [
