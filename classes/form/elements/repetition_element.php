@@ -34,6 +34,8 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class repetition_element extends form_element {
+    /** @var string */
+    public string $name;
     /** @var int number of elements to show initially */
     public int $initialelements;
     /** @var int number of elements to add with each click of the button */
@@ -47,12 +49,15 @@ class repetition_element extends form_element {
     /**
      * Initializes the element.
      *
+     * @param string $name
      * @param int $initialelements number of elements to show initially
      * @param int $increment       number of elements to add with each click of the button
      * @param string $buttonlabel  label for the button which adds additional blanks
      * @param form_element[] $elements
      */
-    public function __construct(int $initialelements, int $increment, string $buttonlabel, array $elements) {
+    public function __construct(string $name, int $initialelements, int $increment, string $buttonlabel,
+                                array  $elements) {
+        $this->name = $name;
         $this->initialelements = $initialelements;
         $this->increment = $increment;
         $this->buttonlabel = $buttonlabel;
@@ -68,7 +73,7 @@ class repetition_element extends form_element {
     public function render_to(render_context $context): void {
         $innercontext = new array_render_context(
             $context,
-            $context->mangle_name("repetition_" . $context->next_unique_int())
+            $context->mangle_name($this->name)
         );
 
         foreach ($this->elements as $element) {
