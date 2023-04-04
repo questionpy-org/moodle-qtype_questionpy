@@ -16,11 +16,11 @@
 
 namespace qtype_questionpy\form\elements;
 
+use coding_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
-use qtype_questionpy\form\array_render_context;
 use qtype_questionpy\form\render_context;
-use qtype_questionpy\utils;
+use qtype_questionpy\form\root_render_context;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -40,8 +40,8 @@ class repetition_element extends form_element {
     public int $initialelements;
     /** @var int number of elements to add with each click of the button */
     public int $increment;
-    /** @var string label for the button which adds additional blanks */
-    public string $buttonlabel;
+    /** @var string|null label for the button which adds additional blanks, null to use default */
+    public ?string $buttonlabel;
 
     /** @var form_element[] */
     public array $elements;
@@ -50,12 +50,12 @@ class repetition_element extends form_element {
      * Initializes the element.
      *
      * @param string $name
-     * @param int $initialelements number of elements to show initially
-     * @param int $increment       number of elements to add with each click of the button
-     * @param string $buttonlabel  label for the button which adds additional blanks
+     * @param int $initialelements     number of elements to show initially
+     * @param int $increment           number of elements to add with each click of the button
+     * @param string|null $buttonlabel label for the button which adds additional blanks, null to use default
      * @param form_element[] $elements
      */
-    public function __construct(string $name, int $initialelements, int $increment, string $buttonlabel,
+    public function __construct(string $name, int $initialelements, int $increment, ?string $buttonlabel,
                                 array  $elements) {
         $this->name = $name;
         $this->initialelements = $initialelements;
@@ -68,57 +68,49 @@ class repetition_element extends form_element {
      * Render this item to the given context.
      *
      * @param render_context $context target context
+     * @throws coding_exception
      * @package qtype_questionpy
      */
     public function render_to(render_context $context): void {
-        $innercontext = new array_render_context(
-            $context,
-            $context->mangle_name($this->name)
-        );
-
-        foreach ($this->elements as $element) {
-            $element->render_to($innercontext);
-        }
-
-        $options = [];
-
-        foreach ($innercontext->types as $name => $type) {
-            utils::ensure_exists($options, $name)["type"] = $type;
-        }
-        foreach ($innercontext->defaults as $name => $default) {
-            utils::ensure_exists($options, $name)["default"] = $default;
-        }
-        foreach ($innercontext->disableifs as $name => $condition) {
-            utils::ensure_exists($options, $name)["disabledif"] = [
-                $condition->name,
-                ...$condition->to_mform_args(),
-            ];
-        }
-        foreach ($innercontext->hideifs as $name => $condition) {
-            utils::ensure_exists($options, $name)["hideif"] = [
-                $condition->name,
-                ...$condition->to_mform_args(),
-            ];
-        }
-
-        foreach ($innercontext->rules as $name => $rules) {
-            // There is only room for at most one rule in the options array, so for now we just ignore others.
-            if ($rules) {
-                utils::ensure_exists($options, $name)["rule"] = $rules[0];
-            }
-        }
-
         /*
-         * FIXME: repeat_elements generates elements with names like qpy_form[repetition_1][name][0],
-         * but uses qpy_form[0][repetition_1][name] when setting their type.
+         * Moodle implements this in moodleform::repeat_elements(), but that method is inconsistent in how it names
+         * elements, so we implement it ourselves.
+         * TODO: When editing a question, we need to get the current number of repeats from the form data.
          */
-        $context->moodleform->repeat_elements(
-            $innercontext->elements, $this->initialelements,
-            $options, "repeats", "add_repeats",
-            $this->increment, $this->buttonlabel, true
-        );
+        $repetitionname = $context->mangle_name($this->name);
 
-        $context->nextuniqueint = $innercontext->nextuniqueint;
+        $repeatsname = "qpy_repeats_" . $this->name;
+        $addmorename = "qpy_repeat_add_more_" . $this->name;
+
+        $repeats = $context->mform->optional_param($repeatsname, $this->initialelements, PARAM_INT);
+        $addmore = $context->mform->optional_param($addmorename, "", PARAM_TEXT);
+
+        if ($addmore) {
+            $repeats += $this->increment;
+        }
+
+        $context->mform->addElement("hidden", $repeatsname, $repeats);
+        $context->mform->setType($repeatsname, PARAM_INT);
+        // Prevent repeats from being overridden with the submitted value.
+        $context->mform->setConstant($repeatsname, $repeats);
+
+        for ($i = 0; $i < $repeats; $i++) {
+            $prefix = $repetitionname . "[$i]";
+            $innercontext = new root_render_context(
+                $context->moodleform, $context->mform,
+                $prefix, $context->nextuniqueint
+            );
+
+            foreach ($this->elements as $element) {
+                $element->render_to($innercontext);
+            }
+
+            $context->nextuniqueint = $innercontext->nextuniqueint;
+        }
+
+        $buttonlabel = $this->buttonlabel ?: get_string('addfields', 'form', $this->increment);
+        $context->mform->addElement("submit", $addmorename, $buttonlabel);
+        $context->mform->registerNoSubmitButton($addmorename);
     }
 }
 

@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form;
 
+use HTML_QuickForm_element;
 use qtype_questionpy\form\conditions\condition;
 use qtype_questionpy\form\elements\group_element;
 use qtype_questionpy\form\elements\repetition_element;
@@ -36,7 +37,7 @@ use qtype_questionpy\utils;
  */
 class array_render_context extends render_context {
     /**
-     * @var array elements so far added to this group
+     * @var HTML_QuickForm_element[] elements so far added to this group
      */
     public array $elements = [];
     /**
