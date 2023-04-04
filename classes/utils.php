@@ -55,10 +55,17 @@ class utils {
         return substr_compare($haystack, $needle, 0, strlen($needle)) === 0;
     }
 
+    public static function str_remove_prefix(string $haystack, string $prefix): string {
+        if (self::str_starts_with($haystack, $prefix)) {
+            return substr($haystack, strlen($prefix));
+        }
+        return $haystack;
+    }
+
     /**
      * Given an array with possible nested arrays, generates flat entries keys reflect the paths in the input array.
      *
-     * @param array $source input array which might contain nested arrays
+     * @param array $source  input array which might contain nested arrays
      * @param string $prefix prefix for all returned keys, as if `$source` where nested in an array with that key
      * @return Generator<string, mixed> flat generator of entries
      */
