@@ -74,17 +74,18 @@ class repetition_element extends form_element {
     public function render_to(render_context $context): void {
         /*
          * Moodle implements this in moodleform::repeat_elements(), but that method is inconsistent in how it names
-         * elements, so we implement it ourselves.
-         * TODO: When editing a question, we need to get the current number of repeats from the form data.
+         * elements, so we implement it our own.
          */
-        $repetitionname = $context->mangle_name($this->name);
-
         $repeatsname = "qpy_repeats_" . $this->name;
         $addmorename = "qpy_repeat_add_more_" . $this->name;
 
-        $repeats = $context->mform->optional_param($repeatsname, $this->initialelements, PARAM_INT);
-        $addmore = $context->mform->optional_param($addmorename, "", PARAM_TEXT);
+        $repeats = $context->mform->optional_param(
+            $repeatsname,
+            isset($context->data[$this->name]) ? count($context->data[$this->name]) : $this->initialelements,
+            PARAM_INT
+        );
 
+        $addmore = $context->mform->optional_param($addmorename, "", PARAM_TEXT);
         if ($addmore) {
             $repeats += $this->increment;
         }
@@ -95,11 +96,7 @@ class repetition_element extends form_element {
         $context->mform->setConstant($repeatsname, $repeats);
 
         for ($i = 0; $i < $repeats; $i++) {
-            $prefix = $repetitionname . "[$i]";
-            $innercontext = new root_render_context(
-                $context->moodleform, $context->mform,
-                $prefix, $context->nextuniqueint
-            );
+            $innercontext = root_render_context::create_inner($context, $this->name . "[$i]");
 
             foreach ($this->elements as $element) {
                 $element->render_to($innercontext);
@@ -109,7 +106,7 @@ class repetition_element extends form_element {
         }
 
         $buttonlabel = $this->buttonlabel ?: get_string('addfields', 'form', $this->increment);
-        $context->mform->addElement("submit", $addmorename, $buttonlabel);
+        $context->mform->addElement("submit", $addmorename, $buttonlabel, [], false);
         $context->mform->registerNoSubmitButton($addmorename);
     }
 }

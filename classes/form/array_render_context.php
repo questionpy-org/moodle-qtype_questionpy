@@ -66,10 +66,10 @@ class array_render_context extends render_context {
      * Initializes a new array-based context.
      *
      * @param render_context $root context containing this group
-     * @param string $prefix prefix for the names of elements in this context
+     * @param string $prefix       prefix for the names of elements in this context
      */
     public function __construct(render_context $root, string $prefix) {
-        parent::__construct($root->moodleform, $root->mform, $prefix, $root->nextuniqueint);
+        parent::__construct($root->moodleform, $root->mform, $prefix, $root->data, $root->nextuniqueint);
     }
 
     /**
