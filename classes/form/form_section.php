@@ -62,8 +62,7 @@ class form_section implements renderable {
     public function render_to(render_context $context): void {
         $mangled = $context->mangle_name($this->name);
         $context->add_element("header", $mangled, $this->header);
-        $innercontext = new root_render_context($context->moodleform, $context->mform, $mangled,
-                                                $context->nextuniqueint);
+        $innercontext = root_render_context::create_inner($context, $this->name);
         foreach ($this->elements as $element) {
             $element->render_to($innercontext);
         }

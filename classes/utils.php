@@ -55,13 +55,6 @@ class utils {
         return substr_compare($haystack, $needle, 0, strlen($needle)) === 0;
     }
 
-    public static function str_remove_prefix(string $haystack, string $prefix): string {
-        if (self::str_starts_with($haystack, $prefix)) {
-            return substr($haystack, strlen($prefix));
-        }
-        return $haystack;
-    }
-
     /**
      * Given an array with possible nested arrays, generates flat entries keys reflect the paths in the input array.
      *
@@ -78,5 +71,29 @@ class utils {
                 yield $fullkey => $value;
             }
         }
+    }
+
+    /**
+     * Given an array and a key such as `abc[def]`, returns `$array["abc"]["def"]`.
+     *
+     * If any of the key's parts don't exist or resolve to null, this function returns null.
+     *
+     * @param array $array
+     * @param string $key
+     * @return mixed
+     */
+    public static function array_get_nested(array $array, string $key) {
+        // Explode a $name like qpy_form[abc][def] into an array ["qpy_form", "abc", "def"].
+        $parts = explode("[", str_replace("]", "", $key));
+
+        $current = $array;
+        foreach ($parts as $key) {
+            $current = $current[$key] ?? null;
+            if ($current === null) {
+                return null;
+            }
+        }
+
+        return $current;
     }
 }

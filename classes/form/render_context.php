@@ -48,9 +48,10 @@ abstract class render_context {
     /** @var string prefix for rendered element names */
     public string $prefix;
 
-    /**
-     * @var int the next int which will be returned by {@see next_unique_int}
-     */
+    /** @var array the current form data */
+    public array $data;
+
+    /** @var int the next int which will be returned by {@see next_unique_int} */
     public int $nextuniqueint;
 
     /**
@@ -60,13 +61,15 @@ abstract class render_context {
      * @param MoodleQuickForm $mform  target {@see MoodleQuickForm} instance, as passed to
      *                                {@see \question_edit_form::definition_inner}
      * @param string $prefix          prefix for the names of elements in this context
+     * @param array $data             the current form data (as of last save)
      * @param int $nextuniqueint      the starting value for {@see next_unique_int}
      */
-    public function __construct(moodleform $moodleform, MoodleQuickForm $mform, string $prefix,
+    public function __construct(moodleform $moodleform, MoodleQuickForm $mform, string $prefix, array $data,
                                 int        $nextuniqueint = 1) {
         $this->moodleform = $moodleform;
         $this->mform = $mform;
         $this->prefix = $prefix;
+        $this->data = $data;
         $this->nextuniqueint = $nextuniqueint;
     }
 
@@ -155,6 +158,14 @@ abstract class render_context {
         if (utils::str_starts_with($name, $this->prefix)) {
             // Already mangled, perhaps by an array_render_context.
             return $name;
+        }
+
+        $firstbrace = strpos($name, "[");
+        if ($firstbrace) {
+            // We want to turn abc[def] into prefix[abc][def], not prefix[abc[def]].
+            $beforebrace = substr($name, 0, $firstbrace);
+            $afterbrace = substr($name, $firstbrace);
+            return $this->prefix . "[$beforebrace]" . $afterbrace;
         }
 
         return $this->prefix . "[$name]";

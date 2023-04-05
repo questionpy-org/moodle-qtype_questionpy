@@ -17,6 +17,7 @@
 namespace qtype_questionpy\form;
 
 use qtype_questionpy\form\conditions\condition;
+use qtype_questionpy\utils;
 
 /**
  * Regular {@see render_context} which delegates to {@see \moodleform} and {@see \MoodleQuickForm}.
@@ -29,6 +30,20 @@ use qtype_questionpy\form\conditions\condition;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class root_render_context extends render_context {
+    /**
+     * Creates an inner context by adding `$name` to the prefix and using `$data[$name]`.
+     *
+     * @param render_context $parent
+     * @param string $name nested name to be added to the prefix. May be made up of `multiple[parts]`.
+     * @return static
+     */
+    public static function create_inner(render_context $parent, string $name): self {
+        return new root_render_context(
+            $parent->moodleform, $parent->mform, $parent->mangle_name($name),
+            utils::array_get_nested($parent->data, $name) ?? [], $parent->nextuniqueint
+        );
+    }
+
     /**
      * Create, add and return an element.
      *

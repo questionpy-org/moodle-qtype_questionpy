@@ -105,12 +105,15 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $mform->addElement("hidden", "package_changed", "true", ["disabled" => "disabled"]);
         $mform->setType("package_changed", PARAM_RAW);
 
-        $packagehash = $this->optional_param("qpy_package_hash", $this->question->qpy_package_hash ?? null,
-            PARAM_ALPHANUM);
+        $packagehash = $this->optional_param(
+            "qpy_package_hash",
+            $this->question->qpy_package_hash ?? null, PARAM_ALPHANUM
+        );
         if ($packagehash) {
-            // A package is selected -> render its form.
             $response = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? null);
-            $response->definition->render_to(new root_render_context($this, $mform, "qpy_form"));
+
+            $context = new root_render_context($this, $mform, "qpy_form", $response->formdata);
+            $response->definition->render_to($context);
 
             // Used by set_data.
             $this->currentdata = $response->formdata;

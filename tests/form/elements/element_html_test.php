@@ -77,7 +77,6 @@ class element_html_test extends \advanced_testcase {
      * Provides argument pairs for {@see test_rendered_html_should_match_snapshot}.
      */
     public function data_provider(): array {
-        // No repetition_element - see FIXME in repetition_element::render_to.
         return [
             ["checkbox.html", new checkbox_element("my_checkbox", "Left", "Right", true, true)],
             ["checkbox_group.html", new checkbox_group_element(
@@ -95,6 +94,9 @@ class element_html_test extends \advanced_testcase {
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
             ], true)],
+            ["repetition.html", new repetition_element("my_rep", 3, 2, null, [
+                new text_input_element("item", "Label"),
+            ])],
             ["select.html", new select_element("my_select", "Label", [
                 new option("Option 1", "opt1", true),
                 new option("Option 2", "opt2"),
