@@ -47,7 +47,7 @@ $string['selection_no_icon'] = 'Could not load the icon.';
 $string['selection_no_package'] = 'There are no available packages, but you can still upload your own!';
 $string['selection_required'] = 'Please select a package.';
 
-$string['question_package_search'] = 'Select an existing packages';
+$string['question_package_search'] = 'Select an existing package';
 $string['question_package_upload'] = 'Upload your own';
 
 // Question management.

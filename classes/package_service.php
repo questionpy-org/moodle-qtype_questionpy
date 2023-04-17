@@ -53,7 +53,7 @@ class package_service {
      * Stores the uploaded draft package file if necessary.
      *
      * * Extracts the package's info
-     * * Ensures ensures that a database record exists for it
+     * * Ensures that a database record exists for it
      * * Copies the draft with the given ID to the packages file area of the given context
      *
      * @param int $draftid   hash of the package to look for
