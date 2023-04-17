@@ -26,8 +26,8 @@ namespace qtype_questionpy\form;
 
 defined('MOODLE_INTERNAL') || die;
 
-use qtype_questionpy\package;
 use qtype_questionpy\localizer;
+use qtype_questionpy\package;
 
 require_once($CFG->libdir . "/formslib.php");
 
@@ -67,12 +67,11 @@ class package_upload extends \moodleform {
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
         $mform->setType('questionpy_package_container', PARAM_TEXT);
 
-        $maxbytes = get_config('qtype_questionpy', 'applicationserver_maxquestionsize');
+        $maxkb = get_config('qtype_questionpy', 'max_package_size_kb');
         $mform->addElement('filepicker', 'qpy_package', get_string('file'), null,
-            ['maxbytes' => $maxbytes, 'accepted_types' => ['.qpy']]);
+            ['maxbytes' => $maxkb * 1024, 'accepted_types' => ['.qpy']]);
 
         $this->add_action_buttons();
-
     }
 
     /**
