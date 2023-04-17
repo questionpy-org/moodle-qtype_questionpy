@@ -169,10 +169,10 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @throws dml_exception
      */
     private function definition_package_upload(MoodleQuickForm $mform, ?array $hideifargs = null): void {
-        $maxbytes = get_config('qtype_questionpy', 'applicationserver_maxquestionsize');
+        $maxkb = get_config('qtype_questionpy', 'max_package_size_kb');
         $mform->addElement(
             "filepicker", "qpy_package", null, null,
-            ['maxbytes' => $maxbytes, 'accepted_types' => ['.qpy']]
+            ['maxbytes' => $maxkb * 1024, 'accepted_types' => ['.qpy']]
         );
         $hideifargs && $mform->hideIf("qpy_package", ...$hideifargs);
     }
