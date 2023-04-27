@@ -18,11 +18,9 @@ namespace qtype_questionpy;
 
 use coding_exception;
 use context_user;
-use file_exception;
 use moodle_exception;
 use qtype_questionpy\api\api;
 use stored_file;
-use stored_file_creation_exception;
 
 /**
  * Manages DB entries for QuestionPy packages and, for uploaded packages, their stored files.
@@ -56,7 +54,7 @@ class package_service {
      * * Ensures that a database record exists for it
      * * Copies the draft with the given ID to the packages file area of the given context
      *
-     * @param int $draftid   hash of the package to look for
+     * @param int $draftid   itemid of the draft file, as contained in the form data of a filepicker
      * @param int $contextid target context for storing the package file (the draft is always retrieved from the user
      *                       context)
      * @return array [id of database record, {@see package} instance, {@see stored_file}]
@@ -64,7 +62,6 @@ class package_service {
      */
     public function save_uploaded_draft(int $draftid, int $contextid): array {
         $draftfile = $this->get_draft_file($draftid);
-
         $package = $this->api->package_extract_info($draftfile);
 
         global $DB;
@@ -76,7 +73,7 @@ class package_service {
             $packageid = $package->store_in_db($contextid);
         }
 
-        $file = $this->ensure_package_file($draftfile, $packageid, $package->hash, $contextid);
+        $file = $this->ensure_package_file($draftid, $packageid, $contextid);
 
         $transaction->allow_commit();
         return [$packageid, $package, $file];
@@ -131,36 +128,23 @@ class package_service {
     /**
      * If the package with the given ID isn't yet stored in the packages file area, copy the given draft file there.
      *
-     * @param stored_file $draftfile
-     * @param int $packageid      package record id, which is used as the file item id
-     * @param string $packagehash package hash, which is used as the file name (+ `.qpy`)
-     * @param int $contextid      target context to look for and store the package file in
+     * @param int $draftid   itemid of the draft file, as contained in the form data of a filepicker
+     * @param int $packageid package record id, which is used as the file item id
+     * @param int $contextid target context to look for and store the package file in
      * @return stored_file the already or newly stored file in the package file area
      * @throws coding_exception
-     * @throws file_exception
-     * @throws stored_file_creation_exception
      */
-    private function ensure_package_file(stored_file $draftfile, int $packageid, string $packagehash,
-                                         int         $contextid): stored_file {
+    private function ensure_package_file(int $draftid, int $packageid, int $contextid): stored_file {
         $fs = get_file_storage();
-        $existingfiles = $fs->get_area_files(
-            $contextid, "qtype_questionpy", self::FILE_AREA, $packageid,
-            "itemid, filepath, filename", false
-        );
-
-        if ($existingfiles) {
-            return reset($existingfiles);
+        file_save_draft_area_files($draftid, $contextid, "qtype_questionpy", self::FILE_AREA, $packageid);
+        $files = $fs->get_area_files($contextid, "qtype_questionpy", self::FILE_AREA, $packageid, "", false);
+        $filecount = count($files);
+        if ($filecount != 1) {
+            throw new coding_exception(
+                "$filecount files exist where there should only be one after saving package $packageid"
+            );
         }
 
-        // Not stored yet. Copy the file from the draft file area to ours.
-        // TODO: Are draft files automatically deleted afterwards or should we delete them?
-        $changes = [
-            "contextid" => $contextid,
-            "component" => "qtype_questionpy",
-            "filearea" => self::FILE_AREA,
-            "itemid" => $packageid,
-            "filename" => "$packagehash.qpy"
-        ];
-        return $fs->create_file_from_storedfile($changes, $draftfile);
+        return reset($files);
     }
 }
