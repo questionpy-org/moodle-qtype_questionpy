@@ -122,7 +122,7 @@ class package_api {
             if ($json["package_not_found"]) {
                 // Add file to parts and resend.
                 $fs = get_file_storage();
-                $filepath = $fs->get_file_system()->get_local_path_from_storedfile($this->file);
+                $filepath = $fs->get_file_system()->get_local_path_from_storedfile($this->file, true);
 
                 $parts["package"] = curl_file_create($filepath, "application/zip");
 

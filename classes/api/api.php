@@ -113,7 +113,7 @@ class api {
      */
     public function package_extract_info(stored_file $file): package {
         $fs = get_file_storage();
-        $filepath = $fs->get_file_system()->get_local_path_from_storedfile($file);
+        $filepath = $fs->get_file_system()->get_local_path_from_storedfile($file, true);
 
         $connector = connector::default();
 
