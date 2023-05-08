@@ -125,19 +125,23 @@ abstract class render_context {
      * Adds a condition which will disable the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param condition $condition
+     * @param string $dependency  absolute name of the element which is depended on
+     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
+     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see MoodleQuickForm::disabledIf
      */
-    abstract public function disable_if(string $dependant, condition $condition);
+    abstract public function disable_if(string $dependant, string $dependency, string $operator, $value = null);
 
     /**
      * Adds a condition which will hide the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param condition $condition
+     * @param string $dependency  absolute name of the element which is depended on
+     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
+     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see MoodleQuickForm::hideIf
      */
-    abstract public function hide_if(string $dependant, condition $condition);
+    abstract public function hide_if(string $dependant, string $dependency, string $operator, $value = null);
 
     /**
      * Adds a `Select all/none` checkbox controller controlling all `advcheckboxes` with the given group id.
@@ -178,5 +182,36 @@ abstract class render_context {
      */
     public function next_unique_int(): int {
         return $this->nextuniqueint++;
+    }
+
+    /**
+     * Turns a reference relative to this context's prefix into an absolute reference.
+     *
+     * The validity of the reference (i.e. whether it points to anything) is not checked.
+     *
+     * @param string $reference relative reference, which may contain `..` parts to refer to the parent
+     * @return string absolute reference
+     */
+    public function reference_to_absolute(string $reference): string {
+        $referee = $this->prefix;
+        // Explode a $reference like qpy_form[abc][def] into an array ["qpy_form", "abc", "def"].
+        $referenceparts = explode("[", str_replace("]", "", $reference));
+        $refereeparts = explode("[", str_replace("]", "", $referee));
+
+        foreach ($referenceparts as $referencepart) {
+            if ($referencepart === "..") {
+                $removed = array_pop($refereeparts);
+                if (is_numeric($removed)) {
+                    // The reference probably points from a repetition outward.
+                    // We removed the index ([0]), but we also want to remove the repetition name.
+                    array_pop($refereeparts);
+                }
+            } else {
+                $refereeparts[] = $referencepart;
+            }
+        }
+
+        // Stitch $refereeparts back together.
+        return $refereeparts[0] . "[" . implode("][", array_slice($refereeparts, 1)) . "]";
     }
 }

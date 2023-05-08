@@ -78,11 +78,16 @@ class group_element extends form_element {
         foreach ($innercontext->defaults as $name => $default) {
             $context->set_default($name, $default);
         }
-        foreach ($innercontext->disableifs as $name => $condition) {
-            $context->disable_if($name, $condition);
+
+        foreach ($innercontext->disableifs as $name => $conditions) {
+            foreach ($conditions as $condition) {
+                $context->disable_if($name, ...$condition);
+            }
         }
-        foreach ($innercontext->hideifs as $name => $condition) {
-            $context->hide_if($name, $condition);
+        foreach ($innercontext->hideifs as $name => $conditions) {
+            foreach ($conditions as $condition) {
+                $context->hide_if($name, ...$condition);
+            }
         }
 
         $context->mform->addGroupRule($groupname, $innercontext->rules);

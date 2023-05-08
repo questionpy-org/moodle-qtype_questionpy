@@ -44,12 +44,12 @@ abstract class condition {
     }
 
     /**
-     * Return the `[$condition]` or `[$condition, $value]` tuple  to pass to {@see \MoodleQuickForm::disabledIf()} or
-     * {@see \MoodleQuickForm::hideIf()} after the depended on element's name.
+     * Return the condition string to pass to {@see \MoodleQuickForm::disabledIf()} or {@see \MoodleQuickForm::hideIf()}
+     * after the depended on element's name.
      *
-     * @return array
+     * @return string
      */
-    abstract public function to_mform_args(): array;
+    abstract public static function mform_type(): string;
 }
 
 array_converter::configure(condition::class, function (converter_config $config) {
