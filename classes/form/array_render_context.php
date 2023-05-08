@@ -54,11 +54,12 @@ class array_render_context extends render_context {
      */
     public array $rules = [];
     /**
-     * @var condition[] associative array of element names to conditions which should disable the named element
+     * @var array associative array of dependant names to [dependency name, operator, value] arrays which should disable
+     *      the named element
      */
     public array $disableifs = [];
     /**
-     * @var condition[] associative array of element names to conditions which should hide the named element
+     * @var array same as $disableifs, but for hiding elements
      */
     public array $hideifs = [];
 
@@ -136,22 +137,26 @@ class array_render_context extends render_context {
      * Adds a condition which will disable the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param condition $condition
+     * @param string $dependency  absolute name of the element which is depended on
+     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
+     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::disabledIf()
      */
-    public function disable_if(string $dependant, condition $condition) {
-        utils::ensure_exists($this->disableifs, $this->mangle_name($dependant))[] = $condition;
+    public function disable_if(string $dependant, string $dependency, string $operator, $value = null) {
+        utils::ensure_exists($this->disableifs, $this->mangle_name($dependant))[] = [$dependency, $operator, $value];
     }
 
     /**
      * Adds a condition which will hide the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param condition $condition
+     * @param string $dependency  absolute name of the element which is depended on
+     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
+     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::hideIf()
      */
-    public function hide_if(string $dependant, condition $condition) {
-        utils::ensure_exists($this->hideifs, $this->mangle_name($dependant))[] = $condition;
+    public function hide_if(string $dependant, string $dependency, string $operator, $value = null) {
+        utils::ensure_exists($this->hideifs, $this->mangle_name($dependant))[] = [$dependency, $operator, $value];
     }
 
     /**

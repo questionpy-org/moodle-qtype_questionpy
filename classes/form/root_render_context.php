@@ -104,22 +104,26 @@ class root_render_context extends render_context {
      * Adds a condition which will disable the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param condition $condition
+     * @param string $dependency  absolute name of the element which is depended on
+     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
+     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::disabledIf()
      */
-    public function disable_if(string $dependant, condition $condition) {
-        $this->mform->disabledIf($this->mangle_name($dependant), $condition->name, ...$condition->to_mform_args());
+    public function disable_if(string $dependant, string $dependency, string $operator, $value = null) {
+        $this->mform->disabledIf($this->mangle_name($dependant), $dependency, $operator, $value);
     }
 
     /**
      * Adds a condition which will hide the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param condition $condition
+     * @param string $dependency  absolute name of the element which is depended on
+     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
+     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::hideIf()
      */
-    public function hide_if(string $dependant, condition $condition) {
-        $this->mform->hideIf($this->mangle_name($dependant), $condition->name, ...$condition->to_mform_args());
+    public function hide_if(string $dependant, string $dependency, string $operator, $value = null) {
+        $this->mform->hideIf($this->mangle_name($dependant), $dependency, $operator, $value);
     }
 
     /**

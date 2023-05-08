@@ -27,12 +27,12 @@ namespace qtype_questionpy\form\conditions;
 class is_checked extends condition {
 
     /**
-     * Return the `[$condition]` or `[$condition, $value]` tuple  to pass to {@see \MoodleQuickForm::disabledIf()} or
-     * {@see \MoodleQuickForm::hideIf()} after the depended on element's name.
+     * Return the condition string to pass to {@see \MoodleQuickForm::disabledIf()} or {@see \MoodleQuickForm::hideIf()}
+     * after the depended on element's name.
      *
-     * @return array
+     * @return string
      */
-    public function to_mform_args(): array {
-        return ["checked"];
+    public static function mform_type(): string {
+        return "checked";
     }
 }

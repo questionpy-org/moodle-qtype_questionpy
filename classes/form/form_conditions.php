@@ -44,11 +44,13 @@ trait form_conditions {
      */
     private function render_conditions(render_context $context, string $name) {
         foreach ($this->disableif as $disableif) {
-            $context->disable_if($name, $disableif);
+            $dependency = $context->reference_to_absolute($disableif->name);
+            $context->disable_if($name, $dependency, $disableif->mform_type(), $disableif->value ?? null);
         }
 
         foreach ($this->hideif as $hideif) {
-            $context->hide_if($name, $hideif);
+            $dependency = $context->reference_to_absolute($hideif->name);
+            $context->hide_if($name, $dependency, $hideif->mform_type(), $hideif->value ?? null);
         }
     }
 
