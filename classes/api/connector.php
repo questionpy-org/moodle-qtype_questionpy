@@ -82,6 +82,18 @@ class connector {
     }
 
     /**
+     * Creates a new connector with current server url.
+     *
+     * @throws moodle_exception
+     */
+    public static function default(): self {
+        // Get server configs.
+        $serverurl = get_config('qtype_questionpy', 'server_url');
+        $timeout = get_config('qtype_questionpy', 'server_timeout');
+        return new connector($serverurl, $timeout);
+    }
+
+    /**
      * Set an option for cURL transfer.
      *
      * @param int $option

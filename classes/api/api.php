@@ -32,39 +32,24 @@ use TypeError;
 class api {
 
     /**
-     * Initializes new connector with current server url.
-     *
-     * @throws moodle_exception
-     */
-    private function create_connector(): connector {
-        // Get server configs.
-        $serverurl = get_config('qtype_questionpy', 'server_url');
-        $timeout = get_config('qtype_questionpy', 'server_timeout');
-        return new connector($serverurl, $timeout);
-    }
-
-    /**
      * Retrieves QuestionPy packages from the application server.
      *
      * @return package[]
      * @throws moodle_exception
      */
     public function get_packages(): array {
-        // Retrieve packages from server.
-        $connector = $this->create_connector();
+        $connector = connector::default();
         $response = $connector->get('/packages');
-
-        // TODO: check response code.
+        $response->assert_2xx();
         $packages = $response->get_data();
 
         $result = [];
-
         foreach ($packages as $package) {
             try {
                 $result[] = array_converter::from_array(package::class, $package);
             } catch (TypeError $e) {
                 // TODO: decide what to do with faulty package.
-                continue;
+                debugging($e->getMessage());
             }
         }
 
@@ -79,7 +64,7 @@ class api {
      * @throws moodle_exception
      */
     public function get_package(string $hash): ?package {
-        $connector = $this->create_connector();
+        $connector = connector::default();
         $response = $connector->get("/packages/$hash");
 
         if ($response->code === 404) {
@@ -99,7 +84,7 @@ class api {
      * @throws moodle_exception
      */
     public function get_question_edit_form(string $packagehash, ?string $questionstate): question_edit_form_response {
-        $connector = $this->create_connector();
+        $connector = connector::default();
 
         $main = [];
         $parts = [];
@@ -128,7 +113,7 @@ class api {
      * @throws moodle_exception
      */
     public function create_question(string $packagehash, ?string $currentstate, object $formdata): question_response {
-        $connector = $this->create_connector();
+        $connector = connector::default();
 
         $main = [
             "form_data" => $formdata,
@@ -158,7 +143,7 @@ class api {
      * @throws moodle_exception
      */
     public function get_hello_world(): string {
-        $connector = $this->create_connector();
+        $connector = connector::default();
         $response = $connector->get('/helloworld');
         return $response->get_data(false);
     }
@@ -176,7 +161,7 @@ class api {
         $data = [
             'package' => $curlfile
         ];
-        $connector = self::create_connector();
+        $connector = connector::default();
         return $connector->post("/package-extract-info", $data);
     }
 }
