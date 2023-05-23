@@ -4,5 +4,6 @@
   "label": "Label",
   "text": "Lorem ipsum dolor sit amet.",
   "disable_if": [],
-  "hide_if": []
+  "hide_if": [],
+  "help": null
 }

@@ -18,7 +18,7 @@ namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
-use qtype_questionpy\form\renderable;
+use qtype_questionpy\form\qpy_renderable;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class form_element implements renderable {
+abstract class form_element implements qpy_renderable {
 }
 
 array_converter::configure(form_element::class, function (converter_config $config) {

@@ -26,7 +26,7 @@ use qtype_questionpy\form\elements\form_element;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-interface renderable {
+interface qpy_renderable {
     /**
      * Render this item to the given context.
      *

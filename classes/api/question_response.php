@@ -37,13 +37,13 @@ class question_response {
     public string $statehash;
 
     /** @var string */
-    public string $gradingmethod;
+    public string $scoringmethod;
 
     /** @var float|int */
-    public float $grademinfraction = 0;
+    public float $scoremin = 0;
 
     /** @var float|int */
-    public float $grademaxfraction = 1;
+    public float $scoremax = 1;
 
     /** @var float|null */
     public ?float $penalty = null;
@@ -62,12 +62,12 @@ class question_response {
      *
      * @param string $state     new question state
      * @param string $statehash hash of `$state`
-     * @param string $gradingmethod
+     * @param string $scoringmethod
      */
-    public function __construct(string $state, string $statehash, string $gradingmethod) {
+    public function __construct(string $state, string $statehash, string $scoringmethod) {
         $this->state = $state;
         $this->statehash = $statehash;
-        $this->gradingmethod = $gradingmethod;
+        $this->scoringmethod = $scoringmethod;
     }
 }
 
@@ -75,9 +75,9 @@ array_converter::configure(question_response::class, function (converter_config 
     $config
         ->rename("state", "question_state")
         ->rename("statehash", "question_state_hash")
-        ->rename("gradingmethod", "grading_method")
-        ->rename("grademinfraction", "grade_min_fraction")
-        ->rename("grademaxfraction", "grade_max_fraction")
+        ->rename("scoringmethod", "scoring_method")
+        ->rename("scoremin", "score_min")
+        ->rename("scoremax", "score_max")
         ->rename("randomguessscore", "random_guess_score")
         ->rename("rendereveryview", "render_every_view")
         ->rename("generalfeedback", "general_feedback");

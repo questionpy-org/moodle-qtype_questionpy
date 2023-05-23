@@ -16,9 +16,11 @@
 
 namespace qtype_questionpy\form\elements;
 
+use coding_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\form_conditions;
+use qtype_questionpy\form\form_help;
 use qtype_questionpy\form\render_context;
 
 defined('MOODLE_INTERNAL') || die;
@@ -43,7 +45,7 @@ class checkbox_element extends form_element {
     /** @var bool */
     public bool $selected = false;
 
-    use form_conditions;
+    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -69,9 +71,10 @@ class checkbox_element extends form_element {
      * @param render_context $context target context
      * @param int|null $group         passed by {@see checkbox_group_element::render_to} to the checkboxes belonging to
      *                                it
+     * @throws coding_exception
      */
     public function render_to(render_context $context, ?int $group = null): void {
-        $context->add_element(
+        $element = $context->add_element(
             "advcheckbox", $this->name, $this->leftlabel, $this->rightlabel,
             $group ? ["group" => $group] : null
         );
@@ -84,6 +87,7 @@ class checkbox_element extends form_element {
         }
 
         $this->render_conditions($context, $this->name);
+        $this->render_help($element);
     }
 }
 

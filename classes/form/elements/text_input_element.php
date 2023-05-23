@@ -17,6 +17,7 @@
 namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\form\form_conditions;
+use qtype_questionpy\form\form_help;
 use qtype_questionpy\form\render_context;
 
 /**
@@ -39,7 +40,7 @@ class text_input_element extends form_element {
     /** @var string|null */
     public ?string $placeholder = null;
 
-    use form_conditions;
+    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -72,7 +73,7 @@ class text_input_element extends form_element {
     public function render_to(render_context $context): void {
         $attributes = $this->placeholder ? ["placeholder" => $this->placeholder] : [];
 
-        $context->add_element("text", $this->name, $this->label, $attributes);
+        $element = $context->add_element("text", $this->name, $this->label, $attributes);
         $context->set_type($this->name, PARAM_TEXT);
 
         if ($this->default) {
@@ -83,5 +84,6 @@ class text_input_element extends form_element {
         }
 
         $this->render_conditions($context, $this->name);
+        $this->render_help($element);
     }
 }

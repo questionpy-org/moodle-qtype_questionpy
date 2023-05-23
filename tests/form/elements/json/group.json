@@ -11,7 +11,8 @@
       "default": null,
       "placeholder": "Vorname",
       "disable_if": [],
-      "hide_if": []
+      "hide_if": [],
+      "help": null
     },
     {
       "kind": "input",
@@ -21,7 +22,8 @@
       "default": null,
       "placeholder": "Nachname (optional)",
       "disable_if": [],
-      "hide_if": []
+      "hide_if": [],
+      "help": null
     }
   ],
   "disable_if": [],
@@ -30,5 +32,6 @@
       "kind": "is_not_checked",
       "name": "chk1"
     }
-  ]
+  ],
+  "help": "Help text"
 }

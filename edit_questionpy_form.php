@@ -23,6 +23,7 @@
  */
 
 use qtype_questionpy\api\api;
+use qtype_questionpy\form\elements\text_input_element;
 use qtype_questionpy\form\root_render_context;
 use qtype_questionpy\localizer;
 use qtype_questionpy\utils;
@@ -134,7 +135,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
         // Current form data was returned by the server along with the form definition in definition_inner.
         foreach (utils::flatten($this->currentdata, "qpy_form") as $name => $value) {
-            $this->question->{$name} = $value;
+            $question->{$name} = $value;
         }
 
         parent::set_data($question);

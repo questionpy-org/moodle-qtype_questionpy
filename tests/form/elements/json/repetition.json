@@ -3,17 +3,18 @@
   "name": "my_rep",
   "initial_elements": 3,
   "increment": 2,
-  "button_label": "",
+  "button_label": null,
   "elements": [
     {
       "kind": "input",
       "name": "item",
-      "label": "",
+      "label": "Label",
       "placeholder": null,
       "required": false,
       "default": null,
       "disable_if": [],
-      "hide_if": []
+      "hide_if": [],
+      "help": null
     }
   ]
 }

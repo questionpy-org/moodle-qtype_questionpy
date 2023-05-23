@@ -37,7 +37,7 @@ trait form_conditions {
     public array $hideif = [];
 
     /**
-     * Renders the conditions. To be called by the {@see renderable::render_to() render_to} of elements.
+     * Renders the conditions. To be called by the {@see qpy_renderable::render_to() render_to} of elements.
      *
      * @param render_context $context target context
      * @param string $name            name of this element

@@ -20,6 +20,7 @@ use HTML_QuickForm_select;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\form_conditions;
+use qtype_questionpy\form\form_help;
 use qtype_questionpy\form\render_context;
 
 defined('MOODLE_INTERNAL') || die;
@@ -44,7 +45,7 @@ class select_element extends form_element {
     /** @var bool */
     public bool $required = false;
 
-    use form_conditions;
+    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -91,6 +92,7 @@ class select_element extends form_element {
         }
 
         $this->render_conditions($context, $this->name);
+        $this->render_help($element);
     }
 }
 

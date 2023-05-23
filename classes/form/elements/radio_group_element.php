@@ -19,6 +19,7 @@ namespace qtype_questionpy\form\elements;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\form_conditions;
+use qtype_questionpy\form\form_help;
 use qtype_questionpy\form\render_context;
 
 defined('MOODLE_INTERNAL') || die;
@@ -41,7 +42,7 @@ class radio_group_element extends form_element {
     /** @var bool */
     public bool $required = false;
 
-    use form_conditions;
+    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -75,7 +76,7 @@ class radio_group_element extends form_element {
             $radioarray[] = $context->mform->createElement("radio", $mangledname, null, $option->label, $option->value);
         }
 
-        $context->add_element("group", "radio_group_" . $this->name, $this->label, $radioarray, null, false);
+        $group = $context->add_element("group", "radio_group_" . $this->name, $this->label, $radioarray, null, false);
 
         if ($default) {
             $context->set_default($this->name, $default);
@@ -85,6 +86,7 @@ class radio_group_element extends form_element {
         }
 
         $this->render_conditions($context, $this->name);
+        $this->render_help($group);
     }
 }
 

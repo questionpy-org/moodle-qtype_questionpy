@@ -20,6 +20,7 @@ use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\array_render_context;
 use qtype_questionpy\form\form_conditions;
+use qtype_questionpy\form\form_help;
 use qtype_questionpy\form\render_context;
 
 defined('MOODLE_INTERNAL') || die;
@@ -41,7 +42,7 @@ class group_element extends form_element {
     /** @var form_element[] */
     public array $elements;
 
-    use form_conditions;
+    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -70,7 +71,7 @@ class group_element extends form_element {
             $element->render_to($innercontext);
         }
 
-        $context->add_element("group", $groupname, $this->label, $innercontext->elements, null, false);
+        $element = $context->add_element("group", $groupname, $this->label, $innercontext->elements, null, false);
 
         foreach ($innercontext->types as $name => $type) {
             $context->set_type($name, $type);
@@ -93,6 +94,7 @@ class group_element extends form_element {
         $context->mform->addGroupRule($groupname, $innercontext->rules);
 
         $this->render_conditions($context, $groupname);
+        $this->render_help($element);
 
         $context->nextuniqueint = $innercontext->nextuniqueint;
     }
