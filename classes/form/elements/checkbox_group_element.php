@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form\elements;
 
+use coding_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\render_context;
@@ -47,6 +48,7 @@ class checkbox_group_element extends form_element {
      * Render this item to the given context.
      *
      * @param render_context $context target context
+     * @throws coding_exception
      * @package qtype_questionpy
      */
     public function render_to(render_context $context): void {

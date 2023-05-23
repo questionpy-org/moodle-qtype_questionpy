@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class qpy_form implements renderable {
+class qpy_form implements qpy_renderable {
     /** @var form_element[] elements to be appended to the default "General" section */
     public array $general;
     /** @var form_section[] additional custom sections */

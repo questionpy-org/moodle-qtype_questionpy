@@ -17,6 +17,7 @@
 namespace qtype_questionpy\form\elements;
 
 use qtype_questionpy\form\form_conditions;
+use qtype_questionpy\form\form_help;
 use qtype_questionpy\form\render_context;
 
 /**
@@ -35,7 +36,7 @@ class static_text_element extends form_element {
     /** @var string */
     public string $text;
 
-    use form_conditions;
+    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -56,8 +57,9 @@ class static_text_element extends form_element {
      * @param render_context $context target context
      */
     public function render_to(render_context $context): void {
-        $context->add_element("static", $this->name, $this->label, $this->text);
+        $element = $context->add_element("static", $this->name, $this->label, $this->text);
 
         $this->render_conditions($context, $this->name);
+        $this->render_help($element);
     }
 }

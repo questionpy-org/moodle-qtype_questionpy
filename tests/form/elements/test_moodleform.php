@@ -21,7 +21,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . "/formslib.php");
 
-use qtype_questionpy\form\renderable;
+use qtype_questionpy\form\qpy_renderable;
 use qtype_questionpy\form\root_render_context;
 
 /**
@@ -34,16 +34,16 @@ use qtype_questionpy\form\root_render_context;
  */
 class test_moodleform extends \moodleform {
     /**
-     * @var renderable element to render
+     * @var qpy_renderable element to render
      */
-    private renderable $element;
+    private qpy_renderable $element;
 
     /**
      * Initializes a new {@see test_moodleform}.
      *
-     * @param renderable $element element to render
+     * @param qpy_renderable $element element to render
      */
-    public function __construct(renderable $element) {
+    public function __construct(qpy_renderable $element) {
         $this->element = $element;
         parent::__construct(null, null, "post", "", ["id" => "my_form"]);
     }

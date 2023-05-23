@@ -25,6 +25,21 @@
 namespace qtype_questionpy;
 
 use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\form\conditions\does_not_equal;
+use qtype_questionpy\form\conditions\equals;
+use qtype_questionpy\form\conditions\in;
+use qtype_questionpy\form\conditions\is_checked;
+use qtype_questionpy\form\conditions\is_not_checked;
+use qtype_questionpy\form\elements\checkbox_element;
+use qtype_questionpy\form\elements\checkbox_group_element;
+use qtype_questionpy\form\elements\group_element;
+use qtype_questionpy\form\elements\hidden_element;
+use qtype_questionpy\form\elements\option;
+use qtype_questionpy\form\elements\radio_group_element;
+use qtype_questionpy\form\elements\repetition_element;
+use qtype_questionpy\form\elements\select_element;
+use qtype_questionpy\form\elements\static_text_element;
+use qtype_questionpy\form\elements\text_input_element;
 
 /**
  * Data provider for {@see package}.
@@ -102,4 +117,45 @@ function package_provider2(): package {
             0 => 'fXuprCRqsLnQQYzFZgAt'
         ]
     ]);
+}
+
+/**
+ * Provides a number of elements for tests.
+ *
+ * @return array[] array of [element kind, element] pairs
+ */
+function element_provider(): array {
+    return [
+        ["checkbox", (new checkbox_element("my_checkbox", "Left", "Right", true, true))
+            ->disable_if(new is_checked("chk1"))
+            ->help("Help text")
+        ],
+        ["checkbox_group", new checkbox_group_element(
+            (new checkbox_element(
+                "my_checkbox", "Left", "Right",
+                true, true
+            ))->help("Help text")
+        )],
+        ["group", (new group_element("my_group", "Name", [
+            new text_input_element("first_name", "", true, null, "Vorname"),
+            new text_input_element("last_name", "", false, null, "Nachname (optional)"),
+        ]))
+            ->hide_if(new is_not_checked("chk1"))
+            ->help("Help text")
+        ],
+        ["hidden", (new hidden_element("my_hidden_value", "42"))->disable_if(new equals("input1", 7))],
+        ["radio_group", (new radio_group_element("my_radio", "Label", [
+            new option("Option 1", "opt1", true),
+            new option("Option 2", "opt2"),
+        ], true))->disable_if(new does_not_equal("input1", ""))],
+        ["repetition", new repetition_element("my_rep", 3, 2, null, [
+            new text_input_element("item", "Label"),
+        ])],
+        ["select", (new select_element("my_select", "Label", [
+            new option("Option 1", "opt1", true),
+            new option("Option 2", "opt2"),
+        ], true, true))->disable_if(new in("input1", ["valid", "also valid"]))],
+        ["static_text", new static_text_element("my_text", "Label", "Lorem ipsum dolor sit amet.")],
+        ["input", new text_input_element("my_field", "Label", true, "default", "placeholder")],
+    ];
 }

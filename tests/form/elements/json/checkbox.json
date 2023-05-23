@@ -11,5 +11,6 @@
       "name": "chk1"
     }
   ],
-  "hide_if": []
+  "hide_if": [],
+  "help": "Help text"
 }

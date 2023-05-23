@@ -6,5 +6,6 @@
   "placeholder": "placeholder",
   "required": true,
   "disable_if": [],
-  "hide_if": []
+  "hide_if": [],
+  "help": null
 }

@@ -25,7 +25,7 @@ use qtype_questionpy\utils;
  * Abstracts away the differences in rendering elements in a group and outside of a group.
  *
  * In a group, the element is created, and added as part of the group element. Outside of a group, the element is added
- * directly. This class abstracts away the differences so that {@see renderable::render_to} implementations needn't be
+ * directly. This class abstracts away the differences so that {@see qpy_renderable::render_to} implementations needn't be
  * aware of where they are being rendered. It does this while still allowing for checkbox controllers, which use an
  * entirely different method.
  *

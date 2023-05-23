@@ -19,8 +19,10 @@ namespace qtype_questionpy\form\elements;
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . "/test_moodleform.php");
+require_once(__DIR__ . "/../../data_provider.php");
 
-use qtype_questionpy\form\renderable;
+use qtype_questionpy\form\qpy_renderable;
+use function qtype_questionpy\element_provider;
 
 /**
  * Tests of the HTML rendering of form elements.
@@ -39,18 +41,22 @@ class element_html_test extends \advanced_testcase {
      * making intended changes instead of failing tests, re-run phpunit with the environment variable
      * `UPDATE_SNAPSHOTS=1`.
      *
-     * @param string $snapshotfilename filename relative to `./html/` where HTML snapshots should be read from and
-     *                                 written to
-     * @param renderable $element      element to render
+     * @param string $elementkind     element kind, which the html file name is based on
+     * @param qpy_renderable $element element to render
      * @dataProvider data_provider
      * @covers       \qtype_questionpy\form\elements
      * @covers       \qtype_questionpy\form\render_context
      * @covers       \qtype_questionpy\form\root_render_context
      * @covers       \qtype_questionpy\form\array_render_context
-     * @covers       \qtype_questionpy\form\renderable
+     * @covers       \qtype_questionpy\form\qpy_renderable
      */
-    public function test_rendered_html_should_match_snapshot(string $snapshotfilename, renderable $element): void {
-        $snapshotfilepath = __DIR__ . "/html/" . $snapshotfilename;
+    public function test_rendered_html_should_match_snapshot(string $elementkind, qpy_renderable $element): void {
+        global $CFG;
+        if (in_array($elementkind, ["checkbox", "group", "checkbox_group"]) && $CFG->branch <= "400") {
+            $this->markTestSkipped("Help buttons are rendered differently in 4.0 and earlier.");
+        }
+
+        $snapshotfilepath = __DIR__ . "/html/" . $elementkind . ".html";
 
         // The sesskey is part of the form and therefore needs to be deterministic.
         $_SESSION['USER']->sesskey = "sesskey";
@@ -64,6 +70,7 @@ class element_html_test extends \advanced_testcase {
 
         if (getenv("UPDATE_SNAPSHOTS")) {
             $actualdom->saveHTMLFile($snapshotfilepath);
+            echo "Updated snapshot $snapshotfilepath.";
         }
 
         $expecteddom = new \DOMDocument();
@@ -77,32 +84,6 @@ class element_html_test extends \advanced_testcase {
      * Provides argument pairs for {@see test_rendered_html_should_match_snapshot}.
      */
     public function data_provider(): array {
-        return [
-            ["checkbox.html", new checkbox_element("my_checkbox", "Left", "Right", true, true)],
-            ["checkbox_group.html", new checkbox_group_element(
-                new checkbox_element(
-                    "my_checkbox", "Left", "Right",
-                    true, true
-                )
-            )],
-            ["group.html", new group_element("my_group", "Name", [
-                new text_input_element("first_name", "", true, null, "Vorname"),
-                new text_input_element("last_name", "", false, null, "Nachname (optional)"),
-            ])],
-            ["hidden.html", new hidden_element("my_hidden_value", "42")],
-            ["radio_group.html", new radio_group_element("my_radio", "Label", [
-                new option("Option 1", "opt1", true),
-                new option("Option 2", "opt2"),
-            ], true)],
-            ["repetition.html", new repetition_element("my_rep", 3, 2, null, [
-                new text_input_element("item", "Label"),
-            ])],
-            ["select.html", new select_element("my_select", "Label", [
-                new option("Option 1", "opt1", true),
-                new option("Option 2", "opt2"),
-            ], true, true)],
-            ["static_text.html", new static_text_element("my_text", "Label", "Lorem ipsum dolor sit amet.")],
-            ["input.html", new text_input_element("my_field", "Label", true, "default", "placeholder")],
-        ];
+        return element_provider();
     }
 }
