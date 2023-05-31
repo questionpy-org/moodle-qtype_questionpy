@@ -27,12 +27,12 @@ class question_type_test extends \advanced_testcase {
 
 
     /**
-     * Hello World Unit Test.
+     * Dummy Test (replace when we have real methods testing the question type).
      *
      * @coversNothing
      * @return void
      */
-    public function test_hello_world() {
+    public function test_dummy() {
         $this->assertTrue(true);
     }
 }

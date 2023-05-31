@@ -137,18 +137,6 @@ class api {
     }
 
     /**
-     * Hello world example.
-     *
-     * @return string
-     * @throws moodle_exception
-     */
-    public function get_hello_world(): string {
-        $connector = connector::default();
-        $response = $connector->get('/helloworld');
-        return $response->get_data(false);
-    }
-
-    /**
      * Get the Package information from the server.
      *
      * @param string $filename

@@ -42,7 +42,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     public function formulation_and_controls(question_attempt $qa, question_display_options $options) {
-        return (new api())->get_hello_world();
+        return '';
     }
 
     /**
