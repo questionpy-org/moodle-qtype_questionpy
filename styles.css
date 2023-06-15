@@ -46,3 +46,30 @@
 #fgroup_id_questionpy_package_container input:checked + .card {
     border-color: var(--primary);
 }
+
+.qpy-repetition {
+    /* Visually groups the elements of each repetition. */
+    background: #eee;
+    border: 1px solid #bbb;
+
+    margin-bottom: 1em;
+
+    display: flex;
+    flex-direction: row;
+}
+
+.qpy-repetition-content {
+    padding-top: 1em;
+    flex-grow: 1;
+}
+
+.qpy-repetition-controls {
+    flex-grow: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.qpy-repetition-remove {
+    margin: .5em;
+}

@@ -17,6 +17,7 @@
 namespace qtype_questionpy;
 
 use Generator;
+use qtype_questionpy\form\elements\repetition_element;
 
 /**
  * Utility functions used in multiple places.
@@ -77,5 +78,31 @@ class utils {
         }
 
         return $current;
+    }
+
+    /**
+     * Within `$array`, recursively looks for any arrays with numeric-only keys with gaps and reindexes them.
+     *
+     * This causes {@see json_encode} to serialize these arrays (with gaps) to JSON objects rather than JSON
+     * arrays. {@see repetition_element}s produce numeric arrays with gaps when repetitions are removed.
+     *
+     * @param array $array
+     * @return void
+     */
+    public static function reindex_integer_arrays(array &$array): void {
+        $numeric = true;
+        foreach ($array as $key => &$value) {
+            if (!is_integer($key)) {
+                $numeric = false;
+            }
+
+            if (is_array($value)) {
+                self::reindex_integer_arrays($value);
+            }
+        }
+
+        if ($numeric) {
+            $array = array_values($array);
+        }
     }
 }
