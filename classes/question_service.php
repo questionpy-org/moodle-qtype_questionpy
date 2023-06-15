@@ -97,6 +97,10 @@ class question_service {
             "questionid" => $question->id,
         ]);
 
+        // Repetition_elements may produce numeric arrays with gaps. We want them to become JSON arrays, so we reindex.
+        // Form element names may not begin with a digit, so this wont accidentally change them.
+        utils::reindex_integer_arrays($question->qpy_form);
+
         $response = $this->api->create_question(
             $question->qpy_package_hash,
             $existingrecord ? $existingrecord->state : null,
