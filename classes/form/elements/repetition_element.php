@@ -37,9 +37,9 @@ class repetition_element extends form_element {
     /** @var string */
     public string $name;
     /** @var int number of repetitions to show initially */
-    public int $initialelements;
+    public int $initialrepetitions;
     /** @var int minimum number of repetitions, which cannot be removed */
-    public int $minimumelements = 1;
+    public int $minimumrepetitions = 1;
     /** @var int number of elements to add with each click of the button */
     public int $increment;
     /** @var string|null label for the button which adds additional blanks, null to use default */
@@ -52,15 +52,15 @@ class repetition_element extends form_element {
      * Initializes the element.
      *
      * @param string $name
-     * @param int $initialelements     number of elements to show initially
-     * @param int $increment           number of elements to add with each click of the button
+     * @param int $initialrepetitions  number of repetitions to show initially
+     * @param int $increment           number of repetitions to add with each click of the button
      * @param string|null $buttonlabel label for the button which adds additional blanks, null to use default
      * @param form_element[] $elements
      */
-    public function __construct(string $name, int $initialelements, int $increment, ?string $buttonlabel,
+    public function __construct(string $name, int $initialrepetitions, int $increment, ?string $buttonlabel,
                                 array  $elements) {
         $this->name = $name;
-        $this->initialelements = $initialelements;
+        $this->initialrepetitions = $initialrepetitions;
         $this->increment = $increment;
         $this->buttonlabel = $buttonlabel;
         $this->elements = $elements;
@@ -87,7 +87,7 @@ class repetition_element extends form_element {
             $repeatsname,
             isset($context->data[$this->name])
                 ? count($context->data[$this->name])
-                : max($this->initialelements, $this->minimumelements),
+                : max($this->initialrepetitions, $this->minimumrepetitions),
             PARAM_INT
         );
 
@@ -117,7 +117,7 @@ class repetition_element extends form_element {
             }
         }
 
-        $allowremoval = $repeats - count($removed) > $this->minimumelements;
+        $allowremoval = $repeats - count($removed) > $this->minimumrepetitions;
 
         $removestring = get_string("remove");
         global $OUTPUT;
@@ -152,8 +152,8 @@ class repetition_element extends form_element {
 
 array_converter::configure(repetition_element::class, function (converter_config $config) {
     $config
-        ->rename("initialelements", "initial_elements")
-        ->rename("minimumelements", "minimum_elements")
+        ->rename("initialrepetitions", "initial_repetitions")
+        ->rename("minimumrepetitions", "minimum_repetitions")
         ->rename("buttonlabel", "button_label")
         ->array_elements("elements", form_element::class);
 });
