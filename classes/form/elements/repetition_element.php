@@ -36,8 +36,10 @@ defined('MOODLE_INTERNAL') || die;
 class repetition_element extends form_element {
     /** @var string */
     public string $name;
-    /** @var int number of elements to show initially */
+    /** @var int number of repetitions to show initially */
     public int $initialelements;
+    /** @var int minimum number of repetitions, which cannot be removed */
+    public int $minimumelements = 1;
     /** @var int number of elements to add with each click of the button */
     public int $increment;
     /** @var string|null label for the button which adds additional blanks, null to use default */
@@ -78,10 +80,14 @@ class repetition_element extends form_element {
          */
         $repeatsname = "qpy_repeats_" . $this->name;
         $addmorename = "qpy_repeat_add_more_" . $this->name;
+        $removenameprefix = "qpy_repeat_remove_$this->name";
+        $removednameprefix = "qpy_repeat_removed_$this->name";
 
         $repeats = $context->mform->optional_param(
             $repeatsname,
-            isset($context->data[$this->name]) ? count($context->data[$this->name]) : $this->initialelements,
+            isset($context->data[$this->name])
+                ? count($context->data[$this->name])
+                : max($this->initialelements, $this->minimumelements),
             PARAM_INT
         );
 
@@ -95,41 +101,46 @@ class repetition_element extends form_element {
         // Prevent repeats from being overridden with the submitted value.
         $context->mform->setConstant($repeatsname, $repeats);
 
-        $removestring = get_string("remove");
-        global $OUTPUT;
-        $removeicon = $OUTPUT->pix_icon('i/delete', $removestring, 'core');
-
+        $removed = [];
         for ($i = 0; $i < $repeats; $i++) {
             /* When a repetition is removed ($removename button clicked), we create a hidden element named $removedname,
                in order to "remember" this while also preserving the indices of the following repetitions.
                The split is necessary because the button must be no-submit, while the hidden element must not prevent
                submission. */
-            $removename = "qpy_repeat_remove_$this->name[$i]";
-            $removedname = "qpy_repeat_removed_$this->name[$i]";
-            $context->mform->registerNoSubmitButton($removename);
-            $isremoved = $context->moodleform->optional_param($removename, false, PARAM_RAW)
-                || $context->moodleform->optional_param($removedname, false, PARAM_RAW);
+            $context->mform->registerNoSubmitButton("{$removenameprefix}[$i]");
+            $isremoved = $context->moodleform->optional_param("{$removenameprefix}[$i]", false, PARAM_RAW)
+                || $context->moodleform->optional_param("{$removednameprefix}[$i]", false, PARAM_RAW);
             if ($isremoved !== false) {
-                $context->mform->addElement("hidden", $removedname, "removed");
-                $context->mform->setType($removedname, PARAM_RAW);
+                $removed[] = $i;
+                $context->mform->addElement("hidden", "{$removednameprefix}[$i]", "removed");
+                $context->mform->setType("{$removednameprefix}[$i]", PARAM_RAW);
+            }
+        }
+
+        $allowremoval = $repeats - count($removed) > $this->minimumelements;
+
+        $removestring = get_string("remove");
+        global $OUTPUT;
+        $removeicon = $OUTPUT->pix_icon('i/delete', $removestring, 'core');
+
+        for ($i = 0; $i < $repeats; $i++) {
+            if (in_array($i, $removed)) {
                 continue;
             }
 
             $context->mform->addElement("html", '<div class="qpy-repetition"><div class="qpy-repetition-content">');
 
             $innercontext = root_render_context::create_inner($context, $this->name . "[$i]");
-
             foreach ($this->elements as $element) {
                 $element->render_to($innercontext);
             }
-
             $context->nextuniqueint = $innercontext->nextuniqueint;
 
             $context->mform->addElement("html", '</div><div class="qpy-repetition-controls">');
-
-            $context->mform->addElement("html", "<button name='$removename' type='submit'
+            if ($allowremoval) {
+                $context->mform->addElement("html", "<button name='{$removenameprefix}[$i]' type='submit'
                 class='btn btn-secondary qpy-repetition-remove' value='remove'>$removeicon $removestring</button>");
-
+            }
             $context->mform->addElement("html", '</div></div>');
         }
 
@@ -142,6 +153,7 @@ class repetition_element extends form_element {
 array_converter::configure(repetition_element::class, function (converter_config $config) {
     $config
         ->rename("initialelements", "initial_elements")
+        ->rename("minimumelements", "minimum_elements")
         ->rename("buttonlabel", "button_label")
         ->array_elements("elements", form_element::class);
 });

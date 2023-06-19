@@ -2,6 +2,7 @@
   "kind": "repetition",
   "name": "my_rep",
   "initial_elements": 3,
+  "minimum_elements": 1,
   "increment": 2,
   "button_label": null,
   "elements": [
