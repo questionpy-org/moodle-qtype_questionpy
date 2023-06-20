@@ -75,7 +75,9 @@ class checkbox_element extends form_element {
      */
     public function render_to(render_context $context, ?int $group = null): void {
         $element = $context->add_element(
-            "advcheckbox", $this->name, $this->leftlabel, $this->rightlabel,
+            "advcheckbox", $this->name,
+            $context->contextualize($this->leftlabel),
+            $context->contextualize($this->rightlabel),
             $group ? ["group" => $group] : null
         );
 

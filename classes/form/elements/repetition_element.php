@@ -20,7 +20,7 @@ use coding_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\form\render_context;
-use qtype_questionpy\form\root_render_context;
+use qtype_questionpy\form\repetition_render_context;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -123,14 +123,17 @@ class repetition_element extends form_element {
         global $OUTPUT;
         $removeicon = $OUTPUT->pix_icon('i/delete', $removestring, 'core');
 
+        // User-facing repetition number. Starts at 1 and doesn't count removed reps.
+        $humanrepno = 0;
         for ($i = 0; $i < $repeats; $i++) {
             if (in_array($i, $removed)) {
                 continue;
             }
+            $humanrepno++;
 
             $context->mform->addElement("html", '<div class="qpy-repetition"><div class="qpy-repetition-content">');
 
-            $innercontext = root_render_context::create_inner($context, $this->name . "[$i]");
+            $innercontext = new repetition_render_context($context, $this->name, $i, $humanrepno);
             foreach ($this->elements as $element) {
                 $element->render_to($innercontext);
             }

@@ -57,7 +57,10 @@ class static_text_element extends form_element {
      * @param render_context $context target context
      */
     public function render_to(render_context $context): void {
-        $element = $context->add_element("static", $this->name, $this->label, $this->text);
+        $element = $context->add_element(
+            "static", $this->name,
+            $context->contextualize($this->label), $context->contextualize($this->text)
+        );
 
         $this->render_conditions($context, $this->name);
         $this->render_help($element);

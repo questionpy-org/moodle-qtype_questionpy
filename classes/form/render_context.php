@@ -18,7 +18,6 @@ namespace qtype_questionpy\form;
 
 use moodleform;
 use MoodleQuickForm;
-use qtype_questionpy\form\conditions\condition;
 use qtype_questionpy\utils;
 
 /**
@@ -213,5 +212,21 @@ abstract class render_context {
 
         // Stitch $refereeparts back together.
         return $refereeparts[0] . "[" . implode("][", array_slice($refereeparts, 1)) . "]";
+    }
+
+    /**
+     * Replaces occurrences of `{ qpy:... }` with the appropriate contextual variable, if any.
+     *
+     * Unrecognized variables aren't replaced at all.
+     *
+     * This is used by {@see repetition_render_context} to allow repeated elements to show the repetition number without
+     * the elements needing to be aware of whether they are in a repetition.
+     *
+     * @param string $text string possibly containing `{ qpy:... }` format specifiers
+     * @return string input string with format specifiers replaced
+     */
+    public function contextualize(string $text): string {
+        // Dummy implementation to be replaced in repetition_render_context and possibly extended in the future.
+        return $text;
     }
 }

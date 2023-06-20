@@ -17,7 +17,6 @@
 namespace qtype_questionpy\form;
 
 use HTML_QuickForm_element;
-use qtype_questionpy\form\conditions\condition;
 use qtype_questionpy\form\elements\group_element;
 use qtype_questionpy\form\elements\repetition_element;
 use qtype_questionpy\utils;
@@ -36,6 +35,8 @@ use qtype_questionpy\utils;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class array_render_context extends render_context {
+    /** @var render_context context containing this group */
+    private render_context $parent;
     /**
      * @var HTML_QuickForm_element[] elements so far added to this group
      */
@@ -66,11 +67,12 @@ class array_render_context extends render_context {
     /**
      * Initializes a new array-based context.
      *
-     * @param render_context $root context containing this group
-     * @param string $prefix       prefix for the names of elements in this context
+     * @param render_context $parent context containing this group
+     * @param string $prefix         prefix for the names of elements in this context
      */
-    public function __construct(render_context $root, string $prefix) {
-        parent::__construct($root->moodleform, $root->mform, $prefix, $root->data, $root->nextuniqueint);
+    public function __construct(render_context $parent, string $prefix) {
+        $this->parent = $parent;
+        parent::__construct($parent->moodleform, $parent->mform, $prefix, $parent->data, $parent->nextuniqueint);
     }
 
     /**
@@ -168,5 +170,18 @@ class array_render_context extends render_context {
      */
     public function add_checkbox_controller(int $groupid): void {
         $this->moodleform->add_checkbox_controller($groupid);
+    }
+
+    /**
+     * Replaces occurrences of `{ qpy:... }` with the appropriate contextual variable, if any.
+     *
+     * This implementation just delegates to the parent context, so that repetition numbers are also replaced within
+     * groups.
+     *
+     * @param string $text string possibly containing `{ qpy:... }` format specifiers
+     * @return string input string with format specifiers replaced
+     */
+    public function contextualize(string $text): string {
+        return $this->parent->contextualize($text);
     }
 }
