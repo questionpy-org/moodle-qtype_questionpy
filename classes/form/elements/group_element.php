@@ -71,7 +71,11 @@ class group_element extends form_element {
             $element->render_to($innercontext);
         }
 
-        $element = $context->add_element("group", $groupname, $this->label, $innercontext->elements, null, false);
+        $element = $context->add_element(
+            "group", $groupname,
+            $context->contextualize($this->label),
+            $innercontext->elements, null, false
+        );
 
         foreach ($innercontext->types as $name => $type) {
             $context->set_type($name, $type);

@@ -74,7 +74,7 @@ class select_element extends form_element {
         $selected = [];
         $optionsassociative = [];
         foreach ($this->options as $option) {
-            $optionsassociative[$option->value] = $option->label;
+            $optionsassociative[$option->value] = $context->contextualize($option->label);
             if ($option->selected) {
                 $selected[] = $option->value;
             }
@@ -82,7 +82,9 @@ class select_element extends form_element {
 
         // phpcs:disable moodle.Commenting.InlineComment.DocBlock
         /** @var $element HTML_QuickForm_select */
-        $element = $context->add_element("select", $this->name, $this->label, $optionsassociative);
+        $element = $context->add_element(
+            "select", $this->name,
+            $context->contextualize($this->label), $optionsassociative);
 
         $element->setMultiple($this->multiple);
         if ($selected) {
