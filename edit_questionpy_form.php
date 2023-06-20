@@ -133,10 +133,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // to define a default value to satisfy the base methods in question_edit_form.
         $question->questiontext = '.';
 
-        // Current form data was returned by the server along with the form definition in definition_inner.
-        foreach (utils::flatten($this->currentdata, "qpy_form") as $name => $value) {
-            $question->{$name} = $value;
-        }
+        $question->qpy_form = $this->currentdata;
 
         parent::set_data($question);
     }

@@ -56,24 +56,6 @@ class utils {
     }
 
     /**
-     * Given an array with possible nested arrays, generates flat entries keys reflect the paths in the input array.
-     *
-     * @param array $source  input array which might contain nested arrays
-     * @param string $prefix prefix for all returned keys, as if `$source` where nested in an array with that key
-     * @return Generator<string, mixed> flat generator of entries
-     */
-    public static function flatten(array $source, string $prefix): Generator {
-        foreach ($source as $key => $value) {
-            $fullkey = "{$prefix}[$key]";
-            if (is_array($value)) {
-                yield from self::flatten($value, $fullkey);
-            } else {
-                yield $fullkey => $value;
-            }
-        }
-    }
-
-    /**
      * Given an array and a key such as `abc[def]`, returns `$array["abc"]["def"]`.
      *
      * If any of the key's parts don't exist or resolve to null, this function returns null.
