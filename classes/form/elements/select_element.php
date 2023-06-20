@@ -85,7 +85,9 @@ class select_element extends form_element {
         $element = $context->add_element("select", $this->name, $this->label, $optionsassociative);
 
         $element->setMultiple($this->multiple);
-        $context->set_default($this->name, $selected);
+        if ($selected) {
+            $context->set_default($this->name, $this->multiple ? $selected : $selected[0]);
+        }
 
         if ($this->required) {
             $context->add_rule($this->name, null, "required");
