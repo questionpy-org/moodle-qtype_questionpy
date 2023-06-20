@@ -205,59 +205,83 @@ class package {
      * @throws dml_exception
      */
     public function store_in_db(int $contextid = 0): int {
-        global $DB;
+        global $DB, $USER;
 
         $transaction = $DB->start_delegated_transaction();
+        $timestamp = time();
 
-        // Store the language independent package data.
-        $packageid = $DB->insert_record('qtype_questionpy_package', [
-            "contextid" => $contextid,
-            "hash" => $this->hash,
-            "shortname" => $this->shortname,
-            "namespace" => $this->namespace,
-            "version" => $this->version,
-            "type" => $this->type,
-            "author" => $this->author,
-            "url" => $this->url,
-            "icon" => $this->icon,
-            "license" => $this->license
+        $packageid = $DB->get_field('qtype_questionpy_package', 'id', [
+            'shortname' => $this->shortname,
+            'namespace' => $this->namespace
         ]);
 
-        if ($this->languages) {
-            // For each language store the localized package data as a separate record.
-            $languagedata = [];
-            foreach ($this->languages as $language) {
-                $languagedata[] = [
-                    "packageid" => $packageid,
-                    "language" => $language,
-                    "name" => $this->get_localized_name([$language]),
-                    "description" => $this->get_localized_description([$language])
-                ];
-            }
-            $DB->insert_records('qtype_questionpy_language', $languagedata);
-        }
+        if (!$packageid) {
+            // Package does not exist -> add it.
+            $packageid = $DB->insert_record('qtype_questionpy_package', [
+                'shortname' => $this->shortname,
+                'namespace' => $this->namespace,
+                'type' => $this->type,
+                'author' => $this->author,
+                'url' => $this->url,
+                'icon' => $this->icon,
+                'license' => $this->license,
+                'timemodified' => $timestamp,
+                'timecreated' => $timestamp
+            ]);
 
-        if ($this->tags) {
-            // Store each tag with the package hash in the tag table.
-            $tagsdata = [];
-            foreach ($this->tags as $tag) {
-                $tagsdata[] = [
-                    "packageid" => $packageid,
-                    "tag" => $tag,
-                ];
+            if ($this->languages) {
+                // For each language store the localized package data as a separate record.
+                $languagedata = [];
+                foreach ($this->languages as $language) {
+                    $languagedata[] = [
+                        'packageid' => $packageid,
+                        'language' => $language,
+                        'name' => $this->get_localized_name([$language]),
+                        'description' => $this->get_localized_description([$language])
+                    ];
+                }
+                $DB->insert_records('qtype_questionpy_language', $languagedata);
             }
-            $DB->insert_records('qtype_questionpy_tags', $tagsdata);
+
+            if ($this->tags) {
+                // Store each tag with the package hash in the tag table.
+                $tagsdata = [];
+                foreach ($this->tags as $tag) {
+                    $tagsdata[] = [
+                        'packageid' => $packageid,
+                        'tag' => $tag,
+                    ];
+                }
+                $DB->insert_records('qtype_questionpy_tags', $tagsdata);
+            }
+        } else {
+            // Package does already exist - check if the version also exists.
+            $pkgversionid = $DB->get_field('qtype_questionpy_pkgversion', 'id', [
+                'packageid' => $packageid,
+                'version' => $this->version,
+            ]);
+
+            if ($pkgversionid) {
+                return $pkgversionid;
+            }
         }
+        // Add the package version.
+        $pkgversionid = $DB->insert_record('qtype_questionpy_pkgversion', [
+            'packageid' => $packageid,
+            'contextid' => $contextid,
+            'hash' => $this->hash,
+            'version' => $this->version,
+            'timecreated' => $timestamp,
+            'userid' => $USER->id,
+        ]);
 
         $transaction->allow_commit();
-        return $packageid;
+        return $pkgversionid;
     }
 
     /**
-     * Deletes the package including all related data from:
-     *  - qtype_questionpy_package
-     *  - qtype_questionpy_language
-     *  - qtype_questionpy_tags
+     * Deletes the package version from the database.
+     * If the package has only one version, the package related data is also deleted.
      *
      * @throws moodle_exception
      */
@@ -265,32 +289,39 @@ class package {
         global $DB;
 
         $transaction = $DB->start_delegated_transaction();
-        $packageid = $DB->get_field('qtype_questionpy_package', 'id', ['hash' => $this->hash]);
-        $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
-        $DB->delete_records('qtype_questionpy_language', ['packageid' => $packageid]);
-        $DB->delete_records('qtype_questionpy_tags', ['packageid' => $packageid]);
+
+        $packageid = $DB->get_field('qtype_questionpy_pkgversion', 'packageid', ['hash' => $this->hash]);
+        $versioncount = $DB->count_records('qtype_questionpy_pkgversion', ['packageid' => $packageid]);
+        $DB->delete_records('qtype_questionpy_pkgversion', ['hash' => $this->hash, 'packageid' => $packageid]);
+
+        if ($versioncount === 1) {
+            // Only one package version exists, therefore we also delete package related data.
+            $DB->delete_records('qtype_questionpy_language', ['packageid' => $packageid]);
+            $DB->delete_records('qtype_questionpy_tags', ['packageid' => $packageid]);
+            $DB->delete_records('qtype_questionpy_package', ['id' => $packageid]);
+        }
+
         $transaction->allow_commit();
     }
+
 
     /**
      * Get a specific package by its hash from the db.
      *
      * @param string $hash
      * @return ?array [id of database record, package instance] or null if not found
-     * @throws dml_exception
      * @throws moodle_exception
      */
     public static function get_record_by_hash(string $hash): ?array {
         global $DB;
-        $package = $DB->get_record('qtype_questionpy_package', ['hash' => $hash]);
-        if (!$package) {
+        $pkgversion = $DB->get_record('qtype_questionpy_pkgversion', ['hash' => $hash]);
+        if (!$pkgversion) {
             return null;
         }
+        $package = self::get_package_data($pkgversion->packageid);
+        $package = array_merge((array) $pkgversion, (array) $package);
 
-        [$package->languages, $package->name, $package->description] = self::get_languagedata($package->id);
-        $package->tags = self::get_tagdata($package->id);
-
-        return [$package->id, array_converter::from_array(self::class, (array)$package)];
+        return [$pkgversion->id, array_converter::from_array(self::class, $package)];
     }
 
     /**
@@ -299,27 +330,40 @@ class package {
      *
      * @param array|null $conditions
      * @return array
-     * @throws dml_exception
      * @throws moodle_exception
      */
     public static function get_records(?array $conditions = null): array {
         global $DB;
-        $records = $DB->get_records('qtype_questionpy_package', $conditions);
+        $pkgversions = $DB->get_records('qtype_questionpy_pkgversion', $conditions);
         $packages = array();
-        foreach ($records as $package) {
-            $package = (array)$package;
-            [$language, $name, $description] = self::get_languagedata($package["id"]);
-            $tags = self::get_tagdata($package["id"]);
-            $temp = [
-                'languages' => $language,
-                'name' => $name,
-                'description' => $description,
-                'tags' => $tags
-            ];
-            $package = array_merge($package, $temp);
+        foreach ($pkgversions as $pkgversion) {
+            $package = self::get_package_data($pkgversion->packageid);
+            $package = array_merge((array) $pkgversion, (array) $package);
+
             $packages[] = array_converter::from_array(self::class, $package);
         }
         return $packages;
+    }
+
+    /**
+     * Get package related data like name, description and tags.
+     *
+     * @param string $packageid
+     * @return mixed|\stdClass
+     * @throws moodle_exception
+     */
+    private static function get_package_data(string $packageid) {
+        global $DB;
+        $package = $DB->get_record('qtype_questionpy_package', ['id' => $packageid]);
+
+        if (!$package) {
+            throw new \coding_exception("The requested package with id '{$packageid}' was not found.");
+        }
+
+        [$package->languages, $package->name, $package->description] = self::get_languagedata($package->id);
+        $package->tags = self::get_tagdata($package->id);
+
+        return $package;
     }
 
     /**

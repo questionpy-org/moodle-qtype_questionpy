@@ -41,82 +41,47 @@ use qtype_questionpy\form\elements\select_element;
 use qtype_questionpy\form\elements\static_text_element;
 use qtype_questionpy\form\elements\text_input_element;
 
+
 /**
- * Data provider for {@see package}.
+ * Returns a package object which can be modified by an array of attributes.
  *
- * @return package A sample package for the tests
+ * @param array $attributes
+ * @return package
+ * @throws \moodle_exception
  */
-function package_provider1(): package {
-    return array_converter::from_array(package::class, [
-        'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
-        'short_name' => 'adAqMNxOZNhuSUWflNui',
-        'namespace' => 'default',
+function package_provider(array $attributes = []): package {
+    $data = array_merge([
+        'short_name' => 'my_short_name',
+        'namespace' => 'my_namespace',
         'name' => [
-            'en' => 'She piece local.',
-            'de' => 'Style important.'
+            'en' => 'de: My Name',
+            'de' => 'en: My Name'
         ],
-        'version' => '865.7797993.0--.0',
+        'version' => '0.1.0',
         'type' => 'questiontype',
-        'author' => 'Mario Hunt',
-        'url' => 'http://www.kane.com/',
+        'author' => 'John Doe',
+        'url' => 'http://www.example.com/',
         'languages' => [
             0 => 'en',
             1 => 'de'
         ],
         'description' => [
-            'en' => 'en: Activity organization letter. Report alone why center.
-                    Real outside glass maintain right hear.
-                    Brother develop process work. Build ago north.
-                    Develop with defense understand garden recently work.',
-            'de' => 'de: Activity few enter medical side position. Safe need no guy price.
-                    Source necessary our me series month seven born.
-                    Anyone everything interest where accept apply. Expert great significant.'
+            'en' => 'en: Lorem ipsum dolor sit amet.',
+            'de' => 'de: Lorem ipsum dolor sit amet.'
         ],
         'icon' => 'https://placehold.jp/40e47e/598311/150x150.png',
-        'license' => '',
+        'license' => 'MIT',
         'tags' => [
-            0 => 'fXuprCRqsLnQQYzFZgAt'
-        ]
-    ]);
-}
+            0 => 'my_tag_0',
+            1 => 'my_tag_1',
+            2 => 'my_tag_2'
+        ]], $attributes);
 
-/**
- * Data provider for {@see package}.
- *
- * @return package Same package as {@see package_provider1} but values in languages array are swapped.
- */
-function package_provider2(): package {
-    return array_converter::from_array(package::class, [
-        'package_hash' => 'dkZZGAOgHTpBOSZMBGNM',
-        'short_name' => 'adAqMNxOZNhuSUWflNui',
-        'namespace' => 'default',
-        'name' => [
-            'en' => 'She piece local.',
-            'de' => 'Style important.'
-        ],
-        'version' => '865.7797993.0--.0',
-        'type' => 'questiontype',
-        'author' => 'Mario Hunt',
-        'url' => 'http://www.kane.com/',
-        'languages' => [
-            0 => 'de',
-            1 => 'en'
-        ],
-        'description' => [
-            'en' => 'en: Activity organization letter. Report alone why center.
-                    Real outside glass maintain right hear.
-                    Brother develop process work. Build ago north.
-                    Develop with defense understand garden recently work.',
-            'de' => 'de: Activity few enter medical side position. Safe need no guy price.
-                    Source necessary our me series month seven born.
-                    Anyone everything interest where accept apply. Expert great significant.'
-        ],
-        'icon' => 'https://placehold.jp/40e47e/598311/150x150.png',
-        'license' => '',
-        'tags' => [
-            0 => 'fXuprCRqsLnQQYzFZgAt'
-        ]
-    ]);
+    if (!isset($attributes['package_hash'])) {
+        $data['package_hash'] = hash('sha256', $data['short_name'] . $data['namespace'] . $data['version']);
+    }
+
+    return array_converter::from_array(package::class, $data);
 }
 
 /**
