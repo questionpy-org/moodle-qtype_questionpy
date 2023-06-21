@@ -62,8 +62,8 @@ class question_service {
             $package = package::get_records(["id" => $record->pkgversionid])[0] ?? null;
             if (!$package) {
                 throw new \coding_exception(
-                    "No package record with ID '{$record->pkgversionid}' was found despite being referenced by" .
-                    " question {$questionid}"
+                    "No package version record with ID '{$record->pkgversionid}' was found despite being referenced" .
+                    " by question {$questionid}"
                 );
             }
 

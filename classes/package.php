@@ -244,7 +244,7 @@ class package {
             }
 
             if ($this->tags) {
-                // Store each tag with the package hash in the tag table.
+                // Store each tag with the package id in the tag table.
                 $tagsdata = [];
                 foreach ($this->tags as $tag) {
                     $tagsdata[] = [
@@ -266,6 +266,7 @@ class package {
             }
         }
         // Add the package version.
+        // TODO: Update the package data in qtype_questionpy_package if the version is newer than the existing ones.
         $pkgversionid = $DB->insert_record('qtype_questionpy_pkgversion', [
             'packageid' => $packageid,
             'contextid' => $contextid,
@@ -325,7 +326,7 @@ class package {
     }
 
     /**
-     * Get packages from the db matching given conditions. Note: only conditions stored in the package table
+     * Get packages from the db matching given conditions. Note: only conditions stored in the package version table
      * are applicable.
      *
      * @param array|null $conditions
@@ -349,10 +350,10 @@ class package {
      * Get package related data like name, description and tags.
      *
      * @param string $packageid
-     * @return mixed|\stdClass
+     * @return object
      * @throws moodle_exception
      */
-    private static function get_package_data(string $packageid) {
+    private static function get_package_data(string $packageid): object {
         global $DB;
         $package = $DB->get_record('qtype_questionpy_package', ['id' => $packageid]);
 
@@ -373,7 +374,7 @@ class package {
      * @return array
      * @throws dml_exception
      */
-    private static function get_languagedata(int $packageid) {
+    private static function get_languagedata(int $packageid): array {
         global $DB;
         $languagedata = $DB->get_records('qtype_questionpy_language', ['packageid' => $packageid]);
         $language = [];
@@ -394,7 +395,7 @@ class package {
      * @return array
      * @throws dml_exception
      */
-    private static function get_tagdata(int $packageid) {
+    private static function get_tagdata(int $packageid): array {
         global $DB;
         $tagdata = $DB->get_records('qtype_questionpy_tags', ['packageid' => $packageid]);
         $tags = [];
