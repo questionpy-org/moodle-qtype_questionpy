@@ -220,10 +220,10 @@ class package_test extends \advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
 
+        $timestamp = time();
+
         $package = array_converter::from_array(package::class, $packagedata);
         $package->store_in_db();
-
-        $timestamp = time();
 
         // Check qtype_questionpy_pkgversion table.
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgversion'));
