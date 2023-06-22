@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form;
 
+use qtype_questionpy\form\context\render_context;
 use qtype_questionpy\form\elements\form_element;
 
 /**

@@ -19,8 +19,8 @@ namespace qtype_questionpy\form\elements;
 use coding_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
-use qtype_questionpy\form\render_context;
-use qtype_questionpy\form\repetition_render_context;
+use qtype_questionpy\form\context\render_context;
+use qtype_questionpy\form\context\repetition_render_context;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -137,7 +137,6 @@ class repetition_element extends form_element {
             foreach ($this->elements as $element) {
                 $element->render_to($innercontext);
             }
-            $context->nextuniqueint = $innercontext->nextuniqueint;
 
             $context->mform->addElement("html", '</div><div class="qpy-repetition-controls">');
             if ($allowremoval) {

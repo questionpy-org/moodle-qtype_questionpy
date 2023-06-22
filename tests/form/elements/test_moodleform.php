@@ -21,8 +21,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->libdir . "/formslib.php");
 
+use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\form\qpy_renderable;
-use qtype_questionpy\form\root_render_context;
 
 /**
  * Stub {@see \moodleform} implementation for tests.

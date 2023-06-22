@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\form;
-
-use qtype_questionpy\form\conditions\condition;
-use qtype_questionpy\utils;
+namespace qtype_questionpy\form\context;
 
 /**
  * Regular {@see render_context} which delegates to {@see \moodleform} and {@see \MoodleQuickForm}.
@@ -26,23 +23,10 @@ use qtype_questionpy\utils;
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
- * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class root_render_context extends render_context {
-    /**
-     * Creates an inner context by adding `$name` to the prefix and using `$data[$name]`.
-     *
-     * @param render_context $parent
-     * @param string $name nested name to be added to the prefix. May be made up of `multiple[parts]`.
-     * @return static
-     */
-    public static function create_inner(render_context $parent, string $name): self {
-        return new root_render_context(
-            $parent->moodleform, $parent->mform, $parent->mangle_name($name),
-            utils::array_get_nested($parent->data, $name) ?? [], $parent->nextuniqueint
-        );
-    }
+abstract class mform_render_context extends render_context {
 
     /**
      * Create, add and return an element.
@@ -103,37 +87,26 @@ class root_render_context extends render_context {
     /**
      * Adds a condition which will disable the named element if met.
      *
-     * @param string $dependant name of the element which has the dependency on another element
-     * @param string $dependency  absolute name of the element which is depended on
-     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
-     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
+     * @param string $dependant  name of the element which has the dependency on another element
+     * @param string $dependency absolute name of the element which is depended on
+     * @param string $operator   one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
+     * @param mixed $value       for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::disabledIf()
      */
-    public function disable_if(string $dependant, string $dependency, string $operator, $value = null) {
+    public function disable_if(string $dependant, string $dependency, string $operator, $value = null): void {
         $this->mform->disabledIf($this->mangle_name($dependant), $dependency, $operator, $value);
     }
 
     /**
      * Adds a condition which will hide the named element if met.
      *
-     * @param string $dependant name of the element which has the dependency on another element
-     * @param string $dependency  absolute name of the element which is depended on
-     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
-     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
+     * @param string $dependant  name of the element which has the dependency on another element
+     * @param string $dependency absolute name of the element which is depended on
+     * @param string $operator   one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
+     * @param mixed $value       for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::hideIf()
      */
-    public function hide_if(string $dependant, string $dependency, string $operator, $value = null) {
+    public function hide_if(string $dependant, string $dependency, string $operator, $value = null): void {
         $this->mform->hideIf($this->mangle_name($dependant), $dependency, $operator, $value);
-    }
-
-    /**
-     * Adds a `Select all/none` checkbox controller controlling all `advcheckboxes` with the given group id.
-     *
-     * @param int $groupid the group id matching the `group` attribute of the `advcheckboxes` which should be toggled
-     *                     by this controller.
-     * @see \moodleform::add_checkbox_controller()
-     */
-    public function add_checkbox_controller(int $groupid): void {
-        $this->moodleform->add_checkbox_controller($groupid);
     }
 }

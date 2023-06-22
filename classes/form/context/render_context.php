@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\form;
+namespace qtype_questionpy\form\context;
 
 use moodleform;
 use MoodleQuickForm;
@@ -28,7 +28,10 @@ use qtype_questionpy\utils;
  * aware of where they are being rendered. It does this while still allowing for checkbox controllers, which use an
  * entirely different method.
  *
- * @see        root_render_context
+ * Render contexts form a hierarchy with a single {@see root_render_context} at the top and 0 or more
+ * {@see section_render_context}s and {@see array_render_context}s below it.
+ *
+ * @see        mform_render_context
  * @see        array_render_context
  * @package    qtype_questionpy
  * @author     Maximilian Haye
@@ -40,7 +43,7 @@ abstract class render_context {
     public moodleform $moodleform;
     /**
      * @var MoodleQuickForm target {@see MoodleQuickForm} instance, as passed to
-     *      {@see \question_edit_form::definition_inner}
+     *                      {@see \question_edit_form::definition_inner}
      */
     public MoodleQuickForm $mform;
 
@@ -50,9 +53,6 @@ abstract class render_context {
     /** @var array the current form data */
     public array $data;
 
-    /** @var int the next int which will be returned by {@see next_unique_int} */
-    public int $nextuniqueint;
-
     /**
      * Initializes a new render context.
      *
@@ -61,15 +61,12 @@ abstract class render_context {
      *                                {@see \question_edit_form::definition_inner}
      * @param string $prefix          prefix for the names of elements in this context
      * @param array $data             the current form data (as of last save)
-     * @param int $nextuniqueint      the starting value for {@see next_unique_int}
      */
-    public function __construct(moodleform $moodleform, MoodleQuickForm $mform, string $prefix, array $data,
-                                int        $nextuniqueint = 1) {
+    public function __construct(moodleform $moodleform, MoodleQuickForm $mform, string $prefix, array $data) {
         $this->moodleform = $moodleform;
         $this->mform = $mform;
         $this->prefix = $prefix;
         $this->data = $data;
-        $this->nextuniqueint = $nextuniqueint;
     }
 
     /**
@@ -129,7 +126,7 @@ abstract class render_context {
      * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see MoodleQuickForm::disabledIf
      */
-    abstract public function disable_if(string $dependant, string $dependency, string $operator, $value = null);
+    abstract public function disable_if(string $dependant, string $dependency, string $operator, $value = null): void;
 
     /**
      * Adds a condition which will hide the named element if met.
@@ -140,16 +137,7 @@ abstract class render_context {
      * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see MoodleQuickForm::hideIf
      */
-    abstract public function hide_if(string $dependant, string $dependency, string $operator, $value = null);
-
-    /**
-     * Adds a `Select all/none` checkbox controller controlling all `advcheckboxes` with the given group id.
-     *
-     * @param int $groupid the group id matching the `group` attribute of the `advcheckboxes` which should be toggled
-     *                     by this controller.
-     * @see moodleform::add_checkbox_controller
-     */
-    abstract public function add_checkbox_controller(int $groupid): void;
+    abstract public function hide_if(string $dependant, string $dependency, string $operator, $value = null): void;
 
     /**
      * Append the given local name to the prefix of this context.
@@ -179,9 +167,7 @@ abstract class render_context {
      *
      * @return int a unique and deterministic integer for use in generated element names and IDs.
      */
-    public function next_unique_int(): int {
-        return $this->nextuniqueint++;
-    }
+    public abstract function next_unique_int(): int;
 
     /**
      * Turns a reference relative to this context's prefix into an absolute reference.
@@ -225,8 +211,5 @@ abstract class render_context {
      * @param string $text string possibly containing `{ qpy:... }` format specifiers
      * @return string input string with format specifiers replaced
      */
-    public function contextualize(string $text): string {
-        // Dummy implementation to be replaced in repetition_render_context and possibly extended in the future.
-        return $text;
-    }
+    public abstract function contextualize(string $text): string;
 }

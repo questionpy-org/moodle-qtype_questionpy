@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\form;
+namespace qtype_questionpy\form\context;
 
 use qtype_questionpy\form\elements\repetition_element;
-use qtype_questionpy\utils;
 
 /**
  * Special {@see render_context} for a single iteration of a {@see repetition_element}.
@@ -30,7 +29,7 @@ use qtype_questionpy\utils;
  * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class repetition_render_context extends root_render_context {
+class repetition_render_context extends section_render_context {
 
     /** @var int running number of this repetition iteration, starting at 1 and not counting removed reps */
     private int $humanrepno;
@@ -39,17 +38,13 @@ class repetition_render_context extends root_render_context {
      * Initializes a context for a single iteration of a {@see repetition_element}.
      *
      * @param render_context $parent context containing the repetition
-     * @param string $name name of the repetition, without index
-     * @param int $repno running number of this repetition iteration, starting at 0 and also counting removed reps
-     * @param int $humanrepno running number of this repetition iteration, starting at 1 and not counting removed reps
+     * @param string $name           name of the repetition, without index
+     * @param int $repno             running number of this repetition iteration, starting at 0 and also counting removed reps
+     * @param int $humanrepno        running number of this repetition iteration, starting at 1 and not counting removed reps
      */
     public function __construct(render_context $parent, string $name, int $repno, int $humanrepno) {
         $this->humanrepno = $humanrepno;
-        parent::__construct(
-            $parent->moodleform, $parent->mform,
-            $parent->mangle_name($name . "[$repno]"),
-            utils::array_get_nested($parent->data, $name) ?? [], $parent->nextuniqueint
-        );
+        parent::__construct($parent, $name . "[$repno]");
     }
 
     /**
@@ -59,6 +54,7 @@ class repetition_render_context extends root_render_context {
      * @return string input string with format specifiers replaced
      */
     public function contextualize(string $text): string {
-        return preg_replace('/\{\s*qpy:repno\s*}/', $this->humanrepno, $text);
+        $text = preg_replace('/\{\s*qpy:repno\s*}/', $this->humanrepno, $text);
+        return parent::contextualize($text);
     }
 }

@@ -19,7 +19,7 @@ namespace qtype_questionpy\form\elements;
 use coding_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
-use qtype_questionpy\form\render_context;
+use qtype_questionpy\form\context\render_context;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -58,7 +58,7 @@ class checkbox_group_element extends form_element {
             $checkbox->render_to($context, $groupid);
         }
 
-        $context->add_checkbox_controller($groupid);
+        $context->moodleform->add_checkbox_controller($groupid);
     }
 }
 
