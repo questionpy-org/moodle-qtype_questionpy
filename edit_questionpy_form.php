@@ -23,10 +23,8 @@
  */
 
 use qtype_questionpy\api\api;
-use qtype_questionpy\form\elements\text_input_element;
-use qtype_questionpy\form\root_render_context;
+use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\localizer;
-use qtype_questionpy\utils;
 
 /**
  * QuestionPy question editing form definition.

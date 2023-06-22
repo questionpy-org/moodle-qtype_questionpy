@@ -14,20 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\form;
+namespace qtype_questionpy\form\context;
 
 use HTML_QuickForm_element;
 use qtype_questionpy\form\elements\group_element;
-use qtype_questionpy\form\elements\repetition_element;
 use qtype_questionpy\utils;
 
 /**
- * A {@see render_context} for {@see group_element groups} and {@see repetition_element repetitions}.
+ * A {@see render_context} for {@see group_element groups}.
  *
  * Instead of adding elements to the {@see \MoodleQuickForm}, they are added to an array which is later used to create
  * the group.
  *
- * @see        root_render_context
+ * @see        mform_render_context
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
@@ -72,7 +71,10 @@ class array_render_context extends render_context {
      */
     public function __construct(render_context $parent, string $prefix) {
         $this->parent = $parent;
-        parent::__construct($parent->moodleform, $parent->mform, $prefix, $parent->data, $parent->nextuniqueint);
+        parent::__construct(
+            $parent->moodleform, $parent->mform, $prefix,
+            utils::array_get_nested($parent->data, $prefix) ?? []
+        );
     }
 
     /**
@@ -144,7 +146,7 @@ class array_render_context extends render_context {
      * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::disabledIf()
      */
-    public function disable_if(string $dependant, string $dependency, string $operator, $value = null) {
+    public function disable_if(string $dependant, string $dependency, string $operator, $value = null): void {
         utils::ensure_exists($this->disableifs, $this->mangle_name($dependant))[] = [$dependency, $operator, $value];
     }
 
@@ -157,19 +159,17 @@ class array_render_context extends render_context {
      * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::hideIf()
      */
-    public function hide_if(string $dependant, string $dependency, string $operator, $value = null) {
+    public function hide_if(string $dependant, string $dependency, string $operator, $value = null): void {
         utils::ensure_exists($this->hideifs, $this->mangle_name($dependant))[] = [$dependency, $operator, $value];
     }
 
     /**
-     * Adds a `Select all/none` checkbox controller controlling all `advcheckboxes` with the given group id.
+     * Get a unique and deterministic integer for use in generated element names and IDs.
      *
-     * @param int $groupid the group id matching the `group` attribute of the `advcheckboxes` which should be toggled
-     *                     by this controller.
-     * @see \moodleform::add_checkbox_controller()
+     * @return int a unique and deterministic integer for use in generated element names and IDs.
      */
-    public function add_checkbox_controller(int $groupid): void {
-        $this->moodleform->add_checkbox_controller($groupid);
+    public function next_unique_int(): int {
+        return $this->parent->next_unique_int();
     }
 
     /**

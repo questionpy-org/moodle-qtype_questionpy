@@ -16,9 +16,9 @@
 
 namespace qtype_questionpy\form\elements;
 
+use qtype_questionpy\form\context\render_context;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\form_help;
-use qtype_questionpy\form\render_context;
 
 /**
  * Element displaying static text and a label.

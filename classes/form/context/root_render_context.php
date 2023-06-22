@@ -14,48 +14,39 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\form\elements;
-
-use qtype_questionpy\form\context\render_context;
-use qtype_questionpy\form\form_conditions;
+namespace qtype_questionpy\form\context;
 
 /**
- * Element which is not displayed at all, but adds a fixed name/value pair to the form data upon submission.
+ * Uppermost render context.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class hidden_element extends form_element {
-    /** @var string */
-    public string $name;
-    /** @var string */
-    public string $value;
+class root_render_context extends mform_render_context {
 
-    use form_conditions;
+    /** @var int the next int which will be returned by {@see next_unique_int} */
+    private int $nextuniqueint = 1;
 
     /**
-     * Initializes the element.
+     * Get a unique and deterministic integer for use in generated element names and IDs.
      *
-     * @param string $name
-     * @param string $value
+     * @return int a unique and deterministic integer for use in generated element names and IDs.
      */
-    public function __construct(string $name, string $value) {
-        $this->name = $name;
-        $this->value = $value;
+    public function next_unique_int(): int {
+        return $this->nextuniqueint++;
     }
 
     /**
-     * Render this item to the given context.
+     * Replaces occurrences of `{ qpy:... }` with the appropriate contextual variable, if any.
      *
-     * @param render_context $context target context
-     * @package qtype_questionpy
+     * This render context returns the string unchanged.
+     *
+     * @param string $text string possibly containing `{ qpy:... }` format specifiers
+     * @return string input string with format specifiers replaced
      */
-    public function render_to(render_context $context): void {
-        $context->add_element("hidden", $this->name, $this->value);
-        $context->set_type($this->name, PARAM_TEXT);
-
-        $this->render_conditions($context, $this->name);
+    public function contextualize(string $text): string {
+        return $text;
     }
 }

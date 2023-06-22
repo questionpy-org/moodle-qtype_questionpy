@@ -45,9 +45,9 @@ class element_html_test extends \advanced_testcase {
      * @param qpy_renderable $element element to render
      * @dataProvider data_provider
      * @covers       \qtype_questionpy\form\elements
-     * @covers       \qtype_questionpy\form\render_context
-     * @covers       \qtype_questionpy\form\root_render_context
-     * @covers       \qtype_questionpy\form\array_render_context
+     * @covers       \qtype_questionpy\form\context\render_context
+     * @covers       \qtype_questionpy\form\context\root_render_context
+     * @covers       \qtype_questionpy\form\context\array_render_context
      * @covers       \qtype_questionpy\form\qpy_renderable
      */
     public function test_rendered_html_should_match_snapshot(string $elementkind, qpy_renderable $element): void {

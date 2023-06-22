@@ -18,6 +18,8 @@ namespace qtype_questionpy\form;
 
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\form\context\render_context;
+use qtype_questionpy\form\context\section_render_context;
 use qtype_questionpy\form\elements\form_element;
 
 defined('MOODLE_INTERNAL') || die;
@@ -62,11 +64,10 @@ class form_section implements qpy_renderable {
     public function render_to(render_context $context): void {
         $mangled = $context->mangle_name($this->name);
         $context->add_element("header", $mangled, $this->header);
-        $innercontext = root_render_context::create_inner($context, $this->name);
+        $innercontext = new section_render_context($context, $this->name);
         foreach ($this->elements as $element) {
             $element->render_to($innercontext);
         }
-        $context->nextuniqueint = $innercontext->nextuniqueint;
     }
 }
 
