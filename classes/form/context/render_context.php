@@ -167,7 +167,7 @@ abstract class render_context {
      *
      * @return int a unique and deterministic integer for use in generated element names and IDs.
      */
-    public abstract function next_unique_int(): int;
+    abstract public function next_unique_int(): int;
 
     /**
      * Turns a reference relative to this context's prefix into an absolute reference.
@@ -211,5 +211,5 @@ abstract class render_context {
      * @param string|null $text string possibly containing `{ qpy:... }` format specifiers
      * @return string|null input string with format specifiers replaced
      */
-    public abstract function contextualize(?string $text): ?string;
+    abstract public function contextualize(?string $text): ?string;
 }
