@@ -16,7 +16,6 @@
 
 namespace qtype_questionpy;
 
-use Generator;
 use qtype_questionpy\form\elements\repetition_element;
 
 /**
@@ -78,6 +77,30 @@ class utils {
         }
 
         return $current;
+    }
+
+    /**
+     * Given a key such as `abc[def]`, returns an array `[ "abc" => [ "def" => $value ] ]`.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @return array
+     */
+    public static function array_create_nested(string $key, $value): array {
+        // Explode a $name like qpy_form[abc][def] into an array ["qpy_form", "abc", "def"].
+        $parts = explode("[", str_replace("]", "", $key));
+
+        $array = [];
+        $current = &$array;
+        foreach ($parts as $key) {
+            if (!is_array($current)) {
+                $current = [];
+            }
+            $current = &$current[$key];
+        }
+        $current = $value;
+
+        return $array;
     }
 
     /**
