@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy\form\context;
 
+use qtype_questionpy\utils;
+
 /**
  * Regular {@see render_context} which delegates to {@see \moodleform} and {@see \MoodleQuickForm}.
  *
@@ -61,7 +63,9 @@ abstract class mform_render_context extends render_context {
      * @see \MoodleQuickForm::setDefault()
      */
     public function set_default(string $name, $default): void {
-        $this->mform->setDefault($this->mangle_name($name), $default);
+        /* We cannot use setDefault because that method uses $name as a top-level key instead of using nested arrays,
+           which causes elements to prefer defaults over saved question data. (#44) */
+        $this->mform->setDefaults(utils::array_create_nested($this->mangle_name($name), $default));
     }
 
     /**
