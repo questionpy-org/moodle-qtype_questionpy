@@ -50,10 +50,14 @@ class repetition_render_context extends section_render_context {
     /**
      * Replaces occurrences of `{ qpy:repno }` with the current repetition number.
      *
-     * @param string $text string possibly containing `{ qpy:repno }` format specifiers
-     * @return string input string with format specifiers replaced
+     * @param string|null $text string possibly containing `{ qpy:repno }` format specifiers
+     * @return string|null input string with format specifiers replaced
      */
-    public function contextualize(string $text): string {
+    public function contextualize(?string $text): ?string {
+        if (!$text) {
+            return $text;
+        }
+
         $text = preg_replace('/\{\s*qpy:repno\s*}/', $this->humanrepno, $text);
         return parent::contextualize($text);
     }

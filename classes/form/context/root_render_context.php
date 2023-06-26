@@ -43,10 +43,10 @@ class root_render_context extends mform_render_context {
      *
      * This render context returns the string unchanged.
      *
-     * @param string $text string possibly containing `{ qpy:... }` format specifiers
-     * @return string input string with format specifiers replaced
+     * @param string|null $text string possibly containing `{ qpy:... }` format specifiers
+     * @return string|null input string with format specifiers replaced
      */
-    public function contextualize(string $text): string {
+    public function contextualize(?string $text): ?string {
         return $text;
     }
 }
