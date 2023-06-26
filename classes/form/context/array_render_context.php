@@ -178,10 +178,10 @@ class array_render_context extends render_context {
      * This implementation just delegates to the parent context, so that repetition numbers are also replaced within
      * groups.
      *
-     * @param string $text string possibly containing `{ qpy:... }` format specifiers
-     * @return string input string with format specifiers replaced
+     * @param string|null $text string possibly containing `{ qpy:... }` format specifiers
+     * @return string|null input string with format specifiers replaced
      */
-    public function contextualize(string $text): string {
+    public function contextualize(?string $text): ?string {
         return $this->parent->contextualize($text);
     }
 }

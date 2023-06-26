@@ -208,8 +208,8 @@ abstract class render_context {
      * This is used by {@see repetition_render_context} to allow repeated elements to show the repetition number without
      * the elements needing to be aware of whether they are in a repetition.
      *
-     * @param string $text string possibly containing `{ qpy:... }` format specifiers
-     * @return string input string with format specifiers replaced
+     * @param string|null $text string possibly containing `{ qpy:... }` format specifiers
+     * @return string|null input string with format specifiers replaced
      */
-    public abstract function contextualize(string $text): string;
+    public abstract function contextualize(?string $text): ?string;
 }
