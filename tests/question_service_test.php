@@ -50,12 +50,14 @@ class question_service_test extends \advanced_testcase {
     /**
      * Tests {@see question_service::get_question()} happy path.
      *
-     * @throws dml_exception
-     * @throws coding_exception
+     * @throws moodle_exception
      * @covers \qtype_questionpy\question_service::get_question
      */
     public function test_get_question_should_load_package_and_state() {
-        [$packageid, $package] = $this->setup_package();
+        $this->resetAfterTest();
+
+        $package = package_provider();
+        $packageid = $package->store_in_db();
         $statestr = $this->setup_question($packageid);
 
         $result = $this->questionservice->get_question(1);
@@ -89,9 +91,13 @@ class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_update_existing_record_if_changed() {
-        [$oldpackageid] = $this->setup_package();
+        $this->resetAfterTest();
+
+        $oldpackageid = package_provider(["version" => "0.1.0"])->store_in_db();
         $oldstate = $this->setup_question($oldpackageid);
-        [$newpackageid, $newpackage] = $this->setup_package();
+
+        $newpackage = package_provider(["version" => "0.2.0"]);
+        $newpackageid = $newpackage->store_in_db();
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -122,7 +128,11 @@ class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_do_nothing_if_unchanged() {
-        [$packageid, $package] = $this->setup_package();
+        $this->resetAfterTest();
+
+        $package = package_provider();
+        $packageid = $package->store_in_db();
+
         $oldstate = $this->setup_question($packageid);
 
         $formdata = ["this is" => "form data"];
@@ -154,7 +164,10 @@ class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_insert_record() {
-        [$packageid, $package] = $this->setup_package();
+        $this->resetAfterTest();
+
+        $package = package_provider();
+        $packageid = $package->store_in_db();
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -204,8 +217,10 @@ class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_delete_question() {
-        [$packageid] = $this->setup_package();
-        $this->setup_question($packageid);
+        $this->resetAfterTest();
+
+        $pkgversionid = package_provider()->store_in_db();
+        $this->setup_question($pkgversionid);
 
         global $DB;
         $this->assertEquals(1, $DB->count_records("qtype_questionpy"));
@@ -218,10 +233,10 @@ class question_service_test extends \advanced_testcase {
     /**
      * Inserts a question using the given package into the DB and returns the state string.
      *
-     * @param int $packageid database ID (not hash) of a package
+     * @param int $pkgversionid database ID (not hash) of a package version
      * @throws dml_exception
      */
-    private function setup_question(int $packageid): string {
+    private function setup_question(int $pkgversionid): string {
         $this->resetAfterTest();
 
         $statestr = '
@@ -235,7 +250,7 @@ class question_service_test extends \advanced_testcase {
             "id" => 1,
             "questionid" => 1,
             "feedback" => "",
-            "packageid" => $packageid,
+            "pkgversionid" => $pkgversionid,
             "state" => $statestr,
         ]);
 
@@ -243,40 +258,22 @@ class question_service_test extends \advanced_testcase {
     }
 
     /**
-     * Inserts a package with a random hash into the DB, returns its ID and the {@see package} instance.
-     *
-     * @throws coding_exception
-     * @throws dml_exception
-     */
-    private function setup_package(): array {
-        $this->resetAfterTest();
-
-        $hash = hash("sha256", rand());
-        $package = new package(
-            $hash, "test", "default", ["en" => "Test"],
-            "0.1.0", "QUESTION_TYPE"
-        );
-        $packageid = $package->store_in_db();
-        return [$packageid, $package];
-    }
-
-    /**
      * Asserts that a single question exists in `qtype_questionpy` and it matches the given arguments.
      *
      * @param int $id expected question id
-     * @param int $packageid expected package id
+     * @param int $pkgversionid expected package id
      * @param string $state expected state
      * @return void
      * @throws dml_exception
      */
-    private function assert_single_question(int $id, int $packageid, string $state) {
+    private function assert_single_question(int $id, int $pkgversionid, string $state) {
         global $DB;
         $records = $DB->get_records("qtype_questionpy");
         $this->assertCount(1, $records);
         $record = current($records);
 
         $this->assertEquals((string) $id, $record->questionid);
-        $this->assertEquals((string) $packageid, $record->packageid);
+        $this->assertEquals((string) $pkgversionid, $record->pkgversionid);
         $this->assertEquals($state, $record->state);
     }
 }

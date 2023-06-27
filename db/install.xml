@@ -26,33 +26,51 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Foreign key references question.id" />
         <FIELD NAME="feedback" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Feedback shown for any response."/>
-        <FIELD NAME="packageid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="pkgversionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="state" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" />
         <KEY NAME="questionid" TYPE="foreign-unique" FIELDS="questionid" REFTABLE="question" REFFIELDS="id" />
-        <KEY NAME="packageid" TYPE="foreign" FIELDS="packageid" REFTABLE="qtype_questionpy_package" REFFIELDS="id"/>
+        <KEY NAME="pkgversionid" TYPE="foreign" FIELDS="pkgversionid" REFTABLE="qtype_questionpy_pkgversion" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
+
     <TABLE NAME="qtype_questionpy_package" COMMENT="Available QuestionPy Packages on the Moodle Server">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="hash" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="shortname" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="namespace" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="version" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="type" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="author" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="url" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="icon" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="URL to the icon"/>
         <FIELD NAME="license" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
+
+    <TABLE NAME="qtype_questionpy_pkgversion" COMMENT="Available QuestionPy Package Versions on the Moodle Server">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="packageid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="hash" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="version" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="packageid" TYPE="foreign" FIELDS="packageid" REFTABLE="qtype_questionpy_package" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
     <TABLE NAME="qtype_questionpy_language" COMMENT="Table storing localized package data.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -66,6 +84,7 @@
         <KEY NAME="packageid" TYPE="foreign" FIELDS="packageid" REFTABLE="qtype_questionpy_package" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
+
     <TABLE NAME="qtype_questionpy_tags" COMMENT="Table storing package tags.">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -77,5 +96,19 @@
         <KEY NAME="packageid" TYPE="foreign" FIELDS="packageid" REFTABLE="qtype_questionpy_package" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
+
+    <TABLE NAME="qtype_questionpy_lastused" COMMENT="Table storing last used packages in a specific context.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="packageid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timeused" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="packageid" TYPE="foreign" FIELDS="packageid" REFTABLE="qtype_questionpy_package" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
   </TABLES>
 </XMLDB>

@@ -59,11 +59,11 @@ class question_service {
         $result = new stdClass();
         $record = $DB->get_record(self::QUESTION_TABLE, ["questionid" => $questionid]);
         if ($record) {
-            $package = package::get_records(["id" => $record->packageid])[0] ?? null;
+            $package = package::get_records(["id" => $record->pkgversionid])[0] ?? null;
             if (!$package) {
                 throw new \coding_exception(
-                    "No package record with ID '{$record->packageid}' was found despite being referenced by" .
-                    " question {$questionid}"
+                    "No package version record with ID '{$record->pkgversionid}' was found despite being referenced" .
+                    " by question {$questionid}"
                 );
             }
 
@@ -85,8 +85,8 @@ class question_service {
     public function upsert_question(object $question): void {
         global $DB;
 
-        [$packageid] = $this->get_package($question->qpy_package_hash);
-        if (!$packageid) {
+        [$pkgversionid] = $this->get_package($question->qpy_package_hash);
+        if (!$pkgversionid) {
             throw new moodle_exception(
                 "package_not_found", "qtype_questionpy", "",
                 (object)["packagehash" => $question->qpy_package_hash]
@@ -114,8 +114,8 @@ class question_service {
             if ($existingrecord->state !== $response->state) {
                 $update["state"] = $response->state;
             }
-            if ($packageid !== $existingrecord->packageid) {
-                $update["packageid"] = $packageid;
+            if ($pkgversionid !== $existingrecord->pkgversionid) {
+                $update["pkgversionid"] = $pkgversionid;
             }
 
             if (count($update) > 1) {
@@ -126,7 +126,7 @@ class question_service {
             $DB->insert_record(self::QUESTION_TABLE, [
                 "questionid" => $question->id,
                 "feedback" => "",
-                "packageid" => $packageid,
+                "pkgversionid" => $pkgversionid,
                 "state" => $response->state,
             ]);
         }
