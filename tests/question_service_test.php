@@ -57,8 +57,8 @@ class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $package = package_provider();
-        $packageid = $package->store_in_db();
-        $statestr = $this->setup_question($packageid);
+        $pkgversionid = $package->store();
+        $statestr = $this->setup_question($pkgversionid);
 
         $result = $this->questionservice->get_question(1);
 
@@ -93,11 +93,11 @@ class question_service_test extends \advanced_testcase {
     public function test_upsert_question_should_update_existing_record_if_changed() {
         $this->resetAfterTest();
 
-        $oldpackageid = package_provider(["version" => "0.1.0"])->store_in_db();
+        $oldpackageid = package_provider(["version" => "0.1.0"])->store();
         $oldstate = $this->setup_question($oldpackageid);
 
         $newpackage = package_provider(["version" => "0.2.0"]);
-        $newpackageid = $newpackage->store_in_db();
+        $newpackageid = $newpackage->store();
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -131,7 +131,7 @@ class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $package = package_provider();
-        $packageid = $package->store_in_db();
+        $packageid = $package->store();
 
         $oldstate = $this->setup_question($packageid);
 
@@ -167,7 +167,7 @@ class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $package = package_provider();
-        $packageid = $package->store_in_db();
+        $packageid = $package->store();
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -212,14 +212,13 @@ class question_service_test extends \advanced_testcase {
     /**
      * Tests that {@see question_service::delete_question()} does what it says on the tin.
      *
-     * @throws dml_exception
-     * @throws coding_exception
+     * @throws moodle_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_delete_question() {
         $this->resetAfterTest();
 
-        $pkgversionid = package_provider()->store_in_db();
+        $pkgversionid = package_provider()->store();
         $this->setup_question($pkgversionid);
 
         global $DB;

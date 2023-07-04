@@ -19,7 +19,7 @@ namespace qtype_questionpy\api;
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\form\qpy_form;
-use qtype_questionpy\package;
+use qtype_questionpy\package\package_raw;
 use TypeError;
 
 /**
@@ -34,7 +34,7 @@ class api {
     /**
      * Retrieves QuestionPy packages from the application server.
      *
-     * @return package[]
+     * @return package_raw[]
      * @throws moodle_exception
      */
     public function get_packages(): array {
@@ -46,7 +46,7 @@ class api {
         $result = [];
         foreach ($packages as $package) {
             try {
-                $result[] = array_converter::from_array(package::class, $package);
+                $result[] = array_converter::from_array(package_raw::class, $package);
             } catch (TypeError $e) {
                 // TODO: decide what to do with faulty package.
                 debugging($e->getMessage());
@@ -60,10 +60,10 @@ class api {
      * Retrieves the package with the given hash, returns null if not found.
      *
      * @param string $hash the hash of the package to get
-     * @return ?package the package with the given hash or null if not found
+     * @return ?package_raw the package with the given hash or null if not found
      * @throws moodle_exception
      */
-    public function get_package(string $hash): ?package {
+    public function get_package(string $hash): ?package_raw {
         $connector = connector::default();
         $response = $connector->get("/packages/$hash");
 
@@ -72,7 +72,7 @@ class api {
         }
         $response->assert_2xx();
 
-        return array_converter::from_array(package::class, $response->get_data());
+        return array_converter::from_array(package_raw::class, $response->get_data());
     }
 
     /**
