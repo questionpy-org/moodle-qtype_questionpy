@@ -225,7 +225,7 @@ class question_service_test extends \advanced_testcase {
         global $DB;
         $this->assertEquals(1, $DB->count_records("qtype_questionpy"));
 
-        $this->questionservice->delete_question(1);
+        question_service::delete_question(1);
 
         $this->assertEquals(0, $DB->count_records("qtype_questionpy"));
     }

@@ -138,7 +138,7 @@ class question_service {
      * @param int $questionid
      * @throws dml_exception
      */
-    public function delete_question(int $questionid) {
+    public static function delete_question(int $questionid) {
         global $DB;
         $DB->delete_records(self::QUESTION_TABLE, ['questionid' => $questionid]);
         // TODO: Also delete packages when they are no longer used by any question.
