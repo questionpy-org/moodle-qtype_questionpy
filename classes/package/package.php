@@ -64,21 +64,6 @@ class package extends package_base {
     }
 
     /**
-     * Returns the current package as a localized array including its versions.
-     *
-     * @param array $languages
-     * @return array
-     * @throws dml_exception
-     */
-    public function as_localized_array(array $languages): array {
-        global $DB;
-        $versions = $DB->get_records('qtype_questionpy_pkgversion', ['packageid' => $this->id]);
-        return array_merge(parent::as_localized_array($languages), [
-            'versions' => $versions,
-        ]);
-    }
-
-    /**
      * Returns the package of the given package version id.
      *
      * @param int $pkgversionid
