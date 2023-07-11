@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  - This file is part of the QuestionPy Moodle plugin - https://questionpy.org/
+  -
+  - Moodle is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - Moodle is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<qpy:question xmlns="http://www.w3.org/1999/xhtml"
+              xmlns:qpy="http://questionpy.org/ns/question"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://questionpy.org/ns/question question.xsd">
+    <qpy:formulation>
+        <div><?v Welcher ist der zweite Buchstabe im deutschen Alphabet??></div>
+        <fieldset qpy:shuffle-contents="" style="display: flex; flex-direction: column">
+            <label>
+                <input type="radio" name="choice" value="A"/>
+                <qpy:shuffled-index format="ABC"/>. A
+                <span qpy:feedback="specific" style="margin-left: .5em; background: rgb(68, 43, 6)">A ist der erste Buchstabe im deutschen Alphabet.</span>
+            </label>
+            <label>
+                <input type="radio" name="choice" value="B" qpy:correct-response=""/>
+                <qpy:shuffled-index format="ABC"/>. B
+                <span qpy:feedback="specific" style="margin-left: .5em; background: rgb(68, 43, 6)">Richtig!</span>
+            </label>
+            <label>
+                <input type="radio" name="choice" value="C"/>
+                <qpy:shuffled-index format="ABC"/>. C
+                <span qpy:feedback="specific" style="margin-left: .5em; background: rgb(68, 43, 6)">C ist der dritte Buchstabe im deutschen Alphabet.</span>
+            </label>
+        </fieldset>
+    </qpy:formulation>
+    <qpy:specific-feedback>
+        <p>Specific feedback</p>
+    </qpy:specific-feedback>
+    <qpy:general-feedback>
+        <p>General feedback</p>
+    </qpy:general-feedback>
+    <qpy:right-answer>
+        <p>Right answer</p>
+    </qpy:right-answer>
+</qpy:question>

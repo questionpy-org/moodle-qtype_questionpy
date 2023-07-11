@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  - This file is part of the QuestionPy Moodle plugin - https://questionpy.org/
+  -
+  - Moodle is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - Moodle is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<qpy:question xmlns="http://www.w3.org/1999/xhtml"
+              xmlns:qpy="http://questionpy.org/ns/question"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://questionpy.org/ns/question question.xsd">
+    <qpy:formulation>
+        <div><?v Wieviele kantendisjunkte Spannbäume kann ein planarer Graph maximal haben??></div>
+        <label>
+            Antwort:
+            <input type="number" name="response" min="0" qpy:correct-response="2"/>
+        </label>
+    </qpy:formulation>
+    <qpy:general-feedback>
+        <p>Zu beweisen mithilfe der Euler'schen Polyederformel und |E| = |V| - 1 für alle Bäume T = (V, E).</p>
+    </qpy:general-feedback>
+    <qpy:right-answer>Die richtige Antwort ist: 2</qpy:right-answer>
+</qpy:question>

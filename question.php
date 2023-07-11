@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\question_ui;
+
 /**
  * Represents a QuestionPy question.
  *
@@ -30,6 +32,23 @@
  */
 class qtype_questionpy_question extends question_graded_automatically_with_countback {
 
+    /** @var question_ui|null $ui */
+    private ?question_ui $ui = null;
+
+    /**
+     * Fetches the question UI XML from the QPy Server, parses it into a {@see question_ui} instance and caches that.
+     *
+     * @return question_ui
+     */
+    public function get_question_ui(): question_ui {
+        if (!$this->ui) {
+            // TODO: Get XML from server.
+            $xml = file_get_contents(__DIR__ . "/simple.xhtml");
+            $this->ui = new question_ui($xml);
+        }
+        return $this->ui;
+    }
+
     /**
      * What data may be included in the form submission when a student submits
      * this question in its current state?
@@ -37,12 +56,12 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * This information is used in calls to optional_param. The parameter name
      * has {@see question_attempt::get_field_prefix()} automatically prepended.
      *
-     * @return array|string variable name => PARAM_... constant, or, as a special case
+     * @return array variable name => PARAM_... constant, or, as a special case
      *      that should only be used in unavoidable, the constant question_attempt::USE_RAW_DATA
      *      meaning take all the raw submitted data belonging to this question.
      */
-    public function get_expected_data() {
-        return null;
+    public function get_expected_data(): array {
+        return $this->get_question_ui()->get_metadata()->expecteddata;
     }
 
     /**
@@ -53,8 +72,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *
      * @return array|null parameter name => value.
      */
-    public function get_correct_response() {
-        return null;
+    public function get_correct_response(): ?array {
+        return $this->get_question_ui()->get_metadata()->correctresponse;
     }
 
     /**
@@ -63,7 +82,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * should move to the COMPLETE or INCOMPLETE state.
      *
      * @param array $response responses, as returned by
-     *      {@see question_attempt_step::get_qt_data()}.
+     *                        {@see question_attempt_step::get_qt_data()}.
      * @return bool whether this response is a complete answer to this question.
      */
     public function is_complete_response(array $response) {
@@ -76,10 +95,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * of responses can safely be discarded.
      *
      * @param array $prevresponse the responses previously recorded for this question,
-     *      as returned by {@see question_attempt_step::get_qt_data()}
-     * @param array $newresponse the new responses, in the same format.
+     *                            as returned by {@see question_attempt_step::get_qt_data()}
+     * @param array $newresponse  the new responses, in the same format.
      * @return bool whether the two sets of responses are the same - that is
-     *      whether the new set of responses can safely be discarded.
+     *                            whether the new set of responses can safely be discarded.
      */
     public function is_same_response(array $prevresponse, array $newresponse) {
         return false;
@@ -110,8 +129,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * Grade a response to the question, returning a fraction between
      * get_min_fraction() and get_max_fraction(), and the corresponding {@see question_state}
      * right, partial or wrong.
+     *
      * @param array $response responses, as returned by
-     *      {@see question_attempt_step::get_qt_data()}.
+     *                        {@see question_attempt_step::get_qt_data()}.
      * @return array (float, integer) the fraction, and the state.
      */
     public function grade_response(array $response) {
@@ -123,11 +143,11 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * tries the student made.
      *
      * @param array $responses the response for each try. Each element of this
-     * array is a response array, as would be passed to {@see grade_response()}.
-     * There may be between 1 and $totaltries responses.
-     * @param int $totaltries The maximum number of tries allowed.
+     *                         array is a response array, as would be passed to {@see grade_response()}.
+     *                         There may be between 1 and $totaltries responses.
+     * @param int $totaltries  The maximum number of tries allowed.
      * @return numeric the fraction that should be awarded for this
-     * sequence of response.
+     *                         sequence of response.
      */
     public function compute_final_grade($responses, $totaltries) {
         return 0;
