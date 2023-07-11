@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\api\api;
-
 /**
  * Generates the output for QuestionPy questions.
  *
@@ -31,18 +29,34 @@ use qtype_questionpy\api\api;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy_renderer extends qtype_renderer {
+
     /**
      * Generate the display of the formulation part of the question. This is the
      * area that contains the quetsion text, and the controls for students to
      * input their answers. Some question types also embed bits of feedback, for
      * example ticks and crosses, in this area.
      *
-     * @param question_attempt $qa the question attempt to display.
+     * @param question_attempt $qa              the question attempt to display.
      * @param question_display_options $options controls what should and should not be displayed.
      * @return string HTML fragment.
+     * @throws coding_exception
      */
-    public function formulation_and_controls(question_attempt $qa, question_display_options $options) {
-        return '';
+    public function formulation_and_controls(question_attempt $qa, question_display_options $options): string {
+        $question = $qa->get_question(false);
+        assert($question instanceof qtype_questionpy_question);
+        return $question->get_question_ui()->render_formulation($qa, $options);
+    }
+
+    /**
+     * Generate the general feedback. This is feedback shown to all students.
+     *
+     * @param question_attempt $qa the question attempt to display.
+     * @return string HTML fragment.
+     */
+    protected function general_feedback(question_attempt $qa): string {
+        $question = $qa->get_question(false);
+        assert($question instanceof qtype_questionpy_question);
+        return $question->get_question_ui()->render_general_feedback($qa) ?? "";
     }
 
     /**
@@ -52,8 +66,10 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @param question_attempt $qa the question attempt to display.
      * @return string HTML fragment.
      */
-    public function specific_feedback(question_attempt $qa) {
-        return '';
+    public function specific_feedback(question_attempt $qa): string {
+        $question = $qa->get_question(false);
+        assert($question instanceof qtype_questionpy_question);
+        return $question->get_question_ui()->render_specific_feedback($qa) ?? "";
     }
 
     /**
@@ -64,8 +80,10 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @param question_attempt $qa the question attempt to display.
      * @return string HTML fragment.
      */
-    public function correct_response(question_attempt $qa) {
-        return '';
+    public function correct_response(question_attempt $qa): string {
+        $question = $qa->get_question(false);
+        assert($question instanceof qtype_questionpy_question);
+        return $question->get_question_ui()->render_right_answer($qa) ?? "";
     }
 
     /**
