@@ -34,9 +34,6 @@ class question_response {
     public string $state;
 
     /** @var string */
-    public string $statehash;
-
-    /** @var string */
     public string $scoringmethod;
 
     /** @var float|int */
@@ -61,12 +58,10 @@ class question_response {
      * Initialize a new question response.
      *
      * @param string $state     new question state
-     * @param string $statehash hash of `$state`
      * @param string $scoringmethod
      */
-    public function __construct(string $state, string $statehash, string $scoringmethod) {
+    public function __construct(string $state, string $scoringmethod) {
         $this->state = $state;
-        $this->statehash = $statehash;
         $this->scoringmethod = $scoringmethod;
     }
 }
@@ -74,7 +69,6 @@ class question_response {
 array_converter::configure(question_response::class, function (converter_config $config) {
     $config
         ->rename("state", "question_state")
-        ->rename("statehash", "question_state_hash")
         ->rename("scoringmethod", "scoring_method")
         ->rename("scoremin", "score_min")
         ->rename("scoremax", "score_max")

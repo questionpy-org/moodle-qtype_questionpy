@@ -90,9 +90,6 @@ class api {
         $parts = [];
 
         if ($questionstate !== null) {
-            $statehash = hash("sha256", $questionstate);
-            $main["question_state_hash"] = $statehash;
-            // TODO: Don't send the question state unconditionally, try the hash first.
             $parts["question_state"] = $questionstate;
         }
 
@@ -123,9 +120,6 @@ class api {
         $parts = [];
 
         if ($currentstate !== null) {
-            $statehash = hash("sha256", $currentstate);
-            $main["question_state_hash"] = $statehash;
-            // TODO: Don't send the question state unconditionally, try the hash first.
             $parts["question_state"] = $currentstate;
         }
 
