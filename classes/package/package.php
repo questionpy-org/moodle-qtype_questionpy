@@ -24,7 +24,9 @@ use qtype_questionpy\array_converter\converter_config;
 defined('MOODLE_INTERNAL') || die;
 
 /**
- * Represents a QuestionPy package.
+ * Represents a QuestionPy package stored in the database.
+ *
+ * It contains the metadata of a package. Each package has at least one {@see package_version}.
  *
  * @package    qtype_questionpy
  * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org

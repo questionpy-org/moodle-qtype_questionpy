@@ -22,7 +22,10 @@ use qtype_questionpy\array_converter\converter_config;
 defined('MOODLE_INTERNAL') || die;
 
 /**
- * Represents a raw QuestionPy package.
+ * Represents a QuestionPy package from a server.
+ *
+ * It contains metadata about a package version and its package. The raw package can be stored in the database and the
+ * data will then be accessible through {@see package} and {@see package_version}.
  *
  * @package    qtype_questionpy
  * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org

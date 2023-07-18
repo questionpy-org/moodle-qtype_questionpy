@@ -19,7 +19,7 @@ namespace qtype_questionpy\package;
 use qtype_questionpy\array_converter\array_converter;
 
 /**
- * Represents a QuestionPy package.
+ * Represents a QuestionPy package and has useful methods for accessing localized package data.
  *
  * @package    qtype_questionpy
  * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
@@ -120,6 +120,7 @@ class package_base {
      *
      * @param array|null $languages
      * @return array array representation of the package
+     * @throws moodle_exception
      */
     public function as_localized_array(array $languages): array {
         return array_merge(

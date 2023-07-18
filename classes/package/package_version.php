@@ -20,7 +20,9 @@ use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 
 /**
- * Represent a QuestionPy package version.
+ * Represents a QuestionPy package version stored in the database.
+ *
+ * It contains the metadata of a package version. A package version belongs to a {@see package}.
  *
  * @package    qtype_questionpy
  * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
