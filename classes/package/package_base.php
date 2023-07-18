@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\package;
 
+use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 
 /**
@@ -30,57 +31,57 @@ class package_base {
     /**
      * @var string package shortname
      */
-    protected $shortname;
+    protected string $shortname;
 
     /**
      * @var string package namespace
      */
-    protected $namespace;
+    protected string $namespace;
 
     /**
      * @var array package name
      */
-    protected $name;
+    protected array $name;
 
     /**
      * @var string package type
      */
-    protected $type;
+    protected string $type;
 
     /**
      * @var string|null package author
      */
-    protected $author;
+    protected ?string $author;
 
     /**
      * @var string|null package url
      */
-    protected $url;
+    protected ?string $url;
 
     /**
      * @var array|null package languages
      */
-    protected $languages;
+    protected ?array $languages;
 
     /**
      * @var array|null package description
      */
-    protected $description;
+    protected ?array $description;
 
     /**
      * @var string|null package icon
      */
-    protected $icon;
+    protected ?string $icon;
 
     /**
      * @var string|null package license
      */
-    protected $license;
+    protected ?string $license;
 
     /**
      * @var array|null package tags
      */
-    protected $tags;
+    protected ?array $tags;
 
     /**
      * Constructs package class.
@@ -98,9 +99,9 @@ class package_base {
      * @param array|null $tags
      */
     public function __construct(string $shortname, string $namespace, array $name, string $type,
-                                string $author = null, string $url = null, array $languages = null,
-                                array  $description = null, string $icon = null, string $license = null,
-                                array  $tags = null) {
+                                ?string $author = null, ?string $url = null, ?array $languages = null,
+                                ?array  $description = null, ?string $icon = null, ?string $license = null,
+                                ?array  $tags = null) {
         $this->shortname = $shortname;
         $this->namespace = $namespace;
         $this->name = $name;

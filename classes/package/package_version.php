@@ -31,33 +31,33 @@ use qtype_questionpy\array_converter\array_converter;
 class package_version {
 
     /**
-     * @var string package version id
+     * @var int package version id
      */
-    public $id;
+    public int $id;
 
     /**
-     * @var string package id
+     * @var int package id
      */
-    public $packageid;
+    public int $packageid;
 
     /**
      * @var string package hash
      */
-    public $hash;
+    public string $hash;
 
     /**
      * @var string package version
      */
-    public $version;
+    public string $version;
 
     /**
      * Retrieves a package version by its id.
      *
-     * @param string $pkgversionid
+     * @param int $pkgversionid
      * @return package_version
      * @throws moodle_exception
      */
-    public static function get_by_id(string $pkgversionid): package_version {
+    public static function get_by_id(int $pkgversionid): package_version {
         global $DB;
         $record = $DB->get_record('qtype_questionpy_pkgversion', ['id' => $pkgversionid]);
         return array_converter::from_array(self::class, (array) $record);

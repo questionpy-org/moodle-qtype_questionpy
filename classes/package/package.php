@@ -37,7 +37,7 @@ class package extends package_base {
     /**
      * @var int package id
      */
-    public $id;
+    public int $id;
 
     /**
      * Constructs package class.
@@ -56,9 +56,9 @@ class package extends package_base {
      * @param array|null $tags
      */
     public function __construct(int $id, string $shortname, string $namespace, array $name, string $type,
-                                string $author = null, string $url = null, array $languages = null,
-                                array  $description = null, string $icon = null, string $license = null,
-                                array  $tags = null) {
+                                ?string $author = null, ?string $url = null, ?array $languages = null,
+                                ?array $description = null, ?string $icon = null, ?string $license = null,
+                                ?array $tags = null) {
         $this->id = $id;
         parent::__construct(
             $shortname, $namespace, $name, $type, $author, $url, $languages, $description, $icon, $license, $tags
@@ -115,8 +115,8 @@ class package extends package_base {
             throw new \coding_exception("The requested package with id '{$packageid}' was not found.");
         }
 
-        [$package->languages, $package->name, $package->description] = self::get_languagedata($package->id);
-        $package->tags = self::get_tagdata($package->id);
+        [$package->languages, $package->name, $package->description] = self::get_language_data($package->id);
+        $package->tags = self::get_tag_data($package->id);
 
         return $package;
     }
@@ -128,7 +128,7 @@ class package extends package_base {
      * @return array
      * @throws dml_exception
      */
-    private static function get_languagedata(int $packageid): array {
+    private static function get_language_data(int $packageid): array {
         global $DB;
         $languagedata = $DB->get_records('qtype_questionpy_language', ['packageid' => $packageid]);
         $language = [];
@@ -149,7 +149,7 @@ class package extends package_base {
      * @return array
      * @throws dml_exception
      */
-    private static function get_tagdata(int $packageid): array {
+    private static function get_tag_data(int $packageid): array {
         global $DB;
         $tagdata = $DB->get_records('qtype_questionpy_tags', ['packageid' => $packageid]);
         $tags = [];
@@ -228,6 +228,5 @@ array_converter::configure(package::class, function (converter_config $config) {
     $config
         ->rename("shortname", "short_name")
         // The DB rows are also read using array_converter, but their columns are named differently to the json fields.
-        ->alias("hash", "hash")
         ->alias("shortname", "shortname");
 });

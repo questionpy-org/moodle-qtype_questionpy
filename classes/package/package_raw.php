@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\package;
 
+use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 
@@ -36,12 +37,12 @@ class package_raw extends package_base {
     /**
      * @var string package hash
      */
-    public $hash;
+    public string $hash;
 
     /**
      * @var string package version
      */
-    private $version;
+    private string $version;
 
     /**
      * Constructs package class.
@@ -60,10 +61,10 @@ class package_raw extends package_base {
      * @param string|null $license
      * @param array|null $tags
      */
-    public function __construct(string $hash, string $shortname, string $namespace, array $name, string $version, string $type,
-                                string $author = null, string $url = null, array $languages = null,
-                                array $description = null, string $icon = null, string $license = null,
-                                array  $tags = null) {
+    public function __construct(string $hash, string $shortname, string $namespace, array $name, string $version,
+                                string $type, ?string $author = null, ?string $url = null, ?array $languages = null,
+                                ?array $description = null, ?string $icon = null, ?string $license = null,
+                                ?array $tags = null) {
         $this->hash = $hash;
         $this->version = $version;
         parent::__construct(
