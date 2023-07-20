@@ -24,6 +24,7 @@
 
 namespace qtype_questionpy;
 
+use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\form\conditions\does_not_equal;
 use qtype_questionpy\form\conditions\equals;
@@ -40,16 +41,17 @@ use qtype_questionpy\form\elements\repetition_element;
 use qtype_questionpy\form\elements\select_element;
 use qtype_questionpy\form\elements\static_text_element;
 use qtype_questionpy\form\elements\text_input_element;
+use qtype_questionpy\package\package_raw;
 
 
 /**
- * Returns a package object which can be modified by an array of attributes.
+ * Returns a raw package object which can be modified by an array of attributes.
  *
  * @param array $attributes
- * @return package
- * @throws \moodle_exception
+ * @return package_raw
+ * @throws moodle_exception
  */
-function package_provider(array $attributes = []): package {
+function package_provider(array $attributes = []): package_raw {
     $data = array_merge([
         'short_name' => 'my_short_name',
         'namespace' => 'my_namespace',
@@ -81,7 +83,7 @@ function package_provider(array $attributes = []): package {
         $data['package_hash'] = hash('sha256', $data['short_name'] . $data['namespace'] . $data['version']);
     }
 
-    return array_converter::from_array(package::class, $data);
+    return array_converter::from_array(package_raw::class, $data);
 }
 
 /**

@@ -19,6 +19,7 @@ namespace qtype_questionpy;
 use dml_exception;
 use moodle_exception;
 use qtype_questionpy\api\api;
+use qtype_questionpy\package\package_version;
 use stdClass;
 
 /**
@@ -59,7 +60,7 @@ class question_service {
         $result = new stdClass();
         $record = $DB->get_record(self::QUESTION_TABLE, ["questionid" => $questionid]);
         if ($record) {
-            $package = package::get_records(["id" => $record->pkgversionid])[0] ?? null;
+            $package = package_version::get_by_id($record->pkgversionid);
             if (!$package) {
                 throw new \coding_exception(
                     "No package version record with ID '{$record->pkgversionid}' was found despite being referenced" .
@@ -85,7 +86,7 @@ class question_service {
     public function upsert_question(object $question): void {
         global $DB;
 
-        [$pkgversionid] = $this->get_package($question->qpy_package_hash);
+        $pkgversionid = $this->get_package($question->qpy_package_hash);
         if (!$pkgversionid) {
             throw new moodle_exception(
                 "package_not_found", "qtype_questionpy", "",
@@ -98,7 +99,7 @@ class question_service {
         ]);
 
         // Repetition_elements may produce numeric arrays with gaps. We want them to become JSON arrays, so we reindex.
-        // Form element names may not begin with a digit, so this wont accidentally change them.
+        // Form element names may not begin with a digit, so this won't accidentally change them.
         utils::reindex_integer_arrays($question->qpy_form);
 
         $response = $this->api->create_question(
@@ -155,8 +156,8 @@ class question_service {
      * @throws dml_exception
      * @throws moodle_exception
      */
-    private function get_package(string $hash): ?array {
-        $result = package::get_record_by_hash($hash);
+    private function get_package(string $hash): ?int {
+        $result = package_version::get_by_hash($hash)->id ?? null;
         if ($result) {
             return $result;
         }
@@ -165,6 +166,6 @@ class question_service {
         if (!$package) {
             return null;
         }
-        return [$package->store_in_db(), $package];
+        return $package->store();
     }
 }

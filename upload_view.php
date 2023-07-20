@@ -22,10 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\package;
-use qtype_questionpy\api;
 use core\output\notification;
 use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\package\package_raw;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 
@@ -80,8 +79,8 @@ if ($mform->is_cancelled()) {
         }
 
         // Save package info in the DB.
-        $package = array_converter::from_array(package::class, $response->get_data());
-        $package->store_in_db($context->id);
+        $package = array_converter::from_array(package_raw::class, $response->get_data());
+        $package->store($context->id);
 
     } catch (moodle_exception $e) {
         // If anything goes wrong while saving the file, rollback.
