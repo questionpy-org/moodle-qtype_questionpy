@@ -25,6 +25,7 @@
 use qtype_questionpy\api\api;
 use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\localizer;
+use qtype_questionpy\package\package;
 
 /**
  * QuestionPy question editing form definition.
@@ -46,15 +47,13 @@ class qtype_questionpy_edit_form extends question_edit_form {
     protected function definition_inner($mform) {
         global $OUTPUT, $PAGE;
 
-        $api = new api();
-
         // TODO: catch moodle_exception?
-        // Retrieve packages from the application server.
-        $packages = $api->get_packages();
+        // Retrieve packages from the database.
+        $packages = package::get_records();
 
         $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
 
-        // No packages received.
+        // No packages available.
         if (!$packages) {
             $mform->addElement(
                 'static', 'questionpy_no_package',
@@ -83,12 +82,16 @@ class qtype_questionpy_edit_form extends question_edit_form {
         foreach ($packages as $package) {
             // Get localized package texts.
             $packagearray = $package->as_localized_array($languages);
+            $packageversions = $package->get_version_array();
 
-            $group[] = $mform->createElement(
-                'radio', 'qpy_package_hash',
-                $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
-                '', $package->hash
-            );
+            foreach ($packageversions as $packageversion) {
+                $group[] = $mform->createElement(
+                    'radio', 'qpy_package_hash',
+                    $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
+                    '', $packageversion->hash
+                );
+            }
+
         }
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>', false);
         $mform->addRule(
@@ -109,6 +112,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
             $this->question->qpy_package_hash ?? null, PARAM_ALPHANUM
         );
         if ($packagehash) {
+            $api = new api();
             $response = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? null);
 
             $context = new root_render_context($this, $mform, "qpy_form", $response->formdata);

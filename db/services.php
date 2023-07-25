@@ -15,17 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for the QuestionPy question type.
+ * QuestionPy external functions.
  *
  * @package    qtype_questionpy
- * @copyright  2022 Martin Gauk, TU Berlin, innoCampus - www.questionpy.org
+ * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'qtype_questionpy';
-$plugin->version = 2022120103;
-$plugin->requires = 2022041901;
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1';
+$functions = [
+    'qtype_questionpy_load_packages' => [
+        'classname' => 'qtype_questionpy\external\load_packages',
+        'description' => 'Loads packages from the application server.',
+        'type' => 'write',
+        'ajax' => true,
+        'loginrequired' => true,
+    ],
+    'qtype_questionpy_remove_packages' => [
+        'classname' => 'qtype_questionpy\external\remove_packages',
+        'description' => 'Removes packages from the database that were not uploaded by a trainer.',
+        'type' => 'write',
+        'ajax' => true,
+        'loginrequired' => true,
+    ],
+];

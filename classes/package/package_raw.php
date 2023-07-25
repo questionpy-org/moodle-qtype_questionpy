@@ -78,10 +78,11 @@ class package_raw extends package_base {
      * Tags are mapped packageid->tag in the table  qtype_questionpy_tags.
      *
      * @param int $contextid
+     * @param bool $withuserid
      * @return int the ID of the inserted record in the DB
      * @throws moodle_exception
      */
-    public function store(int $contextid = 0): int {
+    public function store(int $contextid = 0, bool $withuserid = true): int {
         global $DB, $USER;
 
         $transaction = $DB->start_delegated_transaction();
@@ -150,7 +151,7 @@ class package_raw extends package_base {
             'hash' => $this->hash,
             'version' => $this->version,
             'timecreated' => $timestamp,
-            'userid' => $USER->id,
+            'userid' => $withuserid ? $USER->id : null
         ]);
 
         $transaction->allow_commit();

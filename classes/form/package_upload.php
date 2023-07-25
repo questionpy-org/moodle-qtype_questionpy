@@ -26,8 +26,9 @@ namespace qtype_questionpy\form;
 
 defined('MOODLE_INTERNAL') || die;
 
+use moodle_exception;
 use qtype_questionpy\localizer;
-use qtype_questionpy\package;
+use qtype_questionpy\package\package;
 
 require_once($CFG->libdir . "/formslib.php");
 
@@ -41,12 +42,13 @@ class package_upload extends \moodleform {
 
     /**
      * Build the form definition.
+     *
+     * @throws moodle_exception
      */
     protected function definition() {
         global $OUTPUT;
 
         $mform = $this->_form;
-        $courseid = $this->_customdata['courseid'];
         $contextid = $this->_customdata['contextid'];
 
         // Create group which contains selectable QuestionPy packages.
@@ -61,7 +63,7 @@ class package_upload extends \moodleform {
 
             $group[] = $mform->createElement('text', 'questionpy_package_hash',
                 $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
-                '', $package->hash
+                '', ''
             );
         }
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>');

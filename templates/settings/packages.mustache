@@ -1,0 +1,30 @@
+{{!
+    @template qtype_questionpy/settings/load_packages
+
+    Represent a QuestionPy package.
+
+    Context variables required for this template:
+    * package_count - total number of packages,
+    * package_count - total number of versions
+
+    Example context (json):
+    {
+        "package_count": 1,
+        "version_count": 2
+    }
+}}
+<div>
+    <p id="qpy-total-packages">{{package_count}} packages with a total of {{version_count}} versions</p>
+
+    <div>
+        <button type="button" class="btn btn-primary" id="qpy-load-packages-button">Load Packages</button>
+        <span id="qpy-load-packages-icon" class="d-none">{{#pix}} i/loading, core {{/pix}}</span>
+        <small id="qpy-load-packages-error-message" class="d-none text-danger">{{#str}} service_failed, qtype_questionpy {{/str}}</small>
+    </div>
+
+    <div class="mt-3">
+        <button type="button" class="btn btn-danger" id="qpy-remove-packages-button">Remove Packages</button>
+        <span id="qpy-remove-packages-icon" class="d-none">{{#pix}} i/loading, core {{/pix}}</span>
+        <small id="qpy-remove-packages-error-message" class="d-none text-danger">{{#str}} service_failed, qtype_questionpy {{/str}}</small>
+    </div>
+</div>
