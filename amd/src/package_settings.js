@@ -62,7 +62,7 @@ function initActionButton(service, button, totalPackagesStatus, loadingIcon, err
 }
 
 /**
- * Load packages button
+ * Initializes the buttons to load and remove packages.
  */
 export function init() {
     let totalPackagesStatus = document.getElementById('qpy-total-packages');
