@@ -26,6 +26,7 @@ use qtype_questionpy\package\package;
 
 /**
  * This service loads QuestionPy packages from the application server into the database.
+ *
  * Before doing so, it removes previously loaded packages from the database - packages that were uploaded by a trainer
  * will not be removed.
  *
