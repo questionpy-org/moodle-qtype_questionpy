@@ -66,6 +66,17 @@ class package extends package_base {
     }
 
     /**
+     * Retrieves each version of the package.
+     *
+     * @return array
+     * @throws moodle_exception
+     */
+    public function get_version_array(): array {
+        global $DB;
+        return $DB->get_records('qtype_questionpy_pkgversion', ['packageid' => $this->id]);
+    }
+
+    /**
      * Returns the package of the given package version id.
      *
      * @param int $pkgversionid
@@ -84,16 +95,16 @@ class package extends package_base {
      * are applicable.
      *
      * @param array|null $conditions
-     * @return array
+     * @return package[]
      * @throws moodle_exception
      */
     public static function get_records(?array $conditions = null): array {
         global $DB;
-        $pkgversions = $DB->get_records('qtype_questionpy_pkgversion', $conditions);
         $packages = array();
-        foreach ($pkgversions as $pkgversion) {
-            $package = self::get_package_data($pkgversion->packageid);
-            $package = array_merge((array) $pkgversion, (array) $package);
+        $records = $DB->get_records('qtype_questionpy_pkgversion', $conditions);
+        foreach ($records as $record) {
+            $package = self::get_package_data($record->packageid);
+            $package = array_merge((array) $record, (array) $package);
 
             $packages[] = array_converter::from_array(self::class, $package);
         }

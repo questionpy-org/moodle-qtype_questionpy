@@ -24,9 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use qtype_questionpy\package_settings;
 
 if ($ADMIN->fulltree) {
 
+    // General server settings.
     $settings->add(new admin_setting_configtext(
         'qtype_questionpy/server_url',
         new lang_string('server_url', 'qtype_questionpy'),
@@ -51,6 +53,15 @@ if ($ADMIN->fulltree) {
         5
     ));
 
+    // Package settings.
+    $settings->add(new admin_setting_heading(
+        'qtype_questionpy/heading_packages',
+        'Packages',
+        null
+    ));
+
+    $settings->add(new package_settings());
+
     $settings->add(new admin_setting_configtext(
         'qtype_questionpy/max_package_size_kb',
         new lang_string('max_package_size_kb', 'qtype_questionpy'),
@@ -59,6 +70,5 @@ if ($ADMIN->fulltree) {
         PARAM_FLOAT,
         5
     ));
-
 }
 

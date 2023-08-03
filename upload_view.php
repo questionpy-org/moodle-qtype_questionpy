@@ -23,6 +23,7 @@
  */
 
 use core\output\notification;
+use qtype_questionpy\api\api;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\package\package_raw;
 
@@ -73,8 +74,8 @@ if ($mform->is_cancelled()) {
         $path = $filesystem->get_local_path_from_storedfile($storedfile, true);
         $response = api::package_extract_info($filename, $path);
 
-        if ($response->code != http_response_code(201)) {
-            throw new moodle_exception("serverconnection", "error", "", null,
+        if ($response->code != 201) {
+            throw new moodle_exception('serverconnection', 'error', '', null,
                 "Server response code: $response->code \n Server response: {$response->get_data()}");
         }
 
