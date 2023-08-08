@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die;
 use moodle_exception;
 use qtype_questionpy\localizer;
 use qtype_questionpy\package\package;
+use qtype_questionpy\package\package_version;
 
 require_once($CFG->libdir . "/formslib.php");
 
@@ -55,11 +56,11 @@ class package_upload extends \moodleform {
         $group = array();
 
         $languages = localizer::get_preferred_languages();
-        $packages = package::get_records(['contextid' => $contextid]);
+        $versions = package_version::get_records(['contextid' => $contextid]);
 
-        foreach ($packages as $package) {
+        foreach ($versions as $version) {
             // Get localized package texts.
-            $packagearray = $package->as_localized_array($languages);
+            $packagearray = package::get_by_version($version->id)->as_localized_array($languages);
 
             $group[] = $mform->createElement('text', 'questionpy_package_hash',
                 $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),

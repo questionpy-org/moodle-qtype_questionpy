@@ -21,7 +21,7 @@ use external_function_parameters;
 use external_single_structure;
 use external_value;
 use moodle_exception;
-use qtype_questionpy\package\package;
+use qtype_questionpy\package\package_version;
 
 /**
  * This service removes packages from the database that were not uploaded by a trainer.
@@ -53,10 +53,10 @@ class remove_packages extends external_api {
 
         $transaction = $DB->start_delegated_transaction();
 
-        // Only delete packages that were not uploaded by a user.
-        $packages = package::get_records(['userid' => null]);
-        foreach ($packages as $package) {
-            $package->delete();
+        // Only delete package versions that were not uploaded by a user.
+        $versions = package_version::get_records(['userid' => null]);
+        foreach ($versions as $version) {
+            $version->delete();
         }
 
         $transaction->allow_commit();

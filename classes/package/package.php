@@ -101,12 +101,10 @@ class package extends package_base {
     public static function get_records(?array $conditions = null): array {
         global $DB;
         $packages = array();
-        $records = $DB->get_records('qtype_questionpy_pkgversion', $conditions);
+        $records = $DB->get_records('qtype_questionpy_package', $conditions);
         foreach ($records as $record) {
-            $package = self::get_package_data($record->packageid);
-            $package = array_merge((array) $record, (array) $package);
-
-            $packages[] = array_converter::from_array(self::class, $package);
+            $package = self::get_package_data($record->id);
+            $packages[] = array_converter::from_array(self::class, (array) $package);
         }
         return $packages;
     }
