@@ -22,7 +22,7 @@ use external_single_structure;
 use external_value;
 use moodle_exception;
 use qtype_questionpy\api\api;
-use qtype_questionpy\package\package;
+use qtype_questionpy\package\package_version;
 
 /**
  * This service loads QuestionPy packages from the application server into the database.
@@ -57,10 +57,10 @@ class load_packages extends external_api {
 
         $transaction = $DB->start_delegated_transaction();
 
-        // Remove every package that was received from the application server.
-        $packages = package::get_records(['userid' => null]);
-        foreach ($packages as $package) {
-            $package->delete();
+        // Remove every package version that was received from the application server.
+        $versions = package_version::get_records(['userid' => null]);
+        foreach ($versions as $version) {
+            $version->delete();
         }
 
         // Load packages from the application server.

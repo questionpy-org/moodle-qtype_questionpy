@@ -77,6 +77,24 @@ class package_version {
     }
 
     /**
+     * Get packages from the db matching given conditions. Note: only conditions stored in the package version table
+     * are applicable.
+     *
+     * @param array|null $conditions
+     * @return package_version[]
+     * @throws moodle_exception
+     */
+    public static function get_records(?array $conditions = null): array {
+        global $DB;
+        $packages = array();
+        $records = $DB->get_records('qtype_questionpy_pkgversion', $conditions);
+        foreach ($records as $record) {
+            $packages[] = array_converter::from_array(self::class, (array) $record);
+        }
+        return $packages;
+    }
+
+    /**
      * Deletes the package version from the database.
      * If the package has only one version, the package related data is also deleted.
      *
