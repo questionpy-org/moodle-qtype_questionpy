@@ -80,20 +80,19 @@ class api {
      *
      * @param string $packagehash   package whose form should be requested
      * @param string|null $questionstate current question state
-     * @return qpy_form
+     * @return question_edit_form_response
      * @throws moodle_exception
      */
     public function get_question_edit_form(string $packagehash, ?string $questionstate): question_edit_form_response {
         $connector = connector::default();
 
-        $main = [];
-        $parts = [];
+        $parts = [
+            "main" => "{}"
+        ];
 
         if ($questionstate !== null) {
             $parts["question_state"] = $questionstate;
         }
-
-        $parts["main"] = json_encode($main);
 
         $response = $connector->post("/packages/$packagehash/options", $parts);
         $response->assert_2xx();
