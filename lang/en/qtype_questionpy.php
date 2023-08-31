@@ -53,6 +53,12 @@ $string['selection_no_package_title'] = 'QuestionPy';
 $string['selection_no_package_text'] = 'No packages available.';
 $string['selection_required'] = 'Please select a package.';
 
+$string['open_website'] = 'Open website';
+
+$string['select_package'] = 'Select';
+$string['select_package_element_aria'] = 'Choose version.';
+$string['change_package'] = 'Change';
+
 // Question management.
 $string['package_not_found'] = 'The requested package {$a->packagehash} does not exist.';
 

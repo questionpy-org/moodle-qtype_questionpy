@@ -1,0 +1,48 @@
+{{!
+    This file is part of the QuestionPy Moodle plugin - https://questionpy.org
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template qtype_questionpy/package/package_base
+
+    Represent a QuestionPy package.
+
+    Context variables required for this template:
+    * namespace - QuestionyPy package namespace,
+    * name - QuestionPy package name,
+    * description - QuestionPy package description,
+    * icon - QuestionPy package icon,
+
+    Example context (json):
+    {
+        "namespace": "example_namespace",
+        "name": "ExamplePackage",
+        "description": "This describes the package ExamplePackage.",
+        "icon": "https://picsum.photos/48/48?grayscale"
+    }
+}}
+<div class="qpy-card">
+    <div class="qpy-card-image">
+        <img src="{{icon}}" alt="{{#str}} selection_no_icon, qtype_questionpy {{/str}}">
+    </div>
+    <div class="qpy-card-content">
+        <h5 class="qpy-card-title">{{name}} <small class="text-muted">{{namespace}}</small></h5>
+        <p class="qpy-card-description">
+            {{description}}
+        </p>
+    </div>
+    {{$action}} Default action section {{/action}}
+</div>
+

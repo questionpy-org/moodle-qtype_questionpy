@@ -15,19 +15,52 @@
  * along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {resetFormDirtyState} from "core_form/changechecker";
+
 /**
  * This function is required by <code>qtype_questionpy::display_question_editing_page()</code>.
  *
- * When the package is changed, this function enables the hidden form element <code>package_changed</code> and submits the form.
- * Since <code>package_changed</code> is registered as a no-submit button, it prevents the form data from being saved to the
- * question, while still re-rendering the form with access to the new selected package hash.
+ * When the package is changed, this function enables the hidden form element <code>qpy_package_changed</code> and
+ * submits the form. Since <code>qpy_package_changed</code> is registered as a no-submit button, it prevents the form
+ * data from being saved to the question, while still re-rendering the form with access to the new selected package
+ * hash.
  */
 export function init() {
-    document.getElementsByName("qpy_package_hash")
-        .forEach(radio => radio.addEventListener("change", e => {
-            document.getElementsByName("package_changed").forEach(hidden => {
-                hidden.removeAttribute("disabled");
-            });
+    const packageChanged = document.querySelector('input[name="qpy_package_changed"]');
+    const packageHash = document.querySelector('input[name="qpy_package_hash"]');
+
+    // Check if a package is currently selected.
+    if (packageHash.value) {
+        // Initialize the button to change the package.
+        const changeButton = document.getElementsByClassName("qpy-version-selection-button")[0];
+        changeButton.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            // Remove package hash.
+            packageChanged.removeAttribute("disabled");
+            packageHash.value = '';
+
+            // We do not want any form checking when changing a package.
+            resetFormDirtyState(changeButton);
             e.target.form.submit();
-        }));
+        });
+    } else {
+        document.getElementsByClassName("qpy-card-action")
+            .forEach(card => {
+                // Initialize each select button of every card.
+                const selectedHash = card.getElementsByClassName("qpy-version-selection")[0];
+                const selectButton = card.getElementsByClassName("qpy-version-selection-button")[0];
+                selectButton.addEventListener("click", (e) => {
+                    e.preventDefault();
+
+                    // Set package hash.
+                    packageChanged.removeAttribute("disabled");
+                    packageHash.value = selectedHash.value;
+
+                    // We do not want any form checking when selecting a package.
+                    resetFormDirtyState(selectButton);
+                    e.target.form.submit();
+                });
+            });
+    }
 }

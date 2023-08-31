@@ -26,6 +26,7 @@ use qtype_questionpy\api\api;
 use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\localizer;
 use qtype_questionpy\package\package;
+use qtype_questionpy\package\package_version;
 
 /**
  * QuestionPy question editing form definition.
@@ -39,12 +40,12 @@ class qtype_questionpy_edit_form extends question_edit_form {
     private array $currentdata = [];
 
     /**
-     * Add any question-type specific form fields.
+     * Renders package selection form.
      *
      * @param MoodleQuickForm $mform the form being built.
      * @throws moodle_exception
      */
-    protected function definition_inner($mform) {
+    protected function definition_package_selection(MoodleQuickForm $mform): void {
         global $OUTPUT, $PAGE;
 
         // TODO: catch moodle_exception?
@@ -82,15 +83,12 @@ class qtype_questionpy_edit_form extends question_edit_form {
         foreach ($packages as $package) {
             // Get localized package texts.
             $packagearray = $package->as_localized_array($languages);
-            $packageversions = $package->get_version_array();
+            $packagearray['selected'] = false;
+            $packagearray['versions'] = array_values($package->get_version_array());
 
-            foreach ($packageversions as $packageversion) {
-                $group[] = $mform->createElement(
-                    'radio', 'qpy_package_hash',
-                    $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
-                    '', $packageversion->hash
-                );
-            }
+            $group[] = $mform->createElement(
+                'html', $OUTPUT->render_from_template('qtype_questionpy/package/package_selection', $packagearray),
+            );
 
         }
         $mform->addGroup($group, 'questionpy_package_container', '', '</br>', false);
@@ -100,27 +98,72 @@ class qtype_questionpy_edit_form extends question_edit_form {
         );
 
         $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
+    }
 
-        // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
-        // package has simply been changed. The hidden element is enabled from JS when changing packages.
-        $mform->registerNoSubmitButton("package_changed");
-        $mform->addElement("hidden", "package_changed", "true", ["disabled" => "disabled"]);
-        $mform->setType("package_changed", PARAM_RAW);
+    /**
+     * Renders question edit form of a specific package version.
+     *
+     * @param MoodleQuickForm $mform the form being built.
+     * @param string $packagehash the hash of the package.
+     * @throws moodle_exception
+     */
+    protected function definition_package_settings(MoodleQuickForm $mform, string $packagehash): void {
+        global $OUTPUT;
 
+        $pkgversion = package_version::get_by_hash($packagehash);
+        $package = package::get_by_version($pkgversion->id);
+
+        $languages = localizer::get_preferred_languages();
+        $packagearray = $package->as_localized_array($languages);
+        $packagearray['selected'] = true;
+        $packagearray['versions'] = ['hash' => $pkgversion->hash, 'version' => $pkgversion->version];
+
+        $group = array();
+        $group[] = $mform->createElement(
+            'html', $OUTPUT->render_from_template('qtype_questionpy/package/package_selection', $packagearray)
+        );
+        $mform->addGroup($group, '', 'Selected Package');
+
+        // Render question edit form.
+        $api = new api();
+        $response = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? null);
+
+        $context = new root_render_context($this, $mform, 'qpy_form', $response->formdata);
+        $response->definition->render_to($context);
+
+        // Used by set_data.
+        $this->currentdata = $response->formdata;
+    }
+
+
+    /**
+     * Add any question-type specific form fields.
+     *
+     * @param MoodleQuickForm $mform the form being built.
+     * @throws moodle_exception
+     */
+    protected function definition_inner($mform): void {
+        // Check if package is already selected.
         $packagehash = $this->optional_param(
-            "qpy_package_hash",
+            'qpy_package_hash',
             $this->question->qpy_package_hash ?? null, PARAM_ALPHANUM
         );
+
         if ($packagehash) {
-            $api = new api();
-            $response = $api->get_question_edit_form($packagehash, $this->question->qpy_state ?? null);
-
-            $context = new root_render_context($this, $mform, "qpy_form", $response->formdata);
-            $response->definition->render_to($context);
-
-            // Used by set_data.
-            $this->currentdata = $response->formdata;
+            self::definition_package_settings($mform, $packagehash);
+        } else {
+            self::definition_package_selection($mform);
         }
+
+        // Stores the currently selected package hash.
+        $mform->addElement('hidden', 'qpy_package_hash', '');
+        $mform->setType('qpy_package_hash', PARAM_RAW);
+
+        // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
+        // package has simply been changed. The hidden element is enabled from JS when a package is selected or changed.
+        $mform->registerNoSubmitButton('qpy_package_changed');
+        $mform->addElement('hidden', 'qpy_package_changed', '1', ['disabled' => 'disabled']);
+        $mform->setType('qpy_package_changed', PARAM_BOOL);
     }
 
     /**
