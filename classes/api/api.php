@@ -18,7 +18,6 @@ namespace qtype_questionpy\api;
 
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\form\qpy_form;
 use qtype_questionpy\package\package_raw;
 use TypeError;
 
@@ -130,6 +129,57 @@ class api {
     }
 
     /**
+     * Start an attempt at an existing question.
+     *
+     * @param string $packagehash
+     * @param string $questionstate
+     * @param int $variant variant which should be started (`1` for questions with only one variant)
+     * @return attempt_started the attempt's state and metadata. Note that the attempt state never changes after the
+     *                         attempt has been started.
+     * @throws moodle_exception
+     */
+    public function start_attempt(string $packagehash, string $questionstate, int $variant): attempt_started {
+        $connector = connector::default();
+
+        $main = [
+            "variant" => $variant
+        ];
+        $parts = [
+            "main" => json_encode($main),
+            "question_state" => $questionstate,
+        ];
+
+        $response = $connector->post("/packages/$packagehash/attempt/start", $parts);
+        $response->assert_2xx();
+        return array_converter::from_array(attempt_started::class, $response->get_data());
+    }
+
+    /**
+     * View a previously created attempt.
+     *
+     * @param string $packagehash
+     * @param string $questionstate
+     * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
+     * @return attempt the attempt's metadata. The state is not returned since it never changes.
+     * @throws moodle_exception
+     */
+    public function view_attempt(string $packagehash, string $questionstate, string $attemptstate): attempt {
+        $connector = connector::default();
+
+        $main = [
+            "attempt_state" => $attemptstate
+        ];
+        $parts = [
+            "main" => json_encode($main),
+            "question_state" => $questionstate,
+        ];
+
+        $response = $connector->post("/packages/$packagehash/attempt/view", $parts);
+        $response->assert_2xx();
+        return array_converter::from_array(attempt::class, $response->get_data());
+    }
+
+    /**
      * Get the Package information from the server.
      *
      * @param string $filename
@@ -146,5 +196,3 @@ class api {
         return $connector->post("/package-extract-info", $data);
     }
 }
-
-

@@ -22,7 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\question_ui;
+use qtype_questionpy\api\api;
+use qtype_questionpy\question_ui_renderer;
 
 /**
  * Represents a QuestionPy question.
@@ -32,21 +33,89 @@ use qtype_questionpy\question_ui;
  */
 class qtype_questionpy_question extends question_graded_automatically_with_countback {
 
-    /** @var question_ui|null $ui */
-    private ?question_ui $ui = null;
+    /** @var string */
+    private const QT_VAR_ATTEMPT_STATE = "_attemptstate";
+    /** @var string */
+    private const QT_VAR_MT_SEED = "_mt_seed";
+
+    // Properties which do not change between attempts.
+    /** @var api */
+    private api $api;
+    /** @var string */
+    private string $packagehash;
+    /** @var string */
+    private string $questionstate;
+
+    // Properties which do change between attempts (i.e. are modified by start_attempt and apply_attempt_state).
+    /** @var question_ui_renderer */
+    public question_ui_renderer $ui;
 
     /**
-     * Fetches the question UI XML from the QPy Server, parses it into a {@see question_ui} instance and caches that.
+     * Initialize a new question. Called from {@see qtype_questionpy::make_question_instance()}.
      *
-     * @return question_ui
+     * @param string $packagehash
+     * @param string $questionstate
      */
-    public function get_question_ui(): question_ui {
-        if (!$this->ui) {
-            // TODO: Get XML from server.
-            $xml = file_get_contents(__DIR__ . "/simple.xhtml");
-            $this->ui = new question_ui($xml);
+    public function __construct(string $packagehash, string $questionstate) {
+        parent::__construct();
+        $this->api = new api();
+        $this->packagehash = $packagehash;
+        $this->questionstate = $questionstate;
+    }
+
+    /**
+     * Start a new attempt at this question, storing any information that will
+     * be needed later in the step.
+     *
+     * This is where the question can do any initialisation required on a
+     * per-attempt basis. For example, this is where the multiple choice
+     * question type randomly shuffles the choices (if that option is set).
+     *
+     * Any information about how the question has been set up for this attempt
+     * should be stored in the $step, by calling $step->set_qt_var(...).
+     *
+     * @param question_attempt_step $step The first step of the {@see question_attempt}
+     *      being started. Can be used to store state.
+     * @param int $variant which variant of this question to start. Will be between
+     *      1 and {@see get_num_variants()} inclusive.
+     * @throws moodle_exception
+     */
+    public function start_attempt(question_attempt_step $step, $variant): void {
+        $attempt = $this->api->start_attempt($this->packagehash, $this->questionstate, $variant);
+
+        // We generate a fixed seed to be used during every render of the attempt, to keep shuffles deterministic.
+        $mtseed = mt_rand();
+        $step->set_qt_var(self::QT_VAR_MT_SEED, $mtseed);
+
+        $this->ui = new question_ui_renderer($attempt->ui->content, $mtseed);
+        $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
+    }
+
+    /**
+     * When an in-progress {@see question_attempt} is re-loaded from the
+     * database, this method is called so that the question can re-initialise
+     * its internal state as needed by this attempt.
+     *
+     * For example, the multiple choice question type needs to set the order
+     * of the choices to the order that was set up when start_attempt was called
+     * originally. All the information required to do this should be in the
+     * $step object, which is the first step of the question_attempt being loaded.
+     *
+     * @param question_attempt_step $step The first step of the {@see question_attempt}
+     *      being loaded.
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
+    public function apply_attempt_state(question_attempt_step $step) {
+        $attemptstate = $step->get_qt_var(self::QT_VAR_ATTEMPT_STATE);
+        $mtseed = $step->get_qt_var(self::QT_VAR_MT_SEED);
+        if (is_null($attemptstate) || is_null($mtseed)) {
+            // Start_attempt probably was never called, which it should have been.
+            throw new coding_exception("apply_attempt_state was called, but the attempt is missing a qt var");
         }
-        return $this->ui;
+
+        $attempt = $this->api->view_attempt($this->packagehash, $this->questionstate, $attemptstate);
+        $this->ui = new question_ui_renderer($attempt->ui->content, $mtseed);
     }
 
     /**
@@ -61,7 +130,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *      meaning take all the raw submitted data belonging to this question.
      */
     public function get_expected_data(): array {
-        return $this->get_question_ui()->get_metadata()->expecteddata;
+        return $this->ui->get_metadata()->expecteddata;
     }
 
     /**
@@ -73,7 +142,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return array|null parameter name => value.
      */
     public function get_correct_response(): ?array {
-        return $this->get_question_ui()->get_metadata()->correctresponse;
+        return $this->ui->get_metadata()->correctresponse;
     }
 
     /**

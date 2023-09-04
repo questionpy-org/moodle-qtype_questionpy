@@ -17,7 +17,7 @@
 namespace qtype_questionpy;
 
 /**
- * Metadata about a question attempt, extracted by {@see question_ui} from the XML.
+ * Metadata about a question attempt, extracted by {@see question_ui_renderer} from the XML.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
@@ -37,4 +37,16 @@ class question_metadata {
      * @see \question_definition::get_expected_data()
      */
     public array $expecteddata = [];
+
+    /**
+     * Initializes a new instance.
+     *
+     * @param array|null $correctresponse if known, an array of `name => correct_value` entries for the expected
+     *                                    response fields
+     * @param array $expecteddata an array of `name => PARAM_X` entries for the expected response fields
+     */
+    public function __construct(?array $correctresponse = null, array $expecteddata = []) {
+        $this->correctresponse = $correctresponse;
+        $this->expecteddata = $expecteddata;
+    }
 }

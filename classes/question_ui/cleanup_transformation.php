@@ -17,11 +17,12 @@
 namespace qtype_questionpy\question_ui;
 
 use DOMAttr;
+use DOMNameSpaceNode;
 use DOMNode;
 use DOMNodeList;
 
 /**
- * Removes remaining QuestionPy elements and attributes as well as comments.
+ * Removes remaining QuestionPy elements and attributes as well as comments and xmlns declarations.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
@@ -36,7 +37,7 @@ class cleanup_transformation extends question_ui_transformation {
      * @return DOMNodeList
      */
     public function collect(): DOMNodeList {
-        return $this->xpath->query("//qpy:* | //@qpy:* | //comment()");
+        return $this->xpath->query("//qpy:* | //@qpy:* | //comment() | //namespace::*");
     }
 
     /**
@@ -45,12 +46,12 @@ class cleanup_transformation extends question_ui_transformation {
      * The default implementation delegates to {@see transform_element()} or {@see transform_pi()}, depending on the
      * node type.
      *
-     * @param DOMNode $node one of the nodes returned by {@see collect()}
+     * @param DOMNode|DOMNameSpaceNode $node one of the nodes returned by {@see collect()}
      * @return void
      */
-    public function transform_node(DOMNode $node): void {
-        if ($node instanceof DOMAttr) {
-            $node->parentNode->removeAttributeNode($node);
+    public function transform_node($node): void {
+        if ($node instanceof DOMAttr || $node instanceof DOMNameSpaceNode) {
+            $node->parentNode->removeAttributeNS($node->namespaceURI, $node->localName);
         } else {
             $node->parentNode->removeChild($node);
         }
