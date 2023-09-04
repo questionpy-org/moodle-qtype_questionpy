@@ -20,7 +20,7 @@ use coding_exception;
 use DOMElement;
 use DOMNode;
 use DOMNodeList;
-use qtype_questionpy\question_ui;
+use qtype_questionpy\question_ui_renderer;
 
 /**
  * Shuffles children of elements marked with `qpy:shuffle-contents`.
@@ -46,12 +46,12 @@ class shuffle_transformation extends question_ui_transformation {
     /**
      * Transforms the given element in-place. Delegated to by {@see transform_node()}.
      *
-     * @param DOMElement $element
+     * @param DOMElement $element one of the elements returned by {@see collect()}
      * @return void
      * @throws coding_exception
      */
     protected function transform_element(DOMElement $element): void {
-        $element->removeAttributeNS(question_ui::QPY_NAMESPACE, "shuffle-contents");
+        $element->removeAttributeNS(question_ui_renderer::QPY_NAMESPACE, "shuffle-contents");
         $newelement = $element->cloneNode();
 
         // We want to shuffle elements while leaving other nodes (such as text, spacing) where they are.
@@ -72,11 +72,12 @@ class shuffle_transformation extends question_ui_transformation {
             if ($child instanceof DOMElement) {
                 $child = array_pop($childelements);
                 $newelement->appendChild($child);
-                $this->replace_index($child, $i++);
+                $this->replace_indices($child, $i++);
             } else {
                 $newelement->appendChild($child);
             }
         }
+
         $element->parentNode->replaceChild($newelement, $element);
     }
 
@@ -87,7 +88,7 @@ class shuffle_transformation extends question_ui_transformation {
      * @param int $index
      * @throws coding_exception
      */
-    private function replace_index(DOMNode $element, int $index): void {
+    private function replace_indices(DOMNode $element, int $index): void {
         $indexelements = $this->xpath->query(".//qpy:shuffled-index", $element);
         /** @var DOMElement $indexelement */
         foreach ($indexelements as $indexelement) {

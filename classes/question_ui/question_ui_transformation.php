@@ -18,6 +18,7 @@ namespace qtype_questionpy\question_ui;
 
 use DOMDocument;
 use DOMElement;
+use DOMNameSpaceNode;
 use DOMNode;
 use DOMNodeList;
 use DOMProcessingInstruction;
@@ -71,10 +72,10 @@ abstract class question_ui_transformation {
      * The default implementation delegates to {@see transform_element()} or {@see transform_pi()}, depending on the
      * node type.
      *
-     * @param DOMNode $node one of the nodes returned by {@see collect()}
+     * @param DOMNode|DOMNameSpaceNode $node one of the nodes returned by {@see collect()}
      * @return void
      */
-    public function transform_node(DOMNode $node): void {
+    public function transform_node($node): void {
         if ($node instanceof DOMElement) {
             $this->transform_element($node);
         } else if ($node instanceof DOMProcessingInstruction) {
@@ -85,7 +86,7 @@ abstract class question_ui_transformation {
     /**
      * Transforms the given element in-place. Delegated to by {@see transform_node()}.
      *
-     * @param DOMElement $element
+     * @param DOMElement $element one of the elements returned by {@see collect()}
      * @return void
      */
     protected function transform_element(DOMElement $element): void {
@@ -95,7 +96,7 @@ abstract class question_ui_transformation {
     /**
      * Transforms the given processing instruction in-place. Delegated to by {@see transform_node()}.
      *
-     * @param DOMProcessingInstruction $pi
+     * @param DOMProcessingInstruction $pi one of the PIs returned by {@see collect()}
      * @return void
      */
     protected function transform_pi(DOMProcessingInstruction $pi): void {

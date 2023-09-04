@@ -20,6 +20,8 @@ use coding_exception;
 use DOMAttr;
 use DOMDocument;
 use DOMElement;
+use DOMException;
+use DOMNode;
 use DOMXPath;
 use qtype_questionpy\question_ui\cleanup_transformation;
 use qtype_questionpy\question_ui\feedback_transformation;
@@ -38,7 +40,8 @@ use question_display_options;
  * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_ui {
+class question_ui_renderer {
+
     /** @var string XML namespace for XHTML */
     public const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
     /** @var string XML namespace for our custom things */
@@ -56,25 +59,25 @@ class question_ui {
     /** @var DOMDocument $question */
     public DOMDocument $question;
 
-    /** @var DOMXPath $xpath */
-    private DOMXPath $xpath;
-
     /** @var question_metadata|null $metadata */
     private ?question_metadata $metadata = null;
 
+    /** @var int seed for {@see mt_srand}, to make shuffles deterministic */
+    private int $mtseed;
+
     /**
-     * Parses the given XML and initializes a new {@see question_ui} instance.
+     * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
      *
      * @param string $xml XML as returned by the QPy Server
+     * @param int $mtseed the seed to use ({@see mt_srand()}) to make `qpy:shuffle-contents` deterministic
      */
-    public function __construct(string $xml) {
+    public function __construct(string $xml, int $mtseed) {
         $this->question = new DOMDocument();
         $this->question->loadXML($xml);
         $this->question->normalizeDocument();
 
-        $this->xpath = new DOMXPath($this->question);
-        $this->xpath->registerNamespace("xhtml", self::XHTML_NAMESPACE);
-        $this->xpath->registerNamespace("qpy", self::QPY_NAMESPACE);
+
+        $this->mtseed = $mtseed;
     }
 
     /**
@@ -145,9 +148,14 @@ class question_ui {
      */
     public function get_metadata(): question_metadata {
         if (!$this->metadata) {
+            $xpath = new DOMXPath($this->question);
+            $xpath->registerNamespace("xhtml", self::XHTML_NAMESPACE);
+            $xpath->registerNamespace("qpy", self::QPY_NAMESPACE);
+
             $this->metadata = new question_metadata();
             /** @var DOMAttr $attr */
-            foreach ($this->xpath->query("/qpy:question/qpy:formulation//@qpy:correct-response") as $attr) {
+            foreach ($xpath->query("/qpy:question/qpy:formulation//@qpy:correct-response") as $attr) {
+                /** @var DOMElement $element */
                 $element = $attr->ownerElement;
                 $name = $element->getAttribute("name");
                 if (!$name) {
@@ -158,7 +166,7 @@ class question_ui {
                     $this->metadata->correctresponse = [];
                 }
 
-                if ($element->getAttribute("type") == "radio") {
+                if ($element->tagName == "input" && $element->getAttribute("type") == "radio") {
                     // On radio buttons, we expect the correct option to be marked with correct-response.
                     $radiovalue = $element->getAttribute("value");
                     $this->metadata->correctresponse[$name] = $radiovalue;
@@ -168,7 +176,10 @@ class question_ui {
             }
 
             /** @var DOMElement $element */
-            foreach ($this->xpath->query("/qpy:question/qpy:formulation//xhtml:input") as $element) {
+            foreach ($xpath->query(
+                "/qpy:question/qpy:formulation
+                //*[self::xhtml:input or self::xhtml:select or self::xhtml:textarea or self::xhtml:button]"
+            ) as $element) {
                 $name = $element->getAttribute("name");
                 if ($name) {
                     $this->metadata->expecteddata[$name] = PARAM_RAW;
@@ -182,27 +193,38 @@ class question_ui {
     /**
      * Applies transformations to the descendants of a given node and returns the resulting HTML.
      *
-     * @param \DOMNode $part
+     * @param DOMNode $part
      * @param question_attempt $qa
      * @param question_display_options|null $options
      * @return string
+     * @throws DOMException
      */
-    private function render_part(\DOMNode $part, question_attempt $qa, ?question_display_options $options = null): string {
+    private function render_part(DOMNode $part, question_attempt $qa, ?question_display_options $options = null): string {
         $newdoc = new DOMDocument();
+        $div = $newdoc->appendChild($newdoc->createElementNS(self::XHTML_NAMESPACE, "div"));
         foreach ($part->childNodes as $child) {
-            $newdoc->appendChild($newdoc->importNode($child, true));
+            $div->appendChild($newdoc->importNode($child, true));
         }
 
         $xpath = new DOMXPath($newdoc);
+        $xpath->registerNamespace("xhtml", self::XHTML_NAMESPACE);
         $xpath->registerNamespace("qpy", self::QPY_NAMESPACE);
 
-        foreach (self::TRANSFORMATIONS as $class) {
-            /** @var question_ui_transformation $transformation */
-            $transformation = new $class($xpath, $qa, $options);
-            $nodes = $transformation->collect();
-            foreach ($nodes as $node) {
-                $transformation->transform_node($node);
+        $nextseed = mt_rand();
+        mt_srand($this->mtseed);
+        try {
+            foreach (self::TRANSFORMATIONS as $class) {
+                /** @var question_ui_transformation $transformation */
+                $transformation = new $class($xpath, $qa, $options);
+                $nodes = $transformation->collect();
+                foreach ($nodes as $node) {
+                    $transformation->transform_node($node);
+                }
             }
+        } finally {
+            // I'm not sure whether it is strictly necessary to reset the PRNG seed here, but it feels safer.
+            // Resetting it to its original state would be ideal, but that doesn't seem to be possible.
+            mt_srand($nextseed);
         }
 
         return $newdoc->saveHTML();

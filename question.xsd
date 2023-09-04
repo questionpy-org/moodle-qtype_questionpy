@@ -36,21 +36,21 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="specific-feedback">
+                <xs:element name="specific-feedback" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:group ref="xhtml:xhtml.Flow.mix" maxOccurs="unbounded"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="general-feedback">
+                <xs:element name="general-feedback" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:group ref="xhtml:xhtml.Flow.mix" maxOccurs="unbounded"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="right-answer">
+                <xs:element name="right-answer" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:group ref="xhtml:xhtml.Flow.mix" maxOccurs="unbounded"/>

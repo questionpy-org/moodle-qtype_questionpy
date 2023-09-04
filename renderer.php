@@ -42,9 +42,9 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @throws coding_exception
      */
     public function formulation_and_controls(question_attempt $qa, question_display_options $options): string {
-        $question = $qa->get_question(false);
+        $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
-        return $question->get_question_ui()->render_formulation($qa, $options);
+        return $question->ui->render_formulation($qa, $options);
     }
 
     /**
@@ -54,9 +54,9 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     protected function general_feedback(question_attempt $qa): string {
-        $question = $qa->get_question(false);
+        $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
-        return $question->get_question_ui()->render_general_feedback($qa) ?? "";
+        return $question->ui->render_general_feedback($qa) ?? "";
     }
 
     /**
@@ -67,9 +67,9 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     public function specific_feedback(question_attempt $qa): string {
-        $question = $qa->get_question(false);
+        $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
-        return $question->get_question_ui()->render_specific_feedback($qa) ?? "";
+        return $question->ui->render_specific_feedback($qa) ?? "";
     }
 
     /**
@@ -81,9 +81,9 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     public function correct_response(question_attempt $qa): string {
-        $question = $qa->get_question(false);
+        $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
-        return $question->get_question_ui()->render_right_answer($qa) ?? "";
+        return $question->ui->render_right_answer($qa) ?? "";
     }
 
     /**

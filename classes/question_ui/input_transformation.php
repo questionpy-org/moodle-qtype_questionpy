@@ -39,16 +39,18 @@ class input_transformation extends question_ui_transformation {
      * @return DOMNodeList
      */
     public function collect(): DOMNodeList {
-        return $this->doc->getElementsByTagName("input");
+        return $this->xpath->query("//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea");
     }
 
     /**
      * Transforms the given element in-place. Delegated to by {@see transform_node()}.
      *
-     * @param DOMElement $element
+     * @param DOMElement $element one of the elements returned by {@see collect()}
      * @return void
      */
     protected function transform_element(DOMElement $element): void {
+        /* TODO: Probably split this into smaller transformations. Other things need mangling, and buttons don't need
+                 value setting. */
         $name = $element->getAttribute("name");
         if (!$name) {
             return;
@@ -58,14 +60,28 @@ class input_transformation extends question_ui_transformation {
         $element->setAttribute("name", $this->qa->get_qt_field_name($name));
 
         // Set the last saved value.
-        $type = $element->getAttribute("type") ?: "text";
+        if ($element->tagName == "input") {
+            $type = $element->getAttribute("type") ?: "text";
+        } else {
+            $type = $element->tagName;
+        }
         $lastvalue = $this->qa->get_last_qt_var($name);
 
         if (!is_null($lastvalue)) {
-            if ($element->getAttribute("value") === $lastvalue
-                && ($type === "checkbox" || $type === "radio")) {
+            if (($type === "checkbox" || $type === "radio")
+                && $element->getAttribute("value") === $lastvalue) {
                 $element->setAttribute("checked", "checked");
-            } else {
+            } else if ($type == "select") {
+                // Find the appropriate option and mark it as selected.
+                /** @var DOMElement $option */
+                foreach ($element->getElementsByTagName("option") as $option) {
+                    $optvalue = $option->hasAttribute("value") ? $option->getAttribute("value") : $option->textContent;
+                    if ($optvalue == $lastvalue) {
+                        $option->setAttribute("selected", "selected");
+                        break;
+                    }
+                }
+            } else if ($type != "button" && $type != "submit" && $type != "hidden") {
                 $element->setAttribute("value", $lastvalue);
             }
         }

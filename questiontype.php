@@ -135,6 +135,7 @@ class qtype_questionpy extends question_type {
      * @param object $question question object to which QuestionPy-specific options should be added
      * @throws coding_exception
      * @throws dml_exception
+     * @throws moodle_exception
      */
     public function get_question_options($question): bool {
         if (!parent::get_question_options($question)) {
@@ -146,5 +147,16 @@ class qtype_questionpy extends question_type {
         }
 
         return true;
+    }
+
+    /**
+     * Create an appropriate question_definition for the question of this type
+     * using data loaded from the database.
+     * @param object $questiondata the question data loaded from the database.
+     * @return question_definition an instance of the appropriate question_definition subclass.
+     *      Still needs to be initialised.
+     */
+    protected function make_question_instance($questiondata) {
+        return new qtype_questionpy_question($questiondata->qpy_package_hash, $questiondata->qpy_state);
     }
 }

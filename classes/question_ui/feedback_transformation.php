@@ -18,7 +18,7 @@ namespace qtype_questionpy\question_ui;
 
 use DOMElement;
 use DOMNodeList;
-use qtype_questionpy\question_ui;
+use qtype_questionpy\question_ui_renderer;
 
 /**
  * Removes elements marked with `qpy:feedback` when the type of feedback is disabled in {@see \question_display_options}.
@@ -42,11 +42,11 @@ class feedback_transformation extends question_ui_transformation {
     /**
      * Transforms the given element in-place. Delegated to by {@see transform_node()}.
      *
-     * @param DOMElement $element
+     * @param DOMElement $element one of the elements returned by {@see collect()}
      * @return void
      */
     protected function transform_element(DOMElement $element): void {
-        $feedback = $element->getAttributeNS(question_ui::QPY_NAMESPACE, "feedback");
+        $feedback = $element->getAttributeNS(question_ui_renderer::QPY_NAMESPACE, "feedback");
 
         if (($feedback == "general" && !$this->options->generalfeedback)
             || ($feedback == "specific" && !$this->options->feedback)) {
