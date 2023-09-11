@@ -17,6 +17,7 @@
 namespace qtype_questionpy;
 
 use coding_exception;
+use DOMException;
 
 /**
  * Unit tests for {@see question_ui_renderer}.
@@ -37,7 +38,7 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_extract_correct_metadata() {
         $input = file_get_contents(__DIR__ . "/question_uis/inputs.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
         $metadata = $ui->get_metadata();
 
         $this->assertEquals(new question_metadata([
@@ -64,7 +65,7 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_hide_inline_feedback() {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
 
         $qa = $this->createStub(\question_attempt::class);
         $opts = new \question_display_options();
@@ -83,12 +84,13 @@ class question_ui_renderer_test extends \advanced_testcase {
      * Tests that inline feedback is shown when the {@see \question_display_options} say so.
      *
      * @throws coding_exception
+     * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_show_inline_feedback() {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
 
         $qa = $this->createStub(\question_attempt::class);
         $opts = new \question_display_options();
@@ -114,7 +116,7 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_render_general_feedback_part_when_present() {
         $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
         $result = $ui->render_general_feedback($qa);
@@ -135,7 +137,7 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_render_specific_feedback_part_when_present() {
         $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
         $result = $ui->render_specific_feedback($qa);
@@ -156,7 +158,7 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_render_right_answer_part_when_present() {
         $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
         $result = $ui->render_right_answer($qa);
@@ -179,7 +181,7 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_return_null_when_optional_part_is_missing() {
         $input = file_get_contents(__DIR__ . "/question_uis/no-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
         $this->assertNull($ui->render_general_feedback($qa));
@@ -190,11 +192,12 @@ class question_ui_renderer_test extends \advanced_testcase {
     /**
      * Tests that an exception is thrown when the question formulation is missing.
      * @covers \qtype_questionpy\question_ui_renderer::render_formulation
+     * @throws DOMException
      */
     public function test_should_throw_when_formulation_is_missing() {
         $input = file_get_contents(__DIR__ . "/question_uis/no-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
         $this->expectException(coding_exception::class);
@@ -204,12 +207,13 @@ class question_ui_renderer_test extends \advanced_testcase {
     /**
      * Tests that `name` attributes in most elements are mangled correctly.
      * @throws coding_exception
+     * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_mangle_names() {
         $input = file_get_contents(__DIR__ . "/question_uis/inputs.xhtml");
 
-        $ui = new question_ui_renderer($input, mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_qt_field_name")
             ->willReturnCallback(function ($name) {
@@ -237,6 +241,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * Tests that `qpy:shuffle-elements` sticks to the same shuffled order as long as the seed is the same.
      *
      * @throws coding_exception
+     * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_shuffle_the_same_way_with_same_seed() {
@@ -244,13 +249,68 @@ class question_ui_renderer_test extends \advanced_testcase {
         $qa = $this->createStub(\question_attempt::class);
 
         $seed = mt_rand();
-        $firstresult = (new question_ui_renderer($input, $seed))
+        $firstresult = (new question_ui_renderer($input, [], $seed))
             ->render_formulation($qa, new \question_display_options());
         for ($i = 0; $i < 10; $i++) {
-            $result = (new question_ui_renderer($input, $seed))
+            $result = (new question_ui_renderer($input, [], $seed))
                 ->render_formulation($qa, new \question_display_options());
 
             $this->assertEquals($firstresult, $result);
         }
+    }
+
+    /**
+     * Tests that placeholders are replaced with their parameters.
+     *
+     * @return void
+     * @throws DOMException
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer
+     */
+    public function test_should_resolve_placeholders() {
+        $input = file_get_contents(__DIR__ . "/question_uis/parameters.xhtml");
+        $qa = $this->createStub(\question_attempt::class);
+
+        $ui = new question_ui_renderer($input, [
+            "param" => "Value of param <b>one</b>",
+            "nested" => [
+                "param" => "Value of param <b>two</b>",
+            ]
+        ], mt_rand());
+
+        $result = $ui->render_formulation($qa, new \question_display_options());
+
+        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <span>Parameter: Value of param <b>one</b></span>
+            <span>Nested parameter: Value of param <b>two</b></span>
+        </div>
+        EXPECTED, $result);
+    }
+
+    /**
+     * Tests that placeholders are just removed when the corresponding parameter is null or missing.
+     *
+     * @return void
+     * @throws DOMException
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer
+     */
+    public function test_should_remove_placeholders_when_no_corresponding_parameter_or_parameter_is_null() {
+        $input = file_get_contents(__DIR__ . "/question_uis/parameters.xhtml");
+        $qa = $this->createStub(\question_attempt::class);
+
+        $ui = new question_ui_renderer($input, [
+            "param" => null
+        ], mt_rand());
+
+        $result = $ui->render_formulation($qa, new \question_display_options());
+
+        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <span>Parameter: </span>
+            <span>Nested parameter: </span>
+        </div>
+        EXPECTED, $result);
     }
 }
