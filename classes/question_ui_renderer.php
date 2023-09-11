@@ -21,14 +21,9 @@ use DOMAttr;
 use DOMDocument;
 use DOMElement;
 use DOMException;
+use DOMNameSpaceNode;
 use DOMNode;
 use DOMXPath;
-use qtype_questionpy\question_ui\cleanup_transformation;
-use qtype_questionpy\question_ui\feedback_transformation;
-use qtype_questionpy\question_ui\input_transformation;
-use qtype_questionpy\question_ui\question_ui_transformation;
-use qtype_questionpy\question_ui\shuffle_transformation;
-use qtype_questionpy\question_ui\verbatim_transformation;
 use question_attempt;
 use question_display_options;
 
@@ -47,17 +42,8 @@ class question_ui_renderer {
     /** @var string XML namespace for our custom things */
     public const QPY_NAMESPACE = "http://questionpy.org/ns/question";
 
-    /** @var string[] class names of {@see question_ui_transformation}s to apply, in order */
-    private const TRANSFORMATIONS = [
-        feedback_transformation::class,
-        shuffle_transformation::class,
-        input_transformation::class,
-        verbatim_transformation::class,
-        cleanup_transformation::class
-    ];
-
     /** @var DOMDocument $question */
-    public DOMDocument $question;
+    private DOMDocument $question;
 
     /** @var question_metadata|null $metadata */
     private ?question_metadata $metadata = null;
@@ -76,7 +62,6 @@ class question_ui_renderer {
         $this->question->loadXML($xml);
         $this->question->normalizeDocument();
 
-
         $this->mtseed = $mtseed;
     }
 
@@ -86,6 +71,7 @@ class question_ui_renderer {
      * @param question_attempt $qa
      * @param question_display_options $options
      * @return string
+     * @throws DOMException
      * @throws coding_exception
      */
     public function render_formulation(question_attempt $qa, question_display_options $options): string {
@@ -102,6 +88,8 @@ class question_ui_renderer {
      * Renders the contents of the `qpy:general-feedback` element or returns null if there is none.
      * @param question_attempt $qa
      * @return string|null
+     * @throws DOMException
+     * @throws coding_exception
      */
     public function render_general_feedback(question_attempt $qa): ?string {
         $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "general-feedback");
@@ -116,6 +104,8 @@ class question_ui_renderer {
      * Renders the contents of the `qpy:specific-feedback` element or returns null if there is none.
      * @param question_attempt $qa
      * @return string|null
+     * @throws DOMException
+     * @throws coding_exception
      */
     public function render_specific_feedback(question_attempt $qa): ?string {
         $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "specific-feedback");
@@ -131,6 +121,8 @@ class question_ui_renderer {
      * Renders the contents of the `qpy:right-answer` element or returns null if there is none.
      * @param question_attempt $qa
      * @return string|null
+     * @throws DOMException
+     * @throws coding_exception
      */
     public function render_right_answer(question_attempt $qa): ?string {
         $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "right-answer");
@@ -198,6 +190,7 @@ class question_ui_renderer {
      * @param question_display_options|null $options
      * @return string
      * @throws DOMException
+     * @throws coding_exception
      */
     private function render_part(DOMNode $part, question_attempt $qa, ?question_display_options $options = null): string {
         $newdoc = new DOMDocument();
@@ -213,14 +206,12 @@ class question_ui_renderer {
         $nextseed = mt_rand();
         mt_srand($this->mtseed);
         try {
-            foreach (self::TRANSFORMATIONS as $class) {
-                /** @var question_ui_transformation $transformation */
-                $transformation = new $class($xpath, $qa, $options);
-                $nodes = $transformation->collect();
-                foreach ($nodes as $node) {
-                    $transformation->transform_node($node);
-                }
-            }
+            $this->hide_unwanted_feedback($xpath, $options);
+            $this->set_input_values_and_readonly($xpath, $qa, $options);
+            $this->shuffle_contents($xpath);
+            $this->mangle_ids_and_names($xpath, $qa);
+            $this->clean_up($xpath);
+            $this->replace_placeholders($xpath, []);
         } finally {
             // I'm not sure whether it is strictly necessary to reset the PRNG seed here, but it feels safer.
             // Resetting it to its original state would be ideal, but that doesn't seem to be possible.
@@ -228,5 +219,209 @@ class question_ui_renderer {
         }
 
         return $newdoc->saveHTML();
+    }
+
+    /**
+     * Hides elements marked with `qpy:feedback` if the type of feedback is disabled in {@see question_display_options}.
+     *
+     * @param DOMXPath $xpath
+     * @param question_display_options|null $options
+     * @return void
+     */
+    private function hide_unwanted_feedback(\DOMXPath $xpath, ?question_display_options $options = null): void {
+        /** @var DOMElement $element */
+        foreach ($xpath->query("//*[@qpy:feedback]") as $element) {
+            $feedback = $element->getAttributeNS(self::QPY_NAMESPACE, "feedback");
+
+            if (($feedback == "general" && !$options->generalfeedback)
+                || ($feedback == "specific" && !$options->feedback)) {
+                $element->parentNode->removeChild($element);
+            }
+        }
+    }
+
+    /**
+     * Shuffles children of elements marked with `qpy:shuffle-contents`.
+     *
+     * Also replaces `qpy:shuffled-index` elements which are descendants of each child with the new index of the child.
+     *
+     * @param DOMXPath $xpath
+     * @throws coding_exception
+     */
+    private function shuffle_contents(\DOMXPath $xpath): void {
+        /** @var DOMElement $element */
+        foreach ($xpath->query("//*[@qpy:shuffle-contents]") as $element) {
+            $element->removeAttributeNS(self::QPY_NAMESPACE, "shuffle-contents");
+            $newelement = $element->cloneNode();
+
+            // We want to shuffle elements while leaving other nodes (such as text, spacing) where they are.
+
+            // Collect the elements and shuffle them.
+            $childelements = [];
+            foreach ($element->childNodes as $child) {
+                if ($child instanceof DOMElement) {
+                    $childelements[] = $child;
+                }
+            }
+            shuffle($childelements);
+
+            // Iterate over children, replacing elements with random ones while copying everything else.
+            $i = 1;
+            while ($element->hasChildNodes()) {
+                $child = $element->firstChild;
+                if ($child instanceof DOMElement) {
+                    $child = array_pop($childelements);
+                    $newelement->appendChild($child);
+                    $this->replace_shuffled_indices($xpath, $child, $i++);
+                } else {
+                    $newelement->appendChild($child);
+                }
+            }
+
+            $element->parentNode->replaceChild($newelement, $element);
+        }
+    }
+
+    /**
+     * Among the descendants of `$element`, finds `qpy:shuffled-index` elements and replaces them with `$index`.
+     *
+     * @param DOMXPath $xpath
+     * @param DOMNode $element
+     * @param int $index
+     * @throws coding_exception
+     */
+    private function replace_shuffled_indices(DOMXPath $xpath, DOMNode $element, int $index): void {
+        $indexelements = $xpath->query(".//qpy:shuffled-index", $element);
+        /** @var DOMElement $indexelement */
+        foreach ($indexelements as $indexelement) {
+            $format = $indexelement->getAttribute("format") ?: "123";
+
+            switch ($format) {
+                default:
+                    // TODO: Warning?
+                case "123":
+                    $indexstr = strval($index);
+                    break;
+                case "abc":
+                    $indexstr = strtolower(\question_utils::int_to_letter($index));
+                    break;
+                case "ABC":
+                    $indexstr = \question_utils::int_to_letter($index);
+                    break;
+                case "iii":
+                    $indexstr = \question_utils::int_to_roman($index);
+                    break;
+                case "III":
+                    $indexstr = strtoupper(\question_utils::int_to_roman($index));
+                    break;
+            }
+
+            $indexelement->parentNode->replaceChild(new \DOMText($indexstr), $indexelement);
+        }
+    }
+
+    /**
+     * Mangles element IDs and names so that they are unique when multiple questions are shown at once.
+     *
+     * @param DOMXPath $xpath
+     * @param question_attempt $qa
+     * @return void
+     */
+    private function mangle_ids_and_names(\DOMXPath $xpath, question_attempt $qa): void {
+        /** @var DOMAttr $attr */
+        foreach ($xpath->query("
+                //xhtml:*/@id | //xhtml:label/@for | //xhtml:output/@for | //xhtml:input/@list |
+                (//xhtml:button | //xhtml:form | //xhtml:fieldset | //xhtml:iframe | //xhtml:input | //xhtml:object |
+                 //xhtml:output | //xhtml:select | //xhtml:textarea | //xhtml:map)/@name |
+                //xhtml:img/@usemap
+                ") as $attr) {
+            $original = $attr->value;
+            $attr->value = $qa->get_qt_field_name($original);
+        }
+    }
+
+    /**
+     * Transforms input(-like) elements.
+     *
+     * - If {@see question_display_options} is set, the input is disabled.
+     * - If a value was saved for the input in a previous step, the latest value is added to the HTML.
+     *
+     * Requires the unmangled name of the element, so must be called _before_ {@see mangle_ids_and_names}.
+     *
+     * @param DOMXPath $xpath
+     * @param question_attempt $qa
+     * @param question_display_options|null $options
+     * @return void
+     */
+    private function set_input_values_and_readonly(DOMXPath                  $xpath, question_attempt $qa,
+                                                   ?question_display_options $options = null): void {
+        /** @var DOMElement $element */
+        foreach ($xpath->query("//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea") as $element) {
+            if ($options && $options->readonly) {
+                $element->setAttribute("disabled", "disabled");
+            }
+
+            // We want the unmangled name here, so this method must be called before mangle_ids_and_names.
+            $name = $element->getAttribute("name");
+            if (!$name) {
+                continue;
+            }
+
+            if ($element->tagName == "input") {
+                $type = $element->getAttribute("type") ?: "text";
+            } else {
+                $type = $element->tagName;
+            }
+
+            // Set the last saved value.
+            $lastvalue = $qa->get_last_qt_var($name);
+            if (!is_null($lastvalue)) {
+                if (($type === "checkbox" || $type === "radio") && $element->getAttribute("value") === $lastvalue) {
+                    $element->setAttribute("checked", "checked");
+                } else if ($type == "select") {
+                    // Find the appropriate option and mark it as selected.
+                    /** @var DOMElement $option */
+                    foreach ($element->getElementsByTagName("option") as $option) {
+                        $optvalue = $option->hasAttribute("value") ? $option->getAttribute("value") : $option->textContent;
+                        if ($optvalue == $lastvalue) {
+                            $option->setAttribute("selected", "selected");
+                            break;
+                        }
+                    }
+                } else if ($type != "button" && $type != "submit" && $type != "hidden") {
+                    $element->setAttribute("value", $lastvalue);
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes remaining QuestionPy elements and attributes as well as comments and xmlns declarations.
+     *
+     * @param DOMXPath $xpath
+     * @return void
+     */
+    private function clean_up(DOMXPath $xpath): void {
+        /** @var DOMNode|DOMNameSpaceNode $node */
+        foreach ($xpath->query("//qpy:* | //@qpy:* | //comment() | //namespace::*") as $node) {
+            if ($node instanceof DOMAttr || $node instanceof DOMNameSpaceNode) {
+                $node->parentNode->removeAttributeNS($node->namespaceURI, $node->localName);
+            } else {
+                $node->parentNode->removeChild($node);
+            }
+        }
+    }
+
+    /**
+     * Replace placeholder PIs such as `<?p my_key?>` with the appropriate value from `$parameters`.
+     *
+     * Since QPy transformations should not be applied to the content of parameters, this method should be called last.
+     *
+     * @param DOMXPath $xpath
+     * @param array $parameters
+     * @return void
+     */
+    private function replace_placeholders(DOMXPath $xpath, array $parameters): void {
+        // TODO: Implement me.
     }
 }

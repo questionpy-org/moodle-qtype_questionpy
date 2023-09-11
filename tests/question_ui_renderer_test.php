@@ -60,7 +60,6 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
-     * @covers \qtype_questionpy\question_ui\feedback_transformation
      */
     public function test_should_hide_inline_feedback() {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
@@ -85,7 +84,6 @@ class question_ui_renderer_test extends \advanced_testcase {
      *
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
-     * @covers \qtype_questionpy\question_ui\feedback_transformation
      */
     public function test_should_show_inline_feedback() {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
@@ -97,8 +95,6 @@ class question_ui_renderer_test extends \advanced_testcase {
 
         $result = $ui->render_formulation($qa, $opts);
 
-        /* FIXME: The unused xmlns:qpy namespace declarations are ugly, but there doesn't appear to be an easy way of
-                  telling the DOM library not to emit them. */
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
         <span>No feedback</span>
@@ -209,7 +205,6 @@ class question_ui_renderer_test extends \advanced_testcase {
      * Tests that `name` attributes in most elements are mangled correctly.
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
-     * @covers \qtype_questionpy\question_ui\input_transformation
      */
     public function test_should_mangle_names() {
         $input = file_get_contents(__DIR__ . "/question_uis/inputs.xhtml");
@@ -243,7 +238,6 @@ class question_ui_renderer_test extends \advanced_testcase {
      *
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
-     * @covers \qtype_questionpy\question_ui\shuffle_transformation
      */
     public function test_should_shuffle_the_same_way_with_same_seed() {
         $input = file_get_contents(__DIR__ . "/question_uis/shuffle.xhtml");
