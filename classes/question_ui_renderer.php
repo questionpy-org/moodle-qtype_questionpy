@@ -182,6 +182,10 @@ class question_ui_renderer {
                 $name = $element->getAttribute("name");
                 if ($name) {
                     $this->metadata->expecteddata[$name] = PARAM_RAW;
+
+                    if ($element->hasAttribute("required")) {
+                        $this->metadata->requiredfields[] = $name;
+                    }
                 }
             }
         }
@@ -215,6 +219,7 @@ class question_ui_renderer {
         try {
             $this->hide_unwanted_feedback($xpath, $options);
             $this->set_input_values_and_readonly($xpath, $qa, $options);
+            $this->soften_validation($xpath);
             $this->shuffle_contents($xpath);
             $this->add_styles($xpath);
             $this->mangle_ids_and_names($xpath, $qa);
@@ -448,6 +453,56 @@ class question_ui_renderer {
                 $frag->appendXML($value);
                 $pi->parentNode->replaceChild($frag, $pi);
             }
+        }
+    }
+
+    /**
+     * Replaces the HTML attributes `pattern`, `required`, `minlength`, `maxlength` so that submission is not prevented.
+     *
+     * The standard attributes are replaced with `data-qpy_X`, which are then evaluated in JS.
+     * Ideally we'd also want to handle min and max here, but their evaluation in JS would be quite complicated.
+     *
+     * @param DOMXPath $xpath
+     * @return void
+     */
+    private function soften_validation(DOMXPath $xpath): void {
+        /** @var DOMElement $element */
+        foreach ($xpath->query("//xhtml:input[@pattern]") as $element) {
+            $pattern = $element->getAttribute("pattern");
+            $element->removeAttribute("pattern");
+            $element->setAttribute("data-qpy_pattern", $pattern);
+        }
+
+        foreach ($xpath->query("(//xhtml:input | //xhtml:select | //xhtml:textarea)[@required]") as $element) {
+            $element->removeAttribute("required");
+            $element->setAttribute("data-qpy_required", "data-qpy_required");
+            $element->setAttribute("aria-required", "true");
+        }
+
+        foreach ($xpath->query("(//xhtml:input | //xhtml:textarea)[@minlength]") as $element) {
+            $minlength = $element->getAttribute("minlength");
+            $element->removeAttribute("minlength");
+            $element->setAttribute("data-qpy_minlength", $minlength);
+        }
+
+        foreach ($xpath->query("(//xhtml:input | //xhtml:textarea)[@maxlength]") as $element) {
+            $maxlength = $element->getAttribute("maxlength");
+            $element->removeAttribute("maxlength");
+            $element->setAttribute("data-qpy_maxlength", $maxlength);
+        }
+
+        foreach ($xpath->query("//xhtml:input[@min]") as $element) {
+            $min = $element->getAttribute("min");
+            $element->removeAttribute("min");
+            $element->setAttribute("data-qpy_min", $min);
+            $element->setAttribute("aria-valuemin", $min);
+        }
+
+        foreach ($xpath->query("//xhtml:input[@max]") as $element) {
+            $max = $element->getAttribute("max");
+            $element->removeAttribute("max");
+            $element->setAttribute("data-qpy_max", $max);
+            $element->setAttribute("aria-valuemax", $max);
         }
     }
 

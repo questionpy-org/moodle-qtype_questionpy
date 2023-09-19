@@ -1,0 +1,27 @@
+<qpy:question xmlns="http://www.w3.org/1999/xhtml" xmlns:qpy="http://questionpy.org/ns/question">
+    <qpy:formulation>
+        <div id="my_div">
+            <datalist id="my_list">
+                <option>42</option>
+            </datalist>
+            <label>Wrapping label <input name="my_number" type="number" list="my_list"/></label>
+
+            <label for="my_select">Separate label</label>
+            <select id="my_select" name="my_select">
+                <option value="1">One</option>
+                <option value="2">Two</option>
+            </select>
+
+            <input type="radio" name="my_radio" value="1">One</input>
+            <input type="radio" name="my_radio" value="2">Two</input>
+
+            <textarea name="my_text"/>
+            <button name="my_button">Click me!</button>
+
+            <map name="my_map">
+                <area shape="circle" coords="1, 2, 3"/>
+            </map>
+            <img src="https://picsum.photos/200/300" usemap="#my_map"/>
+        </div>
+    </qpy:formulation>
+</qpy:question>

@@ -39,14 +39,24 @@ class question_metadata {
     public array $expecteddata = [];
 
     /**
+     * @var string[] an array of required field names
+     * @see \question_manually_gradable::is_complete_response()
+     * @see \question_manually_gradable::is_gradable_response()
+     */
+    public array $requiredfields = [];
+
+    /**
      * Initializes a new instance.
      *
      * @param array|null $correctresponse if known, an array of `name => correct_value` entries for the expected
      *                                    response fields
      * @param array $expecteddata an array of `name => PARAM_X` entries for the expected response fields
+     * @param string[] $requiredfields an array of required field names
      */
-    public function __construct(?array $correctresponse = null, array $expecteddata = []) {
+    public function __construct(?array $correctresponse = null, array $expecteddata = [],
+                                array  $requiredfields = []) {
         $this->correctresponse = $correctresponse;
         $this->expecteddata = $expecteddata;
+        $this->requiredfields = $requiredfields;
     }
 }
