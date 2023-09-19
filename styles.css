@@ -110,3 +110,10 @@
 .qpy-repetition-remove {
     margin: .5em;
 }
+
+.form-control.qpy-input {
+    /* Matches the styling used by most bundled question types. */
+    display: inline;
+    width: auto;
+    vertical-align: baseline;
+}

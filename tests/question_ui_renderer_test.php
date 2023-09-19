@@ -224,15 +224,15 @@ class question_ui_renderer_test extends \advanced_testcase {
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
-        <input name="mangled:my_number" type="number"/>
-        <select name="mangled:my_select">
+        <input class="form-control qpy-input" name="mangled:my_number" type="number"/>
+        <select class="form-control qpy-input" name="mangled:my_select">
             <option value="1">One</option>
             <option value="2">Two</option>
         </select>
-        <input type="radio" name="mangled:my_radio" value="1">One</input>
-        <input type="radio" name="mangled:my_radio" value="2">Two</input>
-        <textarea name="mangled:my_text"/>
-        <button name="mangled:my_button">Click me!</button>
+        <input class="qpy-input" type="radio" name="mangled:my_radio" value="1">One</input>
+        <input class="qpy-input" type="radio" name="mangled:my_radio" value="2">Two</input>
+        <textarea class="form-control qpy-input" name="mangled:my_text"/>
+        <button class="btn btn-primary qpy-input" name="mangled:my_button">Click me!</button>
         </div>
         EXPECTED, $result);
     }

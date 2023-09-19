@@ -216,6 +216,7 @@ class question_ui_renderer {
             $this->hide_unwanted_feedback($xpath, $options);
             $this->set_input_values_and_readonly($xpath, $qa, $options);
             $this->shuffle_contents($xpath);
+            $this->add_styles($xpath);
             $this->mangle_ids_and_names($xpath, $qa);
             $this->clean_up($xpath);
             $this->resolve_placeholders($xpath);
@@ -448,5 +449,53 @@ class question_ui_renderer {
                 $pi->parentNode->replaceChild($frag, $pi);
             }
         }
+    }
+
+    /**
+     * Adds CSS classes to various elements to style them similarly to Moodle's own question types.
+     *
+     * @param DOMXPath $xpath
+     * @return void
+     */
+    private function add_styles(DOMXPath $xpath): void {
+        /** @var DOMElement $element */
+        foreach ($xpath->query("
+                //xhtml:input[@type != 'checkbox' and @type != 'radio' and
+                              @type != 'button' and @type != 'submit' and @type != 'reset']
+                | //xhtml:select | //xhtml:textarea
+                ") as $element) {
+            $this->add_class_names($element, "form-control", "qpy-input");
+        }
+
+        foreach ($xpath->query("//xhtml:input[@type = 'button' or @type = 'submit' or @type = 'reset']
+                                | //xhtml:button") as $element) {
+            $this->add_class_names($element, "btn", "btn-primary", "qpy-input");
+        }
+
+        foreach ($xpath->query("//xhtml:input[@type = 'checkbox' or @type = 'radio']") as $element) {
+            $this->add_class_names($element, "qpy-input");
+        }
+    }
+
+    /**
+     * Adds the given class names to the elements `class` attribute if not already present.
+     *
+     * @param DOMElement $element
+     * @param string ...$newclasses
+     * @return void
+     */
+    private function add_class_names(DOMElement $element, string ...$newclasses): void {
+        $classarray = [];
+        for ($class = strtok($element->getAttribute("class"), " \t\n"); $class; $class = strtok(" \t\n")) {
+            $classarray[] = $class;
+        }
+
+        foreach ($newclasses as $newclass) {
+            if (!in_array($newclass, $classarray)) {
+                $classarray[] = $newclass;
+            }
+        }
+
+        $element->setAttribute("class", implode(" ", $classarray));
     }
 }
