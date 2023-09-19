@@ -36,7 +36,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_metadata
      */
     public function test_should_extract_correct_metadata() {
-        $input = file_get_contents(__DIR__ . "/question_uis/inputs.xhtml");
+        $input = file_get_contents(__DIR__ . "/question_uis/metadata.xhtml");
 
         $ui = new question_ui_renderer($input, [], mt_rand());
         $metadata = $ui->get_metadata();
@@ -51,8 +51,10 @@ class question_ui_renderer_test extends \advanced_testcase {
             "my_select" => PARAM_RAW,
             "my_radio" => PARAM_RAW,
             "my_text" => PARAM_RAW,
-            "my_button" => PARAM_RAW
-        ]), $metadata);
+            "my_button" => PARAM_RAW,
+            "only_lowercase_letters" => PARAM_RAW,
+            "between_5_and_10_chars" => PARAM_RAW
+        ], ["my_number"]), $metadata);
     }
 
     /**
@@ -211,7 +213,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_mangle_names() {
-        $input = file_get_contents(__DIR__ . "/question_uis/inputs.xhtml");
+        $input = file_get_contents(__DIR__ . "/question_uis/ids_and_names.xhtml");
 
         $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
@@ -224,15 +226,26 @@ class question_ui_renderer_test extends \advanced_testcase {
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
-        <input class="form-control qpy-input" name="mangled:my_number" type="number"/>
-        <select class="form-control qpy-input" name="mangled:my_select">
-            <option value="1">One</option>
-            <option value="2">Two</option>
-        </select>
-        <input class="qpy-input" type="radio" name="mangled:my_radio" value="1">One</input>
-        <input class="qpy-input" type="radio" name="mangled:my_radio" value="2">Two</input>
-        <textarea class="form-control qpy-input" name="mangled:my_text"/>
-        <button class="btn btn-primary qpy-input" name="mangled:my_button">Click me!</button>
+            <div id="mangled:my_div">
+                <datalist id="mangled:my_list">
+                    <option>42</option>
+                </datalist>
+                <label>Wrapping label <input class="form-control qpy-input" name="mangled:my_number"
+                                             type="number" list="mangled:my_list"/></label>
+                <label for="mangled:my_select">Separate label</label>
+                <select class="form-control qpy-input" id="mangled:my_select" name="mangled:my_select">
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                </select>
+                <input class="qpy-input" type="radio" name="mangled:my_radio" value="1">One</input>
+                <input class="qpy-input" type="radio" name="mangled:my_radio" value="2">Two</input>
+                <textarea class="form-control qpy-input" name="mangled:my_text"/>
+                <button class="btn btn-primary qpy-input" name="mangled:my_button">Click me!</button>
+                <map name="mangled:my_map">
+                    <area shape="circle" coords="1, 2, 3"/>
+                </map>
+                <img src="https://picsum.photos/200/300" usemap="#mangled:my_map"/>
+            </div>
         </div>
         EXPECTED, $result);
     }
@@ -310,6 +323,37 @@ class question_ui_renderer_test extends \advanced_testcase {
         <div xmlns="http://www.w3.org/1999/xhtml">
             <span>Parameter: </span>
             <span>Nested parameter: </span>
+        </div>
+        EXPECTED, $result);
+    }
+
+    /**
+     * Tests that validation attributes from input(-like) elements are replaced so as not to prevent submission.
+     *
+     * @return void
+     * @throws DOMException
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer
+     */
+    public function test_should_soften_validations() {
+        $input = file_get_contents(__DIR__ . "/question_uis/validations.xhtml");
+        $qa = $this->createStub(\question_attempt::class);
+
+        $ui = new question_ui_renderer($input, [], mt_rand());
+
+        $result = $ui->render_formulation($qa, new \question_display_options());
+
+        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <input aria-required="true" data-qpy_required="data-qpy_required"/>
+            <input data-qpy_pattern="^[a-z]+$"/>
+            <input data-qpy_minlength="5"/>
+            <input data-qpy_minlength="10"/>
+            <input aria-valuemin="17" data-qpy_min="17"/>
+            <input aria-valuemax="42" data-qpy_max="42"/>
+            <input aria-required="true" data-qpy_required="data-qpy_required" data-qpy_pattern="^[a-z]+$"
+                   data-qpy_minlength="5" data-qpy_maxlength="10"
+                   aria-valuemin="17" data-qpy_min="17" aria-valuemax="42" data-qpy_max="42"/>
         </div>
         EXPECTED, $result);
     }

@@ -1,6 +1,8 @@
 <qpy:question xmlns="http://www.w3.org/1999/xhtml" xmlns:qpy="http://questionpy.org/ns/question">
     <qpy:formulation>
-        <input name="my_number" type="number" qpy:correct-response="42"/>
+        <input name="my_number" type="number" qpy:correct-response="42" required="required"/>
+        <input name="only_lowercase_letters" pattern="^[a-z]+$"/>
+        <input name="between_5_and_10_chars" minlength="5" maxlength="10"/>
         <select name="my_select" qpy:correct-response="1">
             <option value="1">One</option>
             <option value="2">Two</option>

@@ -83,12 +83,13 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public function start_attempt(question_attempt_step $step, $variant): void {
         $attempt = $this->api->start_attempt($this->packagehash, $this->questionstate, $variant);
 
+        $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
+
         // We generate a fixed seed to be used during every render of the attempt, to keep shuffles deterministic.
         $mtseed = mt_rand();
         $step->set_qt_var(self::QT_VAR_MT_SEED, $mtseed);
 
         $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->parameters, $mtseed);
-        $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
     }
 
     /**
@@ -154,7 +155,12 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *                        {@see question_attempt_step::get_qt_data()}.
      * @return bool whether this response is a complete answer to this question.
      */
-    public function is_complete_response(array $response) {
+    public function is_complete_response(array $response): bool {
+        foreach ($this->ui->get_metadata()->requiredfields as $requiredfield) {
+            if (!isset($response[$requiredfield]) || $response[$requiredfield] === "") {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -165,7 +171,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *
      * @param array $prevresponse the responses previously recorded for this question,
      *                            as returned by {@see question_attempt_step::get_qt_data()}
-     * @param array $newresponse  the new responses, in the same format.
+     * @param array $newresponse the new responses, in the same format.
      * @return bool whether the two sets of responses are the same - that is
      *                            whether the new set of responses can safely be discarded.
      */

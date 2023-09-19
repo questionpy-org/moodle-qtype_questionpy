@@ -31,12 +31,23 @@
 class qtype_questionpy_renderer extends qtype_renderer {
 
     /**
+     * Return any HTML that needs to be included in the page's <head> when this
+     * question is used.
+     * @param question_attempt $qa the question attempt that will be displayed on the page.
+     * @return string HTML fragment.
+     */
+    public function head_code(question_attempt $qa) {
+        $this->page->requires->js_call_amd("qtype_questionpy/view_question", "init");
+        return parent::head_code($qa);
+    }
+
+    /**
      * Generate the display of the formulation part of the question. This is the
      * area that contains the quetsion text, and the controls for students to
      * input their answers. Some question types also embed bits of feedback, for
      * example ticks and crosses, in this area.
      *
-     * @param question_attempt $qa              the question attempt to display.
+     * @param question_attempt $qa the question attempt to display.
      * @param question_display_options $options controls what should and should not be displayed.
      * @return string HTML fragment.
      * @throws coding_exception
