@@ -24,6 +24,11 @@ use moodle_exception;
 use qtype_questionpy\api\api;
 use qtype_questionpy\package\package_version;
 
+defined('MOODLE_INTERNAL') || die;
+
+global $CFG;
+require_once($CFG->libdir . "/externallib.php");
+
 /**
  * This service loads QuestionPy packages from the application server into the database.
  *
