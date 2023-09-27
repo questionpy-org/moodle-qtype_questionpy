@@ -47,8 +47,8 @@ class question_ui_renderer {
     /** @var DOMDocument $question */
     private DOMDocument $question;
 
-    /** @var array $parameters */
-    private array $parameters;
+    /** @var array $placeholders */
+    private array $placeholders;
 
     /** @var question_metadata|null $metadata */
     private ?question_metadata $metadata = null;
@@ -60,15 +60,15 @@ class question_ui_renderer {
      * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
      *
      * @param string $xml XML as returned by the QPy Server
-     * @param array $parameters mapping of parameter names to the strings they should be replaced with in the content
+     * @param array $placeholders string to string mapping of placeholder names to the values
      * @param int $mtseed the seed to use ({@see mt_srand()}) to make `qpy:shuffle-contents` deterministic
      */
-    public function __construct(string $xml, array $parameters, int $mtseed) {
+    public function __construct(string $xml, array $placeholders, int $mtseed) {
         $this->question = new DOMDocument();
         $this->question->loadXML($xml);
         $this->question->normalizeDocument();
 
-        $this->parameters = $parameters;
+        $this->placeholders = $placeholders;
         $this->mtseed = $mtseed;
     }
 
@@ -430,9 +430,10 @@ class question_ui_renderer {
     }
 
     /**
-     * Replace placeholder PIs such as `<?p my_key?>` with the appropriate value from `$parameters`.
+     * Replace placeholder PIs such as `<?p my_key?>` with the appropriate value from `$this->placeholders`.
      *
-     * Since QPy transformations should not be applied to the content of parameters, this method should be called last.
+     * Since QPy transformations should not be applied to the content of the placeholders,
+     * this method should be called last.
      *
      * @param DOMXPath $xpath
      * @return void
@@ -441,16 +442,15 @@ class question_ui_renderer {
         /** @var DOMProcessingInstruction $pi */
         foreach ($xpath->query("//processing-instruction('p')") as $pi) {
             $key = trim($pi->data);
-            $value = utils::array_get_nested($this->parameters, $key);
 
-            if (is_null($value)) {
+            if (!isset($this->placeholders[$key])) {
                 $pi->parentNode->removeChild($pi);
             } else {
                 /** @var DOMDocumentFragment $frag */
                 $frag = $xpath->document->createDocumentFragment();
                 /* TODO: This always interprets the parameter value as XHTML.
                          While supporting markup here is important, perhaps we should allow placeholders to opt out? */
-                $frag->appendXML($value);
+                $frag->appendXML($this->placeholders[$key]);
                 $pi->parentNode->replaceChild($frag, $pi);
             }
         }

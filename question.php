@@ -89,7 +89,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $mtseed = mt_rand();
         $step->set_qt_var(self::QT_VAR_MT_SEED, $mtseed);
 
-        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->parameters, $mtseed);
+        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders, $mtseed);
     }
 
     /**
@@ -116,7 +116,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         }
 
         $attempt = $this->api->view_attempt($this->packagehash, $this->questionstate, $attemptstate);
-        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->parameters, $mtseed);
+        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders, $mtseed);
     }
 
     /**

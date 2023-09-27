@@ -273,7 +273,7 @@ class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
-     * Tests that placeholders are replaced with their parameters.
+     * Tests that placeholders are replaced.
      *
      * @return void
      * @throws DOMException
@@ -281,14 +281,11 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_resolve_placeholders() {
-        $input = file_get_contents(__DIR__ . "/question_uis/parameters.xhtml");
+        $input = file_get_contents(__DIR__ . "/question_uis/placeholder.xhtml");
         $qa = $this->createStub(\question_attempt::class);
 
         $ui = new question_ui_renderer($input, [
             "param" => "Value of param <b>one</b>",
-            "nested" => [
-                "param" => "Value of param <b>two</b>",
-            ]
         ], mt_rand());
 
         $result = $ui->render_formulation($qa, new \question_display_options());
@@ -296,33 +293,29 @@ class question_ui_renderer_test extends \advanced_testcase {
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
             <span>Parameter: Value of param <b>one</b></span>
-            <span>Nested parameter: Value of param <b>two</b></span>
         </div>
         EXPECTED, $result);
     }
 
     /**
-     * Tests that placeholders are just removed when the corresponding parameter is null or missing.
+     * Tests that placeholders are just removed when the corresponding value is missing.
      *
      * @return void
      * @throws DOMException
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_remove_placeholders_when_no_corresponding_parameter_or_parameter_is_null() {
-        $input = file_get_contents(__DIR__ . "/question_uis/parameters.xhtml");
+    public function test_should_remove_placeholders_when_no_corresponding_value() {
+        $input = file_get_contents(__DIR__ . "/question_uis/placeholder.xhtml");
         $qa = $this->createStub(\question_attempt::class);
 
-        $ui = new question_ui_renderer($input, [
-            "param" => null
-        ], mt_rand());
+        $ui = new question_ui_renderer($input, [], mt_rand());
 
         $result = $ui->render_formulation($qa, new \question_display_options());
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
             <span>Parameter: </span>
-            <span>Nested parameter: </span>
         </div>
         EXPECTED, $result);
     }

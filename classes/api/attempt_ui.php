@@ -34,8 +34,8 @@ class attempt_ui {
     /** @var string */
     public string $content;
 
-    /** @var array mapping of parameter names to the strings they should be replaced with in the content */
-    public array $parameters = [];
+    /** @var array string to string mapping of placeholder names to the values (to be replaced in the content) */
+    public array $placeholders = [];
 
     /** @var string|null specifics TBD */
     public ?string $includeinlinecss = null;
