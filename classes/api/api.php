@@ -86,7 +86,7 @@ class api {
         $connector = connector::default();
 
         $parts = [
-            "main" => "{}"
+            "main" => "{}",
         ];
 
         if ($questionstate !== null) {
@@ -142,7 +142,7 @@ class api {
         $connector = connector::default();
 
         $main = [
-            "variant" => $variant
+            "variant" => $variant,
         ];
         $parts = [
             "main" => json_encode($main),
@@ -167,7 +167,7 @@ class api {
         $connector = connector::default();
 
         $main = [
-            "attempt_state" => $attemptstate
+            "attempt_state" => $attemptstate,
         ];
         $parts = [
             "main" => json_encode($main),
@@ -190,7 +190,7 @@ class api {
     public static function package_extract_info(string $filename, string $filepath): http_response_container {
         $curlfile = curl_file_create($filepath, $filename);
         $data = [
-            'package' => $curlfile
+            'package' => $curlfile,
         ];
         $connector = connector::default();
         return $connector->post("/package-extract-info", $data);

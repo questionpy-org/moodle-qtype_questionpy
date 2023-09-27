@@ -90,7 +90,7 @@ class package_raw extends package_base {
 
         $packageid = $DB->get_field('qtype_questionpy_package', 'id', [
             'shortname' => $this->shortname,
-            'namespace' => $this->namespace
+            'namespace' => $this->namespace,
         ]);
 
         if (!$packageid) {
@@ -104,7 +104,7 @@ class package_raw extends package_base {
                 'icon' => $this->icon,
                 'license' => $this->license,
                 'timemodified' => $timestamp,
-                'timecreated' => $timestamp
+                'timecreated' => $timestamp,
             ]);
 
             if ($this->languages) {
@@ -115,7 +115,7 @@ class package_raw extends package_base {
                         'packageid' => $packageid,
                         'language' => $language,
                         'name' => $this->get_localized_name([$language]),
-                        'description' => $this->get_localized_description([$language])
+                        'description' => $this->get_localized_description([$language]),
                     ];
                 }
                 $DB->insert_records('qtype_questionpy_language', $languagedata);
@@ -151,7 +151,7 @@ class package_raw extends package_base {
             'hash' => $this->hash,
             'version' => $this->version,
             'timecreated' => $timestamp,
-            'userid' => $withuserid ? $USER->id : null
+            'userid' => $withuserid ? $USER->id : null,
         ]);
 
         $transaction->allow_commit();

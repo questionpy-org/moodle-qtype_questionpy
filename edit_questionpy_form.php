@@ -76,7 +76,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $mform->setType('questionpy_package_search', PARAM_TEXT);
 
         // Create group which contains selectable QuestionPy packages.
-        $group = array();
+        $group = [];
 
         $languages = localizer::get_preferred_languages();
 
@@ -118,7 +118,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $packagearray['selected'] = true;
         $packagearray['versions'] = ['hash' => $pkgversion->hash, 'version' => $pkgversion->version];
 
-        $group = array();
+        $group = [];
         $group[] = $mform->createElement(
             'html', $OUTPUT->render_from_template('qtype_questionpy/package/package_selection', $packagearray)
         );

@@ -53,7 +53,7 @@ class package_upload extends \moodleform {
         $contextid = $this->_customdata['contextid'];
 
         // Create group which contains selectable QuestionPy packages.
-        $group = array();
+        $group = [];
 
         $languages = localizer::get_preferred_languages();
         $versions = package_version::get_records(['contextid' => $contextid]);

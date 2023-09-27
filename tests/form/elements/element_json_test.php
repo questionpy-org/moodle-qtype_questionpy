@@ -68,9 +68,9 @@ class element_json_test extends \advanced_testcase {
     /**
      * Provider of argument pairs for {@see test_deserialize}.
      */
-    public function deserialize_provider(): array {
+    public static function deserialize_provider(): array {
         return [
-            ...$this->serialize_provider(),
+            ...self::serialize_provider(),
             // TODO: also test defaults.
         ];
     }
@@ -78,7 +78,7 @@ class element_json_test extends \advanced_testcase {
     /**
      * Provider of argument pairs for {@see test_serialize}.
      */
-    public function serialize_provider(): array {
+    public static function serialize_provider(): array {
         return element_provider();
     }
 }

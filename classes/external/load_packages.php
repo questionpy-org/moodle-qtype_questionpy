@@ -79,7 +79,7 @@ class load_packages extends external_api {
 
         return [
             'packages' => $DB->count_records('qtype_questionpy_package'),
-            'versions' => $DB->count_records('qtype_questionpy_pkgversion')
+            'versions' => $DB->count_records('qtype_questionpy_pkgversion'),
         ];
     }
 
@@ -91,7 +91,7 @@ class load_packages extends external_api {
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'packages' => new external_value(PARAM_INT, 'The total amount of packages in the DB.'),
-            'versions' => new external_value(PARAM_INT, 'The total amount of package versions in the DB.')
+            'versions' => new external_value(PARAM_INT, 'The total amount of package versions in the DB.'),
         ]);
     }
 }

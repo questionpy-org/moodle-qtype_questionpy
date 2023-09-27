@@ -100,7 +100,7 @@ class package extends package_base {
      */
     public static function get_records(?array $conditions = null): array {
         global $DB;
-        $packages = array();
+        $packages = [];
         $records = $DB->get_records('qtype_questionpy_package', $conditions);
         foreach ($records as $record) {
             $package = self::get_package_data($record->id);
@@ -148,7 +148,7 @@ class package extends package_base {
             $name[$record->language] = $record->name;
             $description[$record->language] = $record->description;
         }
-        return array($language, $name, $description);
+        return [$language, $name, $description];
     }
 
     /**
@@ -198,7 +198,7 @@ class package extends package_base {
             return [];
         }
 
-        $difference = array();
+        $difference = [];
         $package = (array) $package;
 
         // Remove id from comparison.

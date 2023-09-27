@@ -86,7 +86,7 @@ class package_version {
      */
     public static function get_records(?array $conditions = null): array {
         global $DB;
-        $packages = array();
+        $packages = [];
         $records = $DB->get_records('qtype_questionpy_pkgversion', $conditions);
         foreach ($records as $record) {
             $packages[] = array_converter::from_array(self::class, (array) $record);

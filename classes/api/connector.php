@@ -70,7 +70,7 @@ class connector {
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_TIMEOUT => $this->timeout
+            CURLOPT_TIMEOUT => $this->timeout,
         ]);
     }
 
@@ -201,7 +201,7 @@ class connector {
             $contenttype = is_string($data) ? 'application/json' : 'multipart/form-data';
             $this->set_opts([
                 CURLOPT_POSTFIELDS => $data,
-                CURLOPT_HTTPHEADER => ["Content-Type: $contenttype"]
+                CURLOPT_HTTPHEADER => ["Content-Type: $contenttype"],
             ]);
         }
 
