@@ -46,7 +46,7 @@ echo $output->header(get_string('pluginname', 'qtype_questionpy'));
 
 $customdata = [
     'courseid' => $courseid,
-    'contextid' => $context->id
+    'contextid' => $context->id,
 ];
 $mform = new \qtype_questionpy\form\package_upload(null, $customdata);
 $fs = get_file_storage();

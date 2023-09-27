@@ -83,7 +83,7 @@ class element_html_test extends \advanced_testcase {
     /**
      * Provides argument pairs for {@see test_rendered_html_should_match_snapshot}.
      */
-    public function data_provider(): array {
+    public static function data_provider(): array {
         return element_provider();
     }
 }

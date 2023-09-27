@@ -57,7 +57,7 @@ function package_provider(array $attributes = []): package_raw {
         'namespace' => 'my_namespace',
         'name' => [
             'en' => 'de: My Name',
-            'de' => 'en: My Name'
+            'de' => 'en: My Name',
         ],
         'version' => '0.1.0',
         'type' => 'questiontype',
@@ -65,19 +65,20 @@ function package_provider(array $attributes = []): package_raw {
         'url' => 'http://www.example.com/',
         'languages' => [
             0 => 'en',
-            1 => 'de'
+            1 => 'de',
         ],
         'description' => [
             'en' => 'en: Lorem ipsum dolor sit amet.',
-            'de' => 'de: Lorem ipsum dolor sit amet.'
+            'de' => 'de: Lorem ipsum dolor sit amet.',
         ],
         'icon' => 'https://placehold.jp/40e47e/598311/150x150.png',
         'license' => 'MIT',
         'tags' => [
             0 => 'my_tag_0',
             1 => 'my_tag_1',
-            2 => 'my_tag_2'
-        ]], $attributes);
+            2 => 'my_tag_2',
+        ],
+    ], $attributes);
 
     if (!isset($attributes['package_hash'])) {
         $data['package_hash'] = hash('sha256', $data['short_name'] . $data['namespace'] . $data['version']);
@@ -95,33 +96,36 @@ function element_provider(): array {
     return [
         ["checkbox", (new checkbox_element("my_checkbox", "Left", "Right", true, true))
             ->disable_if(new is_checked("chk1"))
-            ->help("Help text")
+            ->help("Help text"),
         ],
         ["checkbox_group", new checkbox_group_element(
             (new checkbox_element(
                 "my_checkbox", "Left", "Right",
                 true, true
-            ))->help("Help text")
-        )],
+            ))->help("Help text")),
+        ],
         ["group", (new group_element("my_group", "Name", [
             new text_input_element("first_name", "", true, null, "Vorname"),
             new text_input_element("last_name", "", false, null, "Nachname (optional)"),
         ]))
             ->hide_if(new is_not_checked("chk1"))
-            ->help("Help text")
+            ->help("Help text"),
         ],
         ["hidden", (new hidden_element("my_hidden_value", "42"))->disable_if(new equals("input1", 7))],
         ["radio_group", (new radio_group_element("my_radio", "Label", [
             new option("Option 1", "opt1", true),
             new option("Option 2", "opt2"),
-        ], true))->disable_if(new does_not_equal("input1", ""))],
+        ], true))->disable_if(new does_not_equal("input1", "")),
+        ],
         ["repetition", new repetition_element("my_rep", 3, 2, null, [
             new text_input_element("item", "Label"),
-        ])],
+        ]),
+        ],
         ["select", (new select_element("my_select", "Label", [
             new option("Option 1", "opt1", true),
             new option("Option 2", "opt2"),
-        ], true, true))->disable_if(new in("input1", ["valid", "also valid"]))],
+        ], true, true))->disable_if(new in("input1", ["valid", "also valid"])),
+        ],
         ["static_text", new static_text_element("my_text", "Label", "Lorem ipsum dolor sit amet.")],
         ["input", new text_input_element("my_field", "Label", true, "default", "placeholder")],
     ];

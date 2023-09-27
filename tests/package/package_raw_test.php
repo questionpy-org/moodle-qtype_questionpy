@@ -38,73 +38,84 @@ class package_raw_test extends \advanced_testcase {
      *
      * @return array
      */
-    public function valid_package_data_provider(): array {
+    public static function valid_package_data_provider(): array {
         return [
-            'Minimal package data' => [[
-                'package_hash' => 'hash',
-                'short_name' => 'shortname',
-                'namespace' => 'namespace',
-                'name' => [],
-                'version' => '1.0.0',
-                'type' => 'question',
-            ]],
-            'Maximal package data' => [[
-                'package_hash' => 'hash',
-                'short_name' => 'shortname',
-                'namespace' => 'namespace',
-                'name' => [],
-                'version' => '1.0.0',
-                'type' => 'question',
+            'Minimal package data' => [
+                [
+                    'package_hash' => 'hash',
+                    'short_name' => 'shortname',
+                    'namespace' => 'namespace',
+                    'name' => [],
+                    'version' => '1.0.0',
+                    'type' => 'question',
+                ],
+            ],
+            'Maximal package data' => [
+                [
+                    'package_hash' => 'hash',
+                    'short_name' => 'shortname',
+                    'namespace' => 'namespace',
+                    'name' => [],
+                    'version' => '1.0.0',
+                    'type' => 'question',
 
-                'author' => 'author',
-                'url' => 'url',
-                'languages' => [],
-                'description' => [],
-                'icon' => 'icon',
-                'license' => 'license',
-                'tags' => []
-            ]],
-            'With tags' => [[
-                'package_hash' => 'hash',
-                'short_name' => 'shortname',
-                'namespace' => 'namespace',
-                'name' => [],
-                'version' => '1.0.0',
-                'type' => 'question',
-                'tags' => ['tag1', 'tag2']
-            ]],
-            'With one language' => [[
-                'package_hash' => 'hash',
-                'short_name' => 'shortname',
-                'namespace' => 'namespace',
-                'name' => ['en' => 'en_name'],
-                'version' => '1.0.0',
-                'type' => 'question',
-                'languages' => ['en'],
-                'description' => ['en' => 'en_description']
-            ]],
-            'With multiple languages' => [[
-                'package_hash' => 'hash',
-                'short_name' => 'shortname',
-                'namespace' => 'namespace',
-                'name' => ['en' => 'en_name', 'de' => 'de_name', 'fr' => 'fr_name'],
-                'version' => '1.0.0',
-                'type' => 'question',
-                'languages' => ['en', 'de', 'fr'],
-                'description' => ['en' => 'en_description', 'de' => 'de_description', 'fr' => 'fr_description']
-            ]],
-            'With multiple languages and tags' => [[
-                'package_hash' => 'hash',
-                'short_name' => 'shortname',
-                'namespace' => 'namespace',
-                'name' => ['en' => 'en_name', 'de' => 'de_name', 'fr' => 'fr_name'],
-                'version' => '1.0.0',
-                'type' => 'question',
-                'languages' => ['en', 'de', 'fr'],
-                'description' => ['en' => 'en_description', 'de' => 'de_description', 'fr' => 'fr_description'],
-                'tags' => ['tag1', 'tag2']
-            ]],
-
+                    'author' => 'author',
+                    'url' => 'url',
+                    'languages' => [],
+                    'description' => [],
+                    'icon' => 'icon',
+                    'license' => 'license',
+                    'tags' => [],
+                ],
+            ],
+            'With tags' => [
+                [
+                    'package_hash' => 'hash',
+                    'short_name' => 'shortname',
+                    'namespace' => 'namespace',
+                    'name' => [],
+                    'version' => '1.0.0',
+                    'type' => 'question',
+                    'tags' => ['tag1', 'tag2'],
+                ],
+            ],
+            'With one language' => [
+                [
+                    'package_hash' => 'hash',
+                    'short_name' => 'shortname',
+                    'namespace' => 'namespace',
+                    'name' => ['en' => 'en_name'],
+                    'version' => '1.0.0',
+                    'type' => 'question',
+                    'languages' => ['en'],
+                    'description' => ['en' => 'en_description'],
+                ],
+            ],
+            'With multiple languages' => [
+                [
+                    'package_hash' => 'hash',
+                    'short_name' => 'shortname',
+                    'namespace' => 'namespace',
+                    'name' => ['en' => 'en_name', 'de' => 'de_name', 'fr' => 'fr_name'],
+                    'version' => '1.0.0',
+                    'type' => 'question',
+                    'languages' => ['en', 'de', 'fr'],
+                    'description' => ['en' => 'en_description', 'de' => 'de_description', 'fr' => 'fr_description'],
+                ],
+            ],
+            'With multiple languages and tags' => [
+                [
+                    'package_hash' => 'hash',
+                    'short_name' => 'shortname',
+                    'namespace' => 'namespace',
+                    'name' => ['en' => 'en_name', 'de' => 'de_name', 'fr' => 'fr_name'],
+                    'version' => '1.0.0',
+                    'type' => 'question',
+                    'languages' => ['en', 'de', 'fr'],
+                    'description' => ['en' => 'en_description', 'de' => 'de_description', 'fr' => 'fr_description'],
+                    'tags' => ['tag1', 'tag2'],
+                ],
+            ],
         ];
     }
 
