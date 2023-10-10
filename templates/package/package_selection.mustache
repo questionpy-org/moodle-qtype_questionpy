@@ -30,7 +30,7 @@
     * icon - QuestionPy package icon,
     * selected - Weather the current QuestionPy package is selected or not,
     * versions - If 'selected' is true, include only the selected package; else, include every available package,
-    * url - The url of the QuestionPy package,
+    * url - The url of the QuestionPy package
 
     Example context (json):
     {
@@ -81,4 +81,8 @@
         </div>
     {{/action}}
 {{/qtype_questionpy/package/package_base}}
-
+{{#js}}
+require(['qtype_questionpy/edit_question'], function(module) {
+    module.initActionButton('qpy-card-{{uniqid}}', {{selected}});
+});
+{{/js}}

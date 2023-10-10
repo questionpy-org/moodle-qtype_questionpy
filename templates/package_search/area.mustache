@@ -1,0 +1,64 @@
+{{!
+    This file is part of the QuestionPy Moodle plugin - https://questionpy.org
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template qtype_questionpy/package_search/area
+
+    Represents a reactive package search area consisting of a searchbar and a package container.
+
+    Classes required for JS:
+    * qpy-package-search-search-bar,
+    * qpy-package-search-container
+
+    Example context (json):
+    {
+        "contextid": 1,
+        "limit": 10
+    }
+}}
+<div class="qpy-package-search-area" id="qpy-package-search-area-{{uniqid}}">
+    <!-- SEARCH BAR -->
+    <div class="qpy-package-search-search-bar">
+        <input type="text" class="form-control" data-for="search-bar" aria-label="Search Bar" placeholder="{{#str}}selection_searchbar, qtype_questionpy{{/str}}">
+    </div>
+
+    <!-- PACKAGE CONTAINER -->
+    <div class="qpy-package-search-container">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-for="all-header" id="qpy-all-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-all-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-all-content-{{uniqid}}" aria-selected="true">{{#str}}all_packages, qtype_questionpy, 0{{/str}}</button>
+            </li>
+            <li class="ml-auto my-auto" data-for="loading-indicator">
+                {{> core/loading }}
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="qpy-all-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-all-header-{{uniqid}}">
+                <div class="qpy-tab-content" data-for="all-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{{#js}}
+    require(['qtype_questionpy/package_search/area'], function(area) {
+        const areaElement = document.getElementById("qpy-package-search-area-{{uniqid}}");
+        const options = {
+            contextid: {{contextid}},
+            limit: {{limit}},
+        };
+        area.init(areaElement, options);
+    });
+{{/js}}
