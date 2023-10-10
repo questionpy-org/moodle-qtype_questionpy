@@ -285,14 +285,17 @@ class question_ui_renderer_test extends \advanced_testcase {
         $qa = $this->createStub(\question_attempt::class);
 
         $ui = new question_ui_renderer($input, [
-            "param" => "Value of param <b>one</b>",
+            "param" => "Value of param <b>one</b>.<script>'Oh no, danger!'</script>",
         ], mt_rand());
 
         $result = $ui->render_formulation($qa, new \question_display_options());
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
-            <span>Parameter: Value of param <b>one</b></span>
+            <span>By default cleaned parameter: Value of param <b>one</b>.</span>
+            <span>Explicitly cleaned parameter: Value of param <b>one</b>.</span>
+            <span>Noclean parameter: Value of param <b>one</b>.<script>'Oh no, danger!'</script></span>
+            <span>Plain parameter: <![CDATA[Value of param <b>one</b>.<script>'Oh no, danger!'</script>]]></span>
         </div>
         EXPECTED, $result);
     }
@@ -315,7 +318,10 @@ class question_ui_renderer_test extends \advanced_testcase {
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
-            <span>Parameter: </span>
+            <span>By default cleaned parameter: </span>
+            <span>Explicitly cleaned parameter: </span>
+            <span>Noclean parameter: </span>
+            <span>Plain parameter: </span>
         </div>
         EXPECTED, $result);
     }

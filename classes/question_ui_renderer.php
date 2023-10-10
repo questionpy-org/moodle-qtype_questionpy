@@ -19,12 +19,12 @@ namespace qtype_questionpy;
 use coding_exception;
 use DOMAttr;
 use DOMDocument;
-use DOMDocumentFragment;
 use DOMElement;
 use DOMException;
 use DOMNameSpaceNode;
 use DOMNode;
 use DOMProcessingInstruction;
+use DOMText;
 use DOMXPath;
 use question_attempt;
 use question_display_options;
@@ -328,7 +328,7 @@ class question_ui_renderer {
                     break;
             }
 
-            $indexelement->parentNode->replaceChild(new \DOMText($indexstr), $indexelement);
+            $indexelement->parentNode->replaceChild(new DOMText($indexstr), $indexelement);
         }
     }
 
@@ -430,10 +430,10 @@ class question_ui_renderer {
     }
 
     /**
-     * Replace placeholder PIs such as `<?p my_key?>` with the appropriate value from `$this->placeholders`.
+     * Replace placeholder PIs such as `<?p my_key plain?>` with the appropriate value from `$this->placeholders`.
      *
-     * Since QPy transformations should not be applied to the content of the placeholders,
-     * this method should be called last.
+     * Since QPy transformations should not be applied to the content of the placeholders, this method should be called
+     * last.
      *
      * @param DOMXPath $xpath
      * @return void
@@ -441,26 +441,39 @@ class question_ui_renderer {
     private function resolve_placeholders(DOMXPath $xpath): void {
         /** @var DOMProcessingInstruction $pi */
         foreach ($xpath->query("//processing-instruction('p')") as $pi) {
-            $key = trim($pi->data);
+            $parts = preg_split("/\s+/", trim($pi->data));
+            $key = $parts[0];
+            $cleanoption = $parts[1] ?? "clean";
 
             if (!isset($this->placeholders[$key])) {
                 $pi->parentNode->removeChild($pi);
             } else {
-                /** @var DOMDocumentFragment $frag */
-                $frag = $xpath->document->createDocumentFragment();
-                /* TODO: This always interprets the parameter value as XHTML.
-                         While supporting markup here is important, perhaps we should allow placeholders to opt out? */
-                $frag->appendXML($this->placeholders[$key]);
-                $pi->parentNode->replaceChild($frag, $pi);
+                $rawvalue = $this->placeholders[$key];
+                if (strcasecmp($cleanoption, "clean") == 0) {
+                    // Allow (X)HTML, but clean using Moodle's clean_text to prevent XSS.
+                    $element = $xpath->document->createDocumentFragment();
+                    $element->appendXML(clean_text($rawvalue));
+                } else if (strcasecmp($cleanoption, "noclean") == 0) {
+                    $element = $xpath->document->createDocumentFragment();
+                    $element->appendXML($rawvalue);
+                } else {
+                    if (strcasecmp($cleanoption, "plain") != 0) {
+                        debugging("Unrecognized placeholder cleaning option: '$cleanoption', using 'plain'");
+                    }
+                    // Treat the value as plain text and don't allow any kind of markup.
+                    // Since we're adding a text node, the DOM handles escaping for us.
+                    $element = new DOMText($rawvalue);
+                }
+                $pi->parentNode->replaceChild($element, $pi);
             }
         }
     }
 
     /**
-     * Replaces the HTML attributes `pattern`, `required`, `minlength`, `maxlength` so that submission is not prevented.
+     * Replaces the HTML attributes `pattern`, `required`, `minlength`, `maxlength`, `min, `max` so that submission is
+     * not prevented.
      *
      * The standard attributes are replaced with `data-qpy_X`, which are then evaluated in JS.
-     * Ideally we'd also want to handle min and max here, but their evaluation in JS would be quite complicated.
      *
      * @param DOMXPath $xpath
      * @return void
