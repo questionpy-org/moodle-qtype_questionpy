@@ -220,6 +220,7 @@ class question_ui_renderer {
             $this->hide_unwanted_feedback($xpath, $options);
             $this->set_input_values_and_readonly($xpath, $qa, $options);
             $this->soften_validation($xpath);
+            $this->defuse_buttons($xpath);
             $this->shuffle_contents($xpath);
             $this->add_styles($xpath);
             $this->mangle_ids_and_names($xpath, $qa);
@@ -542,6 +543,22 @@ class question_ui_renderer {
 
         foreach ($xpath->query("//xhtml:input[@type = 'checkbox' or @type = 'radio']") as $element) {
             $this->add_class_names($element, "qpy-input");
+        }
+    }
+
+    /**
+     * Turns submit and reset buttons into simple buttons without a default action.
+     *
+     * When multiple questions are shown on the same page, they share a form, so one question must not reset or submit
+     * the entire form.
+     *
+     * @param DOMXPath $xpath
+     * @return void
+     */
+    private function defuse_buttons(DOMXPath $xpath): void {
+        /** @var DOMElement $element */
+        foreach ($xpath->query("(//xhtml:input | //xhtml:button)[@type = 'submit' or @type = 'reset']") as $element) {
+            $element->setAttribute("type", "button");
         }
     }
 
