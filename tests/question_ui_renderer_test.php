@@ -356,4 +356,33 @@ class question_ui_renderer_test extends \advanced_testcase {
         </div>
         EXPECTED, $result);
     }
+
+    /**
+     * Tests that submit and reset buttons (which would also affect other questions) are turned into simple ones.
+     *
+     * @throws DOMException
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer
+     */
+    public function test_should_defuse_buttons() {
+        $input = file_get_contents(__DIR__ . "/question_uis/buttons.xhtml");
+        $qa = $this->createStub(\question_attempt::class);
+
+        $ui = new question_ui_renderer($input, [], mt_rand());
+
+        $result = $ui->render_formulation($qa, new \question_display_options());
+
+        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <button class="btn btn-primary qpy-input" type="button">Submit</button>
+            <button class="btn btn-primary qpy-input" type="button">Reset</button>
+            <button class="btn btn-primary qpy-input" type="button">Button</button>
+
+            <input class="btn btn-primary qpy-input" type="button" value="Submit"/>
+            <input class="btn btn-primary qpy-input" type="button" value="Reset"/>
+            <input class="btn btn-primary qpy-input" type="button" value="Button"/>
+        </div>
+        EXPECTED, $result);
+
+    }
 }
