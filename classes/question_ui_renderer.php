@@ -244,7 +244,7 @@ class question_ui_renderer {
      */
     private function hide_unwanted_feedback(\DOMXPath $xpath, ?question_display_options $options = null): void {
         /** @var DOMElement $element */
-        foreach ($xpath->query("//*[@qpy:feedback]") as $element) {
+        foreach (iterator_to_array($xpath->query("//*[@qpy:feedback]")) as $element) {
             $feedback = $element->getAttributeNS(self::QPY_NAMESPACE, "feedback");
 
             if (($feedback == "general" && !$options->generalfeedback)
@@ -264,7 +264,7 @@ class question_ui_renderer {
      */
     private function shuffle_contents(\DOMXPath $xpath): void {
         /** @var DOMElement $element */
-        foreach ($xpath->query("//*[@qpy:shuffle-contents]") as $element) {
+        foreach (iterator_to_array($xpath->query("//*[@qpy:shuffle-contents]")) as $element) {
             $element->removeAttributeNS(self::QPY_NAMESPACE, "shuffle-contents");
             $newelement = $element->cloneNode();
 
@@ -305,9 +305,8 @@ class question_ui_renderer {
      * @throws coding_exception
      */
     private function replace_shuffled_indices(DOMXPath $xpath, DOMNode $element, int $index): void {
-        $indexelements = $xpath->query(".//qpy:shuffled-index", $element);
         /** @var DOMElement $indexelement */
-        foreach ($indexelements as $indexelement) {
+        foreach (iterator_to_array($xpath->query(".//qpy:shuffled-index", $element)) as $indexelement) {
             $format = $indexelement->getAttribute("format") ?: "123";
 
             switch ($format) {
@@ -421,7 +420,7 @@ class question_ui_renderer {
      */
     private function clean_up(DOMXPath $xpath): void {
         /** @var DOMNode|DOMNameSpaceNode $node */
-        foreach ($xpath->query("//qpy:* | //@qpy:* | //comment() | //namespace::*") as $node) {
+        foreach (iterator_to_array($xpath->query("//qpy:* | //@qpy:* | //comment() | //namespace::*")) as $node) {
             if ($node instanceof DOMAttr || $node instanceof DOMNameSpaceNode) {
                 $node->parentNode->removeAttributeNS($node->namespaceURI, $node->localName);
             } else {
@@ -441,7 +440,7 @@ class question_ui_renderer {
      */
     private function resolve_placeholders(DOMXPath $xpath): void {
         /** @var DOMProcessingInstruction $pi */
-        foreach ($xpath->query("//processing-instruction('p')") as $pi) {
+        foreach (iterator_to_array($xpath->query("//processing-instruction('p')")) as $pi) {
             $parts = preg_split("/\s+/", trim($pi->data));
             $key = $parts[0];
             $cleanoption = $parts[1] ?? "clean";
