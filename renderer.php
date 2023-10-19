@@ -59,42 +59,50 @@ class qtype_questionpy_renderer extends qtype_renderer {
     }
 
     /**
-     * Generate the general feedback. This is feedback shown to all students.
+     * Generate the display of the outcome part of the question.
+     *
+     * We reimplement this method instead of overriding the more specific methods {@see specific_feedback()},
+     * {@see general_feedback()} and {@see correct_response()} because those aren't passed the
+     * {@see question_display_options}.
      *
      * @param question_attempt $qa the question attempt to display.
+     * @param question_display_options $options controls what should and should not be displayed.
      * @return string HTML fragment.
+     * @throws coding_exception
+     * @throws DOMException
      */
-    protected function general_feedback(question_attempt $qa): string {
+    public function feedback(question_attempt $qa, question_display_options $options): string {
         $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
-        return $question->ui->render_general_feedback($qa) ?? "";
-    }
 
-    /**
-     * Generate the specific feedback. This is feedback that varies according to
-     * the response the student gave.
-     *
-     * @param question_attempt $qa the question attempt to display.
-     * @return string HTML fragment.
-     */
-    public function specific_feedback(question_attempt $qa): string {
-        $question = $qa->get_question();
-        assert($question instanceof qtype_questionpy_question);
-        return $question->ui->render_specific_feedback($qa) ?? "";
-    }
+        $output = '';
+        $hint = null;
 
-    /**
-     * Create an automatic description of the correct response to this question.
-     * Not all question types can do this. If it is not possible, this method
-     * should just return an empty string.
-     *
-     * @param question_attempt $qa the question attempt to display.
-     * @return string HTML fragment.
-     */
-    public function correct_response(question_attempt $qa): string {
-        $question = $qa->get_question();
-        assert($question instanceof qtype_questionpy_question);
-        return $question->ui->render_right_answer($qa) ?? "";
+        if ($options->feedback) {
+            $output .= html_writer::nonempty_tag('div', $question->ui->render_specific_feedback($qa, $options) ?? "",
+                ['class' => 'specificfeedback']);
+            $hint = $qa->get_applicable_hint();
+        }
+
+        if ($options->numpartscorrect) {
+            $output .= html_writer::nonempty_tag('div', $this->num_parts_correct($qa), ['class' => 'numpartscorrect']);
+        }
+
+        if ($hint) {
+            $output .= $this->hint($qa, $hint);
+        }
+
+        if ($options->generalfeedback) {
+            $output .= html_writer::nonempty_tag('div', $question->ui->render_general_feedback($qa, $options) ?? "",
+                ['class' => 'generalfeedback']);
+        }
+
+        if ($options->rightanswer) {
+            $output .= html_writer::nonempty_tag('div', $question->ui->render_right_answer($qa, $options) ?? "",
+                ['class' => 'rightanswer']);
+        }
+
+        return $output;
     }
 
     /**

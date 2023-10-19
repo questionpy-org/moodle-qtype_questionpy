@@ -94,50 +94,53 @@ class question_ui_renderer {
     /**
      * Renders the contents of the `qpy:general-feedback` element or returns null if there is none.
      * @param question_attempt $qa
+     * @param question_display_options $options
      * @return string|null
      * @throws DOMException
      * @throws coding_exception
      */
-    public function render_general_feedback(question_attempt $qa): ?string {
+    public function render_general_feedback(question_attempt $qa, question_display_options $options): ?string {
         $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "general-feedback");
         if ($elements->length < 1) {
             return null;
         }
 
-        return $this->render_part($elements->item(0), $qa);
+        return $this->render_part($elements->item(0), $qa, $options);
     }
 
     /**
      * Renders the contents of the `qpy:specific-feedback` element or returns null if there is none.
      * @param question_attempt $qa
+     * @param question_display_options $options
      * @return string|null
      * @throws DOMException
      * @throws coding_exception
      */
-    public function render_specific_feedback(question_attempt $qa): ?string {
+    public function render_specific_feedback(question_attempt $qa, question_display_options $options): ?string {
         $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "specific-feedback");
         if ($elements->length < 1) {
             return null;
         }
 
-        return $this->render_part($elements->item(0), $qa);
+        return $this->render_part($elements->item(0), $qa, $options);
     }
 
 
     /**
      * Renders the contents of the `qpy:right-answer` element or returns null if there is none.
      * @param question_attempt $qa
+     * @param question_display_options $options
      * @return string|null
      * @throws DOMException
      * @throws coding_exception
      */
-    public function render_right_answer(question_attempt $qa): ?string {
+    public function render_right_answer(question_attempt $qa, question_display_options $options): ?string {
         $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "right-answer");
         if ($elements->length < 1) {
             return null;
         }
 
-        return $this->render_part($elements->item(0), $qa);
+        return $this->render_part($elements->item(0), $qa, $options);
     }
 
     /**
@@ -198,12 +201,12 @@ class question_ui_renderer {
      *
      * @param DOMNode $part
      * @param question_attempt $qa
-     * @param question_display_options|null $options
+     * @param question_display_options $options
      * @return string
      * @throws DOMException
      * @throws coding_exception
      */
-    private function render_part(DOMNode $part, question_attempt $qa, ?question_display_options $options = null): string {
+    private function render_part(DOMNode $part, question_attempt $qa, question_display_options $options): string {
         $newdoc = new DOMDocument();
         $div = $newdoc->appendChild($newdoc->createElementNS(self::XHTML_NAMESPACE, "div"));
         foreach ($part->childNodes as $child) {
@@ -218,6 +221,7 @@ class question_ui_renderer {
         mt_srand($this->mtseed);
         try {
             $this->hide_unwanted_feedback($xpath, $options);
+            $this->hide_if_role($xpath, $options);
             $this->set_input_values_and_readonly($xpath, $qa, $options);
             $this->soften_validation($xpath);
             $this->defuse_buttons($xpath);
@@ -239,10 +243,10 @@ class question_ui_renderer {
      * Hides elements marked with `qpy:feedback` if the type of feedback is disabled in {@see question_display_options}.
      *
      * @param DOMXPath $xpath
-     * @param question_display_options|null $options
+     * @param question_display_options $options
      * @return void
      */
-    private function hide_unwanted_feedback(\DOMXPath $xpath, ?question_display_options $options = null): void {
+    private function hide_unwanted_feedback(\DOMXPath $xpath, question_display_options $options): void {
         /** @var DOMElement $element */
         foreach (iterator_to_array($xpath->query("//*[@qpy:feedback]")) as $element) {
             $feedback = $element->getAttributeNS(self::QPY_NAMESPACE, "feedback");
@@ -367,14 +371,14 @@ class question_ui_renderer {
      *
      * @param DOMXPath $xpath
      * @param question_attempt $qa
-     * @param question_display_options|null $options
+     * @param question_display_options $options
      * @return void
      */
-    private function set_input_values_and_readonly(DOMXPath                  $xpath, question_attempt $qa,
-                                                   ?question_display_options $options = null): void {
+    private function set_input_values_and_readonly(DOMXPath                 $xpath, question_attempt $qa,
+                                                   question_display_options $options): void {
         /** @var DOMElement $element */
         foreach ($xpath->query("//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea") as $element) {
-            if ($options && $options->readonly) {
+            if ($options->readonly) {
                 $element->setAttribute("disabled", "disabled");
             }
 
@@ -558,6 +562,38 @@ class question_ui_renderer {
         /** @var DOMElement $element */
         foreach ($xpath->query("(//xhtml:input | //xhtml:button)[@type = 'submit' or @type = 'reset']") as $element) {
             $element->setAttribute("type", "button");
+        }
+    }
+
+    /**
+     * Removes elements with `qpy:if-role` attributes if the user matches none of the given roles in this context.
+     *
+     * The attribute values `teacher`, `proctor`, `scorer` and `developer` are mapped onto Moodle's system as follows:
+     * - The user is a teacher if they have the `mod/quiz:viewreports` capability, which includes the archetypes
+     *   `manager`, `teacher` and `editingteacher`.
+     * - Since Moodle has no concept of proctoring, `proctor` is considered synonymous with `teacher`.
+     * - The user is a scorer if they have the `mod/quiz:grade` capability.
+     * - The user is a developer if they are a teacher AND debugging is turned on. (As per {@see debugging}.)
+     *
+     * @param DOMXPath $xpath
+     * @param question_display_options $options
+     * @throws coding_exception
+     */
+    public function hide_if_role(DOMXPath $xpath, question_display_options $options): void {
+        /** @var DOMAttr $attr */
+        foreach (iterator_to_array($xpath->query("//@qpy:if-role")) as $attr) {
+            $allowedroles = preg_split("/[\s|]+/", $attr->value, -1, PREG_SPLIT_NO_EMPTY);
+
+            $isteacher = has_capability("mod/quiz:viewreports", $options->context);
+            $isscorer = has_capability("mod/quiz:grade", $options->context);
+            $isdeveloper = $isteacher && debugging();
+
+            if (!(in_array("teacher", $allowedroles) && $isteacher
+                || in_array("proctor", $allowedroles) && $isteacher
+                || in_array("scorer", $allowedroles) && $isscorer
+                || in_array("developer", $allowedroles) && $isdeveloper)) {
+                $attr->ownerElement->parentNode->removeChild($attr->ownerElement);
+            }
         }
     }
 

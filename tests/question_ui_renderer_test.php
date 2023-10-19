@@ -17,6 +17,8 @@
 namespace qtype_questionpy;
 
 use coding_exception;
+use core\context;
+use core\context_test;
 use DOMException;
 
 /**
@@ -121,7 +123,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
-        $result = $ui->render_general_feedback($qa);
+        $result = $ui->render_general_feedback($qa, new \question_display_options());
 
         $this->assertXmlStringEqualsXmlString(
             '<div xmlns="http://www.w3.org/1999/xhtml">General feedback part</div>',
@@ -142,7 +144,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
-        $result = $ui->render_specific_feedback($qa);
+        $result = $ui->render_specific_feedback($qa, new \question_display_options());
 
         $this->assertXmlStringEqualsXmlString(
             '<div xmlns="http://www.w3.org/1999/xhtml">Specific feedback part</div>',
@@ -163,7 +165,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
-        $result = $ui->render_right_answer($qa);
+        $result = $ui->render_right_answer($qa, new \question_display_options());
 
         $this->assertXmlStringEqualsXmlString(
             '<div xmlns="http://www.w3.org/1999/xhtml">Right answer part</div>',
@@ -186,9 +188,9 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], mt_rand());
         $qa = $this->createStub(\question_attempt::class);
 
-        $this->assertNull($ui->render_general_feedback($qa));
-        $this->assertNull($ui->render_specific_feedback($qa));
-        $this->assertNull($ui->render_right_answer($qa));
+        $this->assertNull($ui->render_general_feedback($qa, new \question_display_options()));
+        $this->assertNull($ui->render_specific_feedback($qa, new \question_display_options()));
+        $this->assertNull($ui->render_right_answer($qa, new \question_display_options()));
     }
 
     /**
@@ -383,6 +385,65 @@ class question_ui_renderer_test extends \advanced_testcase {
             <input class="btn btn-primary qpy-input" type="button" value="Button"/>
         </div>
         EXPECTED, $result);
+    }
 
+    /**
+     * Tests that elements with `qpy:if-role` attributes are removed when the user has none of the given roles.
+     *
+     * @throws DOMException
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer
+     */
+    public function test_should_remove_element_with_if_role_attribute() {
+        $input = file_get_contents(__DIR__ . "/question_uis/if-role.xhtml");
+        $qa = $this->createStub(\question_attempt::class);
+
+        $this->resetAfterTest();
+        $this->setGuestUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $options = new \question_display_options();
+        $options->context = \context_course::instance($course->id);
+
+        $ui = new question_ui_renderer($input, [], mt_rand());
+
+        $result = $ui->render_formulation($qa, $options);
+
+        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml"></div>
+        EXPECTED, $result);
+    }
+
+    /**
+     * Tests that elements with `qpy:if-role` attributes are left be when the user has at least one of the given roles.
+     *
+     * @throws DOMException
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer
+     */
+    public function test_should_not_remove_element_with_if_role_attribute() {
+        $input = file_get_contents(__DIR__ . "/question_uis/if-role.xhtml");
+        $qa = $this->createStub(\question_attempt::class);
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $options = new \question_display_options();
+        $options->context = \context_course::instance($course->id);
+
+        $ui = new question_ui_renderer($input, [], mt_rand());
+
+        $result = $ui->render_formulation($qa, $options);
+
+        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <div>You're a teacher!</div>
+            <div>You're a developer!</div>
+            <div>You're a scorer!</div>
+            <div>You're a proctor!</div>
+            <div>You're any of the above!</div>
+        </div>
+        EXPECTED, $result);
     }
 }
