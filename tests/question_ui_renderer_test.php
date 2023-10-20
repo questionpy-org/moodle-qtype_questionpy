@@ -195,6 +195,7 @@ class question_ui_renderer_test extends \advanced_testcase {
 
     /**
      * Tests that an exception is thrown when the question formulation is missing.
+     *
      * @covers \qtype_questionpy\question_ui_renderer::render_formulation
      * @throws DOMException
      */
@@ -210,6 +211,7 @@ class question_ui_renderer_test extends \advanced_testcase {
 
     /**
      * Tests that `name` attributes in most elements are mangled correctly.
+     *
      * @throws coding_exception
      * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
@@ -444,6 +446,34 @@ class question_ui_renderer_test extends \advanced_testcase {
             <div>You're a proctor!</div>
             <div>You're any of the above!</div>
         </div>
+        EXPECTED, $result);
+    }
+
+    /**
+     * Tests `qpy:format-float` elements when the current language is en.
+     *
+     * @throws DOMException
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer
+     */
+    public function test_should_format_floats_in_en() {
+        $input = file_get_contents(__DIR__ . "/question_uis/format-floats.xhtml");
+        $qa = $this->createStub(\question_attempt::class);
+
+        $ui = new question_ui_renderer($input, [], mt_rand());
+
+        $result = $ui->render_formulation($qa, new \question_display_options());
+
+        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+                Just the decsep: 1.23456
+                Thousands sep without decimals: 1,000,000,000
+                Thousands sep with decimals: 10,000,000,000.123
+                Round down: 1.11
+                Round up: 1.12
+                Pad with zeros: 1.10000
+                Strip zeros: 1.1
+            </div>
         EXPECTED, $result);
     }
 }

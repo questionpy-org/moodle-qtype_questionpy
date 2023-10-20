@@ -93,6 +93,7 @@ class question_ui_renderer {
 
     /**
      * Renders the contents of the `qpy:general-feedback` element or returns null if there is none.
+     *
      * @param question_attempt $qa
      * @param question_display_options $options
      * @return string|null
@@ -110,6 +111,7 @@ class question_ui_renderer {
 
     /**
      * Renders the contents of the `qpy:specific-feedback` element or returns null if there is none.
+     *
      * @param question_attempt $qa
      * @param question_display_options $options
      * @return string|null
@@ -125,9 +127,9 @@ class question_ui_renderer {
         return $this->render_part($elements->item(0), $qa, $options);
     }
 
-
     /**
      * Renders the contents of the `qpy:right-answer` element or returns null if there is none.
+     *
      * @param question_attempt $qa
      * @param question_display_options $options
      * @return string|null
@@ -220,6 +222,7 @@ class question_ui_renderer {
         $nextseed = mt_rand();
         mt_srand($this->mtseed);
         try {
+            $this->resolve_placeholders($xpath);
             $this->hide_unwanted_feedback($xpath, $options);
             $this->hide_if_role($xpath, $options);
             $this->set_input_values_and_readonly($xpath, $qa, $options);
@@ -227,9 +230,9 @@ class question_ui_renderer {
             $this->defuse_buttons($xpath);
             $this->shuffle_contents($xpath);
             $this->add_styles($xpath);
+            $this->format_floats($xpath);
             $this->mangle_ids_and_names($xpath, $qa);
             $this->clean_up($xpath);
-            $this->resolve_placeholders($xpath);
         } finally {
             // I'm not sure whether it is strictly necessary to reset the PRNG seed here, but it feels safer.
             // Resetting it to its original state would be ideal, but that doesn't seem to be possible.
@@ -594,6 +597,48 @@ class question_ui_renderer {
                 || in_array("developer", $allowedroles) && $isdeveloper)) {
                 $attr->ownerElement->parentNode->removeChild($attr->ownerElement);
             }
+        }
+    }
+
+    /**
+     * Handles `qpy:format-float`. Uses {@see format_float} and optionally adds thousands separators.
+     *
+     * @param DOMXPath $xpath
+     * @return void
+     * @throws coding_exception
+     */
+    private function format_floats(DOMXPath $xpath): void {
+        /** @var DOMElement $element */
+        foreach (iterator_to_array($xpath->query("//qpy:format-float")) as $element) {
+            $float = floatval($element->textContent);
+
+            $precision = intval($element->hasAttribute("precision") ? $element->getAttribute("precision") : -1);
+            $stripzeroes = $element->hasAttribute("strip-zeros");
+
+            $str = format_float($float, $precision, true, $stripzeroes);
+
+            $thousandssep = $element->getAttribute("thousands-separator");
+            if ($thousandssep === "yes") {
+                $thousandssep = get_string("thousandssep", "langconfig");
+            } else if ($thousandssep === "no") {
+                $thousandssep = "";
+            }
+
+            if ($thousandssep !== "") {
+                $decsep = get_string("decsep", "langconfig");
+                $decimalpos = strpos($str, $decsep);
+                if ($decimalpos === false) {
+                    // No decimal, start at the end of the number.
+                    $decimalpos = strlen($str);
+                }
+
+                for ($i = $decimalpos - 3; $i >= 1; $i -= 3) {
+                    // Insert a thousands separator.
+                    $str = substr_replace($str, $thousandssep, $i, 0);
+                }
+            }
+
+            $element->parentNode->replaceChild(new DOMText($str), $element);
         }
     }
 
