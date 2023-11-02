@@ -314,6 +314,17 @@ class question_ui_renderer {
     private function replace_shuffled_indices(DOMXPath $xpath, DOMNode $element, int $index): void {
         /** @var DOMElement $indexelement */
         foreach (iterator_to_array($xpath->query(".//qpy:shuffled-index", $element)) as $indexelement) {
+            // phpcs:ignore Squiz.ControlStructures.ForLoopDeclaration.SpacingAfterSecond
+            for ($ancestor = $indexelement->parentNode; $ancestor !== null && $ancestor !== $indexelement;
+                 $ancestor = $ancestor->parentNode) {
+                assert($ancestor instanceof DOMElement);
+                if ($ancestor->hasAttributeNS(self::QPY_NAMESPACE, "shuffle-contents")) {
+                    // The index element is in a nested shuffle-contents.
+                    // We want it to be replaced with the index of the inner shuffle, so we ignore it for now.
+                    continue 2;
+                }
+            }
+
             $format = $indexelement->getAttribute("format") ?: "123";
 
             switch ($format) {
