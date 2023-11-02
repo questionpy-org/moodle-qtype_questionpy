@@ -53,23 +53,18 @@ class question_ui_renderer {
     /** @var question_metadata|null $metadata */
     private ?question_metadata $metadata = null;
 
-    /** @var int seed for {@see mt_srand}, to make shuffles deterministic */
-    private int $mtseed;
-
     /**
      * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
      *
-     * @param string $xml XML as returned by the QPy Server
+     * @param string $xml         XML as returned by the QPy Server
      * @param array $placeholders string to string mapping of placeholder names to the values
-     * @param int $mtseed the seed to use ({@see mt_srand()}) to make `qpy:shuffle-contents` deterministic
      */
-    public function __construct(string $xml, array $placeholders, int $mtseed) {
+    public function __construct(string $xml, array $placeholders) {
         $this->question = new DOMDocument();
         $this->question->loadXML($xml);
         $this->question->normalizeDocument();
 
         $this->placeholders = $placeholders;
-        $this->mtseed = $mtseed;
     }
 
     /**
@@ -220,7 +215,10 @@ class question_ui_renderer {
         $xpath->registerNamespace("qpy", self::QPY_NAMESPACE);
 
         $nextseed = mt_rand();
-        mt_srand($this->mtseed);
+        if ($qa->get_database_id() === null) {
+            throw new coding_exception("question_attempt does not have an id");
+        }
+        mt_srand($qa->get_database_id());
         try {
             $this->resolve_placeholders($xpath);
             $this->hide_unwanted_feedback($xpath, $options);

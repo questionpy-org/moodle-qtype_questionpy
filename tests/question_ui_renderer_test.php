@@ -17,8 +17,6 @@
 namespace qtype_questionpy;
 
 use coding_exception;
-use core\context;
-use core\context_test;
 use DOMException;
 
 /**
@@ -40,7 +38,7 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_extract_correct_metadata() {
         $input = file_get_contents(__DIR__ . "/question_uis/metadata.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
         $metadata = $ui->get_metadata();
 
         $this->assertEquals(new question_metadata([
@@ -69,9 +67,11 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_hide_inline_feedback() {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
 
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
         $opts = new \question_display_options();
         $opts->hide_all_feedback();
 
@@ -94,9 +94,11 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_show_inline_feedback() {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
 
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
         $opts = new \question_display_options();
 
         $result = $ui->render_formulation($qa, $opts);
@@ -120,8 +122,10 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_render_general_feedback_part_when_present() {
         $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
         $result = $ui->render_general_feedback($qa, new \question_display_options());
 
@@ -141,8 +145,10 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_render_specific_feedback_part_when_present() {
         $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
         $result = $ui->render_specific_feedback($qa, new \question_display_options());
 
@@ -162,8 +168,10 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_render_right_answer_part_when_present() {
         $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
         $result = $ui->render_right_answer($qa, new \question_display_options());
 
@@ -185,8 +193,10 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_return_null_when_optional_part_is_missing() {
         $input = file_get_contents(__DIR__ . "/question_uis/no-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
         $this->assertNull($ui->render_general_feedback($qa, new \question_display_options()));
         $this->assertNull($ui->render_specific_feedback($qa, new \question_display_options()));
@@ -202,8 +212,10 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_throw_when_formulation_is_missing() {
         $input = file_get_contents(__DIR__ . "/question_uis/no-parts.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
         $this->expectException(coding_exception::class);
         $ui->render_formulation($qa, new \question_display_options());
@@ -219,8 +231,10 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_mangle_names() {
         $input = file_get_contents(__DIR__ . "/question_uis/ids_and_names.xhtml");
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
         $qa->method("get_qt_field_name")
             ->willReturnCallback(function ($name) {
                 return "mangled:$name";
@@ -255,21 +269,22 @@ class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
-     * Tests that `qpy:shuffle-elements` sticks to the same shuffled order as long as the seed is the same.
+     * Tests that `qpy:shuffle-elements` sticks to the same shuffled order as long as the seed (attempt id) is the same.
      *
      * @throws coding_exception
      * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_shuffle_the_same_way_with_same_seed() {
+    public function test_should_shuffle_the_same_way_in_same_attempt() {
         $input = file_get_contents(__DIR__ . "/question_uis/shuffle.xhtml");
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
-        $seed = mt_rand();
-        $firstresult = (new question_ui_renderer($input, [], $seed))
+        $firstresult = (new question_ui_renderer($input, []))
             ->render_formulation($qa, new \question_display_options());
         for ($i = 0; $i < 10; $i++) {
-            $result = (new question_ui_renderer($input, [], $seed))
+            $result = (new question_ui_renderer($input, []))
                 ->render_formulation($qa, new \question_display_options());
 
             $this->assertEquals($firstresult, $result);
@@ -287,10 +302,12 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_resolve_placeholders() {
         $input = file_get_contents(__DIR__ . "/question_uis/placeholder.xhtml");
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
         $ui = new question_ui_renderer($input, [
             "param" => "Value of param <b>one</b>.<script>'Oh no, danger!'</script>",
-        ], mt_rand());
+        ]);
 
         $result = $ui->render_formulation($qa, new \question_display_options());
 
@@ -315,8 +332,9 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_remove_placeholders_when_no_corresponding_value() {
         $input = file_get_contents(__DIR__ . "/question_uis/placeholder.xhtml");
         $qa = $this->createStub(\question_attempt::class);
-
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
+        $ui = new question_ui_renderer($input, []);
 
         $result = $ui->render_formulation($qa, new \question_display_options());
 
@@ -341,8 +359,9 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_soften_validations() {
         $input = file_get_contents(__DIR__ . "/question_uis/validations.xhtml");
         $qa = $this->createStub(\question_attempt::class);
-
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
+        $ui = new question_ui_renderer($input, []);
 
         $result = $ui->render_formulation($qa, new \question_display_options());
 
@@ -371,8 +390,9 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_defuse_buttons() {
         $input = file_get_contents(__DIR__ . "/question_uis/buttons.xhtml");
         $qa = $this->createStub(\question_attempt::class);
-
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
+        $ui = new question_ui_renderer($input, []);
 
         $result = $ui->render_formulation($qa, new \question_display_options());
 
@@ -399,6 +419,8 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_remove_element_with_if_role_attribute() {
         $input = file_get_contents(__DIR__ . "/question_uis/if-role.xhtml");
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
         $this->resetAfterTest();
         $this->setGuestUser();
@@ -407,7 +429,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $options = new \question_display_options();
         $options->context = \context_course::instance($course->id);
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
 
         $result = $ui->render_formulation($qa, $options);
 
@@ -426,6 +448,8 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_not_remove_element_with_if_role_attribute() {
         $input = file_get_contents(__DIR__ . "/question_uis/if-role.xhtml");
         $qa = $this->createStub(\question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
 
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -434,7 +458,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $options = new \question_display_options();
         $options->context = \context_course::instance($course->id);
 
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $ui = new question_ui_renderer($input, []);
 
         $result = $ui->render_formulation($qa, $options);
 
@@ -459,8 +483,9 @@ class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_format_floats_in_en() {
         $input = file_get_contents(__DIR__ . "/question_uis/format-floats.xhtml");
         $qa = $this->createStub(\question_attempt::class);
-
-        $ui = new question_ui_renderer($input, [], mt_rand());
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
+        $ui = new question_ui_renderer($input, []);
 
         $result = $ui->render_formulation($qa, new \question_display_options());
 
