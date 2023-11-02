@@ -35,8 +35,6 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
     /** @var string */
     private const QT_VAR_ATTEMPT_STATE = "_attemptstate";
-    /** @var string */
-    private const QT_VAR_MT_SEED = "_mt_seed";
 
     // Properties which do not change between attempts.
     /** @var api */
@@ -85,11 +83,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
         $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
 
-        // We generate a fixed seed to be used during every render of the attempt, to keep shuffles deterministic.
-        $mtseed = mt_rand();
-        $step->set_qt_var(self::QT_VAR_MT_SEED, $mtseed);
-
-        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders, $mtseed);
+        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
     }
 
     /**
@@ -109,14 +103,14 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      */
     public function apply_attempt_state(question_attempt_step $step) {
         $attemptstate = $step->get_qt_var(self::QT_VAR_ATTEMPT_STATE);
-        $mtseed = $step->get_qt_var(self::QT_VAR_MT_SEED);
-        if (is_null($attemptstate) || is_null($mtseed)) {
+        if (is_null($attemptstate)) {
             // Start_attempt probably was never called, which it should have been.
-            throw new coding_exception("apply_attempt_state was called, but the attempt is missing a qt var");
+            $varname = self::QT_VAR_ATTEMPT_STATE;
+            throw new coding_exception("apply_attempt_state was called, but attempt is missing qt var '$varname'");
         }
 
         $attempt = $this->api->view_attempt($this->packagehash, $this->questionstate, $attemptstate);
-        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders, $mtseed);
+        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
     }
 
     /**
