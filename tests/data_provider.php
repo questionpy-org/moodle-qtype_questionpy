@@ -47,6 +47,8 @@ use qtype_questionpy\package\package_raw;
 /**
  * Returns a raw package object which can be modified by an array of attributes.
  *
+ * The languages array gets generated when it is not set inside {@see $attributes}.
+ *
  * @param array $attributes
  * @return package_raw
  * @throws moodle_exception
@@ -56,30 +58,32 @@ function package_provider(array $attributes = []): package_raw {
         'short_name' => 'my_short_name',
         'namespace' => 'my_namespace',
         'name' => [
-            'en' => 'de: My Name',
-            'de' => 'en: My Name',
+            'en' => 'en: My Name',
+            'de' => 'de: My Name',
         ],
         'version' => '0.1.0',
         'type' => 'questiontype',
         'author' => 'John Doe',
         'url' => 'http://www.example.com/',
-        'languages' => [
-            0 => 'en',
-            1 => 'de',
-        ],
+        'languages' => ['en', 'de'],
         'description' => [
             'en' => 'en: Lorem ipsum dolor sit amet.',
             'de' => 'de: Lorem ipsum dolor sit amet.',
         ],
         'icon' => 'https://placehold.jp/40e47e/598311/150x150.png',
         'license' => 'MIT',
-        'tags' => [
-            0 => 'my_tag_0',
-            1 => 'my_tag_1',
-            2 => 'my_tag_2',
-        ],
+        'tags' => ['my_tag_0', 'my_tag_1', 'my_tag_2'],
     ], $attributes);
 
+    // Create 'languages' array based on provided 'name' and 'description' translations if none is provided.
+    if ((isset($attributes['name']) || isset($attributes['description'])) && !isset($attributes['languages'])) {
+        foreach (['name', 'description'] as $field) {
+            $data['languages'] = array_merge($data['languages'], array_keys($data[$field]));
+        }
+        $data['languages'] = array_values(array_unique($data['languages']));
+    }
+
+    // Calculate package hash if none is provided.
     if (!isset($attributes['package_hash'])) {
         $data['package_hash'] = hash('sha256', $data['short_name'] . $data['namespace'] . $data['version']);
     }

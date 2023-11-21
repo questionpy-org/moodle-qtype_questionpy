@@ -39,8 +39,11 @@ class localizer {
             $languages[] = $language;
         } while ($language = get_parent_language($language));
 
-        // Fallback is english - could be already inside the array, but that is okay.
-        $languages[] = 'en';
+        // Fallback is english.
+        if (!in_array('en', $languages)) {
+            $languages[] = 'en';
+        }
+
         return $languages;
     }
 }
