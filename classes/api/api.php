@@ -160,15 +160,24 @@ class api {
      * @param string $packagehash
      * @param string $questionstate
      * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
+     * @param string|null $scoringstate the last scoring state if this attempt has already been scored
+     * @param array|null $response data currently entered by the student
      * @return attempt the attempt's metadata. The state is not returned since it never changes.
      * @throws moodle_exception
      */
-    public function view_attempt(string $packagehash, string $questionstate, string $attemptstate): attempt {
+    public function view_attempt(string $packagehash, string $questionstate, string $attemptstate,
+                                 ?string $scoringstate = null, ?array $response = null): attempt {
         $connector = connector::default();
 
         $main = [
             "attempt_state" => $attemptstate,
+            "response" => $response,
         ];
+
+        if ($scoringstate) {
+            $main["scoring_state"] = $scoringstate;
+        }
+
         $parts = [
             "main" => json_encode($main),
             "question_state" => $questionstate,
@@ -177,6 +186,41 @@ class api {
         $response = $connector->post("/packages/$packagehash/attempt/view", $parts);
         $response->assert_2xx();
         return array_converter::from_array(attempt::class, $response->get_data());
+    }
+
+    /**
+     * Score an attempt.
+     *
+     * @param string $packagehash
+     * @param string $questionstate
+     * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
+     * @param string|null $scoringstate the last scoring state if this attempt had been scored before
+     * @param array $response data submitted by the student
+     * @return attempt_scored the attempt's metadata. The state is not returned since it never changes.
+     * @throws moodle_exception
+     */
+    public function score_attempt(string $packagehash, string $questionstate, string $attemptstate,
+                                  ?string $scoringstate, array $response): attempt_scored {
+        $connector = connector::default();
+
+        $main = [
+            "attempt_state" => $attemptstate,
+            "response" => $response,
+            "generate_hint" => false,
+        ];
+
+        if ($scoringstate) {
+            $main["scoring_state"] = $scoringstate;
+        }
+
+        $parts = [
+            "main" => json_encode($main),
+            "question_state" => $questionstate,
+        ];
+
+        $response = $connector->post("/packages/$packagehash/attempt/score", $parts);
+        $response->assert_2xx();
+        return array_converter::from_array(attempt_scored::class, $response->get_data());
     }
 
     /**

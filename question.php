@@ -35,6 +35,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
     /** @var string */
     private const QT_VAR_ATTEMPT_STATE = "_attemptstate";
+    /** @var string */
+    private const QT_VAR_SCORING_STATE = "_scoringstate";
 
     // Properties which do not change between attempts.
     /** @var api */
@@ -45,6 +47,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     private string $questionstate;
 
     // Properties which do change between attempts (i.e. are modified by start_attempt and apply_attempt_state).
+    /** @var string */
+    public string $attemptstate;
+    /** @var string|null */
+    public ?string $scoringstate;
     /** @var question_ui_renderer */
     public question_ui_renderer $ui;
 
@@ -81,7 +87,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public function start_attempt(question_attempt_step $step, $variant): void {
         $attempt = $this->api->start_attempt($this->packagehash, $this->questionstate, $variant);
 
+        $this->attemptstate = $attempt->attemptstate;
         $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
+        $this->scoringstate = null;
 
         $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
     }
@@ -102,14 +110,18 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function apply_attempt_state(question_attempt_step $step) {
-        $attemptstate = $step->get_qt_var(self::QT_VAR_ATTEMPT_STATE);
-        if (is_null($attemptstate)) {
+        $this->attemptstate = $step->get_qt_var(self::QT_VAR_ATTEMPT_STATE);
+        if (is_null($this->attemptstate)) {
             // Start_attempt probably was never called, which it should have been.
             $varname = self::QT_VAR_ATTEMPT_STATE;
             throw new coding_exception("apply_attempt_state was called, but attempt is missing qt var '$varname'");
         }
 
-        $attempt = $this->api->view_attempt($this->packagehash, $this->questionstate, $attemptstate);
+        $this->scoringstate = $step->get_qt_var(self::QT_VAR_SCORING_STATE);
+
+        // TODO: We probably want to pass the last response here, but don't have an obvious way to get it.
+        $attempt = $this->api->view_attempt($this->packagehash, $this->questionstate, $this->attemptstate,
+            $this->scoringstate);
         $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
     }
 
@@ -202,9 +214,34 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @param array $response responses, as returned by
      *                        {@see question_attempt_step::get_qt_data()}.
      * @return array (float, integer) the fraction, and the state.
+     * @throws coding_exception
+     * @throws moodle_exception
      */
-    public function grade_response(array $response) {
-        return [0, question_state::$gradedwrong];
+    public function grade_response(array $response): array {
+        $attemptscored = $this->api->score_attempt(
+            $this->packagehash, $this->questionstate, $this->attemptstate, $this->scoringstate,
+            $response
+        );
+        $this->ui = new question_ui_renderer($attemptscored->ui->content, $attemptscored->ui->placeholders);
+        // TODO: Persist scoring state. We need to set a qtvar, but we don't have access to the pending step here.
+        $this->scoringstate = $attemptscored->scoringstate;
+        switch ($attemptscored->scoringcode) {
+            case "AUTOMATICALLY_SCORED":
+                $newqstate = question_state::graded_state_for_fraction($attemptscored->score);
+                break;
+            case "NEEDS_MANUAL_SCORING":
+                $newqstate = question_state::$finished;
+                break;
+            case "RESPONSE_NOT_SCORABLE":
+                $newqstate = question_state::$gaveup;
+                break;
+            case "INVALID_RESPONSE":
+                $newqstate = question_state::$invalid;
+                break;
+            default:
+                throw new coding_exception("Unrecognized scoring code: $attemptscored->scoringcode");
+        }
+        return [$attemptscored->score, $newqstate];
     }
 
     /**
@@ -214,11 +251,13 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @param array $responses the response for each try. Each element of this
      *                         array is a response array, as would be passed to {@see grade_response()}.
      *                         There may be between 1 and $totaltries responses.
-     * @param int $totaltries  The maximum number of tries allowed.
+     * @param int $totaltries The maximum number of tries allowed.
      * @return numeric the fraction that should be awarded for this
      *                         sequence of response.
+     * @throws coding_exception
      */
     public function compute_final_grade($responses, $totaltries) {
-        return 0;
+        // TODO: This is necessary to support interactive countback.
+        throw new coding_exception("not implemented");
     }
 }
