@@ -60,6 +60,7 @@ class search_packages extends external_api {
             'order' => new external_value(PARAM_ALPHA),
             'limit' => new external_value(PARAM_INT),
             'page' => new external_value(PARAM_INT),
+            'contextid' => new external_value(PARAM_INT),
         ]);
     }
 
@@ -285,11 +286,12 @@ class search_packages extends external_api {
      * @param string $order
      * @param int $limit
      * @param int $page
+     * @param int $contextid
      * @return array
      * @throws moodle_exception
      */
     public static function execute(string $query, array $tags, string $category, string $sort, string $order,
-                                   int $limit, int $page): array {
+                                   int $limit, int $page, int $contextid): array {
         global $DB;
 
         // Basic parameter validation.
@@ -301,7 +303,12 @@ class search_packages extends external_api {
             'order' => $order,
             'limit' => $limit,
             'page' => $page,
+            'contextid' => $contextid,
         ]);
+
+        // Validate given context id.
+        $context = \context::instance_by_id($contextid, IGNORE_MISSING);
+        self::validate_context($context);
 
         // In addition to the basic parameter validation we also want to validate the values.
         self::validate_parameter_values($params);
