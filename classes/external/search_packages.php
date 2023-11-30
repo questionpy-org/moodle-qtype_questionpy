@@ -59,7 +59,7 @@ class search_packages extends external_api {
             'sort' => new external_value(PARAM_ALPHA),
             'order' => new external_value(PARAM_ALPHA),
             'limit' => new external_value(PARAM_INT),
-            'offset' => new external_value(PARAM_INT),
+            'page' => new external_value(PARAM_INT),
         ]);
     }
 
@@ -87,6 +87,12 @@ class search_packages extends external_api {
         if (!in_array($params['order'], self::ORDER)) {
             $validparameters = implode(', ', self::ORDER);
             throw new invalid_parameter_exception("Unknown order. Valid parameters are: $validparameters");
+        }
+        if ($params['limit'] <= 0 || $params['limit'] > 100) {
+            throw new invalid_parameter_exception("The limit can only be a value from 1 to 100.");
+        }
+        if ($params['page'] < 0) {
+            throw new invalid_parameter_exception("The page can not be negative.");
         }
     }
 
@@ -211,23 +217,20 @@ class search_packages extends external_api {
      * TODO: change the logic when tags are localized.
      *
      * @param array $tags
-     * @return array A list containing the constructed sql fragment, the conditions and an array of parameters.
+     * @return array A list containing the constructed sql fragment and an array of parameters.
      */
     private static function create_tag_filter_sql(array $tags): array {
         $joinsql = '';
         $params = [];
-        $wheretags = [];
         foreach ($tags as $i => $tag) {
             $jointagsparam = "tag$i";
             $params[$jointagsparam] = $tag;
             $joinsql .= "
-                LEFT JOIN {qtype_questionpy_tags} t$i
+                JOIN {qtype_questionpy_tags} t$i
                 ON t$i.packageid = p.id AND t$i.id = :$jointagsparam
             ";
-            $wheretags[] = "NOT t$i IS NULL";
         }
-        $wheresql = implode(' AND ', $wheretags);
-        return [$joinsql, $wheresql, $params];
+        return [$joinsql, $params];
     }
 
     /**
@@ -281,12 +284,12 @@ class search_packages extends external_api {
      * @param string $sort
      * @param string $order
      * @param int $limit
-     * @param int $offset
+     * @param int $page
      * @return array
      * @throws moodle_exception
      */
     public static function execute(string $query, array $tags, string $category, string $sort, string $order,
-                                   int $limit, int $offset): array {
+                                   int $limit, int $page): array {
         global $DB;
 
         // Basic parameter validation.
@@ -297,7 +300,7 @@ class search_packages extends external_api {
             'sort' => $sort,
             'order' => $order,
             'limit' => $limit,
-            'offset' => $offset,
+            'page' => $page,
         ]);
 
         // In addition to the basic parameter validation we also want to validate the values.
@@ -310,8 +313,7 @@ class search_packages extends external_api {
         [$joinlangssql, $joinlangsparams, $coalescenamesql, $coalescedescsql] = self::create_best_language_sql();
 
         // Get only packages with specified tags.
-        [$jointagssql, $conditionssql, $jointagsparams] = self::create_tag_filter_sql($params['tags']);
-        $wheretagsql = self::sql_where($conditionssql);
+        [$jointagssql, $jointagsparams] = self::create_tag_filter_sql($params['tags']);
 
         // Prepare query.
         [$likesql, $likeparams] = self::create_text_search_sql(['name', 'description'], $params['query']);
@@ -327,7 +329,6 @@ class search_packages extends external_api {
                 FROM {qtype_questionpy_package} p
                 $joinlangssql
                 $jointagssql
-                $wheretagsql
             ) subq
             $wherelikesql
             $orderbysql
@@ -337,7 +338,7 @@ class search_packages extends external_api {
         $finalparams = array_merge($joinlangsparams, $jointagsparams, $likeparams);
 
         // Execute the assembled sql query and set the limit and offset.
-        $packagesraw = $DB->get_records_sql($finalsql, $finalparams, $params['limit'] * $params['offset'], $params['limit']);
+        $packagesraw = $DB->get_records_sql($finalsql, $finalparams, $params['limit'] * $params['page'], $params['limit']);
 
         // Get package tag and versions.
         $ids = array_column($packagesraw, 'id');

@@ -107,6 +107,63 @@ class search_packages_test extends \externallib_advanced_testcase {
     }
 
     /**
+     * Provides invalid limits.
+     *
+     * @return array[]
+     */
+    public static function invalid_limit_provider(): array {
+        return [
+            [PHP_INT_MIN],
+            [-1],
+            [0],
+            [101],
+            [PHP_INT_MAX],
+        ];
+    }
+
+    /**
+     * Test the service with invalid limit parameters.
+     *
+     * @param int $limit
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @dataProvider invalid_limit_provider
+     * @throws moodle_exception
+     */
+    public function test_with_invalid_limit(int $limit): void {
+        $this->resetAfterTest();
+        $this->expectException(\invalid_parameter_exception::class);
+        $this->expectExceptionMessageMatches("/.*1 to 100.*/");
+        search_packages::execute('Test query', [], 'all', 'alpha', 'asc', $limit, 5);
+    }
+
+    /**
+     * Provides invalid page values.
+     *
+     * @return array[]
+     */
+    public static function invalid_page_value_provider(): array {
+        return [
+            [PHP_INT_MIN],
+            [-1],
+        ];
+    }
+
+    /**
+     * Test the service with invalid limit parameters.
+     *
+     * @param int $page
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @dataProvider invalid_page_value_provider
+     * @throws moodle_exception
+     */
+    public function test_with_invalid_page_value(int $page): void {
+        $this->resetAfterTest();
+        $this->expectException(\invalid_parameter_exception::class);
+        $this->expectExceptionMessageMatches("/.*can not be negative.*/");
+        search_packages::execute('Test query', [], 'all', 'alpha', 'asc', 1, $page);
+    }
+
+    /**
      * Provides valid but unsupported categories.
      *
      * @return array
@@ -397,15 +454,18 @@ class search_packages_test extends \externallib_advanced_testcase {
         // Sort the array of names so that we can use it as a reference.
         sort($names, SORT_STRING);
 
+        // The smallest valid limit is one.
+        $limit = max($totalpackages, 1);
+
         // Execute service with ascending order.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $totalpackages, 0);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, 0);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         $actualnamespaces = array_column($res['packages'], 'name');
         $this->assertEquals($names, $actualnamespaces);
 
         // Execute service with descending order.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'desc', $totalpackages, 0);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'desc', $limit, 0);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         $actualnamespaces = array_column($res['packages'], 'name');
