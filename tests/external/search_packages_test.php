@@ -204,11 +204,11 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @return array
      */
     public static function category_provider(): array {
-        $parameters = [];
-        foreach (['lastused', 'favourites', 'mine'] as $category) {
-            $parameters[] = [$category];
-        }
-        return $parameters;
+        return [
+            ['recentlyused'],
+            ['favourites'],
+            ['mine'],
+        ];
     }
 
     /**
@@ -225,7 +225,7 @@ class search_packages_test extends \externallib_advanced_testcase {
         $this->resetAfterTest();
         $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
-        search_packages::execute('Test query', [], $category, 'alpha', 'recentlyused', 3, 5, $PAGE->context->id);
+        search_packages::execute('Test query', [], $category, 'alpha', 'up', 3, 5, $PAGE->context->id);
     }
 
     /**
