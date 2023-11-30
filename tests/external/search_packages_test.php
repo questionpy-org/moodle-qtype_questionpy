@@ -63,19 +63,30 @@ class search_packages_test extends \externallib_advanced_testcase {
         $this->assertCount($count, $result['packages']);
     }
 
-
     /**
-     * Test the service with invalid category parameter.
+     * Test that the user needs to be logged in.
      *
      * @covers \qtype_questionpy\external\search_packages::execute
      * @throws moodle_exception
      */
-    public function test_with_invalid_category_value() {
+    public function test_user_needs_to_be_logged_in(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        $this->expectException(\require_login_exception::class);
+        search_packages::execute('Test query', [], 'allmine', 'desc', 'date', 3, 5, $PAGE->context->id);
+    }
+
+    /**
+     * Test that the context needs to be valid.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     */
+    public function test_context_id_needs_to_be_valid(): void {
         $this->resetAfterTest();
         $this->expectException(\invalid_parameter_exception::class);
-        $expected = implode(', ', search_packages::CATEGORIES);
-        $this->expectExceptionMessageMatches("/.*$expected.*/i");
-        search_packages::execute('Test query', [], 'allmine', 'desc', 'date', 3, 5);
+        $this->expectExceptionMessageMatches("/Context does not exist/");
+        search_packages::execute('Test query', [], 'allmine', 'desc', 'date', 3, 5, -1);
     }
 
     /**
@@ -84,12 +95,30 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @covers \qtype_questionpy\external\search_packages::execute
      * @throws moodle_exception
      */
-    public function test_with_invalid_sort_value() {
+    public function test_with_invalid_category_value(): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
+        $this->expectException(\invalid_parameter_exception::class);
+        $expected = implode(', ', search_packages::CATEGORIES);
+        $this->expectExceptionMessageMatches("/.*$expected.*/i");
+        search_packages::execute('Test query', [], 'allmine', 'desc', 'date', 3, 5, $PAGE->context->id);
+    }
+
+    /**
+     * Test the service with invalid category parameter.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     */
+    public function test_with_invalid_sort_value(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $expected = implode(', ', search_packages::SORT);
         $this->expectExceptionMessageMatches("/.*$expected.*/i");
-        search_packages::execute('Test query', [], 'all', 'alphabetically', 'desc', 3, 5);
+        search_packages::execute('Test query', [], 'all', 'alphabetically', 'desc', 3, 5, $PAGE->context->id);
     }
 
     /**
@@ -99,11 +128,13 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_with_invalid_order_value(): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $expected = implode(', ', search_packages::ORDER);
         $this->expectExceptionMessageMatches("/.*$expected.*/i");
-        search_packages::execute('Test query', [], 'all', 'alpha', 'recentlyused', 3, 5);
+        search_packages::execute('Test query', [], 'all', 'alpha', 'recentlyused', 3, 5, $PAGE->context->id);
     }
 
     /**
@@ -130,10 +161,12 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_with_invalid_limit(int $limit): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $this->expectExceptionMessageMatches("/.*1 to 100.*/");
-        search_packages::execute('Test query', [], 'all', 'alpha', 'asc', $limit, 5);
+        search_packages::execute('Test query', [], 'all', 'alpha', 'asc', $limit, 5, $PAGE->context->id);
     }
 
     /**
@@ -157,10 +190,12 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_with_invalid_page_value(int $page): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $this->expectExceptionMessageMatches("/.*can not be negative.*/");
-        search_packages::execute('Test query', [], 'all', 'alpha', 'asc', 1, $page);
+        search_packages::execute('Test query', [], 'all', 'alpha', 'asc', 1, $page, $PAGE->context->id);
     }
 
     /**
@@ -186,9 +221,11 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_categories(string $category): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
-        search_packages::execute('Test query', [], $category, 'alpha', 'recentlyused', 3, 5);
+        search_packages::execute('Test query', [], $category, 'alpha', 'recentlyused', 3, 5, $PAGE->context->id);
     }
 
     /**
@@ -198,10 +235,12 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_search_without_filter_returns_every_package(): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
 
         // Execute service.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 1, 0);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 1, 0, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         $this->assertEqualsCanonicalizing([
@@ -218,7 +257,9 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_search_respects_package_versions(): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
 
         // Create packages and their versions.
         $totalpackages = 2;
@@ -234,7 +275,7 @@ class search_packages_test extends \externallib_advanced_testcase {
         }
 
         // Execute service.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $totalpackages, 0);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $totalpackages, 0, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         // Check if every version in DB is returned under the correct package.
@@ -386,7 +427,9 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_query(string $query, ?string $language, array $packages, array $expected): void {
+        global $PAGE, $USER;
         $this->resetAfterTest();
+        $this->setGuestUser();
 
         // Store every package in the database.
         foreach ($packages as $namespace => [$names, $description]) {
@@ -395,11 +438,11 @@ class search_packages_test extends \externallib_advanced_testcase {
 
         // Set current language if provided.
         if ($language) {
-            set_config('lang', $language);
+            $USER->lang = $language;
         }
 
         // Execute the service.
-        $res = search_packages::execute($query, [], 'all', 'alpha', 'asc', count($packages), 0);
+        $res = search_packages::execute($query, [], 'all', 'alpha', 'asc', count($packages), 0, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         // Get every returned namespace and check if it is correct.
@@ -444,7 +487,9 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_alphabetical_sort(array $names): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
 
         $totalpackages = count($names);
         foreach ($names as $name) {
@@ -458,14 +503,14 @@ class search_packages_test extends \externallib_advanced_testcase {
         $limit = max($totalpackages, 1);
 
         // Execute service with ascending order.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, 0);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, 0, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         $actualnamespaces = array_column($res['packages'], 'name');
         $this->assertEquals($names, $actualnamespaces);
 
         // Execute service with descending order.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'desc', $limit, 0);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'desc', $limit, 0, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         $actualnamespaces = array_column($res['packages'], 'name');
@@ -481,7 +526,9 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_date_sort(): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
 
         // Create multiple packages with different creation times.
         $totalpackages = 3;
@@ -494,7 +541,7 @@ class search_packages_test extends \externallib_advanced_testcase {
         }
 
         // Execute service with ascending order.
-        $res = search_packages::execute('', [], 'all', 'date', 'asc', $totalpackages, 0);
+        $res = search_packages::execute('', [], 'all', 'date', 'asc', $totalpackages, 0, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         // Check that package order is correct.
@@ -502,7 +549,7 @@ class search_packages_test extends \externallib_advanced_testcase {
         $this->assertEquals($namespaces, $actualnamespaces);
 
         // Execute service with descending order.
-        $res = search_packages::execute('', [], 'all', 'date', 'desc', $totalpackages, 0);
+        $res = search_packages::execute('', [], 'all', 'date', 'desc', $totalpackages, 0, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
         // Check that package order is correct.
@@ -538,7 +585,9 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_limit_and_offset(int $limit, int $totalpackages): void {
+        global $PAGE;
         $this->resetAfterTest();
+        $this->setGuestUser();
 
         for ($i = 0; $i < $totalpackages; $i++) {
             package_provider(['namespace' => "ns$i"])->store();
@@ -550,18 +599,18 @@ class search_packages_test extends \externallib_advanced_testcase {
 
         // Check full pages.
         for ($page = 0; $page < $fullpages; $page++) {
-            $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page);
+            $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page, $PAGE->context->id);
             $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
             $this->assert_count_and_total($res, $limit, $totalpackages);
         }
 
         // Check first page that is not full.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
         $this->assert_count_and_total($res, $lastpagesize, $totalpackages);
 
         // Check that next page is empty.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page + 1);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page + 1, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
         $this->assert_count_and_total($res, 0, $totalpackages);
     }
