@@ -39,4 +39,11 @@ $functions = [
         'ajax' => true,
         'loginrequired' => true,
     ],
+    'qtype_questionpy_search_packages' => [
+        'classname' => 'qtype_questionpy\external\search_packages',
+        'description' => 'Search and filter for packages in the database.',
+        'type' => 'read',
+        'ajax' => true,
+        'loginrequired' => true,
+    ],
 ];
