@@ -360,25 +360,19 @@ class search_packages_test extends \externallib_advanced_testcase {
             ['match', 'de', [
                 'ns1' => [['en' => 'en: match'], []],
                 'ns2' => [['en' => 'en: x'], ['en' => 'en: match']],
-                'ns3' => [['en' => 'en: match'], ['en' => 'en: match']]
+                'ns3' => [['en' => 'en: match'], ['en' => 'en: match']],
             ], ['ns1' => ['en', null], 'ns2' => ['en', 'en'], 'ns3' => ['en', 'en']]],
             // Match in fallback language while preferred language does exist but with no match.
             ['match', 'de', [
                 'ns1' => [['en' => 'en: match', 'de' => 'de: x'], []],
                 'ns2' => [['en' => 'en: x'], ['en' => 'en: match', 'de' => 'de: x']],
-                'ns3' => [['en' => 'en: match', 'de' => 'de: x'], ['en' => 'en: match', 'de' => 'de: x']]
+                'ns3' => [['en' => 'en: match', 'de' => 'de: x'], ['en' => 'en: match', 'de' => 'de: x']],
             ], []],
             // Match in fallback language and preferred language.
             ['match', 'de', [
                 'ns1' => [['en' => 'en: match', 'de' => 'de: match'], []],
                 'ns2' => [['en' => 'en: x'], ['en' => 'en: match', 'de' => 'de: match']],
-                'ns3' => [['en' => 'en: match', 'de' => 'de: match'], ['en' => 'en: match', 'de' => 'de: match']]
-            ], ['ns1' => ['de', null], 'ns2' => ['en', 'de'], 'ns3' => ['de', 'de']]],
-            // Match in fallback language and preferred language.
-            ['match', 'de', [
-                'ns1' => [['en' => 'en: match', 'de' => 'de: match'], []],
-                'ns2' => [['en' => 'en: x'], ['en' => 'en: match', 'de' => 'de: match']],
-                'ns3' => [['en' => 'en: match', 'de' => 'de: match'], ['en' => 'en: match', 'de' => 'de: match']]
+                'ns3' => [['en' => 'en: match', 'de' => 'de: match'], ['en' => 'en: match', 'de' => 'de: match']],
             ], ['ns1' => ['de', null], 'ns2' => ['en', 'de'], 'ns3' => ['de', 'de']]],
             // Results must contain every word.
             ['cool match', null, [
