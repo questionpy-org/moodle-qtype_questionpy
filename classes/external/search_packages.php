@@ -21,6 +21,7 @@ defined('MOODLE_INTERNAL') || die;
 global $CFG;
 require_once($CFG->libdir . "/externallib.php");
 
+use context;
 use external_api;
 use external_function_parameters;
 use external_multiple_structure;
@@ -77,9 +78,9 @@ class search_packages extends external_api {
             $validparameters = implode(', ', self::CATEGORIES);
             throw new invalid_parameter_exception("Unknown category. Valid parameters are: $validparameters");
         }
-        if ($params['category'] !== 'all') {
+        if (!in_array($params['category'], ['all', 'recentlyused'])) {
             // TODO: change if more categories are available.
-            throw new invalid_parameter_exception("Only the category 'all' is currently supported.");
+            throw new invalid_parameter_exception("Only the categories all and recentlyused are currently supported.");
         }
         if (!in_array($params['sort'], self::SORT)) {
             $validparameters = implode(', ', self::SORT);
@@ -277,6 +278,88 @@ class search_packages extends external_api {
     }
 
     /**
+     * Constructs sql fragment used to retrieve recently used packages given a context id.
+     *
+     * @param int $contextid
+     * @return array A list containing the constructed sql fragment and an array of parameters.
+     * @throws moodle_exception
+     */
+    private static function create_recently_used_sql(int $contextid): array {
+        global $DB;
+        // If current context is part of a course, get every context of that course.
+        $context = context::instance_by_id($contextid);
+        $coursecontext = $context->get_course_context(false);
+        if ($coursecontext) {
+            // Context is part of a course.
+            $contexts = $coursecontext->get_child_contexts();
+            $contextids = array_keys($contexts);
+            $contextids[] = $coursecontext->id;
+        } else {
+            // Context is not part of a course.
+            $contextids[] = $context->id;
+        }
+
+        // Create relevant sql fragment.
+        [$incontextsql, $incontextparams] = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'contextid');
+        $joinlastusedsql = "
+            JOIN {qtype_questionpy_lastused} lu
+            ON lu.packageid = p.id AND lu.contextid {$incontextsql}
+        ";
+
+        return [$joinlastusedsql, $incontextparams];
+    }
+
+    /**
+     * Constructs the sql query used for searching through packages.
+     *
+     * @param mixed $params The parameters.
+     * @return array
+     * @throws moodle_exception
+     */
+    public static function create_sql($params): array {
+        // Order the results.
+        $orderbysql = self::create_order_by_sql($params['sort'], $params['order']);
+
+        // Search only in best package translation.
+        [$joinlangssql, $joinlangsparams, $coalescenamesql, $coalescedescsql] = self::create_best_language_sql();
+
+        // Get only packages with specified tags.
+        [$jointagssql, $jointagsparams] = self::create_tag_filter_sql($params['tags']);
+
+        // Prepare query.
+        [$likesql, $likeparams] = self::create_text_search_sql(['name', 'description'], $params['query']);
+        $wherelikesql = self::sql_where($likesql);
+
+        // Merge existing parameters.
+        $finalparams = array_merge($joinlangsparams, $jointagsparams, $likeparams);
+
+        // Search through recently used packages if the category is set.
+        $recentlyusedsql = '';
+        if ($params['category'] === 'recentlyused') {
+            [$recentlyusedsql, $recentlyusedparams] = self::create_recently_used_sql($params['contextid']);
+            // Merge new parameters with existing ones.
+            $finalparams = array_merge($finalparams, $recentlyusedparams);
+        }
+
+        // Assemble final sql query.
+        $finalsql = "
+            SELECT id, short_name, namespace, author, url, icon, license, name, description
+            FROM (
+                SELECT p.id, p.shortname AS short_name, p.namespace, p.author, p.url, p.icon, p.license,
+                       $coalescenamesql AS name, $coalescedescsql AS description, p.timecreated
+                FROM {qtype_questionpy_package} p
+                $recentlyusedsql
+                $joinlangssql
+                $jointagssql
+            ) subq
+            $wherelikesql
+            $orderbysql
+        ";
+
+        return [$finalsql, $finalparams];
+    }
+
+    /**
      * This method is called when the service is executed.
      *
      * @param string $query
@@ -307,44 +390,16 @@ class search_packages extends external_api {
         ]);
 
         // Validate given context id.
-        $context = \context::instance_by_id($contextid, IGNORE_MISSING);
+        $context = context::instance_by_id($contextid, IGNORE_MISSING);
         self::validate_context($context);
 
         // In addition to the basic parameter validation we also want to validate the values.
         self::validate_parameter_values($params);
 
-        // Create the 'ORDER BY' sql fragment.
-        $orderbysql = self::create_order_by_sql($params['sort'], $params['order']);
+        // Generate sql and parameters.
+        [$finalsql, $finalparams] = self::create_sql($params);
 
-        // Search only in best package translation.
-        [$joinlangssql, $joinlangsparams, $coalescenamesql, $coalescedescsql] = self::create_best_language_sql();
-
-        // Get only packages with specified tags.
-        [$jointagssql, $jointagsparams] = self::create_tag_filter_sql($params['tags']);
-
-        // Prepare query.
-        [$likesql, $likeparams] = self::create_text_search_sql(['name', 'description'], $params['query']);
-        $wherelikesql = self::sql_where($likesql);
-
-        // Assemble the final sql.
-        // TODO: assemble the sql in a separate function and take the categories into account.
-        $finalsql = "
-            SELECT id, short_name, namespace, author, url, icon, license, name, description
-            FROM (
-                SELECT p.id, p.shortname AS short_name, p.namespace, p.author, p.url, p.icon, p.license,
-                       $coalescenamesql AS name, $coalescedescsql AS description, p.timecreated
-                FROM {qtype_questionpy_package} p
-                $joinlangssql
-                $jointagssql
-            ) subq
-            $wherelikesql
-            $orderbysql
-        ";
-
-        // Merge every parameter array.
-        $finalparams = array_merge($joinlangsparams, $jointagsparams, $likeparams);
-
-        // Execute the assembled sql query and set the limit and offset.
+        // Execute the sql query and set the limit and offset.
         $packagesraw = $DB->get_records_sql($finalsql, $finalparams, $params['limit'] * $params['page'], $params['limit']);
 
         // Get package tag and versions.

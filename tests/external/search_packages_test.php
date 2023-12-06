@@ -23,6 +23,8 @@
 
 namespace qtype_questionpy\external;
 
+use context_course;
+use context_module;
 use external_api;
 use moodle_exception;
 use function qtype_questionpy\package_provider;
@@ -607,6 +609,165 @@ class search_packages_test extends \externallib_advanced_testcase {
         $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page + 1, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
         $this->assert_count_and_total($res, 0, $totalpackages);
+    }
+
+    /**
+     * Adds a package to the last used table.
+     *
+     * TODO: use appropriate {@see package}-method to do this when available.
+     *
+     * @param int $pkgversionid
+     * @param int $contextid
+     * @param int $timeused
+     * @throws moodle_exception
+     */
+    public static function add_last_used_entry(int $pkgversionid, int $contextid, int $timeused = 0): void {
+        global $DB;
+        $packageid = $DB->get_field('qtype_questionpy_pkgversion', 'packageid', ['id' => $pkgversionid], MUST_EXIST);
+        $DB->insert_record('qtype_questionpy_lastused', [
+            'contextid' => $contextid,
+            'packageid' => $packageid,
+            'timeused' => $timeused,
+        ]);
+    }
+
+    /**
+     * Tests that the service works with the recentlyused-category even if no packages are recently used.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     * */
+    public function test_recently_used_with_no_recently_used_packages(): void {
+        $this->resetAfterTest();
+
+        // Create and set user.
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        // Create a course and enrol user.
+        $course = $this->getDataGenerator()->create_course();
+        $coursecontext = context_course::instance($course->id);
+        $this->getDataGenerator()->enrol_user($user->id, $course->id);
+
+        // Execute service.
+        $res = search_packages::execute('', [], 'recentlyused', 'alpha', 'asc', 1, 0, $coursecontext->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 0, 0);
+    }
+
+    /**
+     * Tests that recently used packages can be retrieved by providing the context id of a course.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     */
+    public function test_recently_used_works_with_course_context_id(): void {
+        $this->resetAfterTest();
+
+        // Create and set user.
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        // Create a course with a quiz.
+        $course = $this->getDataGenerator()->create_course();
+        $coursecontext = context_course::instance($course->id);
+        $quiz = $this->getDataGenerator()->create_module('quiz', ['course' => $course]);
+        $quizcontext = context_module::instance($quiz->cmid);
+
+        // Enrol user.
+        $this->getDataGenerator()->enrol_user($user->id, $course->id);
+
+        // Add a package to last used table under the quiz context.
+        $id = package_provider()->store();
+        self::add_last_used_entry($id, $quizcontext->id);
+
+        // Execute service with course context.
+        $res = search_packages::execute('', [], 'recentlyused', 'alpha', 'asc', 1, 0, $coursecontext->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 1, 1);
+    }
+
+    /**
+     * Tests that recently used packages are available across different quizzes in a course.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_recently_used_package_available_in_same_course_different_quiz(): void {
+        $this->resetAfterTest();
+
+        // Create and set user.
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        // Create a course and enrol user.
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($user->id, $course->id);
+
+        // Create two quizzes.
+        $record = ['course' => $course];
+        $quiz1 = $this->getDataGenerator()->create_module('quiz', $record);
+        $quiz2 = $this->getDataGenerator()->create_module('quiz', $record);
+
+        // Get contexts.
+        $quiz1context = context_module::instance($quiz1->cmid);
+        $quiz2context = context_module::instance($quiz2->cmid);
+
+        // Create package in one quiz and use it.
+        $id = package_provider(['namespace' => 'ns1'])->store();
+        self::add_last_used_entry($id, $quiz1context->id);
+
+        // Execute service with context id of the other quiz.
+        $res = search_packages::execute('', [], 'recentlyused', 'alpha', 'asc', 1, 0, $quiz2context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 1, 1);
+    }
+
+    /**
+     * Tests that recently used packages are not available across different courses.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_recently_used_package_not_available_across_different_courses(): void {
+        $this->resetAfterTest();
+
+        // Create and set user.
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        // Create two courses and enrol user.
+        $course1 = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($user->id, $course1->id);
+        $course2 = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->enrol_user($user->id, $course2->id);
+
+        // Create two quizzes; one in each course.
+        $quiz1 = $this->getDataGenerator()->create_module('quiz', ['course' => $course1]);
+        $quiz2 = $this->getDataGenerator()->create_module('quiz', ['course' => $course2]);
+
+        // Get contexts.
+        $quiz1context = context_module::instance($quiz1->cmid);
+        $quiz2context = context_module::instance($quiz2->cmid);
+
+        // Create package in one quiz and use it.
+        $id1 = package_provider(['namespace' => 'ns1'])->store();
+        self::add_last_used_entry($id1, $quiz1context->id);
+        $id2 = package_provider(['namespace' => 'ns2'])->store();
+        self::add_last_used_entry($id2, $quiz2context->id);
+
+        // Execute service with both context ids.
+        $res = search_packages::execute('', [], 'recentlyused', 'alpha', 'asc', 1, 0, $quiz1context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 1, 1);
+        $this->assertEquals('ns1', $res['packages'][0]['namespace']);
+
+        $res = search_packages::execute('', [], 'recentlyused', 'alpha', 'asc', 1, 0, $quiz2context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 1, 1);
+        $this->assertEquals('ns2', $res['packages'][0]['namespace']);
     }
 
     // TODO: add tests for filtering by tags when localized tags are supported.
