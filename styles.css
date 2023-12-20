@@ -117,3 +117,16 @@
     width: auto;
     vertical-align: baseline;
 }
+
+.qpy-server-info-table {
+    margin: 10px;
+}
+
+.qpy-server-info-th {
+    min-width: 250px;
+}
+
+.qpy-server-info-section-title {
+    padding-left: 5px;
+    margin-top: 20px;
+}
