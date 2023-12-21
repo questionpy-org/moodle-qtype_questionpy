@@ -25,62 +25,50 @@
 
     Example context (json):
     {
-        "status":{
-            "name":"questionpy-server",
-            "version":"0.1.0",
-            "allow_lms_packages":true,
-            "max_package_size":20971520,
-            "usage":{
-                "requests_in_process":0,
-                "requests_in_queue":0
-            }
-        },
-        "description":{
-            "title_general":"General",
-            "name":"Name",
-            "version":"Version",
-            "allow_lms_packages":"Allows packages from the LMS",
-            "max_package_size":"Maximum package size",
-            "usage_title":"Usage",
-            "requests_in_process":"Requests in process",
-            "requests_in_queue":"Requests in queue"
+        "name":"questionpy-server",
+        "version":"0.1.0",
+        "allow_lms_packages":true,
+        "max_package_size":20971520,
+        "usage":{
+            "requests_in_process":0,
+            "requests_in_queue":0
         }
     }
 }}
 <div>
-    <h3 class="qpy-server-info-section-title">{{ description.title_general }}</h3>
+    <h3 class="qpy-server-info-section-title">{{#str}} server_info_title_general, qtype_questionpy {{/str}}</h3>
     <table class="qpy-server-info-table">
         <tr>
-            <th class="qpy-server-info-th">{{ description.name }}</th>
-            <td class="qpy-server-info-td">{{ status.name }}</td>
+            <th class="qpy-server-info-th">{{#str}} server_info_name, qtype_questionpy {{/str}}</th>
+            <td class="qpy-server-info-td">{{ name }}</td>
         </tr>
         <tr>
-            <th class="qpy-server-info-th">{{ description.version }}</th>
-            <td class="qpy-server-info-td">{{ status.version }}</td>
+            <th class="qpy-server-info-th">{{#str}} server_info_version, qtype_questionpy {{/str}}</th>
+            <td class="qpy-server-info-td">{{ version }}</td>
         </tr>
         <tr>
-            <th class="qpy-server-info-th">{{ description.allow_lms_packages }}</th>
+            <th class="qpy-server-info-th">{{#str}} server_info_allow_lms_packages, qtype_questionpy {{/str}}</th>
             <td class="qpy-server-info-td">
-                {{#status.allowlmspackages}}Yes{{/status.allowlmspackages}}
-                {{^status.allowlmspackages}}No{{/status.allowlmspackages}}
+                {{#allowlmspackages}}Yes{{/allowlmspackages}}
+                {{^allowlmspackages}}No{{/allowlmspackages}}
             </td>
         </tr>
         <tr>
-            <th class="qpy-server-info-th">{{ description.max_package_size }}</th>
-            <td class="qpy-server-info-td">{{ status.maxpackagesize }} MiB</td>
+            <th class="qpy-server-info-th">{{#str}} server_info_max_package_size, qtype_questionpy {{/str}}</th>
+            <td class="qpy-server-info-td">{{ maxpackagesize }}</td>
         </tr>
     </table>
-    {{#status.usage}}
-    <h3 class="qpy-server-info-section-title">{{ description.usage_title }}</h3>
+    {{#usage}}
+    <h3 class="qpy-server-info-section-title">{{#str}} server_info_usage_title, qtype_questionpy {{/str}}</h3>
     <table class="qpy-server-info-table">
         <tr>
-            <th class="qpy-server-info-th">{{ description.requests_in_process }}</th>
-            <td class="qpy-server-info-td">{{ status.usage.requestsinprocess }}</td>
+            <th class="qpy-server-info-th">{{#str}} server_info_requests_in_process, qtype_questionpy {{/str}}</th>
+            <td class="qpy-server-info-td">{{ usage.requestsinprocess }}</td>
         </tr>
         <tr>
-            <th class="qpy-server-info-th">{{ description.requests_in_queue }}</th>
-            <td class="qpy-server-info-td">{{ status.usage.requestsinqueue }}</td>
+            <th class="qpy-server-info-th">{{#str}} server_info_requests_in_queue, qtype_questionpy {{/str}}</th>
+            <td class="qpy-server-info-td">{{ usage.requestsinqueue }}</td>
         </tr>
     </table>
-    {{/status.usage}}
+    {{/usage}}
 </div>

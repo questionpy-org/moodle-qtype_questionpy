@@ -32,10 +32,10 @@ defined('MOODLE_INTERNAL') || die;
 class usage {
 
     /** @var int */
-    public int $requestsinprocess = 0;
+    public int $requestsinprocess;
 
     /** @var int */
-    public int $requestsinqueue = 0;
+    public int $requestsinqueue;
 
     /**
      * Initialize a new usage.

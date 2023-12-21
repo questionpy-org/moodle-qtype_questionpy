@@ -33,7 +33,7 @@ $context = context_system::instance();
 require_capability('moodle/site:config', $context);
 
 $PAGE->set_context($context);
-$PAGE->set_url('/question/type/questionpy/server_info_view.php');
+$PAGE->set_url('/question/type/questionpy/server_info.php');
 $title = new lang_string('server_info_heading', 'qtype_questionpy');
 $PAGE->set_title($title);
 $output = $PAGE->get_renderer('core');
@@ -42,25 +42,11 @@ echo $output->header();
 echo $output->heading($title);
 
 // Server information and status.
-$api = new api();
-$status = $api->get_server_status();
-
-$status->maxpackagesize /= (1024 * 1024); // Change from bytes to MiB for user readability.
-$description = [
-    "title_general" => new lang_string('server_info_title_general', 'qtype_questionpy'),
-    "name" => new lang_string('server_info_name', 'qtype_questionpy'),
-    "version" => new lang_string('server_info_version', 'qtype_questionpy'),
-    "allow_lms_packages" => new lang_string('server_info_allow_lms_packages', 'qtype_questionpy'),
-    "max_package_size" => new lang_string('server_info_max_package_size', 'qtype_questionpy'),
-    "usage_title" => new lang_string('server_info_usage_title', 'qtype_questionpy'),
-    "requests_in_process" => new lang_string('server_info_requests_in_process', 'qtype_questionpy'),
-    "requests_in_queue" => new lang_string('server_info_requests_in_queue', 'qtype_questionpy'),
-];
-$context = [
-    "status" => $status,
-    "description" => $description,
-];
-
-echo $output->render_from_template('qtype_questionpy/settings/server_info', $context);
+try {
+    $status = api::get_server_status();
+    echo $output->render_from_template('qtype_questionpy/settings/server_info', $status);
+} catch (moodle_exception $e) {
+    notice($e->getMessage());
+}
 
 echo $output->footer();

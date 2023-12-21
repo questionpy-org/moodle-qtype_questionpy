@@ -75,7 +75,7 @@ if ($ADMIN->fulltree) {
         'qtype_questionpy/server_info',
         new lang_string('server_info_heading', 'qtype_questionpy'),
         new lang_string('server_info_description', 'qtype_questionpy', [
-            'link' => (string) new moodle_url('/question/type/questionpy/server_info_view.php'),
+            'link' => (string) new moodle_url('/question/type/questionpy/server_info.php'),
         ])
     ));
 }

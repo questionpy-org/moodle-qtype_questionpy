@@ -32,24 +32,29 @@ defined('MOODLE_INTERNAL') || die;
 class status {
 
     /** @var string */
-    public string $name = "";
+    public string $name;
 
     /** @var string */
-    public string $version = "";
+    public string $version;
 
     /** @var bool */
     public bool $allowlmspackages = false;
 
-    /** @var int */
-    public int $maxpackagesize = 0;
+    /** @var string */
+    public string $maxpackagesize;
 
     /** @var usage|null */
     public ?usage $usage;
 
+
     /**
      * Initialize a new status.
+     *
+     * @param int $maxpackagesize
+     * @throws \coding_exception
      */
-    public function __construct() {
+    public function __construct(int $maxpackagesize) {
+        $this->maxpackagesize = display_size($maxpackagesize, 1, 'MB');
     }
 }
 
