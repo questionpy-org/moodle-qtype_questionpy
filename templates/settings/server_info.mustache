@@ -49,8 +49,8 @@
         <tr>
             <th class="qpy-server-info-th">{{#str}} server_info_allow_lms_packages, qtype_questionpy {{/str}}</th>
             <td class="qpy-server-info-td">
-                {{#allowlmspackages}}Yes{{/allowlmspackages}}
-                {{^allowlmspackages}}No{{/allowlmspackages}}
+                {{#allowlmspackages}}{{#str}} yes, core {{/str}}{{/allowlmspackages}}
+                {{^allowlmspackages}}{{#str}} no, core {{/str}}{{/allowlmspackages}}
             </td>
         </tr>
         <tr>
