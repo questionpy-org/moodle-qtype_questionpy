@@ -18,6 +18,7 @@ namespace qtype_questionpy\api;
 
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\form\conditions\in;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -39,8 +40,13 @@ class usage {
 
     /**
      * Initialize a new usage.
+     *
+     * @param int $requestsinprocess
+     * @param int $requestsinqueue
      */
-    public function __construct() {
+    public function __construct(int $requestsinprocess, int $requestsinqueue) {
+        $this->requestsinprocess = $requestsinprocess;
+        $this->requestsinqueue = $requestsinqueue;
     }
 }
 

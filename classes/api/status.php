@@ -44,16 +44,20 @@ class status {
     public string $maxpackagesize;
 
     /** @var usage|null */
-    public ?usage $usage;
+    public ?usage $usage = null;
 
 
     /**
      * Initialize a new status.
      *
+     * @param string $name
+     * @param string $version
      * @param int $maxpackagesize
      * @throws \coding_exception
      */
-    public function __construct(int $maxpackagesize) {
+    public function __construct(string $name, string $version, int $maxpackagesize) {
+        $this->name = $name;
+        $this->version = $version;
         $this->maxpackagesize = display_size($maxpackagesize, 1, 'MB');
     }
 }
