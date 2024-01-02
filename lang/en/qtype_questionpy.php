@@ -41,6 +41,16 @@ $string['total_packages'] = '{$a->packages} packages with a total of {$a->versio
 $string['load_packages_button'] = 'Load Packages';
 $string['remove_packages_button'] = 'Remove Packages';
 $string['service_failed'] = 'Failed.';
+$string['server_info_heading'] = 'QuestionPy Application Server Information';
+$string['server_info_description'] = '<a href="{$a->link}">Information</a> about the application server you are connected to.';
+$string['server_info_title_general'] = 'General';
+$string['server_info_name'] = 'Name';
+$string['server_info_version'] = 'Version';
+$string['server_info_allow_lms_packages'] = 'Allows packages from the LMS';
+$string['server_info_max_package_size'] = 'Maximum package size';
+$string['server_info_usage_title'] = 'Usage';
+$string['server_info_requests_in_process'] = 'Requests in process';
+$string['server_info_requests_in_queue'] = 'Requests in queue';
 
 // Package upload.
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';

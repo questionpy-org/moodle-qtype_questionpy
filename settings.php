@@ -70,5 +70,13 @@ if ($ADMIN->fulltree) {
         PARAM_FLOAT,
         5
     ));
+
+    $settings->add(new admin_setting_heading(
+        'qtype_questionpy/server_info',
+        new lang_string('server_info_heading', 'qtype_questionpy'),
+        new lang_string('server_info_description', 'qtype_questionpy', [
+            'link' => (string) new moodle_url('/question/type/questionpy/server_info.php'),
+        ])
+    ));
 }
 

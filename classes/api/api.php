@@ -195,4 +195,18 @@ class api {
         $connector = connector::default();
         return $connector->post("/package-extract-info", $data);
     }
+
+    /**
+     * Get the status and information from the server.
+     *
+     * @return status
+     * @throws moodle_exception
+     */
+    public static function get_server_status(): status {
+        $connector = connector::default();
+
+        $response = $connector->get("/status");
+        $response->assert_2xx();
+        return array_converter::from_array(status::class, $response->get_data());
+    }
 }
