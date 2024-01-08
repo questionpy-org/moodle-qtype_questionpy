@@ -65,17 +65,21 @@ class package_settings extends admin_setting {
     /**
      * As no setting is written, this function is empty.
      *
-     * @return void
+     * @return true
      */
-    public function get_setting() {
+    public function get_setting(): bool {
+        /* Returning null causes moodle to think the setting is new and has yet to be set,
+           blocking the upgradesettings.php flow. So we return true. */
+        return true;
     }
 
     /**
      * As no setting is written, this function is empty.
      *
      * @param mixed $data
-     * @return void
+     * @return string empty string if ok, string error message otherwise
      */
-    public function write_setting($data) {
+    public function write_setting($data): string {
+        return "";
     }
 }
