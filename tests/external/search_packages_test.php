@@ -198,30 +198,16 @@ class search_packages_test extends \externallib_advanced_testcase {
     }
 
     /**
-     * Provides valid but unsupported categories.
+     * Tests that the service throws an error for the valid but unsupported category 'favorites'.
      *
-     * @return array
-     */
-    public static function category_provider(): array {
-        return [
-            ['favourites'],
-            ['mine'],
-        ];
-    }
-
-    /**
-     * Tests that the service throws an error for valid but unsupported categories.
-     *
-     * @param string $category
      * @covers \qtype_questionpy\external\search_packages::execute
-     * @dataProvider category_provider
      * @return void
      * @throws moodle_exception
      */
-    public function test_categories(string $category): void {
+    public function test_categories(): void {
         global $PAGE;
         $this->expectException(\invalid_parameter_exception::class);
-        search_packages::execute('Test query', [], $category, 'alpha', 'asc', 3, 5, $PAGE->context->id);
+        search_packages::execute('Test query', [], 'favorites', 'alpha', 'asc', 3, 5, $PAGE->context->id);
     }
 
     /**
@@ -927,6 +913,124 @@ class search_packages_test extends \externallib_advanced_testcase {
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
         $this->assert_count_and_total($res, 1, 1);
         $this->assertEquals('ns2', $res['packages'][0]['namespace']);
+    }
+
+    /**
+     * Tests that if only server packages exist, no package will be returned.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_mine_with_only_server_packages_returns_nothing(): void {
+        global $PAGE;
+        package_provider()->store(0, false);
+        $res = search_packages::execute('', [], 'mine', 'alpha', 'asc', 1, 0, $PAGE->context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 0, 0);
+    }
+
+    /**
+     * Tests that packages uploaded by the current user are returned.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_mine_with_user_uploaded_package(): void {
+        global $PAGE;
+        package_provider()->store();
+        $res = search_packages::execute('', [], 'mine', 'alpha', 'asc', 1, 0, $PAGE->context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 1, 1);
+    }
+
+    /**
+     * Tests that packages uploaded in a relevant context are returned.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_mine_with_in_relevant_context_uploaded_packages(): void {
+        // Create two users and enrol them in the same course.
+        $course = $this->getDataGenerator()->create_course();
+        $user1 = $this->getDataGenerator()->create_and_enrol($course);
+        $user2 = $this->getDataGenerator()->create_and_enrol($course);
+
+        // Get course context.
+        $context = context_course::instance($course->id);
+
+        // Store a package as user one.
+        $this->setUser($user1);
+        package_provider()->store($context->id);
+
+        // Retrieve package as the other user.
+        $this->setUser($user2);
+        $res = search_packages::execute('', [], 'mine', 'alpha', 'asc', 1, 0, $context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 1, 1);
+    }
+
+    /**
+     * Tests that if a package has a version uploaded by a user and there is also a version provided by the server, both
+     * versions get returned.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_mine_with_user_version_and_server_version_are_both_returned(): void {
+        global $PAGE;
+        // Create server package version.
+        package_provider(['namespace' => 'ns1', 'version' => '0.1.0'])->store(0, false);
+        // Create user package version.
+        package_provider(['namespace' => 'ns1', 'version' => '0.2.0'])->store();
+
+        // Execute service.
+        $res = search_packages::execute('', [], 'mine', 'alpha', 'asc', 1, 0, $PAGE->context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+
+        // Both version should be returned.
+        $this->assert_count_and_total($res, 1, 1);
+        $versions = $res['packages'][0]['versions'];
+        $this->assertCount(2, $versions);
+        $this->assertEqualsCanonicalizing(['0.1.0', '0.2.0'], array_column($versions, 'version'));
+    }
+
+    /**
+     * Tests that if a package has a version uploaded in a relevant context and there is also a version provided by the
+     * server, both versions get returned.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_mine_with_context_version_and_server_version_are_both_returned(): void {
+        // Create two users and enrol them in the same course.
+        $course = $this->getDataGenerator()->create_course();
+        $user1 = $this->getDataGenerator()->create_and_enrol($course);
+        $user2 = $this->getDataGenerator()->create_and_enrol($course);
+
+        // Get course context.
+        $context = context_course::instance($course->id);
+
+        // Create server package version.
+        package_provider(['namespace' => 'ns1', 'version' => '0.1.0'])->store(0, false);
+        // Store a package as user one.
+        $this->setUser($user1);
+        package_provider(['namespace' => 'ns1', 'version' => '0.2.0'])->store($context->id);
+
+        // Execute service as user two.
+        $this->setUser($user2);
+        $res = search_packages::execute('', [], 'mine', 'alpha', 'asc', 1, 0, $context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+
+        // Both version should be returned.
+        $this->assert_count_and_total($res, 1, 1);
+        $versions = $res['packages'][0]['versions'];
+        $this->assertCount(2, $versions);
+        $this->assertEqualsCanonicalizing(['0.1.0', '0.2.0'], array_column($versions, 'version'));
     }
 
     // TODO: add tests for filtering by tags when localized tags are supported.

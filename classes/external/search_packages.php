@@ -78,9 +78,9 @@ class search_packages extends external_api {
             $validparameters = implode(', ', self::CATEGORIES);
             throw new invalid_parameter_exception("Unknown category. Valid parameters are: $validparameters");
         }
-        if (!in_array($params['category'], ['all', 'recentlyused'])) {
+        if (!in_array($params['category'], ['all', 'recentlyused', 'mine'])) {
             // TODO: change if more categories are available.
-            throw new invalid_parameter_exception("Only the categories all and recentlyused are currently supported.");
+            throw new invalid_parameter_exception("Only the categories 'all', 'recentlyused' and 'mine' are currently supported.");
         }
         if (!in_array($params['sort'], self::SORT)) {
             $validparameters = implode(', ', self::SORT);
@@ -313,16 +313,21 @@ class search_packages extends external_api {
      * from the application server should be retrieved.
      *
      * @param array $contextids relevant context ids
+     * @param bool $onlymine only packages falling under the 'mine' category should be considered
      * @return array A list containing the sql fragment and two parameter arrays.
      * @throws moodle_exception
      */
-    private static function create_package_guard(array $contextids): array {
+    private static function create_package_guard(array $contextids, bool $onlymine): array {
         global $DB, $USER;
         [$incontextsql, $incontextparams] = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'guard_contextid');
         [$inusersql, $inuserparams] = $DB->get_in_or_equal($USER->id, SQL_PARAMS_NAMED, 'guard_userid');
+        $withserversql = '';
+        if (!$onlymine) {
+            $withserversql = 'pv.userid IS NULL OR';
+        }
         $joinguardsql = "
             JOIN {qtype_questionpy_pkgversion} pv
-            ON p.id = pv.packageid AND (pv.userid IS NULL OR pv.userid {$inusersql} OR pv.contextid {$incontextsql})
+            ON p.id = pv.packageid AND ($withserversql pv.userid {$inusersql} OR pv.contextid {$incontextsql})
         ";
 
         return [$joinguardsql, $incontextparams, $inuserparams];
@@ -371,7 +376,8 @@ class search_packages extends external_api {
         $wherelikesql = self::sql_where($likesql);
 
         // Create package guard.
-        [$joinguardsql, $incontextparams, $inuserparams] = self::create_package_guard($contextids);
+        $onlymine = $params['category'] === 'mine';
+        [$joinguardsql, $incontextparams, $inuserparams] = self::create_package_guard($contextids, $onlymine);
 
         // Merge existing parameters.
         $finalparams = array_merge($joinlangsparams, $jointagsparams, $likeparams, $incontextparams, $inuserparams);
