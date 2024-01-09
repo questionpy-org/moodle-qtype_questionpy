@@ -49,6 +49,14 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
 class search_packages_test extends \externallib_advanced_testcase {
 
     /**
+     * This method is called before each test.
+     */
+    public function setUp(): void {
+        $this->resetAfterTest();
+        $this->setGuestUser();
+    }
+
+    /**
      * Asserts that count and total are set correctly.
      *
      * @param array $result
@@ -73,7 +81,7 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_user_needs_to_be_logged_in(): void {
         global $PAGE;
-        $this->resetAfterTest();
+        $this->setUser();
         $this->expectException(\require_login_exception::class);
         search_packages::execute('Test query', [], 'allmine', 'desc', 'date', 3, 5, $PAGE->context->id);
     }
@@ -85,7 +93,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_context_id_needs_to_be_valid(): void {
-        $this->resetAfterTest();
         $this->expectException(\invalid_parameter_exception::class);
         $this->expectExceptionMessageMatches("/Context does not exist/");
         search_packages::execute('Test query', [], 'allmine', 'desc', 'date', 3, 5, -1);
@@ -99,8 +106,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_with_invalid_category_value(): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $expected = implode(', ', search_packages::CATEGORIES);
         $this->expectExceptionMessageMatches("/.*$expected.*/i");
@@ -115,8 +120,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_with_invalid_sort_value(): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $expected = implode(', ', search_packages::SORT);
         $this->expectExceptionMessageMatches("/.*$expected.*/i");
@@ -131,8 +134,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_with_invalid_order_value(): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $expected = implode(', ', search_packages::ORDER);
         $this->expectExceptionMessageMatches("/.*$expected.*/i");
@@ -164,8 +165,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_with_invalid_limit(int $limit): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $this->expectExceptionMessageMatches("/.*1 to 100.*/");
         search_packages::execute('Test query', [], 'all', 'alpha', 'asc', $limit, 5, $PAGE->context->id);
@@ -193,8 +192,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_with_invalid_page_value(int $page): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
         $this->expectExceptionMessageMatches("/.*can not be negative.*/");
         search_packages::execute('Test query', [], 'all', 'alpha', 'asc', 1, $page, $PAGE->context->id);
@@ -207,7 +204,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public static function category_provider(): array {
         return [
-            ['recentlyused'],
             ['favourites'],
             ['mine'],
         ];
@@ -224,10 +220,8 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_categories(string $category): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
         $this->expectException(\invalid_parameter_exception::class);
-        search_packages::execute('Test query', [], $category, 'alpha', 'up', 3, 5, $PAGE->context->id);
+        search_packages::execute('Test query', [], $category, 'alpha', 'asc', 3, 5, $PAGE->context->id);
     }
 
     /**
@@ -236,11 +230,8 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @covers \qtype_questionpy\external\search_packages::execute
      * @throws moodle_exception
      */
-    public function test_search_without_filter_returns_every_package(): void {
+    public function test_search_without_available_packages(): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
-
         // Execute service.
         $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 1, 0, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
@@ -253,16 +244,27 @@ class search_packages_test extends \externallib_advanced_testcase {
     }
 
     /**
-     * Tests that the service returns every version of a package.
+     * Acts as a provider for {@see test_user_and_server_versions_get_returned}.
      *
+     * @return array[]
+     */
+    public static function as_user_provider(): array {
+        return [
+            [true],
+            [false],
+        ];
+    }
+
+    /**
+     * Tests that packages uploaded by the user and packages retrieved by the server are returned by the service.
+     *
+     * @param bool $asuser Whether the packages were uploaded as user or not.
      * @covers \qtype_questionpy\external\search_packages::execute
+     * @dataProvider as_user_provider
      * @throws moodle_exception
      */
-    public function test_search_respects_package_versions(): void {
+    public function test_user_and_server_versions_get_returned(bool $asuser): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
-
         // Create packages and their versions.
         $totalpackages = 2;
         $totalversions = 3;
@@ -271,7 +273,7 @@ class search_packages_test extends \externallib_advanced_testcase {
         for ($i = 0; $i < $totalpackages; $i++) {
             $namespace = "n$i";
             for ($j = 0; $j < $totalversions; $j++) {
-                $versionid = package_provider(['namespace' => $namespace, 'version' => "0.$j.0"])->store();
+                $versionid = package_provider(['namespace' => $namespace, 'version' => "0.$j.0"])->store(0, $asuser);
                 $versions[$namespace][] = $versionid;
             }
         }
@@ -291,6 +293,180 @@ class search_packages_test extends \externallib_advanced_testcase {
 
         // The amount of package versions should not change the package count.
         $this->assert_count_and_total($res, $totalpackages, $totalpackages);
+    }
+
+    /**
+     * Tests that every package in a course context gets returned.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     */
+    public function test_versions_get_returned_with_relevant_contexts(): void {
+        // Create and enrol two users in the same course.
+        $course = $this->getDataGenerator()->create_course();
+        $user1 = $this->getDataGenerator()->create_and_enrol($course);
+        $user2 = $this->getDataGenerator()->create_and_enrol($course);
+
+        // Create two quizzes.
+        $record = ['course' => $course];
+        $quiz1 = $this->getDataGenerator()->create_module('quiz', $record);
+        $quiz2 = $this->getDataGenerator()->create_module('quiz', $record);
+
+        // Get contexts.
+        $coursecontext = context_course::instance($course->id);
+        $quiz1context = context_module::instance($quiz1->cmid);
+        $quiz2context = context_module::instance($quiz2->cmid);
+
+        // Set a user and create a package in each quiz.
+        $this->setUser($user1);
+        package_provider(['namespace' => 'ns1'])->store($quiz1context->id);
+        package_provider(['namespace' => 'ns2'])->store($quiz2context->id);
+
+        // Set the other user and use every context to retrieve the package.
+        $this->setUser($user2);
+        foreach ([$coursecontext, $quiz1context, $quiz2context] as $context) {
+            $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 2, 0, $context->id);
+            $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+
+            // Check if every version in DB is returned under the correct package.
+            $this->assertCount(2, $res['packages']);
+            $this->assertCount(1, $res['packages'][0]['versions']);
+            $this->assertCount(1, $res['packages'][1]['versions']);
+
+            // The amount of package versions should not change the package count.
+            $this->assert_count_and_total($res, 2, 2);
+        }
+    }
+
+    /**
+     * Tests that even for the same package but different versions the context gets respected.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     */
+    public function test_that_context_get_respected_with_same_package_but_different_version(): void {
+        // Create two users in two separate courses.
+        $course1 = $this->getDataGenerator()->create_course();
+        $user1 = $this->getDataGenerator()->create_and_enrol($course1);
+        $course2 = $this->getDataGenerator()->create_course();
+        $user2 = $this->getDataGenerator()->create_and_enrol($course2);
+
+        // Get contexts.
+        $course1context = context_course::instance($course1->id);
+        $course2context = context_course::instance($course2->id);
+
+        // Create two different package versions of same package with both users in their courses.
+        $this->setUser($user1);
+        package_provider(['namespace' => 'ns1', 'version' => '0.1.0'])->store($course1context->id);
+        $this->setUser($user2);
+        package_provider(['namespace' => 'ns1', 'version' => '0.2.0'])->store($course2context->id);
+
+        // Check that context gets respected.
+        $expected = [
+            $user1->id => [$course1context->id, '0.1.0'],
+            $user2->id => [$course2context->id, '0.2.0'],
+        ];
+
+        foreach ($expected as $userid => [$coursecontextid, $version]) {
+            $this->setUser($userid);
+
+            $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 2, 0, $coursecontextid);
+            $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+
+            $this->assert_count_and_total($res, 1, 1);
+            $versions = $res['packages'][0]['versions'];
+            $this->assertCount(1, $versions);
+            $this->assertEquals($version, $versions[0]['version']);
+        }
+    }
+
+    /**
+     * Tests that packages with a different (course) context are ignored.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     */
+    public function test_versions_are_ignored_with_irrelevant_contexts(): void {
+        // Create two users in two separate courses.
+        $course1 = $this->getDataGenerator()->create_course();
+        $user1 = $this->getDataGenerator()->create_and_enrol($course1);
+        $course2 = $this->getDataGenerator()->create_course();
+        $user2 = $this->getDataGenerator()->create_and_enrol($course2);
+
+        // Get contexts.
+        $course1context = context_course::instance($course1->id);
+        $course2context = context_course::instance($course2->id);
+
+        // Set a user and create a package inside its course.
+        $this->setUser($user1);
+        package_provider(['namespace' => 'ns1'])->store($course1context->id);
+
+        // Set the other user and retrieve all packages.
+        $this->setUser($user2);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 1, 0, $course2context->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+
+        // No packages should be available for that user.
+        $this->assert_count_and_total($res, 0, 0);
+    }
+
+    /**
+     * Tests that having packages with multiple different sources returns correct values.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     */
+    public function test_mixed_versions_are_returned_correctly(): void {
+        // Create two courses and get contexts.
+        $course1 = $this->getDataGenerator()->create_course();
+        $course2 = $this->getDataGenerator()->create_course();
+        // Enrol two users in both courses.
+        $user1 = $this->getDataGenerator()->create_and_enrol($course1);
+        $user2 = $this->getDataGenerator()->create_and_enrol($course1);
+        $this->getDataGenerator()->enrol_user($user1->id, $course2->id);
+        $this->getDataGenerator()->enrol_user($user2->id, $course2->id);
+
+        // Get contexts.
+        $course1context = context_course::instance($course1->id);
+        $course2context = context_course::instance($course2->id);
+
+        // Server package - should be always available.
+        package_provider(['namespace' => 'ns1'])->store(0, false);
+
+        // Both users create a package in both quizzes.
+        $this->setUser($user1);
+        package_provider(['namespace' => 'ns2'])->store($course1context->id);
+        package_provider(['namespace' => 'ns3'])->store($course2context->id);
+        $this->setUser($user2);
+        package_provider(['namespace' => 'ns4'])->store($course1context->id);
+        package_provider(['namespace' => 'ns5'])->store($course2context->id);
+
+        // Create expected namespaces array for each user in each course.
+        $expected = [
+            $user1->id => [
+                $course1context->id => ['ns1', 'ns2', 'ns3', 'ns4'],
+                $course2context->id => ['ns1', 'ns2', 'ns3', 'ns5'],
+            ],
+            $user2->id => [
+                $course1context->id => ['ns1', 'ns2', 'ns4', 'ns5'],
+                $course2context->id => ['ns1', 'ns3', 'ns4', 'ns5'],
+            ],
+        ];
+
+        // Check the returned packages for each user in each course.
+        foreach ($expected as $userid => $coursecontext) {
+            $this->setUser($userid);
+            foreach ($coursecontext as $coursecontextid => $expectednamespaces) {
+                $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 4, 0, $coursecontextid);
+                $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+
+                $namespaces = array_column($res['packages'], 'namespace');
+                $this->assertEqualsCanonicalizing($expectednamespaces, $namespaces);
+
+                $this->assert_count_and_total($res, 4, 4);
+            }
+        }
+
     }
 
     /**
@@ -419,13 +595,10 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @param array $expected
      * @covers \qtype_questionpy\external\search_packages::execute
      * @dataProvider query_provider
-     * @return void
      * @throws moodle_exception
      */
     public function test_query(string $query, ?string $language, array $packages, array $expected): void {
         global $PAGE, $USER;
-        $this->resetAfterTest();
-        $this->setGuestUser();
 
         // Store every package in the database.
         foreach ($packages as $namespace => [$names, $description]) {
@@ -484,8 +657,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_alphabetical_sort(array $names): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
 
         $totalpackages = count($names);
         foreach ($names as $name) {
@@ -523,8 +694,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_date_sort(): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
 
         // Create multiple packages with different creation times.
         $totalpackages = 3;
@@ -582,8 +751,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_limit_and_offset(int $limit, int $totalpackages): void {
         global $PAGE;
-        $this->resetAfterTest();
-        $this->setGuestUser();
 
         for ($i = 0; $i < $totalpackages; $i++) {
             package_provider(['namespace' => "ns$i"])->store();
@@ -601,12 +768,12 @@ class search_packages_test extends \externallib_advanced_testcase {
         }
 
         // Check first page that is not full.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page, $PAGE->context->id);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $fullpages, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
         $this->assert_count_and_total($res, $lastpagesize, $totalpackages);
 
         // Check that next page is empty.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $page + 1, $PAGE->context->id);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $limit, $fullpages + 1, $PAGE->context->id);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
         $this->assert_count_and_total($res, 0, $totalpackages);
     }
@@ -638,8 +805,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      * */
     public function test_recently_used_with_no_recently_used_packages(): void {
-        $this->resetAfterTest();
-
         // Create and set user.
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
@@ -662,8 +827,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_recently_used_works_with_course_context_id(): void {
-        $this->resetAfterTest();
-
         // Create and set user.
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
@@ -695,8 +858,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_recently_used_package_available_in_same_course_different_quiz(): void {
-        $this->resetAfterTest();
-
         // Create and set user.
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
@@ -732,8 +893,6 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_recently_used_package_not_available_across_different_courses(): void {
-        $this->resetAfterTest();
-
         // Create and set user.
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
