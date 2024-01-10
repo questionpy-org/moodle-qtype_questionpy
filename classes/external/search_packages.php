@@ -281,18 +281,17 @@ class search_packages extends external_api {
     }
 
     /**
-     * Returns a list of relevant context ids related to the given context id.
+     * Returns a list of relevant context ids related to the given context.
      *
      * If the given context is part of a course context, the course context id and every child context id are returned.
-     * Else, only the given context id is returned inside the array.
+     * Else, only the id of the given context is returned inside the array.
      *
-     * @param int $contextid
+     * @param context $context
      * @return int[] relevant context ids
      * @throws moodle_exception
      */
-    private static function get_relevant_context_ids(int $contextid): array {
-        // If current context is part of a course, get every context of that course.
-        $context = context::instance_by_id($contextid);
+    private static function get_relevant_context_ids(context $context): array {
+        // If context is part of a course, get every context of that course.
         $coursecontext = $context->get_course_context(false);
         if ($coursecontext) {
             // Context is part of a course.
@@ -447,7 +446,7 @@ class search_packages extends external_api {
         self::validate_parameter_values($params);
 
         // Get relevant context ids.
-        $contextids = self::get_relevant_context_ids($params['contextid']);
+        $contextids = self::get_relevant_context_ids($context);
 
         // Generate sql and parameters.
         [$finalsql, $finalparams] = self::create_sql($params, $contextids);
