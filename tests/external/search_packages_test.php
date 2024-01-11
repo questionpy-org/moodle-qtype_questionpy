@@ -25,6 +25,8 @@ namespace qtype_questionpy\external;
 
 use context_course;
 use context_module;
+use context_user;
+use core_favourites\local\service\user_favourite_service;
 use external_api;
 use moodle_exception;
 use function qtype_questionpy\package_provider;
@@ -195,19 +197,6 @@ class search_packages_test extends \externallib_advanced_testcase {
         $this->expectException(\invalid_parameter_exception::class);
         $this->expectExceptionMessageMatches("/.*can not be negative.*/");
         search_packages::execute('Test query', [], 'all', 'alpha', 'asc', 1, $page, $PAGE->context->id);
-    }
-
-    /**
-     * Tests that the service throws an error for the valid but unsupported category 'favorites'.
-     *
-     * @covers \qtype_questionpy\external\search_packages::execute
-     * @return void
-     * @throws moodle_exception
-     */
-    public function test_categories(): void {
-        global $PAGE;
-        $this->expectException(\invalid_parameter_exception::class);
-        search_packages::execute('Test query', [], 'favorites', 'alpha', 'asc', 3, 5, $PAGE->context->id);
     }
 
     /**
@@ -1031,6 +1020,147 @@ class search_packages_test extends \externallib_advanced_testcase {
         $versions = $res['packages'][0]['versions'];
         $this->assertCount(2, $versions);
         $this->assertEqualsCanonicalizing(['0.1.0', '0.2.0'], array_column($versions, 'version'));
+    }
+
+    /**
+     * Favourites one or multiple packages given their id(s).
+     *
+     * @param user_favourite_service $ufservice
+     * @param context_user $context
+     * @param int ...$ids the package version ids to be marked as favourite
+     * @throws moodle_exception
+     */
+    private static function favourite(user_favourite_service $ufservice, context_user $context, int ...$ids): void {
+        global $DB;
+
+        [$insql, $inparams] = $DB->get_in_or_equal($ids);
+        $packageids = $DB->get_fieldset_select('qtype_questionpy_pkgversion', 'packageid', "id $insql", $inparams);
+        foreach ($packageids as $packageid) {
+            $ufservice->create_favourite('qtype_questionpy', 'package', $packageid, $context);
+        }
+    }
+
+    /**
+     * Tests that only packages marked as favourite are returned. Server provided, user uploaded and in relevant context
+     * uploaded packages are used. It also tests that the `isfavourite`-property is set correctly.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_favourites_returns_packages_marked_as_favourite_and_isfavourite_is_set_correctly(): void {
+        // Create two users and assign them to the same course.
+        $course = $this->getDataGenerator()->create_course();
+        $user1 = $this->getDataGenerator()->create_and_enrol($course);
+        $user2 = $this->getDataGenerator()->create_and_enrol($course);
+
+        // Create two packages provided by the server.
+        $pkgversionidserver = package_provider(['namespace' => 'ns1'])->store(0, false);
+        package_provider(['namespace' => 'ns2'])->store(0, false);
+
+        // Upload two packages as user one inside the course.
+        $this->setUser($user1);
+        $coursecontext = context_course::instance($course->id);
+        $pkgversionidcontext = package_provider(['namespace' => 'ns3'])->store($coursecontext->id);
+        package_provider(['namespace' => 'ns4'])->store($coursecontext->id);
+
+        // Set user two and upload two packages.
+        $this->setUser($user2);
+        $pkgversioniduser = package_provider(['namespace' => 'ns5'])->store();
+        package_provider(['namespace' => 'ns6'])->store();
+
+        // Favourite one package of each kind as user two.
+        $usercontext = context_user::instance($user2->id);
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+        self::favourite($ufservice, $usercontext, $pkgversionidserver, $pkgversionidcontext, $pkgversioniduser);
+        $favourites = ['ns1', 'ns3', 'ns5'];
+
+        // Check if only packages marked as favourite are returned.
+        $res = search_packages::execute('', [], 'favourites', 'alpha', 'asc', 3, 0, $coursecontext->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 3, 3);
+        $namespaces = array_column($res['packages'], 'namespace');
+        $this->assertEqualsCanonicalizing($favourites, $namespaces);
+
+        // Check if isfavourite-property is set correctly.
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 6, 0, $coursecontext->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 6, 6);
+
+        foreach ($res['packages'] as $package) {
+            if (in_array($package['namespace'], $favourites)) {
+                self::assertTrue($package['isfavourite']);
+            } else {
+                self::assertFalse($package['isfavourite']);
+            }
+        }
+    }
+
+    /**
+     * Tests that packages marked as favourite do not get returned in a different/non-relevant context.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_favourites_respects_current_context(): void {
+        // Create two users and assign them to the same course.
+        $course = $this->getDataGenerator()->create_course();
+        $user1 = $this->getDataGenerator()->create_and_enrol($course);
+        $user2 = $this->getDataGenerator()->create_and_enrol($course);
+
+        // Upload a package as user one inside the course.
+        $this->setUser($user1);
+        $coursecontext = context_course::instance($course->id);
+        $pkgversionid = package_provider()->store($coursecontext->id);
+
+        // Favourite the uploaded package.
+        $this->setUser($user2);
+        $usercontext = context_user::instance($user2->id);
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+        self::favourite($ufservice, $usercontext, $pkgversionid);
+
+        // Check that no package gets returned in different context.
+        $res = search_packages::execute('', [], 'favourites', 'alpha', 'asc', 1, 0, $usercontext->id);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 0, 0);
+    }
+
+    /**
+     * Tests that only packages which were marked as favourite by the current user are returned even if another user has
+     * also marked packages as favourite.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_favourites_are_not_shared_across_users(): void {
+        global $PAGE;
+
+        // Create two users and get the user favourite service.
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+        $user1context = context_user::instance($user1->id);
+        $user2context = context_user::instance($user2->id);
+        $user1service = \core_favourites\service_factory::get_service_for_user_context($user1context);
+        $user2service = \core_favourites\service_factory::get_service_for_user_context($user2context);
+
+        // Create two server packages.
+        $pkgversion1 = package_provider(['namespace' => 'ns1'])->store(0, false);
+        $pkgversion2 = package_provider(['namespace' => 'ns2'])->store(0, false);
+
+        // Both users favourite different packages.
+        self::favourite($user1service, $user1context, $pkgversion1);
+        self::favourite($user2service, $user2context, $pkgversion2);
+
+        // Check that each user has only the correct favourite set.
+        foreach ([[$user1, 'ns1'], [$user2, 'ns2']] as [$user, $ns]) {
+            $this->setUser($user);
+            $res = search_packages::execute('', [], 'favourites', 'alpha', 'asc', 1, 0, $PAGE->context->id);
+            $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+            $this->assert_count_and_total($res, 1, 1);
+            $this->assertEquals($ns, $res['packages'][0]['namespace']);
+        }
     }
 
     // TODO: add tests for filtering by tags when localized tags are supported.
