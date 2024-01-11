@@ -22,6 +22,7 @@ global $CFG;
 require_once($CFG->libdir . "/externallib.php");
 
 use context;
+use context_user;
 use external_api;
 use external_function_parameters;
 use external_multiple_structure;
@@ -77,10 +78,6 @@ class search_packages extends external_api {
         if (!in_array($params['category'], self::CATEGORIES)) {
             $validparameters = implode(', ', self::CATEGORIES);
             throw new invalid_parameter_exception("Unknown category. Valid parameters are: $validparameters");
-        }
-        if (!in_array($params['category'], ['all', 'recentlyused', 'mine'])) {
-            // TODO: change if more categories are available.
-            throw new invalid_parameter_exception("Only the categories 'all', 'recentlyused' and 'mine' are currently supported.");
         }
         if (!in_array($params['sort'], self::SORT)) {
             $validparameters = implode(', ', self::SORT);
@@ -361,6 +358,8 @@ class search_packages extends external_api {
      * @throws moodle_exception
      */
     public static function create_sql($params, array $contextids): array {
+        global $USER;
+
         // Order the results.
         $orderbysql = self::create_order_by_sql($params['sort'], $params['order']);
 
@@ -378,28 +377,42 @@ class search_packages extends external_api {
         $onlymine = $params['category'] === 'mine';
         [$joinguardsql, $incontextparams, $inuserparams] = self::create_package_guard($contextids, $onlymine);
 
+        // Get the favourite-status of a package.
+        $usercontext = context_user::instance($USER->id);
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+        [$joinfavsql, $joinfavparams] = $ufservice->get_join_sql_by_type('qtype_questionpy', 'package', 'f', 'p.id');
+
         // Merge existing parameters.
-        $finalparams = array_merge($joinlangsparams, $jointagsparams, $likeparams, $incontextparams, $inuserparams);
+        $finalparams = array_merge($joinlangsparams, $jointagsparams, $likeparams, $incontextparams, $inuserparams,
+                                   $joinfavparams);
 
         // Search through recently used packages if the category is set.
         $recentlyusedsql = '';
+        $wherefavsql = '';
         if ($params['category'] === 'recentlyused') {
             [$recentlyusedsql, $recentlyusedparams] = self::create_recently_used_sql($contextids);
             // Merge new parameters with existing ones.
             $finalparams = array_merge($finalparams, $recentlyusedparams);
+        } else if ($params['category'] === 'favourites') {
+            // We only want to include packages which were marked as favourite.
+            $wherefavsql = 'WHERE f.id IS NOT NULL';
         }
 
         // Assemble final sql query.
         $finalsql = "
-            SELECT id, short_name, namespace, author, url, icon, license, name, description
+            SELECT id, short_name, namespace, author, url, icon, license, name, description, isfavourite
             FROM (
                 SELECT DISTINCT p.id, p.shortname AS short_name, p.namespace, p.author, p.url, p.icon, p.license,
-                       $coalescenamesql AS name, $coalescedescsql AS description, p.timecreated
+                                $coalescenamesql AS name, $coalescedescsql AS description, p.timecreated,
+                                -- Transform the favourite-ID into 0 and 1; the service converts them into booleans.
+                                CASE WHEN f.id IS NULL THEN 0 ELSE 1 END AS isfavourite
                 FROM {qtype_questionpy_package} p
                 $joinguardsql
+                $joinfavsql
                 $recentlyusedsql
                 $joinlangssql
                 $jointagssql
+                $wherefavsql
             ) subq
             $wherelikesql
             $orderbysql
@@ -463,8 +476,6 @@ class search_packages extends external_api {
             $package->tags = $tags[$package->id] ?? [];
             // There should always be at least one version of a package therefore this check is obsolete.
             $package->versions = $versions[$package->id] ?? [];
-            // TODO: Favourites API.
-            $package->isfavourite = false;
         }
 
         // Calculate total packages (without pagination).
