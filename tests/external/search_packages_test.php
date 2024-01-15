@@ -662,12 +662,41 @@ class search_packages_test extends \externallib_advanced_testcase {
     }
 
     /**
+     * Modifies the creation time of a package given a package version id and the requested creation time.
+     *
+     * @param int $pkgversionid
+     * @param int $timecreated
+     * @throws moodle_exception
+     */
+    private static function modify_package_creation_time(int $pkgversionid, int $timecreated): void {
+        global $DB;
+        $packageid = $DB->get_field('qtype_questionpy_pkgversion', 'packageid', ['id' => $pkgversionid]);
+        $update = ['id' => $packageid, 'timecreated' => $timecreated];
+        $DB->update_record('qtype_questionpy_package', (object) $update, true);
+    }
+
+    /**
+     * Provides categories of which the date-sorting is done via the `timecreated`-field.
+     *
+     * @return array[]
+     */
+    public static function category_provider(): array {
+        return [
+            ['all'],
+            ['mine'],
+        ];
+    }
+    /**
      * Tests the date-sorting of the service.
      *
+     * A test for the `recentlyused`-category can be found at {@see test_date_sort_with_recentlyused_category}.
+     *
+     * @param string $category
+     * @dataProvider category_provider
      * @covers \qtype_questionpy\external\search_packages::execute
      * @throws moodle_exception
      */
-    public function test_date_sort(): void {
+    public function test_date_sort(string $category): void {
         global $PAGE;
 
         // Create multiple packages with different creation times.
@@ -676,29 +705,27 @@ class search_packages_test extends \externallib_advanced_testcase {
         $namespaces = [];
         for ($i = 0; $i < $totalpackages; $i++) {
             $namespaces[] = "ns$i";
-            package_provider(['namespace' => "ns$i"])->store();
-            $this->waitForSecond();
+            $pkgversionid = package_provider(['namespace' => "ns$i"])->store();
+            $this->modify_package_creation_time($pkgversionid, $i);
         }
 
-        // Execute service with ascending order.
-        $res = search_packages::execute('', [], 'all', 'date', 'asc', $totalpackages, 0, $PAGE->context->id);
-        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        // Expected values per sorting order.
+        $expected = [
+            'asc' => $namespaces,
+            'desc' => array_reverse($namespaces),
+        ];
 
-        // Check that package order is correct.
-        $actualnamespaces = array_column($res['packages'], 'namespace');
-        $this->assertEquals($namespaces, $actualnamespaces);
+        foreach ($expected as $order => $expectednamespaces) {
+            $res = search_packages::execute('', [], $category, 'date', $order, $totalpackages, 0, $PAGE->context->id);
+            $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
 
-        // Execute service with descending order.
-        $res = search_packages::execute('', [], 'all', 'date', 'desc', $totalpackages, 0, $PAGE->context->id);
-        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+            // Check that package order is correct.
+            $actualnamespaces = array_column($res['packages'], 'namespace');
+            $this->assertEquals($expectednamespaces, $actualnamespaces);
 
-        // Check that package order is correct.
-        $actualnamespaces = array_column($res['packages'], 'namespace');
-        $this->assertEquals(array_reverse($namespaces), $actualnamespaces);
-
-        $this->assert_count_and_total($res, $totalpackages, $totalpackages);
+            $this->assert_count_and_total($res, $totalpackages, $totalpackages);
+        }
     }
-
 
     /**
      * Provides total package count and a limit.
@@ -771,6 +798,55 @@ class search_packages_test extends \externallib_advanced_testcase {
             'packageid' => $packageid,
             'timeused' => $timeused,
         ]);
+    }
+
+    /**
+     * Tests the date-sorting of the service with the `recentylused`-category.
+     *
+     * The data should be sorted according to the `timeused`-field and not the `timecreated`-field.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @throws moodle_exception
+     */
+    public function test_date_sort_with_recentlyused_category(): void {
+        global $PAGE;
+
+        // Create multiple packages with different creation times.
+        $totalpackages = 3;
+
+        $namespaces = [];
+        $ids = [];
+        for ($i = 0; $i < $totalpackages; $i++) {
+            $namespaces[] = "ns$i";
+            $pkgversionid = package_provider(['namespace' => "ns$i"])->store();
+            $ids[] = $pkgversionid;
+            $this->modify_package_creation_time($pkgversionid, $i);
+        }
+
+        // Add packages in a different order to the last used table.
+        $indices = [0, 2, 1];
+        $reorderednamespaces = [];
+        foreach ($indices as $timeused => $index) {
+            $reorderednamespaces[] = $namespaces[$index];
+            self::add_last_used_entry($ids[$index], $PAGE->context->id, $timeused);
+        }
+
+        // Expected values per sorting order.
+        $expected = [
+            'asc' => $reorderednamespaces,
+            'desc' => array_reverse($reorderednamespaces),
+        ];
+
+        foreach ($expected as $order => $expectednamespaces) {
+            $res = search_packages::execute('', [], 'recentlyused', 'date', $order, $totalpackages, 0, $PAGE->context->id);
+            $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+
+            // Check that package order is correct.
+            $actualnamespaces = array_column($res['packages'], 'namespace');
+            $this->assertEquals($expectednamespaces, $actualnamespaces);
+
+            $this->assert_count_and_total($res, $totalpackages, $totalpackages);
+        }
     }
 
     /**

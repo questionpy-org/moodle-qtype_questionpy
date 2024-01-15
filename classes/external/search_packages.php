@@ -201,14 +201,19 @@ class search_packages extends external_api {
      *
      * @param string $sort Kind of ordering {@see search_packages::SORT}.
      * @param string $order Direction of the ordering {@see search_packages::ORDER}.
+     * @param bool $timeused If true, the `timeused`-field instead of the `timecreated`-field will be used for ordering.
      * @return string The sql fragment.
      */
-    private static function create_order_by_sql(string $sort, string $order): string {
+    private static function create_order_by_sql(string $sort, string $order, bool $timeused): string {
         $sql = 'ORDER BY';
         if ($sort === 'alpha') {
             $sql .= ' name';
         } else {
-            $sql .= ' timecreated';
+            if ($timeused) {
+                $sql .= ' timeused';
+            } else {
+                $sql .= ' timecreated';
+            }
         }
         return $sql . ' ' . $order;
     }
@@ -361,7 +366,8 @@ class search_packages extends external_api {
         global $USER;
 
         // Order the results.
-        $orderbysql = self::create_order_by_sql($params['sort'], $params['order']);
+        $isrecentylusedcategory = $params['category'] === 'recentlyused';
+        $orderbysql = self::create_order_by_sql($params['sort'], $params['order'], $isrecentylusedcategory);
 
         // Search only in best package translation.
         [$joinlangssql, $joinlangsparams, $coalescenamesql, $coalescedescsql] = self::create_best_language_sql();
@@ -387,12 +393,14 @@ class search_packages extends external_api {
                                    $joinfavparams);
 
         // Search through recently used packages if the category is set.
+        $selecttimeusedsql = '';
         $recentlyusedsql = '';
         $wherefavsql = '';
-        if ($params['category'] === 'recentlyused') {
+        if ($isrecentylusedcategory) {
             [$recentlyusedsql, $recentlyusedparams] = self::create_recently_used_sql($contextids);
             // Merge new parameters with existing ones.
             $finalparams = array_merge($finalparams, $recentlyusedparams);
+            $selecttimeusedsql = ', lu.timeused';
         } else if ($params['category'] === 'favourites') {
             // We only want to include packages which were marked as favourite.
             $wherefavsql = 'WHERE f.id IS NOT NULL';
@@ -403,7 +411,7 @@ class search_packages extends external_api {
             SELECT id, short_name, namespace, author, url, icon, license, name, description, isfavourite
             FROM (
                 SELECT DISTINCT p.id, p.shortname AS short_name, p.namespace, p.author, p.url, p.icon, p.license,
-                                $coalescenamesql AS name, $coalescedescsql AS description, p.timecreated,
+                                $coalescenamesql AS name, $coalescedescsql AS description, p.timecreated $selecttimeusedsql,
                                 -- Transform the favourite-ID into 0 and 1; the service converts them into booleans.
                                 CASE WHEN f.id IS NULL THEN 0 ELSE 1 END AS isfavourite
                 FROM {qtype_questionpy_package} p
