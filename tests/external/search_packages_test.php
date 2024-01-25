@@ -462,6 +462,11 @@ class search_packages_test extends \externallib_advanced_testcase {
                 'ns1' => [['en' => 'en: x'], []],
                 'ns2' => [['en' => 'en: x'], ['en' => 'en: x']],
             ], ['ns1' => ['en', null], 'ns2' => ['en', 'en']]],
+            // Query containing only seperated chars.
+            ['q p y', null, [
+                'ns1' => [['en' => 'en: x'], []],
+                'ns2' => [['en' => 'en: x'], ['en' => 'en: x']],
+            ], ['ns1' => ['en', null], 'ns2' => ['en', 'en']]],
             // Query without match.
             ['match', null, [
                 'ns1' => [['en' => 'en: x'], []],
