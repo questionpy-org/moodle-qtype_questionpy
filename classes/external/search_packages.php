@@ -107,19 +107,14 @@ class search_packages extends external_api {
     private static function create_text_search_sql(array $fieldnames, string $query): array {
         global $DB;
 
-        $query = trim($query);
-
-        if ($query == '' || strlen($query) == 1) {
-            return ['', []];
-        }
-
         $segments = [];
         $params = [];
-        $words = explode(' ', $query);
+
+        $words = explode(' ', trim($query));
 
         foreach ($words as $i => $word) {
             $word = trim($word);
-            // Discard words of length 1.
+            // Discard words of length one.
             if (strlen($word) <= 1) {
                 continue;
             }
@@ -131,6 +126,11 @@ class search_packages extends external_api {
                 $params[$param] = '%' . $escapedword . '%';
                 $segments[$fieldname][] = $DB->sql_like($fieldname, ":$param", false);
             }
+        }
+
+        // Query was either empty or only contained words of length one.
+        if (count($params) === 0) {
+            return ['', []];
         }
 
         $parts = [];
