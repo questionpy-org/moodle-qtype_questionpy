@@ -22,7 +22,7 @@
 import {dispatchEvent} from 'core/event_dispatcher';
 
 export const eventNames = {
-    stateChanged: 'qtype_questionpy:stateChanged',
+    stateChanged: "qtype_questionpy:stateChanged",
 };
 
 export const notifyStateChanged = (detail, target) => dispatchEvent(eventNames.stateChanged, detail, target);

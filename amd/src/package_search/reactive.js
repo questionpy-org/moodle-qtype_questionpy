@@ -52,28 +52,28 @@ export default class extends Reactive {
             state: {
                 general: {
                     loading: true,
-                    selected: 'all',
-                    sort: 'alpha',
-                    order: 'asc',
-                    query: '',
+                    selected: "all",
+                    sort: "alpha",
+                    order: "asc",
+                    query: "",
                 },
-                all: {
-                    data: noData,
-                    page: 0,
+                    all: {
+                        data: noData,
+                        page: 0,
+                    },
+                    recentlyused: {
+                        data: noData,
+                        page: 0,
+                    },
+                    favourites: {
+                        data: noData,
+                        page: 0,
+                    },
+                    mine: {
+                        data: noData,
+                        page: 0,
+                    },
                 },
-                recentlyused: {
-                    data: noData,
-                    page: 0,
-                },
-                favourites: {
-                    data: noData,
-                    page: 0,
-                },
-                mine: {
-                    data: noData,
-                    page: 0,
-                },
-            },
         });
         this.options = options;
     }
@@ -84,12 +84,12 @@ export default class extends Reactive {
     load() {
         this.searchBar = new SearchBar({
             element: this.target.getElementsByClassName("qpy-package-search-search-bar")[0],
-            name: 'search_bar',
+            name: "search_bar",
             reactive: this
         });
         this.packageContainer = new Container({
             element: this.target.getElementsByClassName("qpy-package-search-container")[0],
-            name: 'container',
+            name: "container",
             reactive: this
         });
     }

@@ -31,8 +31,11 @@ export default class extends BaseComponent {
 
     getWatchers() {
         return [
-            {watch: `general.loading:updated`, handler: this.updateStatus},
-            {watch: `all:updated`, handler: this.render},
+            {watch: "general.loading:updated", handler: this.updateStatus},
+            {watch: "all:updated", handler: this.renderAll},
+            {watch: "recentlyused:updated", handler: this.renderRecentlyUsed},
+            {watch: "favourites:updated", handler: this.renderFavourites},
+            {watch: "mine:updated", handler: this.renderMine},
         ];
     }
 
@@ -41,6 +44,12 @@ export default class extends BaseComponent {
             LOADING_INDICATOR: `[data-for="loading-indicator"]`,
             ALL_HEADER: `[data-for="all-header"]`,
             ALL_CONTENT: `[data-for="all-content"]`,
+            RECENTLY_USED_HEADER: `[data-for="recently-used-header"]`,
+            RECENTLY_USED_CONTENT: `[data-for="recently-used-content"]`,
+            FAVOURITES_HEADER: `[data-for="favourites-header"]`,
+            FAVOURITES_CONTENT: `[data-for="favourites-content"]`,
+            MINE_HEADER: `[data-for="mine-header"]`,
+            MINE_CONTENT: `[data-for="mine-content"]`,
         };
 
         // Prefetch the package template for faster rendering.
@@ -50,7 +59,7 @@ export default class extends BaseComponent {
 
     async stateReady() {
         // Initial loading of the packages.
-        this.reactive.dispatch('searchPackages');
+        this.reactive.dispatch("searchPackages");
     }
 
     /**
@@ -77,7 +86,7 @@ export default class extends BaseComponent {
      * @returns {Promise}
      * @private
      */
-    _getRenderPromise(contexts) {
+    _getPackageTemplatesPromise(contexts) {
         let promises = [];
         for (const context of contexts) {
             const promise = templates.renderForPromise(this.packageTemplate, context);
@@ -87,23 +96,102 @@ export default class extends BaseComponent {
     }
 
     /**
-     * Renders every package inside the current state.
+     * Groups header and templates promises.
+     *
+     * @param {string} headerStringKey
+     * @param {Object} packageData
+     * @returns {Promise<[string, Object]>}
+     * @private
+     */
+    async _renderPromise(headerStringKey, packageData) {
+        // Get string and render templates.
+        const getString = strings.get_string(headerStringKey, "qtype_questionpy", packageData.total);
+        const renderTemplates = this._getPackageTemplatesPromise(packageData.packages);
+        return Promise.all([getString, renderTemplates]);
+    }
+
+    /**
+     * Renders every package inside a specific tab.
+     *
+     * @param {string} headerSelector
+     * @param {string} contentSelector
+     * @param {string} header
+     * @param {Object} content
+     * @private
+     */
+    _render(headerSelector, contentSelector, header, content) {
+        const contentElement = this.getElement(contentSelector);
+        contentElement.innerHTML = "";
+        for (const {html, js} of content) {
+            templates.appendNodeContents(contentElement, html, js);
+        }
+        this.getElement(headerSelector).innerHTML = header;
+    }
+
+
+    /**
+     * Renders every package inside the current state for the `all`-category.
      *
      * @returns {Promise<void>}
      */
-    async render() {
+    async renderAll() {
         try {
-            // Get string and render templates.
-            const getStringAll = strings.get_string("all_packages", "qtype_questionpy", this.getState().all.data.total);
-            const renderTemplatesAll = this._getRenderPromise(this.getState().all.data.packages);
-            const [stringAll, templatesAll] = await Promise.all([getStringAll, renderTemplatesAll]);
-
+            const state = this.getState();
+            // Get string and package templates.
+            const [string, packageTemplates] = await this._renderPromise("search_all_header", state.all.data);
             // Update DOM.
-            this.getElement(this.selectors.ALL_CONTENT).innerHTML = "";
-            for (const {html, js} of templatesAll) {
-                templates.appendNodeContents(this.getElement(this.selectors.ALL_CONTENT), html, js);
-            }
-            this.getElement(this.selectors.ALL_HEADER).innerHTML = stringAll;
+            this._render(this.selectors.ALL_HEADER, this.selectors.ALL_CONTENT, string, packageTemplates);
+        } catch (exception) {
+            await Notification.exception(exception);
+        }
+    }
+
+    /**
+     * Renders every package inside the current state for the `recentlyused`-category.
+     *
+     * @returns {Promise<void>}
+     */
+    async renderRecentlyUsed() {
+        try {
+            const state = this.getState();
+            // Get string and package templates.
+            const [string, packageTemplates] = await this._renderPromise("search_recently_used_header", state.recentlyused.data);
+            // Update DOM.
+            this._render(this.selectors.RECENTLY_USED_HEADER, this.selectors.RECENTLY_USED_CONTENT, string, packageTemplates);
+        } catch (exception) {
+            await Notification.exception(exception);
+        }
+    }
+
+    /**
+     * Renders every package inside the current state for the `favourites`-category.
+     *
+     * @returns {Promise<void>}
+     */
+    async renderFavourites() {
+        try {
+            const state = this.getState();
+            // Get string and package templates.
+            const [string, packageTemplates] = await this._renderPromise("search_favourites_header", state.favourites.data);
+            // Update DOM.
+            this._render(this.selectors.FAVOURITES_HEADER, this.selectors.FAVOURITES_CONTENT, string, packageTemplates);
+        } catch (exception) {
+            await Notification.exception(exception);
+        }
+    }
+
+    /**
+     * Renders every package inside the current state for the `mine`-category.
+     *
+     * @returns {Promise<void>}
+     */
+    async renderMine() {
+        try {
+            const state = this.getState();
+            // Get string and package templates.
+            const [string, packageTemplates] = await this._renderPromise("search_mine_header", state.mine.data);
+            // Update DOM.
+            this._render(this.selectors.MINE_HEADER, this.selectors.MINE_CONTENT, string, packageTemplates);
         } catch (exception) {
             await Notification.exception(exception);
         }

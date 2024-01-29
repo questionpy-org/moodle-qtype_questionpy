@@ -51,12 +51,12 @@ export default class {
      * @returns {any}
      * @private
      */
-    _searchPackagesInCategories(args, ...categories) {
+    _getSearchPackagesInCategoriesPromise(args, ...categories) {
         let clonedArgs = {...args};
         let methods = [];
         for (const category of categories) {
             let method = {
-                methodname: 'qtype_questionpy_search_packages',
+                methodname: "qtype_questionpy_search_packages",
                 args: clonedArgs,
             };
             method.args.category = category;
@@ -69,6 +69,8 @@ export default class {
 
     /**
      * Used to search packages.
+     *
+     * Missing arguments are taken from the current state.
      *
      * @param {StateManager} stateManager
      * @param {Object|null} args
@@ -91,8 +93,8 @@ export default class {
         this._setLoading(stateManager, true);
 
         try {
-            let [all, recentlyused,
-                favourites, mine] = await this._searchPackagesInCategories(mergedArgs, 'all', 'recentlyused', 'favourites', 'mine');
+            let [all, recentlyused, favourites, mine] = await this._getSearchPackagesInCategoriesPromise(mergedArgs,
+                "all", "recentlyused", "favourites", "mine");
 
             stateManager.setReadOnly(false);
             state.all.data = await all;

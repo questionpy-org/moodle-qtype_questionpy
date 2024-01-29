@@ -87,7 +87,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $group[] = $mform->createElement(
             'html', $OUTPUT->render_from_template('qtype_questionpy/package/package_selection', $packagearray)
         );
-        $mform->addGroup($group, '', 'Selected Package');
+        $mform->addGroup($group, '', get_string('selection_title_selected', 'qtype_questionpy'));
 
         // Render question edit form.
         $api = new api();
