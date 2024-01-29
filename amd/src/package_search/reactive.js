@@ -57,23 +57,23 @@ export default class extends Reactive {
                     order: "asc",
                     query: "",
                 },
-                    all: {
-                        data: noData,
-                        page: 0,
-                    },
-                    recentlyused: {
-                        data: noData,
-                        page: 0,
-                    },
-                    favourites: {
-                        data: noData,
-                        page: 0,
-                    },
-                    mine: {
-                        data: noData,
-                        page: 0,
-                    },
+                all: {
+                    data: noData,
+                    page: 0,
                 },
+                recentlyused: {
+                    data: noData,
+                    page: 0,
+                },
+                favourites: {
+                    data: noData,
+                    page: 0,
+                },
+                mine: {
+                    data: noData,
+                    page: 0,
+                },
+            },
         });
         this.options = options;
     }
