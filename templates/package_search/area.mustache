@@ -60,15 +60,19 @@
         <div class="tab-content">
             <div class="tab-pane show active" data-for="all-content" id="qpy-all-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-all-header-{{uniqid}}">
                 <div class="qpy-tab-content" data-for="all-content"></div>
+                {{> qtype_questionpy/package_search/pagination }}
             </div>
             <div class="tab-pane" data-for="recentlyused-content" id="qpy-recently-used-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-recently-used-header-{{uniqid}}">
                 <div class="qpy-tab-content" data-for="recently-used-content"></div>
+                {{> qtype_questionpy/package_search/pagination }}
             </div>
             <div class="tab-pane" data-for="favourites-content" id="qpy-favourites-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-favourites-header-{{uniqid}}">
                 <div class="qpy-tab-content" data-for="favourites-content"></div>
+                {{> qtype_questionpy/package_search/pagination }}
             </div>
             <div class="tab-pane" data-for="mine-content" id="qpy-mine-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-mine-header-{{uniqid}}">
                 <div class="qpy-tab-content" data-for="mine-content"></div>
+                {{> qtype_questionpy/package_search/pagination }}
             </div>
         </div>
     </div>

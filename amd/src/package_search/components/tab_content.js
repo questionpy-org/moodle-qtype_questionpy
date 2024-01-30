@@ -22,6 +22,7 @@
 import * as templates from 'core/templates';
 import Notification from 'core/notification';
 import Component from 'qtype_questionpy/package_search/component';
+import Pagination from 'qtype_questionpy/package_search/components/pagination';
 
 export default class extends Component {
     getWatchers() {
@@ -34,7 +35,16 @@ export default class extends Component {
         this.category = descriptor.category;
         this.selectors = {
             CONTENT: ".qpy-tab-content",
+            PAGINATION: '[data-for="pagination"]',
         };
+
+        // Register pagination.
+        new Pagination({
+            element: this.getElement(this.selectors.PAGINATION),
+            name: `pagiation_${this.category}`,
+            reactive: descriptor.reactive,
+            category: this.category,
+        });
     }
 
     /**

@@ -118,4 +118,15 @@ export default class {
     async searchPackagesByQuery(stateManager, query) {
         await this.searchPackages(stateManager, {page: 0, query: query});
     }
+
+    /**
+     * Used to change the current page of a tab.
+     *
+     * @param {StateManager} stateManager
+     * @param {string} category
+     * @param {number} page
+     */
+    async changePage(stateManager, category, page) {
+        await this.searchPackages(stateManager, {page: page}, [category]);
+    }
 }
