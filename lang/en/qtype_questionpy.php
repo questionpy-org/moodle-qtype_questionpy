@@ -71,7 +71,7 @@ $string['open_website'] = 'Open website';
 $string['search_bar'] = 'Search...';
 $string['search_bar_label_aria'] = 'Search Bar';
 $string['search_all_header'] = 'All ({$a})';
-$string['search_recently_used_header'] = 'Recently Used ({$a})';
+$string['search_recentlyused_header'] = 'Recently Used ({$a})';
 $string['search_favourites_header'] = 'Favourites ({$a})';
 $string['search_mine_header'] = 'Mine ({$a})';
 

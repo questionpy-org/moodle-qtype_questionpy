@@ -20,12 +20,12 @@
  */
 
 import {debounce} from 'core/utils';
-import {BaseComponent} from 'core/reactive';
+import Component from 'qtype_questionpy/package_search/component';
 
-export default class extends BaseComponent {
+export default class extends Component {
     create() {
         this.selectors = {
-            SEARCH_BAR: `[data-for="search-bar"]`,
+            SEARCH_BAR: '[data-for="search-bar"]',
         };
     }
 
@@ -55,7 +55,7 @@ export default class extends BaseComponent {
      * @param {string} query
      */
     searchPackages(query) {
-        this.reactive.dispatch('searchPackagesByQuery', query);
+        this.reactive.dispatch("searchPackagesByQuery", query);
     }
 
 }

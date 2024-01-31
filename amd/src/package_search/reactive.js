@@ -23,8 +23,7 @@ import {Reactive} from 'core/reactive';
 
 import SearchMutations from 'qtype_questionpy/package_search/mutations';
 import {eventNames, notifyStateChanged} from 'qtype_questionpy/package_search/events';
-import Container from 'qtype_questionpy/package_search/components/container';
-import SearchBar from 'qtype_questionpy/package_search/components/search_bar';
+import Area from 'qtype_questionpy/package_search/components/area';
 
 let counter = 0;
 
@@ -91,14 +90,9 @@ export default class extends Reactive {
      * Loads every component of the package search area.
      */
     load() {
-        this.searchBar = new SearchBar({
-            element: this.target.getElementsByClassName("qpy-package-search-search-bar")[0],
-            name: "search_bar",
-            reactive: this
-        });
-        this.packageContainer = new Container({
-            element: this.target.getElementsByClassName("qpy-package-search-container")[0],
-            name: "container",
+        new Area({
+            element: this.target,
+            name: "search_area",
             reactive: this
         });
     }
