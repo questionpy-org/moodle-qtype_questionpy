@@ -23,21 +23,18 @@ import {debounce} from 'core/utils';
 import {BaseComponent} from 'core/reactive';
 
 export default class extends BaseComponent {
-    constructor(description) {
-        super(description);
-    }
-
     create() {
         this.selectors = {
             SEARCH_BAR: `[data-for="search-bar"]`,
         };
-
-        // Debounce search method to reduce requests.
-        this.searchPackages = debounce((event) => this._searchPackages(event), 300);
     }
 
     stateReady() {
-        this.addEventListener(this.getElement(this.selectors.SEARCH_BAR), "input", this.searchPackages);
+        this.addEventListener(
+            this.getElement(this.selectors.SEARCH_BAR),
+            "input",
+            debounce((event) => this.searchPackages(event.target.value), 300)
+        );
         this.addEventListener(this.getElement(this.selectors.SEARCH_BAR), "keydown", this.ignoreEnter);
     }
 
@@ -55,11 +52,10 @@ export default class extends BaseComponent {
     /**
      * Dispatches package search by query mutation.
      *
-     * @param {InputEvent} event
-     * @private
+     * @param {string} query
      */
-    _searchPackages(event) {
-        this.reactive.dispatch('searchPackagesByQuery', event.target.value);
+    searchPackages(query) {
+        this.reactive.dispatch('searchPackagesByQuery', query);
     }
 
 }

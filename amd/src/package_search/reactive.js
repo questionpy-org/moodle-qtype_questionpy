@@ -29,7 +29,6 @@ import SearchBar from 'qtype_questionpy/package_search/components/search_bar';
 let counter = 0;
 
 export default class extends Reactive {
-
     /**
      * Reactive element used for package search.
      *
@@ -37,12 +36,6 @@ export default class extends Reactive {
      * @param {{contextid: number, limit: number}} options
      */
     constructor(target, options) {
-        const noData = {
-            packages: [],
-            count: 0,
-            total: 0,
-        };
-
         super({
             name: `PackageSearch${counter++}`,
             eventName: eventNames.stateChanged,
@@ -58,19 +51,35 @@ export default class extends Reactive {
                     query: "",
                 },
                 all: {
-                    data: noData,
+                    data: {
+                        packages: [],
+                        count: 0,
+                        total: 0,
+                    },
                     page: 0,
                 },
                 recentlyused: {
-                    data: noData,
+                    data: {
+                        packages: [],
+                        count: 0,
+                        total: 0,
+                    },
                     page: 0,
                 },
                 favourites: {
-                    data: noData,
+                    data: {
+                        packages: [],
+                        count: 0,
+                        total: 0,
+                    },
                     page: 0,
                 },
                 mine: {
-                    data: noData,
+                    data: {
+                        packages: [],
+                        count: 0,
+                        total: 0,
+                    },
                     page: 0,
                 },
             },

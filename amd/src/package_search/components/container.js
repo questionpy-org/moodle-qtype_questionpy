@@ -25,10 +25,6 @@ import Notification from 'core/notification';
 import {BaseComponent} from 'core/reactive';
 
 export default class extends BaseComponent {
-    constructor(description) {
-        super(description);
-    }
-
     getWatchers() {
         return [
             {watch: "general.loading:updated", handler: this.updateStatus},
@@ -41,7 +37,6 @@ export default class extends BaseComponent {
 
     async create() {
         this.selectors = {
-            LOADING_INDICATOR: `[data-for="loading-indicator"]`,
             ALL_HEADER: `[data-for="all-header"]`,
             ALL_CONTENT: `[data-for="all-content"]`,
             RECENTLY_USED_HEADER: `[data-for="recently-used-header"]`,
@@ -54,7 +49,7 @@ export default class extends BaseComponent {
 
         // Prefetch the package template for faster rendering.
         this.packageTemplate = "qtype_questionpy/package/package_selection";
-        await templates.prefetchTemplates([this.packageTemplate]);
+        templates.prefetchTemplates([this.packageTemplate]);
     }
 
     async stateReady() {
@@ -72,11 +67,13 @@ export default class extends BaseComponent {
     }
 
     /**
-     * Hides or shows the loading indicator.
+     * Adds or removes the `qpy-loading` class from the search area.
+     *
+     * TODO: This should be handled by the area itself.
      */
     updateStatus() {
         const loading = this.getState().general.loading;
-        this.getElement(this.selectors.LOADING_INDICATOR).style.visibility = loading ? "visible" : "hidden";
+        this.element.parentElement.classList.toggle("qpy-loading", loading);
     }
 
     /**

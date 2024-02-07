@@ -23,7 +23,6 @@ import Ajax from 'core/ajax';
 import Notification from 'core/notification';
 
 export default class {
-
     /**
      * @param {{contextid: number, limit: number}} options
      */
@@ -32,38 +31,34 @@ export default class {
     }
 
     /**
-     * Sets search current status.
+     * Search through given categories.
      *
-     * @param {StateManager} stateManager
-     * @param {boolean} loading
-     */
-    _setLoading(stateManager, loading) {
-        stateManager.setReadOnly(false);
-        stateManager.state.general.loading = loading;
-        stateManager.setReadOnly(true);
-    }
-
-    /**
-     * Search through given categories with same arguments.
+     * If no page is provided the current page will be used.
      *
-     * @param {Object} args the arguments
-     * @param {string} categories
+     * @param {any} state
+     * @param {number|null} page
+     * @param {string[]} categories
      * @returns {any}
      * @private
      */
-    _getSearchPackagesInCategoriesPromise(args, ...categories) {
-        let clonedArgs = {...args};
-        let methods = [];
+    _getSearchPackagesInCategoriesPromise(state, page, categories) {
+        const methods = [];
         for (const category of categories) {
-            let method = {
+            const method = {
                 methodname: "qtype_questionpy_search_packages",
-                args: clonedArgs,
+                args: {
+                    query: state.general.query,
+                    tags: state.general.tags,
+                    category: category,
+                    sort: state.general.sort,
+                    order: state.general.order,
+                    limit: this.options.limit,
+                    page: (typeof page === "number") ? page : state[category].page,
+                    contextid: this.options.contextid,
+                },
             };
-            method.args.category = category;
             methods.push(method);
-            clonedArgs = {...args};
         }
-
         return Ajax.call(methods);
     }
 
@@ -74,39 +69,44 @@ export default class {
      *
      * @param {StateManager} stateManager
      * @param {Object|null} args
+     * @param {string[]|null} categories
      */
-    async searchPackages(stateManager, args = null) {
+    async searchPackages(stateManager, args = null, categories = null) {
         const state = stateManager.state;
 
         // Missing arguments are taken from the current state.
         args = args || {};
-        let mergedArgs = {
-            query: args.query || state.general.query,
-            tags: [], // TODO.
-            sort: args.sort || state.general.sort,
-            order: args.order || state.general.order,
-            limit: this.options.limit,
-            page: 0,
-            contextid: this.options.contextid,
-        };
 
-        this._setLoading(stateManager, true);
+        // Search through every category if no categories are provided.
+        categories = categories || ["all", "recentlyused", "favourites", "mine"];
+
+        // Update general data.
+        stateManager.setReadOnly(false);
+        state.general.loading = true;
+        state.general.query = (typeof args.query === "string") ? args.query : state.general.query;
+        state.general.tags = [];
+        state.general.sort = args.sort || state.general.sort;
+        state.general.order = args.order || state.general.order;
+        stateManager.setReadOnly(true);
 
         try {
-            let [all, recentlyused, favourites, mine] = await this._getSearchPackagesInCategoriesPromise(mergedArgs,
-                "all", "recentlyused", "favourites", "mine");
+            // Get search results for each category.
+            let results = await this._getSearchPackagesInCategoriesPromise(state, args.page, categories);
 
             stateManager.setReadOnly(false);
-            state.all.data = await all;
-            state.recentlyused.data = await recentlyused;
-            state.favourites.data = await favourites;
-            state.mine.data = await mine;
+            // Update category specific data.
+            for (const [index, category] of categories.entries()) {
+                state[category].data = await results[index];
+                if (typeof args.page === "number") {
+                    state[category].page = args.page;
+                }
+            }
+            // Update loading status.
+            state.general.loading = false;
             stateManager.setReadOnly(true);
         } catch (exception) {
             await Notification.exception(exception);
         }
-
-        this._setLoading(stateManager, false);
     }
 
     /**
@@ -116,6 +116,6 @@ export default class {
      * @param {string} query
      */
     async searchPackagesByQuery(stateManager, query) {
-        await this.searchPackages(stateManager, {query: query});
+        await this.searchPackages(stateManager, {page: 0, query: query});
     }
 }
