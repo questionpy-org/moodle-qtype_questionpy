@@ -73,18 +73,12 @@ export default class extends Component {
         const currentPage = this._getCurrentPage();
         const lastPage = this._getLastPage();
 
+        // Update page status.
         this.getElement(this.selectors.CURRENT).innerHTML = `${currentPage + 1} / ${lastPage + 1}`;
 
-        if (currentPage === 0) {
-            this.getElement(this.selectors.PREVIOUS_BUTTON).classList.add("disabled");
-        } else {
-            this.getElement(this.selectors.PREVIOUS_BUTTON).classList.remove("disabled");
-        }
-        if (currentPage === lastPage) {
-            this.getElement(this.selectors.NEXT_BUTTON).classList.add("disabled");
-        } else {
-            this.getElement(this.selectors.NEXT_BUTTON).classList.remove("disabled");
-        }
+        // Disable or enable buttons.
+        this.getElement(this.selectors.PREVIOUS_BUTTON).classList.toggle("disabled", currentPage === 0);
+        this.getElement(this.selectors.NEXT_BUTTON).classList.toggle("disabled", currentPage === lastPage);
     }
 
     /**

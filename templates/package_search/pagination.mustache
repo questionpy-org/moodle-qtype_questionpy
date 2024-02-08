@@ -19,22 +19,25 @@
 
     Represents a pagination section of a package container.
 
-    Classes required for JS:
-    * qpy-pagination
+    Data attributes required for JS:
+    * data-for="pagination"
+    * data-for="pagination-previous"
+    * data-for="pagination-current"
+    * data-for="pagination-next"
 
     Example context (json):
     {}
 }}
-<nav data-for="pagination" aria-label="{{#str}}search_pagination_label_aria, qtype_questionpy{{/str}}">
+<nav data-for="pagination" aria-label="{{#cleanstr}} search_pagination_label_aria, qtype_questionpy {{/cleanstr}}">
     <ul class="pagination justify-content-center">
         <li class="page-item disabled" data-for="pagination-previous">
-            <a role="button" class="page-link" aria-label="{{#str}}search_pagination_previous_aria, qtype_questionpy{{/str}}">
+            <a role="button" class="page-link" aria-label="{{#cleanstr}} search_pagination_previous_aria, qtype_questionpy {{/cleanstr}}">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
         <li class="page-item active"><span class="page-link" data-for="pagination-current">1 / 1</span></li>
         <li class="page-item disabled" data-for="pagination-next">
-            <a role="button" class="page-link" aria-label="{{#str}}search_pagination_next_aria, qtype_questionpy{{/str}}">
+            <a role="button" class="page-link" aria-label="{{#cleanstr}} search_pagination_next_aria, qtype_questionpy {{/cleanstr}}">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
