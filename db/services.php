@@ -46,4 +46,20 @@ $functions = [
         'ajax' => true,
         'loginrequired' => true,
     ],
+    'qtype_questionpy_favourite_package' => [
+        'classname' => 'qtype_questionpy\external\favourite_package',
+        'methodname' => 'favourite_package_execute',
+        'description' => 'Favourite a package.',
+        'type' => 'write',
+        'ajax' => true,
+        'loginrequired' => true,
+    ],
+    'qtype_questionpy_unfavourite_package' => [
+        'classname' => 'qtype_questionpy\external\favourite_package',
+        'methodname' => 'unfavourite_package_execute',
+        'description' => 'Unfavourite a package.',
+        'type' => 'write',
+        'ajax' => true,
+        'loginrequired' => true,
+    ],
 ];

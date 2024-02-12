@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy;
 
+use context;
+use moodle_exception;
 use qtype_questionpy\form\elements\repetition_element;
 
 /**
@@ -127,5 +129,30 @@ class utils {
         if ($numeric) {
             $array = array_values($array);
         }
+    }
+
+    /**
+     * Returns a list of relevant context ids related to the given context.
+     *
+     * If the given context is part of a course context, the course context id and every child context id are returned.
+     * Else, only the id of the given context is returned inside the array.
+     *
+     * @param context $context
+     * @return int[] relevant context ids
+     * @throws moodle_exception
+     */
+    public static function get_relevant_context_ids(context $context): array {
+        // If context is part of a course, get every context of that course.
+        $coursecontext = $context->get_course_context(false);
+        if ($coursecontext) {
+            // Context is part of a course.
+            $contexts = $coursecontext->get_child_contexts();
+            $contextids = array_keys($contexts);
+            $contextids[] = $coursecontext->id;
+        } else {
+            // Context is not part of a course.
+            $contextids[] = $context->id;
+        }
+        return $contextids;
     }
 }
