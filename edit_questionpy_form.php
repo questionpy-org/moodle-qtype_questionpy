@@ -55,7 +55,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // Create a group which contains the package container - the group is used to simplify the styling.
         // TODO: get limit from settings.
         $group[] = $mform->createElement('html', $OUTPUT->render_from_template('qtype_questionpy/package_search/area',
-            ['contextid' => $PAGE->context->id, 'limit' => 2]));
+            ['contextid' => $PAGE->context->id, 'limit' => 10]));
         $mform->addGroup($group, 'questionpy_package_container', get_string('selection_title', 'qtype_questionpy'), null, false);
         $mform->addRule(
             'questionpy_package_container',

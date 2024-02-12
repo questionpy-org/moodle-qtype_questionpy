@@ -29,9 +29,11 @@
     Example context (json):
     {}
 }}
-<select class="custom-select" data-for="sort" aria-label="{{#cleanstr}} search_sort_label_aria, qtype_questionpy {{/cleanstr}}">
-    <option data-sort="alpha" data-order="asc" selected>&#9650; {{#cleanstr}} search_sort_alphabetical, qtype_questionpy {{/cleanstr}}</option>
-    <option data-sort="alpha" data-order="desc">&#9660; {{#cleanstr}} search_sort_alphabetical, qtype_questionpy {{/cleanstr}}</option>
-    <option data-sort="date" data-order="asc">&#9650; {{#cleanstr}} search_sort_creation_date, qtype_questionpy {{/cleanstr}}</option>
-    <option data-sort="date" data-order="desc">&#9660; {{#cleanstr}} search_sort_creation_date, qtype_questionpy {{/cleanstr}}</option>
-</select>
+<div class="d-flex justify-content-end">
+    <select class="custom-select custom-select-sm" data-for="sort" aria-label="{{#cleanstr}} search_sort_label_aria, qtype_questionpy {{/cleanstr}}">
+        <option data-sort="alpha" data-order="asc" selected>&#9650; {{#str}} search_sort_alphabetical, qtype_questionpy {{/str}}</option>
+        <option data-sort="alpha" data-order="desc">&#9660; {{#str}} search_sort_alphabetical, qtype_questionpy {{/str}}</option>
+        <option data-sort="date" data-order="asc">&#9650; {{#str}} search_sort_creation_date, qtype_questionpy {{/str}}</option>
+        <option data-sort="date" data-order="desc">&#9660; {{#str}} search_sort_creation_date, qtype_questionpy {{/str}}</option>
+    </select>
+</div>
