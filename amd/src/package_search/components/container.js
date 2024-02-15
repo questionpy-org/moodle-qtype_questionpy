@@ -20,177 +20,29 @@
  */
 
 import * as templates from 'core/templates';
-import * as strings from 'core/str';
-import Notification from 'core/notification';
-import {BaseComponent} from 'core/reactive';
+import Component from 'qtype_questionpy/package_search/component';
+import TabHeader from 'qtype_questionpy/package_search/components/tab_header';
+import TabContent from 'qtype_questionpy/package_search/components/tab_content';
 
-export default class extends BaseComponent {
-    getWatchers() {
-        return [
-            {watch: "general.loading:updated", handler: this.updateStatus},
-            {watch: "all:updated", handler: this.renderAll},
-            {watch: "recentlyused:updated", handler: this.renderRecentlyUsed},
-            {watch: "favourites:updated", handler: this.renderFavourites},
-            {watch: "mine:updated", handler: this.renderMine},
-        ];
-    }
-
-    async create() {
-        this.selectors = {
-            ALL_HEADER: `[data-for="all-header"]`,
-            ALL_CONTENT: `[data-for="all-content"]`,
-            RECENTLY_USED_HEADER: `[data-for="recently-used-header"]`,
-            RECENTLY_USED_CONTENT: `[data-for="recently-used-content"]`,
-            FAVOURITES_HEADER: `[data-for="favourites-header"]`,
-            FAVOURITES_CONTENT: `[data-for="favourites-content"]`,
-            MINE_HEADER: `[data-for="mine-header"]`,
-            MINE_CONTENT: `[data-for="mine-content"]`,
-        };
+export default class extends Component {
+    async create(descriptor) {
+        // Register header and content of tabs.
+        for (const category of ["all", "recentlyused", "favourites", "mine"]) {
+            new TabHeader({
+                element: this.getElement(`[data-for="${category}-header"]`),
+                name: `category_${category}_header`,
+                reactive: descriptor.reactive,
+                category: category,
+            });
+            new TabContent({
+                element: this.getElement(`[data-for="${category}-content"]`),
+                name: `category_${category}_header`,
+                reactive: descriptor.reactive,
+                category: category,
+            });
+        }
 
         // Prefetch the package template for faster rendering.
-        this.packageTemplate = "qtype_questionpy/package/package_selection";
-        templates.prefetchTemplates([this.packageTemplate]);
-    }
-
-    async stateReady() {
-        // Initial loading of the packages.
-        this.reactive.dispatch("searchPackages");
-    }
-
-    /**
-     * Returns the current state.
-     *
-     * @returns {any}
-     */
-    getState() {
-        return this.reactive.stateManager.state;
-    }
-
-    /**
-     * Adds or removes the `qpy-loading` class from the search area.
-     *
-     * TODO: This should be handled by the area itself.
-     */
-    updateStatus() {
-        const loading = this.getState().general.loading;
-        this.element.parentElement.classList.toggle("qpy-loading", loading);
-    }
-
-    /**
-     * Groups render promises for package templates.
-     *
-     * @param {Object[]} contexts
-     * @returns {Promise}
-     * @private
-     */
-    _getPackageTemplatesPromise(contexts) {
-        let promises = [];
-        for (const context of contexts) {
-            const promise = templates.renderForPromise(this.packageTemplate, context);
-            promises.push(promise);
-        }
-        return Promise.all(promises);
-    }
-
-    /**
-     * Groups header and templates promises.
-     *
-     * @param {string} headerStringKey
-     * @param {Object} packageData
-     * @returns {Promise<[string, Object]>}
-     * @private
-     */
-    async _renderPromise(headerStringKey, packageData) {
-        // Get string and render templates.
-        const getString = strings.get_string(headerStringKey, "qtype_questionpy", packageData.total);
-        const renderTemplates = this._getPackageTemplatesPromise(packageData.packages);
-        return Promise.all([getString, renderTemplates]);
-    }
-
-    /**
-     * Renders every package inside a specific tab.
-     *
-     * @param {string} headerSelector
-     * @param {string} contentSelector
-     * @param {string} header
-     * @param {Object} content
-     * @private
-     */
-    _render(headerSelector, contentSelector, header, content) {
-        const contentElement = this.getElement(contentSelector);
-        contentElement.innerHTML = "";
-        for (const {html, js} of content) {
-            templates.appendNodeContents(contentElement, html, js);
-        }
-        this.getElement(headerSelector).innerHTML = header;
-    }
-
-
-    /**
-     * Renders every package inside the current state for the `all`-category.
-     *
-     * @returns {Promise<void>}
-     */
-    async renderAll() {
-        try {
-            const state = this.getState();
-            // Get string and package templates.
-            const [string, packageTemplates] = await this._renderPromise("search_all_header", state.all.data);
-            // Update DOM.
-            this._render(this.selectors.ALL_HEADER, this.selectors.ALL_CONTENT, string, packageTemplates);
-        } catch (exception) {
-            await Notification.exception(exception);
-        }
-    }
-
-    /**
-     * Renders every package inside the current state for the `recentlyused`-category.
-     *
-     * @returns {Promise<void>}
-     */
-    async renderRecentlyUsed() {
-        try {
-            const state = this.getState();
-            // Get string and package templates.
-            const [string, packageTemplates] = await this._renderPromise("search_recently_used_header", state.recentlyused.data);
-            // Update DOM.
-            this._render(this.selectors.RECENTLY_USED_HEADER, this.selectors.RECENTLY_USED_CONTENT, string, packageTemplates);
-        } catch (exception) {
-            await Notification.exception(exception);
-        }
-    }
-
-    /**
-     * Renders every package inside the current state for the `favourites`-category.
-     *
-     * @returns {Promise<void>}
-     */
-    async renderFavourites() {
-        try {
-            const state = this.getState();
-            // Get string and package templates.
-            const [string, packageTemplates] = await this._renderPromise("search_favourites_header", state.favourites.data);
-            // Update DOM.
-            this._render(this.selectors.FAVOURITES_HEADER, this.selectors.FAVOURITES_CONTENT, string, packageTemplates);
-        } catch (exception) {
-            await Notification.exception(exception);
-        }
-    }
-
-    /**
-     * Renders every package inside the current state for the `mine`-category.
-     *
-     * @returns {Promise<void>}
-     */
-    async renderMine() {
-        try {
-            const state = this.getState();
-            // Get string and package templates.
-            const [string, packageTemplates] = await this._renderPromise("search_mine_header", state.mine.data);
-            // Update DOM.
-            this._render(this.selectors.MINE_HEADER, this.selectors.MINE_CONTENT, string, packageTemplates);
-        } catch (exception) {
-            await Notification.exception(exception);
-        }
+        templates.prefetchTemplates(["qtype_questionpy/package/package_selection"]);
     }
 }

@@ -19,18 +19,16 @@
 
     Represents a reactive package search area consisting of a searchbar and a package container.
 
-    Classes required for JS:
-    * qpy-package-search-search-bar
-    * qpy-package-search-container
-
     Data attributes required for JS:
+    * data-for="search-bar-container"
     * data-for="search-bar"
+    * data-for="package-container"
     * data-for="all-header"
-    * data-for="recently-used-header"
+    * data-for="recentlyused-header"
     * data-for="favourites-header"
     * data-for="mine-header"
     * data-for="all-content"
-    * data-for="recently-used-content"
+    * data-for="recentlyused-content"
     * data-for="favourites-content"
     * data-for="mine-content"
 
@@ -42,35 +40,42 @@
 }}
 <div class="qpy-package-search-area qpy-loading" id="qpy-package-search-area-{{uniqid}}">
     <!-- SEARCH BAR -->
-    <div class="qpy-package-search-search-bar">
+    <div data-for="search-bar-container">
         <input type="text" class="form-control" data-for="search-bar" aria-label="{{#cleanstr}} search_bar_label_aria, qtype_questionpy {{/cleanstr}}" placeholder="{{#cleanstr}} search_bar, qtype_questionpy {{/cleanstr}}">
     </div>
 
     <!-- PACKAGE CONTAINER -->
-    <div class="qpy-package-search-container">
+    <div data-for="package-container" class="qpy-package-search-container">
         <nav>
             <div class="nav nav-tabs" role="tablist">
-                <button class="nav-link active" data-for="all-header" id="qpy-all-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-all-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-all-content-{{uniqid}}" aria-selected="true">{{#str}} search_all_header, qtype_questionpy, 0 {{/str}}</button>
-                <button class="nav-link" data-for="recently-used-header" id="qpy-recently-used-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-recently-used-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-recently-used-content-{{uniqid}}" aria-selected="false">{{#str}} search_recently_used_header, qtype_questionpy, 0 {{/str}}</button>
-                <button class="nav-link" data-for="favourites-header" id="qpy-favourites-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-favourites-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-favourites-content-{{uniqid}}" aria-selected="false">{{#str}} search_favourites_header, qtype_questionpy, 0 {{/str}}</button>
-                <button class="nav-link" data-for="mine-header" id="qpy-mine-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-mine-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-mine-content-{{uniqid}}" aria-selected="false">{{#str}} search_mine_header, qtype_questionpy, 0 {{/str}}</button>
+                <button class="nav-link active" data-for="all-header" id="qpy-all-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-all-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-all-content-{{uniqid}}" aria-selected="true">{{#cleanstr}} search_all_header, qtype_questionpy, 0 {{/cleanstr}}</button>
+                <button class="nav-link" data-for="recentlyused-header" id="qpy-recently-used-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-recently-used-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-recently-used-content-{{uniqid}}" aria-selected="false">{{#cleanstr}} search_recentlyused_header, qtype_questionpy, 0 {{/cleanstr}}</button>
+                <button class="nav-link" data-for="favourites-header" id="qpy-favourites-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-favourites-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-favourites-content-{{uniqid}}" aria-selected="false">{{#cleanstr}} search_favourites_header, qtype_questionpy, 0 {{/cleanstr}}</button>
+                <button class="nav-link" data-for="mine-header" id="qpy-mine-header-{{uniqid}}" data-toggle="tab" data-target="#qpy-mine-content-{{uniqid}}" type="button" role="tab" aria-controls="qpy-mine-content-{{uniqid}}" aria-selected="false">{{#cleanstr}} search_mine_header, qtype_questionpy, 0 {{/cleanstr}}</button>
                 <div class="ml-auto my-auto qpy-loading-indicator">
                     {{> core/loading }}
                 </div>
             </div>
         </nav>
         <div class="tab-content">
-            <div class="tab-pane show active" id="qpy-all-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-all-header-{{uniqid}}">
+            <div class="tab-pane show active" data-for="all-content" id="qpy-all-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-all-header-{{uniqid}}">
+                {{> qtype_questionpy/package_search/sort }}
                 <div class="qpy-tab-content" data-for="all-content"></div>
+                {{> qtype_questionpy/package_search/pagination }}
             </div>
-            <div class="tab-pane" id="qpy-recently-used-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-recently-used-header-{{uniqid}}">
+            <div class="tab-pane" data-for="recentlyused-content" id="qpy-recently-used-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-recently-used-header-{{uniqid}}">
                 <div class="qpy-tab-content" data-for="recently-used-content"></div>
+                {{> qtype_questionpy/package_search/pagination }}
             </div>
-            <div class="tab-pane" id="qpy-favourites-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-favourites-header-{{uniqid}}">
+            <div class="tab-pane" data-for="favourites-content" id="qpy-favourites-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-favourites-header-{{uniqid}}">
+                {{> qtype_questionpy/package_search/sort }}
                 <div class="qpy-tab-content" data-for="favourites-content"></div>
+                {{> qtype_questionpy/package_search/pagination }}
             </div>
-            <div class="tab-pane" id="qpy-mine-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-mine-header-{{uniqid}}">
+            <div class="tab-pane" data-for="mine-content" id="qpy-mine-content-{{uniqid}}" role="tabpanel" aria-labelledby="qpy-mine-header-{{uniqid}}">
+                {{> qtype_questionpy/package_search/sort }}
                 <div class="qpy-tab-content" data-for="mine-content"></div>
+                {{> qtype_questionpy/package_search/pagination }}
             </div>
         </div>
     </div>
