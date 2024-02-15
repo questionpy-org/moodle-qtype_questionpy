@@ -50,8 +50,8 @@ export default class {
                     query: state.general.query,
                     tags: state.general.tags,
                     category: category,
-                    sort: state.general.sort,
-                    order: state.general.order,
+                    sort: state.general.sorting.sort,
+                    order: state.general.sorting.order,
                     limit: this.options.limit,
                     page: (typeof page === "number") ? page : state[category].page,
                     contextid: this.options.contextid,
@@ -85,8 +85,10 @@ export default class {
         state.general.loading = true;
         state.general.query = (typeof args.query === "string") ? args.query : state.general.query;
         state.general.tags = [];
-        state.general.sort = args.sort || state.general.sort;
-        state.general.order = args.order || state.general.order;
+        state.general.sorting = {
+            sort: args.sort || state.general.sorting.sort,
+            order: args.order || state.general.sorting.order,
+        };
         stateManager.setReadOnly(true);
 
         try {
@@ -117,5 +119,27 @@ export default class {
      */
     async searchPackagesByQuery(stateManager, query) {
         await this.searchPackages(stateManager, {page: 0, query: query});
+    }
+
+    /**
+     * Used to change the current page of a tab.
+     *
+     * @param {StateManager} stateManager
+     * @param {string} category
+     * @param {number} page
+     */
+    async changePage(stateManager, category, page) {
+        await this.searchPackages(stateManager, {page: page}, [category]);
+    }
+
+    /**
+     * Used to change the current sorting.
+     *
+     * @param {StateManager} stateManager
+     * @param {string} sort
+     * @param {string} order
+     */
+    async changeSort(stateManager, sort, order) {
+        await this.searchPackages(stateManager, {sort: sort, order: order}, ["all", "favourites", "mine"]);
     }
 }

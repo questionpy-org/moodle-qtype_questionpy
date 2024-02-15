@@ -74,6 +74,12 @@ $string['search_all_header'] = 'All ({$a})';
 $string['search_recentlyused_header'] = 'Recently Used ({$a})';
 $string['search_favourites_header'] = 'Favourites ({$a})';
 $string['search_mine_header'] = 'Mine ({$a})';
+$string['search_pagination_label_aria'] = 'Search results pages';
+$string['search_pagination_previous_aria'] = 'Previous';
+$string['search_pagination_next_aria'] = 'Next';
+$string['search_sort_label_aria'] = 'Sorting';
+$string['search_sort_alphabetical'] = 'Alphabetical';
+$string['search_sort_creation_date'] = 'Creation Date';
 
 // Question management.
 $string['package_not_found'] = 'The requested package {$a->packagehash} does not exist.';

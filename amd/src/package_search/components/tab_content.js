@@ -22,6 +22,8 @@
 import * as templates from 'core/templates';
 import Notification from 'core/notification';
 import Component from 'qtype_questionpy/package_search/component';
+import Pagination from 'qtype_questionpy/package_search/components/pagination';
+import Sort from 'qtype_questionpy/package_search/components/sort';
 
 export default class extends Component {
     getWatchers() {
@@ -34,7 +36,27 @@ export default class extends Component {
         this.category = descriptor.category;
         this.selectors = {
             CONTENT: ".qpy-tab-content",
+            SORT: '[data-for="sort"]',
+            PAGINATION: '[data-for="pagination"]',
         };
+
+        // Register sort if available.
+        const sortElement = this.getElement(this.selectors.SORT);
+        if (sortElement) {
+            new Sort({
+                element: sortElement,
+                name: `sort_${this.category}`,
+                reactive: descriptor.reactive,
+            });
+        }
+
+        // Register pagination.
+        new Pagination({
+            element: this.getElement(this.selectors.PAGINATION),
+            name: `pagiation_${this.category}`,
+            reactive: descriptor.reactive,
+            category: this.category,
+        });
     }
 
     /**
