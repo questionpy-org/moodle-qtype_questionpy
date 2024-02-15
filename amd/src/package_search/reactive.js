@@ -44,9 +44,10 @@ export default class extends Reactive {
             state: {
                 general: {
                     loading: true,
-                    selected: "all",
-                    sort: "alpha",
-                    order: "asc",
+                    sorting: {
+                      sort: "alpha",
+                      order: "asc",
+                    },
                     query: "",
                 },
                 all: {

@@ -1,0 +1,39 @@
+{{!
+    This file is part of the QuestionPy Moodle plugin - https://questionpy.org
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template qtype_questionpy/package_search/sort
+
+    Represents a sort section of a package container.
+
+    Data attributes required for JS:
+    * data-for="sort"
+    * data-sort="alpha"
+    * data-sort="date"
+    * data-order="asc"
+    * data-order="desc"
+
+    Example context (json):
+    {}
+}}
+<div class="d-flex justify-content-end">
+    <select class="custom-select custom-select-sm" data-for="sort" aria-label="{{#cleanstr}} search_sort_label_aria, qtype_questionpy {{/cleanstr}}">
+        <option data-sort="alpha" data-order="asc" selected>&#9650; {{#str}} search_sort_alphabetical, qtype_questionpy {{/str}}</option>
+        <option data-sort="alpha" data-order="desc">&#9660; {{#str}} search_sort_alphabetical, qtype_questionpy {{/str}}</option>
+        <option data-sort="date" data-order="asc">&#9650; {{#str}} search_sort_creation_date, qtype_questionpy {{/str}}</option>
+        <option data-sort="date" data-order="desc">&#9660; {{#str}} search_sort_creation_date, qtype_questionpy {{/str}}</option>
+    </select>
+</div>
