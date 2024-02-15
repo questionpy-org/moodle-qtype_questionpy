@@ -30,7 +30,7 @@ use moodle_exception;
 use qtype_questionpy\utils;
 
 /**
- * This service can be used to mark a package as favourite.
+ * This service can be used to mark or unmark a package as favourite.
  *
  * @package    qtype_questionpy
  * @copyright  2024 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
@@ -43,9 +43,10 @@ class favourite_package extends external_api {
      *
      * @return external_function_parameters
      */
-    public static function favourite_package_parameters(): external_function_parameters {
+    public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'packageid' => new external_value(PARAM_INT),
+            'unmark' => new external_value(PARAM_BOOL, 'If "false", mark package as favourite, else unmark.', VALUE_DEFAULT, false),
             'contextid' => new external_value(PARAM_INT),
         ]);
     }
@@ -89,16 +90,18 @@ class favourite_package extends external_api {
      * from the application server can be marked as favourite.
      *
      * @param int $packageid
+     * @param bool $unmark
      * @param int $contextid
      * @return bool
      * @throws moodle_exception
      */
-    public static function favourite_package_execute(int $packageid, int $contextid): bool {
+    public static function execute(int $packageid, bool $unmark, int $contextid): bool {
         global $USER;
 
         // Basic parameter validation.
-        $params = self::validate_parameters(self::favourite_package_parameters(), [
+        $params = self::validate_parameters(self::execute_parameters(), [
             'packageid' => $packageid,
+            'unmark' => $unmark,
             'contextid' => $contextid,
         ]);
 
@@ -110,8 +113,18 @@ class favourite_package extends external_api {
         $usercontext = context_user::instance($USER->id);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
 
-        // Check if the package is already marked as favourite.
+        // Check if the package is marked as favourite.
         if ($ufservice->favourite_exists('qtype_questionpy', 'package', $params['packageid'], $usercontext)) {
+            if ($params['unmark']) {
+                $ufservice->delete_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
+            }
+            // The package was either already marked as favourite or the package was unmarked successfully.
+            return true;
+        }
+
+        // Package is not marked as favourite.
+        if ($params['unmark']) {
+            // There is no package to be unmarked.
             return true;
         }
 
@@ -119,7 +132,6 @@ class favourite_package extends external_api {
         if ($accessible = self::package_is_accessible($params['packageid'], $context)) {
             $ufservice->create_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
         }
-
         return $accessible;
     }
 
@@ -128,60 +140,7 @@ class favourite_package extends external_api {
      *
      * @return external_value
      */
-    public static function favourite_package_returns(): external_value {
-        return new external_value(PARAM_BOOL, 'successfully marked package as favourite');
-    }
-
-    /**
-     * Used to verify the parameters passed to the service.
-     *
-     * @return external_function_parameters
-     */
-    public static function unfavourite_package_parameters(): external_function_parameters {
-        return new external_function_parameters([
-            'packageid' => new external_value(PARAM_INT),
-            'contextid' => new external_value(PARAM_INT),
-        ]);
-    }
-
-    /**
-     * This method is called when the service is executed.
-     *
-     * @param int $packageid
-     * @param int $contextid
-     * @return bool
-     * @throws moodle_exception
-     */
-    public static function unfavourite_package_execute(int $packageid, int $contextid): bool {
-        global $USER;
-
-        // Basic parameter validation.
-        $params = self::validate_parameters(self::unfavourite_package_parameters(), [
-            'packageid' => $packageid,
-            'contextid' => $contextid,
-        ]);
-
-        // Validate given context id.
-        $context = context::instance_by_id($params['contextid'], IGNORE_MISSING);
-        self::validate_context($context);
-
-        // Get user favourite service.
-        $usercontext = context_user::instance($USER->id);
-        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
-
-        // Unmark package as favourite if it is marked as such.
-        if ($ufservice->favourite_exists('qtype_questionpy', 'package', $params['packageid'], $usercontext)) {
-            $ufservice->delete_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
-        }
-        return true;
-    }
-
-    /**
-     * This method is used to specify the return value of the service.
-     *
-     * @return external_value
-     */
-    public static function unfavourite_package_returns(): external_value {
-        return new external_value(PARAM_BOOL, 'successfully unmarked package as favourite');
+    public static function execute_returns(): external_value {
+        return new external_value(PARAM_BOOL, 'successfully un-/marked package as favourite');
     }
 }
