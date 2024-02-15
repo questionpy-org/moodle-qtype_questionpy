@@ -100,20 +100,6 @@ class qtype_questionpy extends question_type {
     }
 
     /**
-     * Adds the `edit_question` JS module to the requires before rendering the question edit form.
-     *
-     * @param qtype_questionpy_edit_form $mform the {@see qtype_questionpy_edit_form form} to be rendered
-     * @param object $question                  probably {@see qtype_questionpy_question}?
-     * @param string $wizardnow
-     * @return void
-     */
-    public function display_question_editing_page($mform, $question, $wizardnow) {
-        global $PAGE;
-        $PAGE->requires->js_call_amd("qtype_questionpy/edit_question", "init");
-        parent::display_question_editing_page($mform, $question, $wizardnow);
-    }
-
-    /**
      * Saves QuestionPy-specific options.
      *
      * @param object $question this holds the information from the editing form, it is not a standard question object

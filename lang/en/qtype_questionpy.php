@@ -57,17 +57,29 @@ $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
 
 // Package selection.
 $string['selection_title'] = 'Select QuestionPy Package';
-$string['selection_searchbar'] = 'Search...';
+$string['selection_title_selected'] = 'Selected Package';
 $string['selection_no_icon'] = 'Could not load the icon.';
-$string['selection_no_package_title'] = 'QuestionPy';
-$string['selection_no_package_text'] = 'No packages available.';
 $string['selection_required'] = 'Please select a package.';
-
-$string['open_website'] = 'Open website';
 
 $string['select_package'] = 'Select';
 $string['select_package_element_aria'] = 'Choose version.';
 $string['change_package'] = 'Change';
+
+$string['open_website'] = 'Open website';
+
+// Package search.
+$string['search_bar'] = 'Search...';
+$string['search_bar_label_aria'] = 'Search Bar';
+$string['search_all_header'] = 'All ({$a})';
+$string['search_recentlyused_header'] = 'Recently Used ({$a})';
+$string['search_favourites_header'] = 'Favourites ({$a})';
+$string['search_mine_header'] = 'Mine ({$a})';
+$string['search_pagination_label_aria'] = 'Search results pages';
+$string['search_pagination_previous_aria'] = 'Previous';
+$string['search_pagination_next_aria'] = 'Next';
+$string['search_sort_label_aria'] = 'Sorting';
+$string['search_sort_alphabetical'] = 'Alphabetical';
+$string['search_sort_creation_date'] = 'Creation Date';
 
 // Question management.
 $string['package_not_found'] = 'The requested package {$a->packagehash} does not exist.';

@@ -15,6 +15,10 @@
  * along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+:root {
+    --qpy-card-width: 600px;
+}
+
 /* Remove question text and general feedback from edit form. */
 #page-question-type-questionpy #fitem_id_questiontext,
 #page-question-type-questionpy #fitem_id_generalfeedback {
@@ -22,8 +26,15 @@
 }
 
 /* Style package selection container */
-#fgroup_id_questionpy_package_container fieldset > div {
-    row-gap: 10px;
+.qpy-package-search-container {
+    width: var(--qpy-card-width);
+    margin: 2px;
+}
+
+.qpy-tab-content {
+    display: flex;
+    flex-flow: column;
+    row-gap: 5px;
     overflow-y: scroll;
     max-height: 400px;
 }
@@ -35,7 +46,7 @@
     gap: 10px;
     align-items: stretch;
     height: 120px;
-    width: 600px;
+    width: var(--qpy-card-width);
     padding: 10px;
 }
 
@@ -82,6 +93,10 @@
 .qpy-card-action-options {
     display: flex;
     justify-content: space-between;
+}
+
+.qpy-package-search-area:not(.qpy-loading) .qpy-loading-indicator {
+    visibility: hidden;
 }
 
 .qpy-repetition {
