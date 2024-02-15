@@ -31,7 +31,6 @@ use external_value;
 use invalid_parameter_exception;
 use moodle_exception;
 use qtype_questionpy\localizer;
-use qtype_questionpy\utils;
 
 /**
  * This service can be used to search and filter for packages in the database.
@@ -284,6 +283,31 @@ class search_packages extends external_api {
     }
 
     /**
+     * Returns a list of relevant context ids related to the given context.
+     *
+     * If the given context is part of a course context, the course context id and every child context id are returned.
+     * Else, only the id of the given context is returned inside the array.
+     *
+     * @param context $context
+     * @return int[] relevant context ids
+     * @throws moodle_exception
+     */
+    public static function get_relevant_context_ids(context $context): array {
+        // If context is part of a course, get every context of that course.
+        $coursecontext = $context->get_course_context(false);
+        if ($coursecontext) {
+            // Context is part of a course.
+            $contexts = $coursecontext->get_child_contexts();
+            $contextids = array_keys($contexts);
+            $contextids[] = $coursecontext->id;
+        } else {
+            // Context is not part of a course.
+            $contextids[] = $context->id;
+        }
+        return $contextids;
+    }
+
+    /**
      * Constructs sql fragment used to guard packages which should not be visible for the current user.
      *
      * Only packages with relevant context ids, packages from the current user or packages
@@ -443,7 +467,7 @@ class search_packages extends external_api {
         self::validate_parameter_values($params);
 
         // Get relevant context ids.
-        $contextids = utils::get_relevant_context_ids($context);
+        $contextids = self::get_relevant_context_ids($context);
 
         // Generate sql and parameters.
         [$finalsql, $finalparams] = self::create_sql($params, $contextids);

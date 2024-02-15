@@ -40,7 +40,7 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
 /**
  * Tests for {@see favourite_package}.
  *
- * @runTestsInSeparateProcesses
+ * @/runTestsInSeparateProcesses
  *
  * @package    qtype_questionpy
  * @author     Jan Britz

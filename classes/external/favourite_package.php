@@ -51,6 +51,38 @@ class favourite_package extends external_api {
     }
 
     /**
+     * Checks if a package should be accessible by the user in the given context.
+     *
+     * @param int $packageid
+     * @param context $context
+     * @return bool
+     * @throws moodle_exception
+     */
+    private static function package_is_accessible(int $packageid, context $context): bool {
+        global $DB, $USER;
+
+        // Path of the current context.
+        $paths['path'] = $context->path;
+
+        // If the current context if part of a course, add 'child context path'-pattern.
+        $childpathsql = "";
+        if ($coursecontext = $context->get_course_context(false)) {
+            $childpathsql = 'OR c.path LIKE :childpath';
+            $paths['path'] = $coursecontext->path;
+            $paths['childpath'] = $coursecontext->path . '/%';
+        }
+
+        // Check if at least one package version of the given package is accessible for the user.
+        return $DB->record_exists_sql("
+            SELECT pv.id
+            FROM {qtype_questionpy_pkgversion} pv
+            LEFT JOIN {context} c
+            ON c.id = pv.contextid
+            WHERE (pv.packageid = :packageid) AND (pv.userid IS NULL OR pv.userid = :userid OR c.path LIKE :path $childpathsql)
+        ", array_merge($paths, ['packageid' => $packageid, 'userid' => $USER->id]));
+    }
+
+    /**
      * This method is called when the service is executed.
      *
      * Only packages with relevant context ids, packages from the current user or packages
@@ -62,7 +94,7 @@ class favourite_package extends external_api {
      * @throws moodle_exception
      */
     public static function favourite_package_execute(int $packageid, int $contextid): bool {
-        global $DB, $USER;
+        global $USER;
 
         // Basic parameter validation.
         $params = self::validate_parameters(self::favourite_package_parameters(), [
@@ -83,27 +115,12 @@ class favourite_package extends external_api {
             return true;
         }
 
-        // Get relevant context ids.
-        $contextids = utils::get_relevant_context_ids($context);
-        [$insql, $inparams] = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'contextid');
-
-        // Check if package can be marked as favourite.
-        $applicable = $DB->record_exists_sql("
-            SELECT id
-            FROM {qtype_questionpy_pkgversion}
-            WHERE (packageid = :packageid) AND (userid IS NULL OR userid = :userid OR contextid {$insql})
-        ", array_merge(['packageid' => $params['packageid'], 'userid' => $USER->id], $inparams));
-
-        // Favourite package if it is applicable.
-        if ($applicable) {
-            try {
-                $ufservice->create_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
-            } catch (moodle_exception $exception) {
-                return false;
-            }
+        // Mark package as favourite if it is accessible by the user.
+        if ($accessible = self::package_is_accessible($params['packageid'], $context)) {
+            $ufservice->create_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
         }
 
-         return $applicable;
+        return $accessible;
     }
 
     /**
@@ -152,18 +169,10 @@ class favourite_package extends external_api {
         $usercontext = context_user::instance($USER->id);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
 
-        // Check if the package is even marked as a favourite.
-        if (!$ufservice->favourite_exists('qtype_questionpy', 'package', $params['packageid'], $usercontext)) {
-            return true;
-        }
-
-        // Unfavourite package if possible.
-        try {
+        // Unmark package as favourite if it is marked as such.
+        if ($ufservice->favourite_exists('qtype_questionpy', 'package', $params['packageid'], $usercontext)) {
             $ufservice->delete_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
-        } catch (moodle_exception $exception) {
-            return false;
         }
-
         return true;
     }
 
