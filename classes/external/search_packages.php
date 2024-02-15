@@ -292,7 +292,7 @@ class search_packages extends external_api {
      * @return int[] relevant context ids
      * @throws moodle_exception
      */
-    public static function get_relevant_context_ids(context $context): array {
+    private static function get_relevant_context_ids(context $context): array {
         // If context is part of a course, get every context of that course.
         $coursecontext = $context->get_course_context(false);
         if ($coursecontext) {
