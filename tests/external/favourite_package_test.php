@@ -94,7 +94,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
         global $PAGE;
         $this->setUser();
         $this->expectException(\require_login_exception::class);
-        favourite_package::execute(0, false, $PAGE->context->id);
+        favourite_package::execute(0, true, $PAGE->context->id);
     }
 
     /**
@@ -106,7 +106,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
     public function test_favourite_needs_context_id_to_be_valid(): void {
         $this->expectException(\invalid_parameter_exception::class);
         $this->expectExceptionMessageMatches("/Context does not exist/");
-        favourite_package::execute(0, false, -1);
+        favourite_package::execute(0, true, -1);
     }
 
     /**
@@ -117,7 +117,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
      */
     public function test_favourite_with_not_existing_package_id_does_not_work(): void {
         global $USER, $PAGE;
-        $res = favourite_package::execute(42, false, $PAGE->context->id);
+        $res = favourite_package::execute(42, true, $PAGE->context->id);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         $this->assertFalse($res);
         $this->assert_marked_as_favourite($USER->id, []);
@@ -132,7 +132,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
     public function test_favourite_works_with_user_package(): void {
         global $USER, $PAGE;
         $packageid = self::get_id(package_provider()->store());
-        $res = favourite_package::execute($packageid, false, $PAGE->context->id);
+        $res = favourite_package::execute($packageid, true, $PAGE->context->id);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
         $this->assert_marked_as_favourite($USER->id, [$packageid]);
@@ -147,7 +147,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
     public function test_favourite_works_with_server_package(): void {
         global $USER, $PAGE;
         $packageid = self::get_id(package_provider()->store(0, false));
-        $res = favourite_package::execute($packageid, false, $PAGE->context->id);
+        $res = favourite_package::execute($packageid, true, $PAGE->context->id);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
         $this->assert_marked_as_favourite($USER->id, [$packageid]);
@@ -172,7 +172,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
 
         // Favourite the package as user two.
         $this->setUser($user2);
-        $res = favourite_package::execute($packageid, false, $coursecontext->id);
+        $res = favourite_package::execute($packageid, true, $coursecontext->id);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
         $this->assert_marked_as_favourite($user2->id, [$packageid]);
@@ -200,7 +200,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
 
         // Favourite the package as user two in quiz two.
         $this->setUser($user2);
-        $res = favourite_package::execute($packageid, false, $quiz2context->id);
+        $res = favourite_package::execute($packageid, true, $quiz2context->id);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
         $this->assert_marked_as_favourite($user2->id, [$packageid]);
@@ -216,7 +216,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
         global $USER, $PAGE;
         $packageid = self::get_id(package_provider()->store());
         for ($i = 0; $i < 3; $i++) {
-            $res = favourite_package::execute($packageid, false, $PAGE->context->id);
+            $res = favourite_package::execute($packageid, true, $PAGE->context->id);
             $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
             $this->assertTrue($res);
             $this->assert_marked_as_favourite($USER->id, [$packageid]);
@@ -244,7 +244,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
 
         // Favourite the package as user two in course two.
         $this->setUser($user2);
-        $res = favourite_package::execute($packageid, false, $course2context->id);
+        $res = favourite_package::execute($packageid, true, $course2context->id);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         $this->assertFalse($res);
         $this->assert_marked_as_favourite($user2->id, []);
@@ -258,7 +258,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
      */
     public function test_unfavourite_with_not_existing_package_id_does_work(): void {
         global $USER, $PAGE;
-        $res = favourite_package::execute(42, true, $PAGE->context->id);
+        $res = favourite_package::execute(42, false, $PAGE->context->id);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         $this->assertTrue($res);
         $this->assert_marked_as_favourite($USER->id, []);
@@ -280,7 +280,7 @@ class favourite_package_test extends \externallib_advanced_testcase {
         $ufservice->create_favourite('qtype_questionpy', 'package', $packageid, $context);
 
         // Unfavourite the package.
-        $res = favourite_package::execute($packageid, true, $context->id);
+        $res = favourite_package::execute($packageid, false, $context->id);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         $this->assertTrue($res);
         $this->assert_marked_as_favourite($USER->id, []);

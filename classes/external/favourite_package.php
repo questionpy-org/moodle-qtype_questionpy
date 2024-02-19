@@ -46,7 +46,7 @@ class favourite_package extends external_api {
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'packageid' => new external_value(PARAM_INT),
-            'unmark' => new external_value(PARAM_BOOL, 'If "false", mark package as favourite, else unmark.', VALUE_DEFAULT, false),
+            'favourite' => new external_value(PARAM_BOOL),
             'contextid' => new external_value(PARAM_INT),
         ]);
     }
@@ -90,18 +90,18 @@ class favourite_package extends external_api {
      * from the application server can be marked as favourite.
      *
      * @param int $packageid
-     * @param bool $unmark
+     * @param bool $favourite
      * @param int $contextid
      * @return bool
      * @throws moodle_exception
      */
-    public static function execute(int $packageid, bool $unmark, int $contextid): bool {
+    public static function execute(int $packageid, bool $favourite, int $contextid): bool {
         global $USER;
 
         // Basic parameter validation.
         $params = self::validate_parameters(self::execute_parameters(), [
             'packageid' => $packageid,
-            'unmark' => $unmark,
+            'favourite' => $favourite,
             'contextid' => $contextid,
         ]);
 
@@ -115,7 +115,7 @@ class favourite_package extends external_api {
 
         // Check if the package is marked as favourite.
         if ($ufservice->favourite_exists('qtype_questionpy', 'package', $params['packageid'], $usercontext)) {
-            if ($params['unmark']) {
+            if (!$params['favourite']) {
                 $ufservice->delete_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
             }
             // The package was either already marked as favourite or the package was unmarked successfully.
@@ -123,7 +123,7 @@ class favourite_package extends external_api {
         }
 
         // Package is not marked as favourite.
-        if ($params['unmark']) {
+        if (!$params['favourite']) {
             // There is no package to be unmarked.
             return true;
         }
