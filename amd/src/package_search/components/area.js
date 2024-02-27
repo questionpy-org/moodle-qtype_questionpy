@@ -32,12 +32,14 @@ export default class extends Component {
 
     create(descriptor) {
         // Register search bar.
+        // TODO: register component inside mustache template.
         new SearchBar({
             element: this.getElement('[data-for="search-bar-container"'),
             name: "search_bar",
             reactive: descriptor.reactive,
         });
         // Register package container.
+        // TODO: register component inside mustache template.
         new Container({
             element: this.getElement('[data-for="package-container"'),
             name: "container",

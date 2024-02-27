@@ -24,7 +24,7 @@ import Component from 'qtype_questionpy/package_search/component';
 export default class extends Component {
     getWatchers() {
         return [
-            {watch: `${this.category}.data:updated`, handler: this.updateCurrentPage},
+            {watch: `${this.category}:updated`, handler: this.updateCurrentPage},
         ];
     }
 
@@ -60,10 +60,10 @@ export default class extends Component {
      */
     _getLastPage() {
         const state = this.getState()[this.category];
-        if (state.data.total === 0) {
+        if (state.total === 0) {
             return 0;
         }
-        return Math.floor((state.data.total - 1) / this.reactive.options.limit);
+        return Math.floor((state.total - 1) / this.reactive.options.limit);
     }
 
     /**

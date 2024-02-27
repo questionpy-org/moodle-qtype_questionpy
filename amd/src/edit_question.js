@@ -16,6 +16,8 @@
  */
 
 import {resetFormDirtyState} from 'core_form/changechecker';
+import Notification from 'core/notification';
+import {favouritePackage} from 'qtype_questionpy/utils';
 
 /**
  * This function is called by the <code>package_selection</code>-template and initializes the action button.
@@ -25,14 +27,12 @@ import {resetFormDirtyState} from 'core_form/changechecker';
  * data from being saved to the question, while still re-rendering the form with access to the new selected package
  * hash.
  *
- * @param {string} cardId
+ * @param {HTMLDivElement} card
  * @param {boolean} selected
  */
-export function initActionButton(cardId, selected) {
+export function initActionButton(card, selected) {
     const packageChanged = document.querySelector('input[name="qpy_package_changed"]');
     const packageHash = document.querySelector('input[name="qpy_package_hash"]');
-
-    const card = document.getElementById(cardId);
 
     if (selected) {
         // Initialize the button to change the package.
@@ -66,3 +66,26 @@ export function initActionButton(cardId, selected) {
     }
 }
 
+/**
+ * This function is called by the <code>package_selection</code>-template and initializes the favourite button, when
+ * a package is already selected.
+ *
+ * @param {HTMLDivElement} card
+ * @param {number} packageId
+ * @param {number} contextId
+ */
+export function initFavouriteButton(card, packageId, contextId) {
+    const button = card.querySelector('[data-for="favourite-button"]');
+    const isFavouriteAttributeName = "data-is-favourite";
+    button.addEventListener("click", async() => {
+        try {
+            const isFavourite = button.hasAttribute(isFavouriteAttributeName);
+            const successful = await favouritePackage(packageId, !isFavourite, contextId);
+            if (successful) {
+                button.toggleAttribute(isFavouriteAttributeName, !isFavourite);
+            }
+        } catch (exception) {
+            await Notification.exception(exception);
+        }
+    });
+}

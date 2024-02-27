@@ -23,24 +23,34 @@
     * qpy-version-selection,
     * qpy-version-selection-button
 
+    Data attributes required for JS:
+    * data-for="favouite-button",
+    * data-is-favourite
+
     Context variables required for this template:
+    * id - QuestionPy package id,
     * namespace - QuestionyPy package namespace,
     * name - QuestionPy package name,
     * description - QuestionPy package description,
     * icon - QuestionPy package icon,
-    * selected - Weather the current QuestionPy package is selected or not,
     * versions - If 'selected' is true, include only the selected package; else, include every available package,
-    * url - The url of the QuestionPy package
+    * url - The url of the QuestionPy package,
+    * selected - Whether the current QuestionPy package is selected or not,
+    * isfavourite - Whether the current QuestionPy package is marked as favourite or not,
+    * contextid - The current context id.
 
     Example context (json):
     {
+        "id": 0,
         "namespace": "example_namespace",
         "name": "ExamplePackage",
         "description": "This describes the package ExamplePackage.",
         "icon": "https://picsum.photos/48/48?grayscale",
-        "selected": true,
         "versions": [{"hash": "example_hash", "version": "0.1.0"}],
-        "url": "https://example.com"
+        "url": "https://example.com",
+        "selected": true,
+        "isfavourite": false,
+        "contextid": 0
     }
 }}
 {{<qtype_questionpy/package/package_base}}
@@ -54,35 +64,39 @@
                 </select>
                 <div class="dropdown">
                     <a role="button" data-toggle="dropdown" aria-expanded="false">
-                        {{#pix}}i/moremenu{{/pix}}
+                        {{#pix}} i/moremenu {{/pix}}
                     </a>
                     <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#" data-for="favourite-button" {{#isfavourite}} data-is-favourite {{/isfavourite}}>
+                            <span class="qpy-favourite-button-text">
+                                {{#pix}} i/star-rating {{/pix}}{{#str}} mark_as_favourite, qtype_questionpy {{/str}}
+                            </span>
+                            <span class="qpy-unfavourite-button-text">
+                                {{#pix}} i/star-o {{/pix}}{{#str}} unmark_as_favourite, qtype_questionpy {{/str}}
+                            </span>
+                        </a>
                         {{#url}}
-                            <a class="dropdown-item" href="{{url}}" target="_blank">{{#pix}}i/mnethost{{/pix}}{{#str}}open_website, qtype_questionpy{{/str}}</a>
-                        {{/url}}
-
-                        {{!
-                            TODO: This is only here so that the menu is not empty and should be remove when other menu
-                                  items are added.
-                        }}
-                        {{^url}}
-                            <a class="dropdown-item" href="https://example.com/" target="_blank">{{#pix}}i/mnethost{{/pix}}{{#str}}open_website, qtype_questionpy{{/str}}</a>
+                            <a class="dropdown-item" href="{{url}}" target="_blank">{{#pix}} i/mnethost {{/pix}}{{#str}} open_website, qtype_questionpy {{/str}}</a>
                         {{/url}}
                     </div>
                 </div>
             </div>
 
             {{^selected}}
-                <button class="btn btn-primary qpy-version-selection-button">{{#str}}select_package, qtype_questionpy{{/str}}</button>
+                <button class="btn btn-primary qpy-version-selection-button">{{#str}} select_package, qtype_questionpy {{/str}}</button>
             {{/selected}}
             {{#selected}}
-                <button class="btn btn-danger qpy-version-selection-button">{{#str}}change_package, qtype_questionpy{{/str}}</button>
+                <button class="btn btn-danger qpy-version-selection-button">{{#str}} change_package, qtype_questionpy {{/str}}</button>
             {{/selected}}
         </div>
     {{/action}}
 {{/qtype_questionpy/package/package_base}}
 {{#js}}
-require(['qtype_questionpy/edit_question'], function(module) {
-    module.initActionButton('qpy-card-{{uniqid}}', {{selected}});
-});
+    require(['qtype_questionpy/edit_question'], function(module) {
+        const card = document.getElementById("qpy-card-{{uniqid}}");
+        module.initActionButton(card, {{selected}});
+        {{#selected}}
+            module.initFavouriteButton(card, {{id}}, {{contextid}});
+        {{/selected}}
+    });
 {{/js}}

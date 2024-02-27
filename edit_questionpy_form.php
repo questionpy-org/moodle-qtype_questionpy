@@ -73,7 +73,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @throws moodle_exception
      */
     protected function definition_package_settings(MoodleQuickForm $mform, string $packagehash): void {
-        global $OUTPUT;
+        global $OUTPUT, $USER, $PAGE;
 
         $pkgversion = package_version::get_by_hash($packagehash);
         $package = package::get_by_version($pkgversion->id);
@@ -82,6 +82,11 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $packagearray = $package->as_localized_array($languages);
         $packagearray['selected'] = true;
         $packagearray['versions'] = ['hash' => $pkgversion->hash, 'version' => $pkgversion->version];
+        $packagearray['contextid'] = $PAGE->context->id;
+
+        $usercontext = context_user::instance($USER->id);
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+        $packagearray['isfavourite'] = $ufservice->favourite_exists('qtype_questionpy', 'package', $package->id, $usercontext);
 
         $group = [];
         $group[] = $mform->createElement(

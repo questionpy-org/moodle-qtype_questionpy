@@ -16,29 +16,38 @@
  */
 
 /**
- * @module qtype_questionpy/package_search/components/tab_header
+ * @module qtype_questionpy/package_search/components/package
  */
 
-import * as strings from 'core/str';
 import Component from 'qtype_questionpy/package_search/component';
 
 export default class extends Component {
     getWatchers() {
         return [
-            {watch: `${this.category}.total:updated`, handler: this.render},
+            {watch: `${this.category}Packages[${this.packageid}].isfavourite:updated`, handler: this.favouriteChanged},
         ];
     }
 
-    async create(descriptor) {
+    create(descriptor) {
+        this.packageid = descriptor.packageid;
         this.category = descriptor.category;
+        this.selectors = {
+            FAVOURITE_BUTTON: '[data-for="favourite-button"]',
+        };
     }
 
-    /**
-     * Renders every package inside a specific tab.
-     */
-    async render() {
-        const data = this.getState()[this.category];
-        this.element.innerHTML = await strings.get_string(`search_${this.category}_header`, "qtype_questionpy", data.total);
+    isFavourite() {
+        return this.getState()[`${this.category}Packages`].get(this.packageid).isfavourite;
     }
 
+    stateReady() {
+        this.addEventListener(this.getElement(this.selectors.FAVOURITE_BUTTON), "click", () => {
+            this.reactive.dispatch("favourite", this.packageid, !this.isFavourite());
+        });
+    }
+
+    async favouriteChanged() {
+        const isFavourite = this.isFavourite();
+        this.getElement(this.selectors.FAVOURITE_BUTTON).toggleAttribute("data-is-favourite", isFavourite);
+    }
 }
