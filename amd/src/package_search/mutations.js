@@ -21,6 +21,7 @@
 
 import Ajax from 'core/ajax';
 import Notification from 'core/notification';
+import {favouritePackage} from 'qtype_questionpy/utils';
 
 export default class {
     /**
@@ -63,6 +64,30 @@ export default class {
     }
 
     /**
+     * Sets the `loading` property.
+     *
+     * It only communicates changes to the watchers if the `StateManager` is currently readonly.
+     *
+     * @param {StateManager} stateManager
+     * @param {boolean} loading
+     * @private
+     */
+    _setLoading(stateManager, loading) {
+        const state = stateManager.state;
+        if (state.loading === loading) {
+            return;
+        }
+        const isReadonly = stateManager.readonly;
+        if (isReadonly) {
+            stateManager.setReadOnly(false);
+        }
+        state.general.loading = loading;
+        if (isReadonly) {
+            stateManager.setReadOnly(true);
+        }
+    }
+
+    /**
      * Used to search packages.
      *
      * Missing arguments are taken from the current state.
@@ -82,7 +107,7 @@ export default class {
 
         // Update general data.
         stateManager.setReadOnly(false);
-        state.general.loading = true;
+        this._setLoading(stateManager, true);
         state.general.query = (typeof args.query === "string") ? args.query : state.general.query;
         state.general.tags = [];
         state.general.sorting = {
@@ -98,16 +123,19 @@ export default class {
             stateManager.setReadOnly(false);
             // Update category specific data.
             for (const [index, category] of categories.entries()) {
-                state[category].data = await results[index];
+                const result = await results[index];
+                state[`${category}Packages`] = result.packages;
+                state[category].count = result.count;
+                state[category].total = result.total;
                 if (typeof args.page === "number") {
                     state[category].page = args.page;
                 }
             }
-            // Update loading status.
-            state.general.loading = false;
             stateManager.setReadOnly(true);
         } catch (exception) {
             await Notification.exception(exception);
+        } finally {
+            this._setLoading(stateManager, false);
         }
     }
 
@@ -141,5 +169,56 @@ export default class {
      */
     async changeSort(stateManager, sort, order) {
         await this.searchPackages(stateManager, {sort: sort, order: order}, ["all", "favourites", "mine"]);
+    }
+
+    /**
+     * Used to re-/load data of given categories.
+     *
+     * @param {StateManager} stateManager
+     * @param {string[]} categories
+     */
+    async load(stateManager, categories) {
+        await this.searchPackages(stateManager, {}, categories);
+    }
+
+    /**
+     * Used to un-/favourite a package.
+     *
+     * @param {StateManager} stateManager
+     * @param {int} packageid
+     * @param {boolean} favourite
+     */
+    async favourite(stateManager, packageid, favourite) {
+        const state = stateManager.state;
+        try {
+            this._setLoading(stateManager, true);
+            const successful = await favouritePackage(packageid, favourite, this.options.contextid);
+            if (!successful) {
+                return;
+            }
+            stateManager.setReadOnly(false);
+            for (const category of ["all", "mine", "recentlyused"]) {
+                const pkg = state[`${category}Packages`].get(packageid);
+                if (pkg) {
+                    pkg.isfavourite = favourite;
+                }
+            }
+            stateManager.setReadOnly(true);
+            let page = state.favourites.page;
+            if (!favourite) {
+                // Turn back a page in 'favourites' if the unmarked package was the last one on the page.
+                const isFirstPage = page === 0;
+                const isLastPage = page === Math.floor((state.favourites.total - 1) / this.options.limit);
+                const existsOnePackage = state.favourites.count === 1;
+                if (!isFirstPage && isLastPage && existsOnePackage) {
+                    page -= 1;
+                }
+            }
+            await this.changePage(stateManager, 'favourites', page);
+        } catch (exception) {
+            await Notification.exception(exception);
+        } finally {
+            this._setLoading(stateManager, false);
+        }
     }
 }

@@ -95,6 +95,11 @@
     justify-content: space-between;
 }
 
+.qpy-card-action [data-for="favourite-button"][data-is-favourite] .qpy-unfavourite-button-text,
+.qpy-card-action [data-for="favourite-button"]:not([data-is-favourite]) .qpy-favourite-button-text {
+    display: none;
+}
+
 .qpy-package-search-area:not(.qpy-loading) .qpy-loading-indicator {
     visibility: hidden;
 }

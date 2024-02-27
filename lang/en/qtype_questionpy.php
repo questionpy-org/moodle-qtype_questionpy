@@ -66,6 +66,8 @@ $string['select_package_element_aria'] = 'Choose version.';
 $string['change_package'] = 'Change';
 
 $string['open_website'] = 'Open website';
+$string['mark_as_favourite'] = 'Favourite';
+$string['unmark_as_favourite'] = 'Favourite';
 
 // Package search.
 $string['search_bar'] = 'Search...';

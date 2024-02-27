@@ -16,29 +16,27 @@
  */
 
 /**
- * @module qtype_questionpy/package_search/components/tab_header
+ * @module qtype_questionpy/utils
  */
 
-import * as strings from 'core/str';
-import Component from 'qtype_questionpy/package_search/component';
+import Ajax from 'core/ajax';
 
-export default class extends Component {
-    getWatchers() {
-        return [
-            {watch: `${this.category}.total:updated`, handler: this.render},
-        ];
-    }
 
-    async create(descriptor) {
-        this.category = descriptor.category;
-    }
-
-    /**
-     * Renders every package inside a specific tab.
-     */
-    async render() {
-        const data = this.getState()[this.category];
-        this.element.innerHTML = await strings.get_string(`search_${this.category}_header`, "qtype_questionpy", data.total);
-    }
-
-}
+/**
+ * Favourites a package.
+ *
+ * @param {number} packageid
+ * @param {boolean} favourite
+ * @param {number} contextid
+ * @returns {Promise<boolean>}
+ */
+export const favouritePackage = async(packageid, favourite, contextid) => {
+    return await Ajax.call([{
+        methodname: "qtype_questionpy_favourite_package",
+        args: {
+            packageid: packageid,
+            favourite: favourite,
+            contextid: contextid,
+        },
+    }])[0];
+};

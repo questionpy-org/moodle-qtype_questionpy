@@ -51,37 +51,29 @@ export default class extends Reactive {
                     query: "",
                 },
                 all: {
-                    data: {
-                        packages: [],
-                        count: 0,
-                        total: 0,
-                    },
+                    count: 0,
+                    total: 0,
                     page: 0,
                 },
+                allPackages: [],
                 recentlyused: {
-                    data: {
-                        packages: [],
-                        count: 0,
-                        total: 0,
-                    },
+                    count: 0,
+                    total: 0,
                     page: 0,
                 },
+                recentlyusedPackages: [],
                 favourites: {
-                    data: {
-                        packages: [],
-                        count: 0,
-                        total: 0,
-                    },
+                    count: 0,
+                    total: 0,
                     page: 0,
                 },
+                favouritesPackages: [],
                 mine: {
-                    data: {
-                        packages: [],
-                        count: 0,
-                        total: 0,
-                    },
+                    count: 0,
+                    total: 0,
                     page: 0,
                 },
+                minePackages: [],
             },
         });
         this.options = options;

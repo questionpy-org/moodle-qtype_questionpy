@@ -27,6 +27,7 @@ import TabContent from 'qtype_questionpy/package_search/components/tab_content';
 export default class extends Component {
     async create(descriptor) {
         // Register header and content of tabs.
+        // TODO: register components inside mustache template.
         for (const category of ["all", "recentlyused", "favourites", "mine"]) {
             new TabHeader({
                 element: this.getElement(`[data-for="${category}-header"]`),

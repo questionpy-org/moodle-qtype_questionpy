@@ -24,11 +24,12 @@ import Notification from 'core/notification';
 import Component from 'qtype_questionpy/package_search/component';
 import Pagination from 'qtype_questionpy/package_search/components/pagination';
 import Sort from 'qtype_questionpy/package_search/components/sort';
+import Package from 'qtype_questionpy/package_search/components/package';
 
 export default class extends Component {
     getWatchers() {
         return [
-            {watch: `${this.category}:updated`, handler: this.render},
+            {watch: `state.${this.category}Packages:updated`, handler: this.render},
         ];
     }
 
@@ -41,6 +42,7 @@ export default class extends Component {
         };
 
         // Register sort if available.
+        // TODO: register component inside mustache template.
         const sortElement = this.getElement(this.selectors.SORT);
         if (sortElement) {
             new Sort({
@@ -51,6 +53,7 @@ export default class extends Component {
         }
 
         // Register pagination.
+        // TODO: register component inside mustache template.
         new Pagination({
             element: this.getElement(this.selectors.PAGINATION),
             name: `pagiation_${this.category}`,
@@ -69,7 +72,9 @@ export default class extends Component {
     _getPackageTemplatesPromise(contexts) {
         let promises = [];
         for (const context of contexts) {
-            const promise = templates.renderForPromise("qtype_questionpy/package/package_selection", context);
+            // Context is a proxy, we need to get the target.
+            const contextObj = Object.assign({}, context);
+            const promise = templates.renderForPromise("qtype_questionpy/package/package_selection", contextObj);
             promises.push(promise);
         }
         return Promise.all(promises);
@@ -80,12 +85,19 @@ export default class extends Component {
      */
     async render() {
         try {
-            const state = this.getState()[this.category];
-            const packageTemplates = await this._getPackageTemplatesPromise(state.data.packages);
-            const element = this.getElement(this.selectors.CONTENT);
-            element.innerHTML = "";
+            const packages = Array.from(this.getState()[`${this.category}Packages`].values());
+            const packageTemplates = await this._getPackageTemplatesPromise(packages);
+            const contentElement = this.getElement(this.selectors.CONTENT);
+            contentElement.innerHTML = "";
+            let index = 0;
             for (const {html, js} of packageTemplates) {
-                templates.appendNodeContents(element, html, js);
+                const packageElement = templates.appendNodeContents(contentElement, html, js)[0];
+                // TODO: register component inside mustache template.
+                new Package({
+                    element: packageElement,
+                    category: this.category,
+                    packageid: packages[index++].id,
+                });
             }
         } catch (exception) {
             await Notification.exception(exception);
