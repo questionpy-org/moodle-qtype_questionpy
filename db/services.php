@@ -46,4 +46,11 @@ $functions = [
         'ajax' => true,
         'loginrequired' => true,
     ],
+    'qtype_questionpy_favourite_package' => [
+        'classname' => 'qtype_questionpy\external\favourite_package',
+        'description' => 'Mark or unmark a package as favourite.',
+        'type' => 'write',
+        'ajax' => true,
+        'loginrequired' => true,
+    ],
 ];
