@@ -234,6 +234,5 @@ class package_version {
         $DB->delete_records('qtype_questionpy_tags', ['packageid' => $this->packageid]);
         $DB->delete_records('qtype_questionpy_package', ['id' => $this->packageid]);
 
-        $transaction->allow_commit();
     }
 }

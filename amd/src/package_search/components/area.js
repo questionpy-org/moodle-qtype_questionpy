@@ -21,6 +21,7 @@
 
 import Component from 'qtype_questionpy/package_search/component';
 import Container from 'qtype_questionpy/package_search/components/container';
+import UploadButton from 'qtype_questionpy/package_search/components/upload';
 import SearchBar from 'qtype_questionpy/package_search/components/search_bar';
 
 export default class extends Component {
@@ -36,6 +37,12 @@ export default class extends Component {
         new SearchBar({
             element: this.getElement('[data-for="search-bar-container"'),
             name: "search_bar",
+            reactive: descriptor.reactive,
+        });
+        // Register upload button.
+        new UploadButton({
+            element: this.getElement('[data-for="upload-button"]'),
+            name: "upload_button",
             reactive: descriptor.reactive,
         });
         // Register package container.

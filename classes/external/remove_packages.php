@@ -56,7 +56,7 @@ class remove_packages extends external_api {
         // Only delete package versions that were not uploaded by a user.
         $versions = package_version::get_by_server();
         foreach ($versions as $version) {
-            $version->delete_as_server();
+                $version->delete_as_server();
         }
 
         $transaction->allow_commit();

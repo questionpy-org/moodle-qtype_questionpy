@@ -22,6 +22,7 @@ global $CFG;
 require_once($CFG->libdir . "/externallib.php");
 
 use context;
+use context_system;
 use context_user;
 use external_api;
 use external_function_parameters;
@@ -30,6 +31,7 @@ use external_single_structure;
 use external_value;
 use invalid_parameter_exception;
 use moodle_exception;
+use moodle_url;
 use qtype_questionpy\localizer;
 use qtype_questionpy\package\package_version;
 
@@ -186,13 +188,17 @@ class search_packages extends external_api {
         $versionsraw = $DB->get_records_sql($sql, $params);
 
         $versions = [];
+        $systemcontextid = context_system::instance()->id;
         foreach ($versionsraw as $version) {
+            $fileurl = $version->ismine ? moodle_url::make_pluginfile_url($systemcontextid, 'qtype_questionpy', 'package', 0, '/',
+                $version->hash . '.qpy')->out() : null;
             $versions[$version->packageid][] = [
                 'id' => $version->id,
                 'hash' => $version->hash,
                 'version' => $version->version,
                 'ismine' => $version->ismine,
                 'isfromserver' => $version->isfromserver,
+                'fileurl' => $fileurl,
             ];
         }
 
@@ -466,6 +472,7 @@ class search_packages extends external_api {
                     'version' => new external_value(PARAM_TEXT),
                     'ismine' => new external_value(PARAM_BOOL, 'Version was uploaded by the current user'),
                     'isfromserver' => new external_value(PARAM_BOOL, 'Version is provided by the application server'),
+                    'fileurl' => new external_value(PARAM_URL),
                 ])),
                 'author' => new external_value(PARAM_RAW),
                 'name' => new external_value(PARAM_TEXT),

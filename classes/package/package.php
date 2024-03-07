@@ -40,6 +40,16 @@ class package extends package_base {
     public int $id;
 
     /**
+     * @var string shortname
+     */
+    public string $shortname;
+
+    /**
+     * @var string namespace
+     */
+    public string $namespace;
+
+    /**
      * Constructs package class.
      *
      * @param int $id

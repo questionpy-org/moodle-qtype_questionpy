@@ -48,8 +48,6 @@ class qtype_questionpy_edit_form extends question_edit_form {
     protected function definition_package_selection(MoodleQuickForm $mform): void {
         global $OUTPUT, $PAGE;
 
-        $uploadlink = $PAGE->get_renderer('qtype_questionpy')->package_upload_link($this->context);
-
         $mform->setType('questionpy_package_search', PARAM_TEXT);
 
         // Create a group which contains the package container - the group is used to simplify the styling.
@@ -61,8 +59,6 @@ class qtype_questionpy_edit_form extends question_edit_form {
             'questionpy_package_container',
             get_string('selection_required', 'qtype_questionpy'), 'required'
         );
-
-        $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
     }
 
     /**
@@ -81,8 +77,21 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $languages = localizer::get_preferred_languages();
         $packagearray = $package->as_localized_array($languages);
         $packagearray['selected'] = true;
-        $packagearray['versions'] = ['hash' => $pkgversion->hash, 'version' => $pkgversion->version];
-        $packagearray['contextid'] = $PAGE->context->id;
+
+        $fileurl = '';
+        if ($pkgversion->ismine) {
+            $systemcontextid = context_system::instance()->id;
+            $fileurl = moodle_url::make_pluginfile_url($systemcontextid, 'qtype_questionpy', 'package', 0, '/',
+                $packagehash . '.qpy')->out();
+        }
+
+        $packagearray['versions'] = [
+            'hash' => $pkgversion->hash,
+            'version' => $pkgversion->version,
+            'ismine' => $pkgversion->ismine,
+            'fileurl' => $fileurl,
+        ];
+        $packagearray['contextid'] = $PAGE->context->get_course_context()->id;
 
         $usercontext = context_user::instance($USER->id);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);

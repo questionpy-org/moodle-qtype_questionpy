@@ -25,7 +25,8 @@
 
     Data attributes required for JS:
     * data-for="favouite-button",
-    * data-is-favourite
+    * data-is-favourite,
+    * data-for="download-button"
 
     Context variables required for this template:
     * id - QuestionPy package id,
@@ -46,9 +47,9 @@
         "name": "ExamplePackage",
         "description": "This describes the package ExamplePackage.",
         "icon": "https://picsum.photos/48/48?grayscale",
-        "versions": [{"hash": "example_hash", "version": "0.1.0"}],
-        "url": "https://example.com",
         "selected": true,
+        "versions": [{"hash": "example_hash", "version": "0.1.0", "ismine": true, "fileurl": "www.example.com/package.qpy"}],
+        "url": "https://example.com",
         "isfavourite": false,
         "contextid": 0
     }
@@ -59,7 +60,7 @@
             <div class="qpy-card-action-options">
                 <select class="qpy-version-selection" {{#selected}}disabled{{/selected}} aria-label="{{#str}}select_package_element_aria, qtype_questionpy{{/str}}">
                     {{#versions}}
-                        <option value="{{hash}}">{{version}}</option>
+                        <option value="{{hash}}" {{#ismine}} data-is-mine {{/ismine}} data-fileurl="{{fileurl}}">{{version}}</option>
                     {{/versions}}
                 </select>
                 <div class="dropdown">
@@ -78,6 +79,7 @@
                         {{#url}}
                             <a class="dropdown-item" href="{{url}}" target="_blank">{{#pix}} i/mnethost {{/pix}}{{#str}} open_website, qtype_questionpy {{/str}}</a>
                         {{/url}}
+                        <a class="dropdown-item d-none" data-for="download-button" href="">{{#pix}} t/download {{/pix}}{{#str}} download_package, qtype_questionpy {{/str}}</a>
                     </div>
                 </div>
             </div>
@@ -97,6 +99,7 @@
         module.initActionButton(card, {{selected}});
         {{#selected}}
             module.initFavouriteButton(card, {{id}}, {{contextid}});
+            module.initDownloadButton(card);
         {{/selected}}
     });
 {{/js}}

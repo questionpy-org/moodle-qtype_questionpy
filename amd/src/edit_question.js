@@ -89,3 +89,20 @@ export function initFavouriteButton(card, packageId, contextId) {
         }
     });
 }
+
+/**
+ * This function is called by the <code>package_selection</code>-template and initializes the download button, when
+ * a package is already selected.
+ *
+ * @param {HTMLDivElement} card
+ */
+export function initDownloadButton(card) {
+    const button = card.querySelector('[data-for="download-button"]');
+    const selection = card.querySelector('.qpy-version-selection');
+    const version = selection.options[selection.selectedIndex];
+    const isMine = version.hasAttribute('data-is-mine');
+    button.classList.toggle('d-none', !isMine);
+    if (isMine) {
+        button.href = version.dataset.fileurl;
+    }
+}
