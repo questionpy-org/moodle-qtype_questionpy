@@ -19,6 +19,7 @@ namespace qtype_questionpy\package;
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
+use stored_file;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -79,10 +80,11 @@ class package_raw extends package_base {
      *
      * @param int $contextid
      * @param bool $withuserid
+     * @param string|null $filename
      * @return int the ID of the inserted record in the DB
      * @throws moodle_exception
      */
-    public function store(int $contextid = 0, bool $withuserid = true): int {
+    public function store(int $contextid = 0, bool $withuserid = true, string $filename = null): int {
         global $DB, $USER;
 
         $transaction = $DB->start_delegated_transaction();
@@ -134,13 +136,13 @@ class package_raw extends package_base {
             }
         } else {
             // Package does already exist - check if the version also exists.
-            $pkgversionid = $DB->get_field('qtype_questionpy_pkgversion', 'id', [
+            $pkgversion = $DB->get_record('qtype_questionpy_pkgversion', [
                 'packageid' => $packageid,
                 'version' => $this->version,
             ]);
 
-            if ($pkgversionid) {
-                return $pkgversionid;
+            if ($pkgversion && $pkgversion->hash !== $this->hash) {
+                throw new moodle_exception('same_version_different_hash_error', 'qtype_questionpy');
             }
         }
         // Add the package version.
@@ -152,6 +154,7 @@ class package_raw extends package_base {
             'version' => $this->version,
             'timecreated' => $timestamp,
             'userid' => $withuserid ? $USER->id : null,
+            'filename' => $filename,
         ]);
 
         $transaction->allow_commit();

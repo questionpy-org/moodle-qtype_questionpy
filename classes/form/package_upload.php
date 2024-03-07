@@ -26,90 +26,109 @@ namespace qtype_questionpy\form;
 
 defined('MOODLE_INTERNAL') || die;
 
+use context;
+use core_form\dynamic_form;
 use moodle_exception;
-use qtype_questionpy\localizer;
-use qtype_questionpy\package\package;
-use qtype_questionpy\package\package_version;
+use moodle_url;
+use qtype_questionpy\api\api;
 
 require_once($CFG->libdir . "/formslib.php");
 
 /**
- * QuestionPy package upload form definition.
+ * Dynamic QuestionPy package upload form.
  *
  * @copyright  2022 Alexander Schmitz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class package_upload extends \moodleform {
+class package_upload extends dynamic_form {
 
     /**
-     * Build the form definition.
+     * Builds the form definition.
      *
      * @throws moodle_exception
      */
     protected function definition() {
-        global $OUTPUT;
-
         $mform = $this->_form;
-        $contextid = $this->_customdata['contextid'];
 
-        // Create group which contains selectable QuestionPy packages.
-        $group = [];
-
-        $languages = localizer::get_preferred_languages();
-        $versions = package_version::get_records(['contextid' => $contextid]);
-
-        foreach ($versions as $version) {
-            // Get localized package texts.
-            $packagearray = package::get_by_version($version->id)->as_localized_array($languages);
-
-            $group[] = $mform->createElement('text', 'questionpy_package_hash',
-                $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
-                '', ''
-            );
-        }
-        $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
-        $mform->setType('questionpy_package_container', PARAM_TEXT);
+        $mform->addElement('hidden', 'contextid');
+        $mform->setType('contextid', PARAM_INT);
 
         $maxkb = get_config('qtype_questionpy', 'max_package_size_kb');
         $mform->addElement('filepicker', 'qpy_package', get_string('file'), null,
             ['maxbytes' => $maxkb * 1024, 'accepted_types' => ['.qpy']]);
-
-        $this->add_action_buttons();
+        $mform->addRule('qpy_package', null, 'required');
     }
 
     /**
-     * Load in existing data as form defaults. Usually new entry defaults are stored directly in
-     * form definition (new entry form); this function is used to load in data where values
-     * already exist and data is being edited (edit entry form).
-     *
-     * note: $slashed param removed
-     *
-     * @param array $data
-     * @param array $files
-     * @return array $errors
+     * @throws moodle_exception
      */
-    public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
-        if (!self::file_uploaded($data['qpy_package'])) {
-            $errors["qpy_package"] = get_string('formerror_noqpy_package', 'qtype_questionpy');
-        }
-        return $errors;
+    protected function get_context_for_dynamic_submission(): context {
+        $contextid = $this->optional_param('contextid', null, PARAM_INT);
+        return context::instance_by_id($contextid);
     }
 
     /**
-     * Checks to see if a file has been uploaded.
-     *
-     * @param string $draftitemid The draft id
-     * @return bool True if files exist, false if not.
+     * @throws moodle_exception
      */
-    public static function file_uploaded($draftitemid) {
-        $draftareafiles = file_get_drafarea_files($draftitemid);
-        do {
-            $draftareafile = array_shift($draftareafiles->list);
-        } while ($draftareafile !== null && $draftareafile->filename == '.');
-        if ($draftareafile === null) {
-            return false;
+    protected function check_access_for_dynamic_submission(): void {
+        $context = $this->get_context_for_dynamic_submission();
+        require_capability('qtype/questionpy:uploadpackages', $context);
+    }
+
+    /**
+     * @throws moodle_exception
+     */
+    public function process_dynamic_submission(): void {
+        $contextid = $this->optional_param('contextid', null, PARAM_INT);
+
+        // Get file storage.
+        $filestorage = get_file_storage();
+
+        // Get filename.
+        $filename = $this->get_new_filename('qpy_package');
+        $filename = $filestorage->get_unused_filename($contextid, 'qtype_questionpy', 'package', 0, '/', $filename);
+        if (strlen($filename) > 255) {
+            throw new moodle_exception('file_name_too_long_error', 'qtype_questionpy');
         }
-        return true;
+
+        // Save file inside current file area.
+        $file = $this->save_stored_file('qpy_package', $contextid, 'qtype_questionpy', 'package', 0, '/', $filename);
+        if (!$file) {
+            throw new moodle_exception('cannotuploadfile');
+        }
+
+        try {
+            // Store the package in the database.
+            $path = $filestorage->get_file_system()->get_local_path_from_storedfile($file);
+            $rawpackage = api::extract_package_info($path);
+            $rawpackage->store($contextid, true, $filename);
+        } catch (moodle_exception $exception) {
+            $file->delete();
+            throw $exception;
+        }
+    }
+
+    /**
+     * @throws moodle_exception
+     */
+    public function set_data_for_dynamic_submission(): void {
+        $contextid = $this->optional_param('contextid', null, PARAM_INT);
+
+        // Set the context id to the course context id if the context is part of a course.
+        $context = context::instance_by_id($contextid);
+        if ($coursecontext = $context->get_course_context(false)) {
+            $contextid = $coursecontext->id;
+        }
+
+        $this->set_data([
+            'contextid' => $contextid,
+        ]);
+    }
+
+    /**
+     * @throws moodle_exception
+     */
+    protected function get_page_url_for_dynamic_submission(): moodle_url {
+        return $this->get_context_for_dynamic_submission()->get_url();
     }
 }

@@ -221,4 +221,8 @@ export default class {
             this._setLoading(stateManager, false);
         }
     }
+
+    async packageUploaded(stateManager) {
+        await this.changeSort(stateManager, 'date', 'desc');
+    }
 }
