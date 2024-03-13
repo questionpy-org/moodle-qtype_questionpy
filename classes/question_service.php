@@ -84,6 +84,11 @@ class question_service {
      * @throws moodle_exception
      */
     public function upsert_question(object $question): void {
+        if (!isset($question->qpy_form)) {
+            // This happens when the package defines an empty options form, which we do want to support.
+            $question->qpy_form = [];
+        }
+
         global $DB;
 
         $pkgversionid = $this->get_package($question->qpy_package_hash);
@@ -105,7 +110,7 @@ class question_service {
         $response = $this->api->create_question(
             $question->qpy_package_hash,
             $existingrecord ? $existingrecord->state : null,
-            (object)$question->qpy_form ?? new stdClass()
+            (object)$question->qpy_form
         );
 
         if ($existingrecord) {
