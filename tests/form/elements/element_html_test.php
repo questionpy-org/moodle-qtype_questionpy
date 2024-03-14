@@ -52,8 +52,8 @@ class element_html_test extends \advanced_testcase {
      */
     public function test_rendered_html_should_match_snapshot(string $elementkind, qpy_renderable $element): void {
         global $CFG;
-        if (in_array($elementkind, ["checkbox", "group", "checkbox_group"]) && $CFG->branch <= "400") {
-            $this->markTestSkipped("Help buttons are rendered differently in 4.0 and earlier.");
+        if ($CFG->branch < "403") {
+            $this->markTestSkipped("Mform HTML output changes between Moodle versions so we only run them on 4.3");
         }
 
         $snapshotfilepath = __DIR__ . "/html/" . $elementkind . ".html";
