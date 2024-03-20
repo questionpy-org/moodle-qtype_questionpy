@@ -76,14 +76,16 @@ class repetition_element extends form_element {
     public function render_to(render_context $context): void {
         /*
          * Moodle implements this in moodleform::repeat_elements(), but that method is inconsistent in how it names
-         * elements, so we implement it our own.
+         * elements, so we implement our own.
          */
-        $repeatsname = "qpy_repeats_" . $this->name;
-        $addmorename = "qpy_repeat_add_more_" . $this->name;
-        $removenameprefix = "qpy_repeat_remove_$this->name";
-        $removednameprefix = "qpy_repeat_removed_$this->name";
+        $mangledname = str_replace(["[", "]"], "_", $context->mangle_name($this->name));
+        $internalname = "qpy_repetition[$mangledname]";
+        $repeatsname = "{$internalname}[repeats]";
+        $addmorename = "{$internalname}[add_more]";
+        $removenameprefix = "{$internalname}[remove]";
+        $removednameprefix = "{$internalname}[removed]";
 
-        $repeats = $context->mform->optional_param(
+        $repeats = $context->moodleform->optional_param(
             $repeatsname,
             isset($context->data[$this->name])
                 ? count($context->data[$this->name])
@@ -91,7 +93,7 @@ class repetition_element extends form_element {
             PARAM_INT
         );
 
-        $addmore = $context->mform->optional_param($addmorename, "", PARAM_TEXT);
+        $addmore = $context->moodleform->optional_param($addmorename, "", PARAM_TEXT);
         if ($addmore) {
             $repeats += $this->increment;
         }
