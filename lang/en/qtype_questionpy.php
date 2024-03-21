@@ -53,7 +53,9 @@ $string['server_info_requests_in_process'] = 'Requests in process';
 $string['server_info_requests_in_queue'] = 'Requests in queue';
 
 // Package upload.
-$string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
+$string['upload_package'] = 'Upload a package';
+$string['file_name_too_long_error'] = 'The filename "{a}" is too long.';
+$string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
 
 // Package selection.
 $string['selection_title'] = 'Select QuestionPy Package';
@@ -75,7 +77,7 @@ $string['search_bar_label_aria'] = 'Search Bar';
 $string['search_all_header'] = 'All ({$a})';
 $string['search_recentlyused_header'] = 'Recently Used ({$a})';
 $string['search_favourites_header'] = 'Favourites ({$a})';
-$string['search_mine_header'] = 'Mine ({$a})';
+$string['search_mine_header'] = 'Custom ({$a})';
 $string['search_pagination_label_aria'] = 'Search results pages';
 $string['search_pagination_previous_aria'] = 'Previous';
 $string['search_pagination_next_aria'] = 'Next';

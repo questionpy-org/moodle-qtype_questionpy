@@ -61,8 +61,6 @@ class qtype_questionpy_edit_form extends question_edit_form {
             'questionpy_package_container',
             get_string('selection_required', 'qtype_questionpy'), 'required'
         );
-
-        $mform->addElement('button', 'uploadlink', 'QPy Package upload form', $uploadlink);
     }
 
     /**

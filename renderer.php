@@ -118,4 +118,20 @@ class qtype_questionpy_renderer extends qtype_renderer {
 
         return $this->action_link($link, 'qpy_package_upload', $action, null);
     }
+
+    /**
+     *
+     */
+    public function get_file_download_link(string $pathnamehash): moodle_url {
+        $filestorage = get_file_storage();
+        $file = $filestorage->get_file_by_hash($pathnamehash);
+        return moodle_url::make_pluginfile_url(
+            $file->get_contextid(),
+            $file->get_component(),
+            $file->get_filearea(),
+            $file->get_itemid(),
+            $file->get_filepath(),
+            $file->get_filename(),
+        );
+    }
 }

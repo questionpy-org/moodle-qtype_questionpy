@@ -33,6 +33,8 @@ export default class extends Component {
         this.category = descriptor.category;
         this.selectors = {
             FAVOURITE_BUTTON: '[data-for="favourite-button"]',
+            DOWNLOAD_BUTTON: '[data-for="download-button"]',
+            VERSION_SELECTION: '.qpy-version-selection',
         };
     }
 
@@ -44,6 +46,20 @@ export default class extends Component {
         this.addEventListener(this.getElement(this.selectors.FAVOURITE_BUTTON), "click", () => {
             this.reactive.dispatch("favourite", this.packageid, !this.isFavourite());
         });
+
+        this.addEventListener(this.getElement(this.selectors.VERSION_SELECTION), "change", () => {
+            this.setUpDownloadButton();
+        });
+
+        this.setUpDownloadButton();
+    }
+
+    setUpDownloadButton() {
+        const selection = this.getElement(this.selectors.VERSION_SELECTION);
+        const option = selection.options[selection.selectedIndex];
+        const button = this.getElement(this.selectors.DOWNLOAD_BUTTON);
+        button.classList.toggle("d-none", !option.hasAttribute("data-is-mine"));
+        button.href = option.dataset.fileurl;
     }
 
     async favouriteChanged() {

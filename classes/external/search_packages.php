@@ -30,6 +30,7 @@ use external_single_structure;
 use external_value;
 use invalid_parameter_exception;
 use moodle_exception;
+use moodle_url;
 use qtype_questionpy\localizer;
 
 /**
@@ -176,20 +177,28 @@ class search_packages extends external_api {
             ];
         }
 
-        // Get relevant package versions.
+        /*
+            Get relevant package versions.
+            TODO: if a package was uploaded by a user and also was uploaded by another person in the same context
+                  and/or by the server, prefer the user uploaded package.
+        */
         $versionsraw = $DB->get_records_sql("
-            SELECT id, packageid, hash, version, userid
+            SELECT id, packageid, contextid, hash, version, userid, filename
             FROM {qtype_questionpy_pkgversion}
             WHERE packageid {$inpackagesql} AND (userid IS NULL OR userid {$inusersql} OR contextid {$incontextsql})
         ", array_merge($inpackageparams, $incontextparams, $inuserparams));
 
         $versions = [];
         foreach ($versionsraw as $version) {
+            $ismine = $version->userid === $USER->id;
+            $fileurl = $ismine ? moodle_url::make_pluginfile_url($version->contextid, 'qtype_questionpy', 'package', 0, '/',
+                $version->filename)->out() : null;
             $versions[$version->packageid][] = [
                 'id' => $version->id,
                 'hash' => $version->hash,
                 'version' => $version->version,
-                'ismine' => $version->userid === $USER->id,
+                'ismine' => $ismine,
+                'fileurl' => $fileurl,
             ];
         }
 
@@ -513,6 +522,7 @@ class search_packages extends external_api {
                     'hash' => new external_value(PARAM_ALPHANUM),
                     'version' => new external_value(PARAM_TEXT),
                     'ismine' => new external_value(PARAM_BOOL),
+                    'fileurl' => new external_value(PARAM_URL),
                 ])),
                 'author' => new external_value(PARAM_RAW),
                 'name' => new external_value(PARAM_TEXT),

@@ -224,20 +224,22 @@ class api {
     }
 
     /**
-     * Get the Package information from the server.
+     * Get a {@see package_raw} from a file.
      *
-     * @param string $filename
      * @param string $filepath
-     * @return http_response_container
+     * @return package_raw
      * @throws moodle_exception
      */
-    public static function package_extract_info(string $filename, string $filepath): http_response_container {
-        $curlfile = curl_file_create($filepath, $filename);
-        $data = [
-            'package' => $curlfile,
-        ];
+    public static function extract_package_info(string $filepath): package_raw {
         $connector = connector::default();
-        return $connector->post("/package-extract-info", $data);
+
+        $data = [
+            'package' => curl_file_create($filepath),
+        ];
+
+        $response = $connector->post("/package-extract-info", $data);
+        $response->assert_2xx();
+        return array_converter::from_array(package_raw::class, $response->get_data());
     }
 
     /**

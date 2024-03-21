@@ -23,20 +23,49 @@
  */
 
 /**
- * Checks file access for QuestionPy questions.
- * @package  qtype_questionpy
- * @category files
+ * Serve files from the QuestionPy file areas.
+ *
  * @param stdClass $course course object
  * @param stdClass $cm course module object
  * @param stdClass $context context object
  * @param string $filearea file area
  * @param array $args extra arguments
- * @param bool $forcedownload whether or not force download
+ * @param bool $forcedownload whether to force download
  * @param array $options additional options affecting the file serving
  * @return bool
+ * @throws moodle_exception
  */
-function qtype_questionpy_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=[]) {
-    global $CFG;
-    require_once($CFG->libdir . '/questionlib.php');
-    question_pluginfile($course, $context, 'qtype_questionpy', $filearea, $args, $forcedownload, $options);
+function qtype_questionpy_pluginfile($course, $cm, $context, string $filearea, array $args,
+                                     bool $forcedownload, array $options=[]): bool {
+    global $USER;
+
+    // We currently only store files inside the package file area.
+    if ($filearea !== 'package') {
+        return false;
+    }
+
+    require_login($course, true, $cm);
+
+    // Extract the item id.
+    $itemid = array_shift($args);
+
+    // Extract the filename and filepath.
+    $filename = array_pop($args);
+    $filepath = '/';
+    if (!empty($args)) {
+        $filepath .= implode('/', $args) . '/';
+    }
+
+    // Get the file.
+    $filestorage = get_file_storage();
+    $file = $filestorage->get_file($context->id, 'qtype_questionpy', $filearea, $itemid, $filepath, $filename);
+
+    // Check if package was found and uploaded by the current user.
+    if (!$file || $file->get_userid() !== $USER->id) {
+        return false;
+    }
+
+    // Package was found and is accessible by the current user - send it.
+    send_stored_file($file, DAYSECS, 0, $forcedownload, $options);
+    return true;
 }

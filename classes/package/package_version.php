@@ -17,6 +17,7 @@
 namespace qtype_questionpy\package;
 
 use moodle_exception;
+use moodle_url;
 use qtype_questionpy\array_converter\array_converter;
 
 /**
@@ -49,6 +50,11 @@ class package_version {
      * @var string package version
      */
     public string $version;
+
+    /**
+     * @var string|null path name hash
+     */
+    public ?string $pathnamehash;
 
     /**
      * Retrieves a package version by its id.
@@ -94,18 +100,38 @@ class package_version {
         return $packages;
     }
 
+    public function download_package_file() {
+        if (is_null($this->pathnamehash) || ($file = get_file_storage()->get_file_by_hash($this->pathnamehash))) {
+            throw new moodle_exception('storedfilecannotread');
+        }
+        return moodle_url::make_pluginfile_url(
+            $file->get_contextid(),
+            $file->get_component(),
+            $file->get_filearea(),
+            $file->get_itemid(),
+            $file->get_filepath(),
+            $file->get_filename(),
+            true
+        );
+    }
+
     /**
      * Deletes the package version from the database.
      * If the package has only one version, the package related data is also deleted.
      *
+     * @param int|null $userid
      * @throws moodle_exception
      */
-    public function delete(): void {
+    public function delete(int $userid = null): void {
         global $DB;
 
         $transaction = $DB->start_delegated_transaction();
         $versioncount = $DB->count_records('qtype_questionpy_pkgversion', ['packageid' => $this->packageid]);
-        $DB->delete_records('qtype_questionpy_pkgversion', ['hash' => $this->hash, 'packageid' => $this->packageid]);
+        $DB->delete_records('qtype_questionpy_pkgversion', [
+            'hash' => $this->hash,
+            'packageid' => $this->packageid,
+            'userid' => $userid,
+        ]);
 
         if ($versioncount === 1) {
             // Only one package version exists, therefore we also delete package related data.

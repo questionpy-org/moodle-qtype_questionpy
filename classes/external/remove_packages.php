@@ -49,16 +49,25 @@ class remove_packages extends external_api {
      * @throws moodle_exception
      */
     public static function execute(): array {
-        global $DB;
+        global $DB, $USER;
 
         $transaction = $DB->start_delegated_transaction();
 
         // Only delete package versions that were not uploaded by a user.
+
         $versions = package_version::get_records(['userid' => null]);
+        $DB->delete_records('qtype_questionpy_package');
+        $DB->delete_records('qtype_questionpy_pkgversion');
+        $DB->delete_records('qtype_questionpy_tags');
+        $DB->delete_records('qtype_questionpy_language');
+        /*
+        $DB->delete_records('qtype_questionpy_lastused');
+        //$versions = package_version::get_records();
         foreach ($versions as $version) {
             $version->delete();
+            $version->delete($USER->id);
         }
-
+        */
         $transaction->allow_commit();
 
         return [
