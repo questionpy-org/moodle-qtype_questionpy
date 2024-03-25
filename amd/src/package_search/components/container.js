@@ -28,7 +28,7 @@ export default class extends Component {
     async create(descriptor) {
         // Register header and content of tabs.
         // TODO: register components inside mustache template.
-        for (const category of ["all", "recentlyused", "favourites", "mine"]) {
+        for (const category of ["all", "recentlyused", "favourites", "custom"]) {
             new TabHeader({
                 element: this.getElement(`[data-for="${category}-header"]`),
                 name: `category_${category}_header`,

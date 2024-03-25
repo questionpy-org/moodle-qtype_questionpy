@@ -23,8 +23,6 @@
 
 namespace qtype_questionpy\external;
 
-use context_course;
-use context_module;
 use context_user;
 use external_api;
 use moodle_exception;
@@ -91,22 +89,9 @@ class favourite_package_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_favourite_needs_user_to_be_logged_in(): void {
-        global $PAGE;
         $this->setUser();
         $this->expectException(\require_login_exception::class);
-        favourite_package::execute(0, true, $PAGE->context->id);
-    }
-
-    /**
-     * Test that the context needs to be valid.
-     *
-     * @covers \qtype_questionpy\external\favourite_package::execute
-     * @throws moodle_exception
-     */
-    public function test_favourite_needs_context_id_to_be_valid(): void {
-        $this->expectException(\invalid_parameter_exception::class);
-        $this->expectExceptionMessageMatches("/Context does not exist/");
-        favourite_package::execute(0, true, -1);
+        favourite_package::execute(0, true);
     }
 
     /**
@@ -116,8 +101,8 @@ class favourite_package_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_favourite_with_not_existing_package_id_does_not_work(): void {
-        global $USER, $PAGE;
-        $res = favourite_package::execute(42, true, $PAGE->context->id);
+        global $USER;
+        $res = favourite_package::execute(42, true);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         $this->assertFalse($res);
         $this->assert_marked_as_favourite($USER->id, []);
@@ -130,9 +115,9 @@ class favourite_package_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_favourite_works_with_user_package(): void {
-        global $USER, $PAGE;
-        $packageid = self::get_id(package_provider()->store());
-        $res = favourite_package::execute($packageid, true, $PAGE->context->id);
+        global $USER;
+        $packageid = self::get_id(package_provider()->store(true));
+        $res = favourite_package::execute($packageid, true);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
         $this->assert_marked_as_favourite($USER->id, [$packageid]);
@@ -145,66 +130,37 @@ class favourite_package_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_favourite_works_with_server_package(): void {
-        global $USER, $PAGE;
-        $packageid = self::get_id(package_provider()->store(0, false));
-        $res = favourite_package::execute($packageid, true, $PAGE->context->id);
+        global $USER;
+        $packageid = self::get_id(package_provider()->store(false));
+        $res = favourite_package::execute($packageid, true);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
         $this->assert_marked_as_favourite($USER->id, [$packageid]);
     }
 
     /**
-     * Test that you can favourite a package that was uploaded by a different user in same course.
+     * Test that you can favourite a package that was uploaded by a different user.
      *
      * @covers \qtype_questionpy\external\favourite_package::execute
      * @throws moodle_exception
      */
-    public function test_favourite_works_with_packages_uploaded_in_same_course(): void {
-        // Create two users and enrol them in the same course.
-        $course = $this->getDataGenerator()->create_course();
-        $coursecontext = context_course::instance($course->id);
-        $user1 = $this->getDataGenerator()->create_and_enrol($course);
-        $user2 = $this->getDataGenerator()->create_and_enrol($course);
+    public function test_favourite_works_with_packages_uploaded_by_other_user(): void {
+        // Create two users.
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
 
         // Upload a package as user one.
         $this->setUser($user1);
-        $packageid = self::get_id(package_provider()->store($coursecontext->id));
+        $packageid = self::get_id(package_provider()->store(true));
 
         // Favourite the package as user two.
         $this->setUser($user2);
-        $res = favourite_package::execute($packageid, true, $coursecontext->id);
+        $res = favourite_package::execute($packageid, true);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
         $this->assert_marked_as_favourite($user2->id, [$packageid]);
     }
 
-    /**
-     * Test that you can favourite a package that was uploaded by a different user in a different quiz in same course.
-     *
-     * @covers \qtype_questionpy\external\favourite_package::execute
-     * @throws moodle_exception
-     */
-    public function test_favourite_works_with_packages_uploaded_in_same_course_different_quiz(): void {
-        // Create two users, enrol them in the same course and create two quizzes in that course.
-        $course = $this->getDataGenerator()->create_course();
-        $user1 = $this->getDataGenerator()->create_and_enrol($course);
-        $user2 = $this->getDataGenerator()->create_and_enrol($course);
-        $quiz1 = $this->getDataGenerator()->create_module('quiz', ['course' => $course]);
-        $quiz1context = context_module::instance($quiz1->cmid);
-        $quiz2 = $this->getDataGenerator()->create_module('quiz', ['course' => $course]);
-        $quiz2context = context_module::instance($quiz2->cmid);
-
-        // Upload a package as user one in quiz one.
-        $this->setUser($user1);
-        $packageid = self::get_id(package_provider()->store($quiz1context->id));
-
-        // Favourite the package as user two in quiz two.
-        $this->setUser($user2);
-        $res = favourite_package::execute($packageid, true, $quiz2context->id);
-        $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
-        self::assertTrue($res);
-        $this->assert_marked_as_favourite($user2->id, [$packageid]);
-    }
 
     /**
      * Test that you can mark one package multiple times as favourite.
@@ -213,41 +169,14 @@ class favourite_package_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_favourite_works_when_marking_same_package_multiple_times_as_favourite(): void {
-        global $USER, $PAGE;
-        $packageid = self::get_id(package_provider()->store());
+        global $USER;
+        $packageid = self::get_id(package_provider()->store(true));
         for ($i = 0; $i < 3; $i++) {
-            $res = favourite_package::execute($packageid, true, $PAGE->context->id);
+            $res = favourite_package::execute($packageid, true);
             $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
             $this->assertTrue($res);
             $this->assert_marked_as_favourite($USER->id, [$packageid]);
         }
-    }
-
-    /**
-     * Test that you can not favourite packages from irrelevant contexts.
-     *
-     * @covers \qtype_questionpy\external\favourite_package::execute
-     * @throws moodle_exception
-     */
-    public function test_favourite_does_not_work_with_packages_from_irrelevant_contexts(): void {
-        // Create two users and enrol them into two different courses.
-        $course1 = $this->getDataGenerator()->create_course();
-        $course1context = context_course::instance($course1->id);
-        $user1 = $this->getDataGenerator()->create_and_enrol($course1);
-        $course2 = $this->getDataGenerator()->create_course();
-        $course2context = context_course::instance($course2->id);
-        $user2 = $this->getDataGenerator()->create_and_enrol($course2);
-
-        // Upload a package as user one in course one.
-        $this->setUser($user1);
-        $packageid = self::get_id(package_provider()->store($course1context->id));
-
-        // Favourite the package as user two in course two.
-        $this->setUser($user2);
-        $res = favourite_package::execute($packageid, true, $course2context->id);
-        $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
-        $this->assertFalse($res);
-        $this->assert_marked_as_favourite($user2->id, []);
     }
 
     /**
@@ -257,8 +186,8 @@ class favourite_package_test extends \externallib_advanced_testcase {
      * @throws moodle_exception
      */
     public function test_unfavourite_with_not_existing_package_id_does_work(): void {
-        global $USER, $PAGE;
-        $res = favourite_package::execute(42, false, $PAGE->context->id);
+        global $USER;
+        $res = favourite_package::execute(42, false);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         $this->assertTrue($res);
         $this->assert_marked_as_favourite($USER->id, []);
@@ -274,13 +203,13 @@ class favourite_package_test extends \externallib_advanced_testcase {
         global $USER;
 
         // Create a package and favourite it via the user favourite service.
-        $packageid = self::get_id(package_provider()->store());
+        $packageid = self::get_id(package_provider()->store(true));
         $context = context_user::instance($USER->id);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($context);
         $ufservice->create_favourite('qtype_questionpy', 'package', $packageid, $context);
 
         // Unfavourite the package.
-        $res = favourite_package::execute($packageid, false, $context->id);
+        $res = favourite_package::execute($packageid, false);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         $this->assertTrue($res);
         $this->assert_marked_as_favourite($USER->id, []);

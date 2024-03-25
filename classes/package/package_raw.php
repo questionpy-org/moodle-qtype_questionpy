@@ -73,19 +73,104 @@ class package_raw extends package_base {
     }
 
     /**
+     * Persists a package version in the database.
+     *
+     * @param int $packageid
+     * @return int
+     * @throws moodle_exception
+     */
+    private function store_pkgversion(int $packageid): int {
+        global $DB;
+
+        return $DB->insert_record('qtype_questionpy_pkgversion', [
+            'packageid' => $packageid,
+            'hash' => $this->hash,
+            'version' => $this->version,
+        ]);
+    }
+
+    /**
+     * Persists a package source in the database.
+     *
+     * @param int $pkgversionid
+     * @param int $timestamp
+     * @param bool $asuser
+     * @throws moodle_exception
+     */
+    private function store_source(int $pkgversionid, int $timestamp, bool $asuser): void {
+        global $DB, $USER;
+
+        // Create package source.
+        $DB->insert_record('qtype_questionpy_source', [
+            'pkgversionid' => $pkgversionid,
+            'timecreated' => $timestamp,
+            'userid' => $asuser ? $USER->id : null,
+        ]);
+    }
+
+    /**
+     * Persists a package in the database.
+     *
+     * @param int $timestamp
+     * @return int
+     * @throws moodle_exception
+     */
+    private function store_package(int $timestamp): int {
+        global $DB;
+
+        $packageid = $DB->insert_record('qtype_questionpy_package', [
+            'shortname' => $this->shortname,
+            'namespace' => $this->namespace,
+            'type' => $this->type,
+            'author' => $this->author,
+            'url' => $this->url,
+            'icon' => $this->icon,
+            'license' => $this->license,
+            'timemodified' => $timestamp,
+            'timecreated' => $timestamp,
+        ]);
+
+        if ($this->languages) {
+            // For each language store the localized package data as a separate record.
+            $languagedata = [];
+            foreach ($this->languages as $language) {
+                $languagedata[] = [
+                    'packageid' => $packageid,
+                    'language' => $language,
+                    'name' => $this->get_localized_name([$language]),
+                    'description' => $this->get_localized_description([$language]),
+                ];
+            }
+            $DB->insert_records('qtype_questionpy_language', $languagedata);
+        }
+
+        if ($this->tags) {
+            // Store each tag with the package id in the tag table.
+            $tagsdata = [];
+            foreach ($this->tags as $tag) {
+                $tagsdata[] = [
+                    'packageid' => $packageid,
+                    'tag' => $tag,
+                ];
+            }
+            $DB->insert_records('qtype_questionpy_tags', $tagsdata);
+        }
+        return $packageid;
+    }
+
+    /**
      * Persist this package in the database.
+     *
      * Localized data is stored in qtype_questionpy_language.
      * Tags are mapped packageid->tag in the table  qtype_questionpy_tags.
      *
-     * @param int $contextid
-     * @param bool $withuserid
+     * @param bool $asuser
      * @return int the ID of the inserted record in the DB
      * @throws moodle_exception
      */
-    public function store(int $contextid = 0, bool $withuserid = true): int {
-        global $DB, $USER;
+    public function store(bool $asuser): int {
+        global $DB;
 
-        $transaction = $DB->start_delegated_transaction();
         $timestamp = time();
 
         $packageid = $DB->get_field('qtype_questionpy_package', 'id', [
@@ -95,64 +180,44 @@ class package_raw extends package_base {
 
         if (!$packageid) {
             // Package does not exist -> add it.
-            $packageid = $DB->insert_record('qtype_questionpy_package', [
-                'shortname' => $this->shortname,
-                'namespace' => $this->namespace,
-                'type' => $this->type,
-                'author' => $this->author,
-                'url' => $this->url,
-                'icon' => $this->icon,
-                'license' => $this->license,
-                'timemodified' => $timestamp,
-                'timecreated' => $timestamp,
-            ]);
-
-            if ($this->languages) {
-                // For each language store the localized package data as a separate record.
-                $languagedata = [];
-                foreach ($this->languages as $language) {
-                    $languagedata[] = [
-                        'packageid' => $packageid,
-                        'language' => $language,
-                        'name' => $this->get_localized_name([$language]),
-                        'description' => $this->get_localized_description([$language]),
-                    ];
-                }
-                $DB->insert_records('qtype_questionpy_language', $languagedata);
-            }
-
-            if ($this->tags) {
-                // Store each tag with the package id in the tag table.
-                $tagsdata = [];
-                foreach ($this->tags as $tag) {
-                    $tagsdata[] = [
-                        'packageid' => $packageid,
-                        'tag' => $tag,
-                    ];
-                }
-                $DB->insert_records('qtype_questionpy_tags', $tagsdata);
-            }
+            $transaction = $DB->start_delegated_transaction();
+            $packageid = $this->store_package($timestamp);
         } else {
             // Package does already exist - check if the version also exists.
-            $pkgversionid = $DB->get_field('qtype_questionpy_pkgversion', 'id', [
-                'packageid' => $packageid,
-                'version' => $this->version,
-            ]);
+            $pkgversion = package_version::get_by_package_and_version($packageid, $this->version);
+            if ($pkgversion) {
+                // Package version does already exist.
+                if ($pkgversion->hash !== $this->hash) {
+                    // Version does not match existing hash.
+                    /*
+                     * TODO: Prioritize package versions from the application server.
+                     *       If the package version comes from the application server, change the version string of the
+                     *       existing package version in the database and store the current package version?
+                     */
+                    throw new moodle_exception('same_version_different_hash_error', 'qtype_questionpy');
+                }
 
-            if ($pkgversionid) {
-                return $pkgversionid;
+                // Check if the current user / application server already uploaded the package.
+                if ($asuser && $pkgversion->ismine) {
+                    // Version was already uploaded by the current user.
+                    throw new moodle_exception('version_is_already_stored_error', 'qtype_questionpy');
+                } else if (!$asuser && $pkgversion->istrusted) {
+                    // Version was already uploaded by the application server.
+                    return $packageid;
+                }
+
+                // Create new package version source.
+                $this->store_source($pkgversion->id, $timestamp, $asuser);
+                return $pkgversion->id;
             }
+
+            // Package version does not exist.
+            $transaction = $DB->start_delegated_transaction();
         }
-        // Add the package version.
-        // TODO: Update the package data in qtype_questionpy_package if the version is newer than the existing ones.
-        $pkgversionid = $DB->insert_record('qtype_questionpy_pkgversion', [
-            'packageid' => $packageid,
-            'contextid' => $contextid,
-            'hash' => $this->hash,
-            'version' => $this->version,
-            'timecreated' => $timestamp,
-            'userid' => $withuserid ? $USER->id : null,
-        ]);
+
+        // Create package version and source.
+        $pkgversionid = $this->store_pkgversion($packageid);
+        $this->store_source($pkgversionid, $timestamp, $asuser);
 
         $transaction->allow_commit();
         return $pkgversionid;

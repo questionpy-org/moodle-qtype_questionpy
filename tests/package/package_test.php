@@ -44,7 +44,7 @@ class package_test extends \advanced_testcase {
 
         // Store a package.
         $rawpackage = package_provider();
-        $pkgversionid = $rawpackage->store();
+        $pkgversionid = $rawpackage->store(true);
 
         // Get the package.
         package::get_by_version($pkgversionid);
@@ -63,7 +63,7 @@ class package_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store a package.
-        $pkgversionid = package_provider(['languages' => ['en', 'de'], 'tags' => ['tag_0']])->store();
+        $pkgversionid = package_provider(['languages' => ['en', 'de'], 'tags' => ['tag_0']])->store(true);
         $package = package::get_by_version($pkgversionid);
 
         // Delete the package.
@@ -88,8 +88,8 @@ class package_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store two versions of the same package.
-        package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store();
-        $pkgversionid = package_provider(['version' => '2.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store();
+        package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store(true);
+        $pkgversionid = package_provider(['version' => '2.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store(true);
         $package = package::get_by_version($pkgversionid);
 
         // Delete the package.
@@ -116,27 +116,5 @@ class package_test extends \advanced_testcase {
         $difference = $package1->difference_from($package2);
         $this->assertEmpty($difference);
         $this->assertTrue($package1->equals($package2));
-    }
-
-    /**
-     * Stores two packages in the DB.
-     * Queries the two packages by the hash and tests if the original package is in the query result.
-     *
-     * @covers \qtype_questionpy\package::get_records
-     * @return void
-     * @throws moodle_exception
-     */
-    public function test_get_records() {
-        global $DB;
-        $this->resetAfterTest();
-
-        $rawpackage1 = package_provider();
-        $rawpackage2 = package_provider();
-        $package1id = $rawpackage1->store();
-        $rawpackage2->store();
-
-        $this->assertCount(1, $DB->get_records('qtype_questionpy_pkgversion', ['id' => $package1id]));
-        $this->assertCount(1, $DB->get_records('qtype_questionpy_pkgversion',
-            ['hash' => $rawpackage1->hash]));
     }
 }

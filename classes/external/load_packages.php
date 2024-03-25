@@ -63,16 +63,16 @@ class load_packages extends external_api {
         $transaction = $DB->start_delegated_transaction();
 
         // Remove every package version that was received from the application server.
-        $versions = package_version::get_records(['userid' => null]);
+        $versions = package_version::get_by_server();
         foreach ($versions as $version) {
-            $version->delete();
+            $version->delete(false);
         }
 
         // Load packages from the application server.
         $api = new api();
         $packages = $api->get_packages();
         foreach ($packages as $package) {
-            $package->store(0, false);
+            $package->store(false);
         }
 
         $transaction->allow_commit();

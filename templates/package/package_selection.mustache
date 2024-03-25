@@ -37,7 +37,6 @@
     * url - The url of the QuestionPy package,
     * selected - Whether the current QuestionPy package is selected or not,
     * isfavourite - Whether the current QuestionPy package is marked as favourite or not,
-    * contextid - The current context id.
 
     Example context (json):
     {
@@ -49,8 +48,7 @@
         "versions": [{"hash": "example_hash", "version": "0.1.0"}],
         "url": "https://example.com",
         "selected": true,
-        "isfavourite": false,
-        "contextid": 0
+        "isfavourite": false
     }
 }}
 {{<qtype_questionpy/package/package_base}}
@@ -96,7 +94,7 @@
         const card = document.getElementById("qpy-card-{{uniqid}}");
         module.initActionButton(card, {{selected}});
         {{#selected}}
-            module.initFavouriteButton(card, {{id}}, {{contextid}});
+            module.initFavouriteButton(card, {{id}});
         {{/selected}}
     });
 {{/js}}
