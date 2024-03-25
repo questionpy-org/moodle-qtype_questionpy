@@ -34,6 +34,7 @@ $string['server_password'] = 'QuestionPy Application Server Password';
 $string['server_password_description'] = 'The Password to access the Application Server';
 $string['server_timeout'] = 'Server timeout time';
 $string['server_timeout_description'] = 'Server timeout time in seconds';
+$string['heading_packages'] = 'Packages';
 $string['max_package_size_kb'] = 'Maximum file size of a QuestionPy package';
 $string['max_package_size_kb_description'] = 'Maximum file size in kB';
 $string['packages_subheading'] = 'Packages';
@@ -51,6 +52,10 @@ $string['server_info_max_package_size'] = 'Maximum package size';
 $string['server_info_usage_title'] = 'Usage';
 $string['server_info_requests_in_process'] = 'Requests in process';
 $string['server_info_requests_in_queue'] = 'Requests in queue';
+
+// Question settings.
+$string['shuffleanswers'] = 'Shuffle the contents?';
+$string['shuffleanswers_desc'] = 'Whether the content of a qpy:shuffle-contents should be randomly shuffled for each attempt by default.';
 
 // Package upload.
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';

@@ -53,6 +53,9 @@ class question_ui_renderer {
     /** @var question_metadata|null $metadata */
     private ?question_metadata $metadata = null;
 
+    /** @var boolean Whether the questions answers should be shuffled. */
+    public bool $shuffleanswers;
+
     /**
      * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
      *
@@ -282,14 +285,16 @@ class question_ui_renderer {
                     $childelements[] = $child;
                 }
             }
-            shuffle($childelements);
+            if ($this->shuffleanswers) {
+                shuffle($childelements);
+            }
 
             // Iterate over children, replacing elements with random ones while copying everything else.
             $i = 1;
             while ($element->hasChildNodes()) {
                 $child = $element->firstChild;
                 if ($child instanceof DOMElement) {
-                    $child = array_pop($childelements);
+                    $child = array_shift($childelements);
                     $newelement->appendChild($child);
                     $this->replace_shuffled_indices($xpath, $child, $i++);
                 } else {

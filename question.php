@@ -45,6 +45,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     private string $packagehash;
     /** @var string */
     private string $questionstate;
+    /** @var boolean Whether the questions answers should be shuffled. */
+    public bool $shuffleanswers;
 
     // Properties which do change between attempts (i.e. are modified by start_attempt and apply_attempt_state).
     /** @var string */
@@ -92,6 +94,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $this->scoringstate = null;
 
         $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
+        $this->ui->shuffleanswers = $this->shuffleanswers;
     }
 
     /**
@@ -123,6 +126,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $attempt = $this->api->view_attempt($this->packagehash, $this->questionstate, $this->attemptstate,
             $this->scoringstate);
         $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
+        $this->ui->shuffleanswers = $this->shuffleanswers;
     }
 
     /**
@@ -223,6 +227,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $response
         );
         $this->ui = new question_ui_renderer($attemptscored->ui->content, $attemptscored->ui->placeholders);
+        $this->ui->shuffleanswers = $this->shuffleanswers;
         // TODO: Persist scoring state. We need to set a qtvar, but we don't have access to the pending step here.
         $this->scoringstate = $attemptscored->scoringstate;
         switch ($attemptscored->scoringcode) {
