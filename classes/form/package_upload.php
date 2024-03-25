@@ -47,28 +47,7 @@ class package_upload extends \moodleform {
      * @throws moodle_exception
      */
     protected function definition() {
-        global $OUTPUT;
-
         $mform = $this->_form;
-        $contextid = $this->_customdata['contextid'];
-
-        // Create group which contains selectable QuestionPy packages.
-        $group = [];
-
-        $languages = localizer::get_preferred_languages();
-        $versions = package_version::get_records(['contextid' => $contextid]);
-
-        foreach ($versions as $version) {
-            // Get localized package texts.
-            $packagearray = package::get_by_version($version->id)->as_localized_array($languages);
-
-            $group[] = $mform->createElement('text', 'questionpy_package_hash',
-                $OUTPUT->render_from_template('qtype_questionpy/package', $packagearray),
-                '', ''
-            );
-        }
-        $mform->addGroup($group, 'questionpy_package_container', '', '</br>');
-        $mform->setType('questionpy_package_container', PARAM_TEXT);
 
         $maxkb = get_config('qtype_questionpy', 'max_package_size_kb');
         $mform->addElement('filepicker', 'qpy_package', get_string('file'), null,

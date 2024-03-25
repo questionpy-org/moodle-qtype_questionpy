@@ -68,12 +68,12 @@ export default class extends Reactive {
                     page: 0,
                 },
                 favouritesPackages: [],
-                mine: {
+                custom: {
                     count: 0,
                     total: 0,
                     page: 0,
                 },
-                minePackages: [],
+                customPackages: [],
             },
         });
         this.options = options;
