@@ -24,7 +24,9 @@
 
 use qtype_questionpy\api\api;
 use qtype_questionpy\api\attempt_ui;
+use qtype_questionpy\constants;
 use qtype_questionpy\question_ui_metadata_extractor;
+use qtype_questionpy\utils;
 
 /**
  * Represents a QuestionPy question.
@@ -33,30 +35,28 @@ use qtype_questionpy\question_ui_metadata_extractor;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy_question extends question_graded_automatically_with_countback {
-    /** @var string */
-    private const QT_VAR_ATTEMPT_STATE = "_attemptstate";
-    /** @var string */
-    private const QT_VAR_SCORING_STATE = "_scoringstate";
-
     // Properties which do not change between attempts.
     /** @var api */
     private api $api;
     /** @var string */
     public string $packagehash;
     /** @var string */
-    private string $questionstate;
+    public string $questionstate;
     /** @var stored_file|null */
     private ?stored_file $packagefile;
 
     // Properties which do change between attempts (i.e. are modified by start_attempt and apply_attempt_state).
     /** @var string */
-    public string $attemptstate;
+    private string $attemptstate;
     /** @var string|null */
-    public ?string $scoringstate;
+    private ?string $scoringstate;
     /** @var attempt_ui */
     public attempt_ui $ui;
     /** @var question_ui_metadata_extractor $metadata */
     public question_ui_metadata_extractor $metadata;
+
+    /** @var qbehaviour_questionpy|null $behaviour */
+    public ?qbehaviour_questionpy $behaviour = null;
 
     /**
      * Initialize a new question. Called from {@see qtype_questionpy::make_question_instance()}.
@@ -105,7 +105,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $attempt = $this->api->package($this->packagehash, $this->packagefile)->start_attempt($this->questionstate, $variant);
 
         $this->attemptstate = $attempt->attemptstate;
-        $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
+        $step->set_qt_var(constants::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
         $this->scoringstate = null;
         $this->update_ui($attempt->ui);
     }
@@ -126,22 +126,46 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function apply_attempt_state(question_attempt_step $step) {
-        $this->attemptstate = $step->get_qt_var(self::QT_VAR_ATTEMPT_STATE);
-        if (is_null($this->attemptstate)) {
+        $attemptstate = $step->get_qt_var(constants::QT_VAR_ATTEMPT_STATE);
+        if (is_null($attemptstate)) {
             // Start_attempt probably was never called, which it should have been.
-            $varname = self::QT_VAR_ATTEMPT_STATE;
+            $varname = constants::QT_VAR_ATTEMPT_STATE;
             throw new coding_exception("apply_attempt_state was called, but attempt is missing qt var '$varname'");
         }
 
-        $this->scoringstate = $step->get_qt_var(self::QT_VAR_SCORING_STATE);
+        $this->attemptstate = $attemptstate;
+        $this->scoringstate = $this->get_behaviour()->get_qa()->get_last_qt_var(constants::QT_VAR_SCORING_STATE);
 
-        // TODO: We probably want to pass the last response here, but don't have an obvious way to get it.
-        $attempt = $this->api->package($this->packagehash, $this->packagefile)->view_attempt(
-            $this->questionstate,
-            $this->attemptstate,
-            $this->scoringstate
+        $lastresponse = array_filter(
+            $this->get_behaviour()->get_qa()->get_last_qt_data(null),
+            fn($key) => !utils::str_starts_with($key, "_"),
+            ARRAY_FILTER_USE_KEY
         );
+
+        /* TODO: This method is also called from question_attempt->regrade and
+                 question_attempt->start_question_based_on, where we shouldn't need to get the UI. */
+        $attempt = $this->api->package($this->packagehash, $this->packagefile)
+            ->view_attempt(
+                $this->questionstate,
+                $this->attemptstate,
+                $this->scoringstate,
+                $lastresponse
+            );
         $this->update_ui($attempt->ui);
+    }
+
+    /**
+     * Checks that our behaviour has been set, which happens in {@see qbehaviour_questionpy::__construct}.
+     *
+     * @throws coding_exception
+     */
+    private function get_behaviour(): qbehaviour_questionpy {
+        if ($this->behaviour === null) {
+            throw new coding_exception(
+                "qtype_questionpy_question->behaviour is not set, does the question use the wrong behaviour?"
+            );
+        }
+        return $this->behaviour;
     }
 
     /**
@@ -244,8 +268,12 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $response
         );
         $this->update_ui($attemptscored->ui);
-        // TODO: Persist scoring state. We need to set a qtvar, but we don't have access to the pending step here.
+
+        // Persist scoring state.
         $this->scoringstate = $attemptscored->scoringstate;
+        $this->get_behaviour()->get_pending_step()
+            ->set_qt_var(constants::QT_VAR_SCORING_STATE, $attemptscored->scoringstate);
+
         switch ($attemptscored->scoringcode) {
             case "AUTOMATICALLY_SCORED":
                 $newqstate = question_state::graded_state_for_fraction($attemptscored->score);
@@ -280,5 +308,19 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public function compute_final_grade($responses, $totaltries) {
         // TODO: This is necessary to support interactive countback.
         throw new coding_exception("not implemented");
+    }
+
+    /**
+     * Wraps the behaviour which would ordinarily have been used in a {@see qbehaviour_questionpy}.
+     *
+     * @param question_attempt $qa
+     * @param string $preferredbehaviour the requested type of behaviour.
+     * @return question_behaviour
+     * @throws coding_exception
+     */
+    public function make_behaviour(question_attempt $qa, $preferredbehaviour): question_behaviour {
+        question_engine::load_behaviour_class("questionpy");
+        $delegate = parent::make_behaviour($qa, $preferredbehaviour);
+        return new qbehaviour_questionpy($qa, $preferredbehaviour, $delegate);
     }
 }
