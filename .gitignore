@@ -3,3 +3,5 @@
 # Since package.json only contains dev dependencies, comitting the lockfile makes little sence.
 /package-lock.json
 /node_modules
+
+.idea

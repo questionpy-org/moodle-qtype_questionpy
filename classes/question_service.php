@@ -70,6 +70,7 @@ class question_service {
 
             $result->qpy_package_hash = $package->hash;
             $result->qpy_state = $record->state;
+            $result->shuffleanswers = $record->shuffleanswers;
         }
 
         return $result;
@@ -124,6 +125,10 @@ class question_service {
                 $update["pkgversionid"] = $pkgversionid;
             }
 
+            if ($question->shuffleanswers !== $existingrecord->shuffleanswers) {
+                $update["shuffleanswers"] = $question->shuffleanswers;
+            }
+
             if (count($update) > 1) {
                 $DB->update_record(self::QUESTION_TABLE, (object)$update);
             }
@@ -134,6 +139,7 @@ class question_service {
                 "feedback" => "",
                 "pkgversionid" => $pkgversionid,
                 "state" => $response->state,
+                "shuffleanswers" => $question->shuffleanswers,
             ]);
         }
     }

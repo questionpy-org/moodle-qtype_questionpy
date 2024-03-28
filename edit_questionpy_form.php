@@ -129,6 +129,10 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $mform->addElement('hidden', 'qpy_package_hash', '');
         $mform->setType('qpy_package_hash', PARAM_RAW);
 
+        // Whether the content of a qpy:shuffle-contents can be randomly shuffled.
+        $mform->addElement('hidden', 'shuffleanswers', get_config('qtype_questionpy', 'shuffleanswers'));
+        $mform->setType('shuffleanswers', PARAM_BOOL);
+
         // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
         // package has simply been changed. The hidden element is enabled from JS when a package is selected or changed.
         $mform->registerNoSubmitButton('qpy_package_changed');

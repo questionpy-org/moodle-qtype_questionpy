@@ -53,8 +53,19 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @throws coding_exception
      */
     public function formulation_and_controls(question_attempt $qa, question_display_options $options): string {
+        global $DB;
         $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
+
+        // Check if we are in a quiz context.
+        if ($this->page->context->contextlevel == CONTEXT_MODULE && $this->page->cm->modname == 'quiz') {
+            $quiz = $DB->get_record('quiz', ['id' => $this->page->cm->instance]);
+            if ($quiz) {
+              // Access the shuffleanswers property of the quiz.
+              $question->ui->shuffleanswers = $quiz->shuffleanswers;
+            }
+        }
+
         return $question->ui->render_formulation($qa, $options);
     }
 
