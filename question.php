@@ -54,6 +54,11 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     /** @var question_ui_renderer */
     public question_ui_renderer $ui;
 
+    /** @var question_attempt_pending_step|null */
+    public ?question_attempt_pending_step $pendingstep = null;
+    /** @var question_attempt $qa */
+    public question_attempt $qa;
+
     /**
      * Initialize a new question. Called from {@see qtype_questionpy::make_question_instance()}.
      *
@@ -117,11 +122,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             throw new coding_exception("apply_attempt_state was called, but attempt is missing qt var '$varname'");
         }
 
-        $this->scoringstate = $step->get_qt_var(self::QT_VAR_SCORING_STATE);
+        $this->scoringstate = $this->qa->get_last_qt_var(self::QT_VAR_SCORING_STATE);
 
-        // TODO: We probably want to pass the last response here, but don't have an obvious way to get it.
         $attempt = $this->api->view_attempt($this->packagehash, $this->questionstate, $this->attemptstate,
-            $this->scoringstate);
+            $this->scoringstate, $this->qa->get_last_qt_data(null));
         $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
     }
 
@@ -222,9 +226,18 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $this->packagehash, $this->questionstate, $this->attemptstate, $this->scoringstate,
             $response
         );
-        $this->ui = new question_ui_renderer($attemptscored->ui->content, $attemptscored->ui->placeholders);
-        // TODO: Persist scoring state. We need to set a qtvar, but we don't have access to the pending step here.
+
+        // Persist scoring state.
         $this->scoringstate = $attemptscored->scoringstate;
+        if (!$this->pendingstep) {
+            throw new coding_exception(
+                "pendingstep is not set, we are either using the wrong behaviour or not currently processing an action"
+            );
+        }
+        $this->pendingstep->set_qt_var(self::QT_VAR_SCORING_STATE, $attemptscored->scoringstate);
+
+        $this->ui = new question_ui_renderer($attemptscored->ui->content, $attemptscored->ui->placeholders);
+
         switch ($attemptscored->scoringcode) {
             case "AUTOMATICALLY_SCORED":
                 $newqstate = question_state::graded_state_for_fraction($attemptscored->score);
@@ -259,5 +272,11 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public function compute_final_grade($responses, $totaltries) {
         // TODO: This is necessary to support interactive countback.
         throw new coding_exception("not implemented");
+    }
+
+    public function make_behaviour(question_attempt $qa, $preferredbehaviour) {
+        question_engine::load_behaviour_class("questionpy");
+        $delegate = parent::make_behaviour($qa, $preferredbehaviour);
+        return new qbehaviour_questionpy($qa, $preferredbehaviour, $delegate);
     }
 }
