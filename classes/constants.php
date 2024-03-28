@@ -29,4 +29,9 @@ class constants {
     public const NAMESPACE_XHTML = 'http://www.w3.org/1999/xhtml';
     /** @var string XML namespace for our custom things */
     public const NAMESPACE_QPY = 'http://questionpy.org/ns/question';
+
+    /** @var string */
+    public const QT_VAR_ATTEMPT_STATE = "_attemptstate";
+    /** @var string */
+    public const QT_VAR_SCORING_STATE = "_scoringstate";
 }
