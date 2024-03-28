@@ -169,10 +169,11 @@ class api {
                                  ?string $scoringstate = null, ?array $response = null): attempt {
         $connector = connector::default();
 
-        $main = [
-            "attempt_state" => $attemptstate,
-            "response" => $response,
-        ];
+        $main = ["attempt_state" => $attemptstate];
+        // Cast to object so empty responses are serialized as JSON objects, not arrays.
+        if ($response !== null) {
+            $main["response"] = (object)$response;
+        }
 
         if ($scoringstate) {
             $main["scoring_state"] = $scoringstate;
@@ -183,9 +184,9 @@ class api {
             "question_state" => $questionstate,
         ];
 
-        $response = $connector->post("/packages/$packagehash/attempt/view", $parts);
-        $response->assert_2xx();
-        return array_converter::from_array(attempt::class, $response->get_data());
+        $httpresponse = $connector->post("/packages/$packagehash/attempt/view", $parts);
+        $httpresponse->assert_2xx();
+        return array_converter::from_array(attempt::class, $httpresponse->get_data());
     }
 
     /**
@@ -205,7 +206,8 @@ class api {
 
         $main = [
             "attempt_state" => $attemptstate,
-            "response" => $response,
+            // Cast to object so empty responses are serialized as JSON objects, not arrays.
+            "response" => (object)$response,
             "generate_hint" => false,
         ];
 
@@ -218,9 +220,9 @@ class api {
             "question_state" => $questionstate,
         ];
 
-        $response = $connector->post("/packages/$packagehash/attempt/score", $parts);
-        $response->assert_2xx();
-        return array_converter::from_array(attempt_scored::class, $response->get_data());
+        $httpresponse = $connector->post("/packages/$packagehash/attempt/score", $parts);
+        $httpresponse->assert_2xx();
+        return array_converter::from_array(attempt_scored::class, $httpresponse->get_data());
     }
 
     /**
