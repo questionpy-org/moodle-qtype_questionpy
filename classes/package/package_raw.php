@@ -201,6 +201,9 @@ class package_raw extends package_base {
     }
 
     /**
+     * Persists the current package in the database as the server.
+     *
+     * @return int
      * @throws moodle_exception
      */
     public function store_as_server(): int {
@@ -251,9 +254,13 @@ class package_raw extends package_base {
     }
 
     /**
+     * Persists the current package in the database as the current user.
+     *
+     * @param int $contextid
+     * @return int
      * @throws moodle_exception
      */
-    public function store_as_user(int $contextid) {
+    public function store_as_user(int $contextid): int {
         global $DB, $USER;
         $this->dbtimestamp = time();
         $this->dbcontextid = $contextid;

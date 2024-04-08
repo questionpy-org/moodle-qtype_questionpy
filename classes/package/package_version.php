@@ -194,6 +194,7 @@ class package_version {
      * If a package version has only one source, the package version is also deleted.
      * If the package has only one version, the package related data is also deleted.
      *
+     * @param bool $asuser
      * @throws moodle_exception
      */
     private function delete(bool $asuser): void {
