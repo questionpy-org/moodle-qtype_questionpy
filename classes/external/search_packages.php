@@ -22,7 +22,6 @@ global $CFG;
 require_once($CFG->libdir . "/externallib.php");
 
 use context;
-use context_system;
 use context_user;
 use external_api;
 use external_function_parameters;
@@ -64,7 +63,7 @@ class search_packages extends external_api {
             'order' => new external_value(PARAM_ALPHA),
             'limit' => new external_value(PARAM_INT),
             'page' => new external_value(PARAM_INT),
-            'contextid' => new external_value(PARAM_INT, 'Required when category is "recentlyused"', VALUE_DEFAULT, null),
+            'contextid' => new external_value(PARAM_INT),
         ]);
     }
 
@@ -80,9 +79,6 @@ class search_packages extends external_api {
         if (!in_array($params['category'], self::CATEGORIES)) {
             $validparameters = implode(', ', self::CATEGORIES);
             throw new invalid_parameter_exception("Unknown category. Valid parameters are: $validparameters");
-        }
-        if ($params['category'] === 'recentlyused' && !isset($params['contextid'])) {
-            throw new invalid_parameter_exception('A context id must be provided if category is "recentlyused".');
         }
         if (!in_array($params['sort'], self::SORT)) {
             $validparameters = implode(', ', self::SORT);
@@ -153,11 +149,12 @@ class search_packages extends external_api {
      * Retrieves the tags and package versions of multiple packages given their ids.
      *
      * @param int[] $packageids Package ids.
+     * @param int $contextid Context id.
      * @return array[] A list containing the tags and versions.
      * @throws moodle_exception
      */
-    private static function get_tags_and_versions(array $packageids): array {
-        global $DB;
+    private static function get_tags_and_versions(array $packageids, int $contextid): array {
+        global $DB, $USER;
 
         if (empty($packageids)) {
             return [[], []];
@@ -182,8 +179,12 @@ class search_packages extends external_api {
         }
 
         // Get relevant package versions.
-        [$sql, $params] = package_version::sql_get("pv.packageid {$inpackagesql}", $inpackageparams);
+        [$sql, $params] = package_version::sql_get_where(
+            "packageid {$inpackagesql} AND (pv.isfromserver = 1 OR s.userid = :userid OR v.contextid = :contextid)",
+            array_merge($inpackageparams, ['userid' => $USER->id, 'contextid' => $contextid])
+        );
         $versionsraw = $DB->get_records_sql($sql, $params);
+
         $versions = [];
         foreach ($versionsraw as $version) {
             $versions[$version->packageid][] = [
@@ -191,7 +192,7 @@ class search_packages extends external_api {
                 'hash' => $version->hash,
                 'version' => $version->version,
                 'ismine' => $version->ismine,
-                'istrusted' => $version->istrusted,
+                'isfromserver' => $version->isfromserver,
             ];
         }
 
@@ -272,6 +273,33 @@ class search_packages extends external_api {
     }
 
     /**
+     * Constructs sql fragment used to guard packages which should not be visible for the current user.
+     *
+     * @param int $contextid relevant context id
+     * @param bool $onlycustom only packages falling under the 'custom' category should be considered
+     * @return array A list containing the sql fragment, where-clause and a parameter array.
+     */
+    private static function create_package_guard(int $contextid, bool $onlycustom): array {
+        global $USER;
+        $joinguardsql = '
+            JOIN {qtype_questionpy_pkgversion} pv
+            ON p.id = pv.packageid
+            LEFT JOIN {qtype_questionpy_source} s
+            ON pv.id = s.pkgversionid
+            LEFT JOIN {qtype_questionpy_visibility} v
+            ON s.id = v.sourceid
+        ';
+        $whereguardsql = 'v.contextid = :guard_contextid OR s.userid = :guard_userid';
+        $joinguardparams = ['guard_contextid' => $contextid, 'guard_userid' => $USER->id];
+
+        if (!$onlycustom) {
+            $whereguardsql .= ' OR pv.isfromserver = 1';
+        }
+
+        return [$joinguardsql, "WHERE ($whereguardsql)", $joinguardparams];
+    }
+
+    /**
      * Constructs sql fragment used to retrieve recently used packages given a context id.
      *
      * @param int $contextid
@@ -285,24 +313,6 @@ class search_packages extends external_api {
         ";
 
         return [$joinlastusedsql, ['contextid' => $contextid]];
-    }
-
-    /**
-     * Constructs sql fragment used to retrieve packages where at least one version was uploaded by a user and is not
-     * provided by the application server.
-     *
-     * @return string The constructed sql fragment.
-     */
-    private static function create_custom_sql(): string {
-        return '
-            JOIN (
-                SELECT pv.packageid
-                FROM {qtype_questionpy_pkgversion} pv
-                JOIN {qtype_questionpy_source} s
-                ON pv.id = s.pkgversionid AND s.userid IS NOT NULL
-            ) c
-            ON c.packageid = p.id
-        ';
     }
 
     /**
@@ -327,19 +337,21 @@ class search_packages extends external_api {
         // Prepare query.
         [$wherelikesql, $wherelikeparams] = self::create_text_search_sql(['name', 'description'], $params['query']);
 
+        // Create package guard.
+        [$joinguardsql, $whereguardsql, $joinguardparams] = self::create_package_guard($params['contextid'],
+            $params['category'] === 'custom');
+
         // Get the favourite-status of a package.
         $usercontext = context_user::instance($USER->id);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
         [$joinfavsql, $joinfavparams] = $ufservice->get_join_sql_by_type('qtype_questionpy', 'package', 'f', 'p.id');
 
         // Merge existing parameters.
-        $finalparams = array_merge($joinlangsparams, $jointagsparams, $wherelikeparams, $joinfavparams);
+        $finalparams = array_merge($joinlangsparams, $jointagsparams, $wherelikeparams, $joinguardparams, $joinfavparams);
 
         // Search through recently used packages if the category is set.
         $selecttimeusedsql = '';
         $joinrecentlyusedsql = '';
-        $wherefavsql = '';
-        $joincustomsql = '';
         if ($isrecentylusedcategory) {
             [$joinrecentlyusedsql, $recentlyusedparams] = self::create_recently_used_sql($params['contextid']);
             // Merge new parameters with existing ones.
@@ -347,9 +359,7 @@ class search_packages extends external_api {
             $selecttimeusedsql = ', lu.timeused';
         } else if ($params['category'] === 'favourites') {
             // We only want to include packages which were marked as favourite.
-            $wherefavsql = 'WHERE f.id IS NOT NULL';
-        } else if ($params['category'] === 'custom') {
-            $joincustomsql = self::create_custom_sql();
+            $whereguardsql .= ' AND f.id IS NOT NULL';
         }
 
         // Assemble final sql query.
@@ -361,12 +371,12 @@ class search_packages extends external_api {
                                 -- Transform the favourite-ID into 0 and 1; the service converts them into booleans.
                                 CASE WHEN f.id IS NULL THEN 0 ELSE 1 END AS isfavourite
                 FROM {qtype_questionpy_package} p
+                $joinguardsql
                 $joinfavsql
                 $joinrecentlyusedsql
-                $joincustomsql
                 $joinlangssql
                 $jointagssql
-                $wherefavsql
+                $whereguardsql
             ) subq
             $wherelikesql
             $orderbysql
@@ -385,12 +395,12 @@ class search_packages extends external_api {
      * @param string $order
      * @param int $limit
      * @param int $page
-     * @param int|null $contextid
+     * @param int $contextid
      * @return array
      * @throws moodle_exception
      */
     public static function execute(string $query, array $tags, string $category, string $sort, string $order,
-                                   int $limit, int $page, ?int $contextid): array {
+                                   int $limit, int $page, int $contextid): array {
         global $DB;
 
         // Basic parameter validation.
@@ -406,11 +416,7 @@ class search_packages extends external_api {
         ]);
 
         // Validate context id.
-        if (is_null($params['contextid'])) {
-            self::validate_context(context_system::instance());
-        } else {
-            self::validate_context(context::instance_by_id($params['contextid'], IGNORE_MISSING));
-        }
+        self::validate_context(context::instance_by_id($params['contextid'], IGNORE_MISSING));
 
         // In addition to the basic parameter validation we also want to validate the values.
         self::validate_parameter_values($params);
@@ -423,7 +429,7 @@ class search_packages extends external_api {
 
         // Get package tag and versions.
         $ids = array_column($packagesraw, 'id');
-        [$tags, $versions] = self::get_tags_and_versions($ids);
+        [$tags, $versions] = self::get_tags_and_versions($ids, $contextid);
 
         // Set the tags and package versions.
         foreach ($packagesraw as $package) {
@@ -459,7 +465,7 @@ class search_packages extends external_api {
                     'hash' => new external_value(PARAM_ALPHANUM),
                     'version' => new external_value(PARAM_TEXT),
                     'ismine' => new external_value(PARAM_BOOL, 'Version was uploaded by the current user'),
-                    'istrusted' => new external_value(PARAM_BOOL, 'Version is provided by the application server'),
+                    'isfromserver' => new external_value(PARAM_BOOL, 'Version is provided by the application server'),
                 ])),
                 'author' => new external_value(PARAM_RAW),
                 'name' => new external_value(PARAM_TEXT),

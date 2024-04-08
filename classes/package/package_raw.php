@@ -45,6 +45,16 @@ class package_raw extends package_base {
     private string $version;
 
     /**
+     * @var string timestamp used by {@see store_as_server} and {@see store_as_user}
+     */
+    private string $dbtimestamp;
+
+    /**
+     * @var string contextid used by {@see store_as_user}
+     */
+    private string $dbcontextid;
+
+    /**
      * Constructs package class.
      *
      * @param string $hash
@@ -73,49 +83,13 @@ class package_raw extends package_base {
     }
 
     /**
-     * Persists a package version in the database.
-     *
-     * @param int $packageid
-     * @return int
-     * @throws moodle_exception
-     */
-    private function store_pkgversion(int $packageid): int {
-        global $DB;
-
-        return $DB->insert_record('qtype_questionpy_pkgversion', [
-            'packageid' => $packageid,
-            'hash' => $this->hash,
-            'version' => $this->version,
-        ]);
-    }
-
-    /**
-     * Persists a package source in the database.
-     *
-     * @param int $pkgversionid
-     * @param int $timestamp
-     * @param bool $asuser
-     * @throws moodle_exception
-     */
-    private function store_source(int $pkgversionid, int $timestamp, bool $asuser): void {
-        global $DB, $USER;
-
-        // Create package source.
-        $DB->insert_record('qtype_questionpy_source', [
-            'pkgversionid' => $pkgversionid,
-            'timecreated' => $timestamp,
-            'userid' => $asuser ? $USER->id : null,
-        ]);
-    }
-
-    /**
      * Persists a package in the database.
      *
-     * @param int $timestamp
+     * @param bool $createall
      * @return int
      * @throws moodle_exception
      */
-    private function store_package(int $timestamp): int {
+    private function store_package(bool $createall = false): int {
         global $DB;
 
         $packageid = $DB->insert_record('qtype_questionpy_package', [
@@ -126,8 +100,8 @@ class package_raw extends package_base {
             'url' => $this->url,
             'icon' => $this->icon,
             'license' => $this->license,
-            'timemodified' => $timestamp,
-            'timecreated' => $timestamp,
+            'timemodified' => $this->dbtimestamp,
+            'timecreated' => $this->dbtimestamp,
         ]);
 
         if ($this->languages) {
@@ -155,24 +129,83 @@ class package_raw extends package_base {
             }
             $DB->insert_records('qtype_questionpy_tags', $tagsdata);
         }
+
+        if ($createall) {
+            return $this->store_pkgversion($packageid, false, $createall);
+        }
         return $packageid;
     }
 
     /**
-     * Persist this package in the database.
+     * Persists a package version in the database.
      *
-     * Localized data is stored in qtype_questionpy_language.
-     * Tags are mapped packageid->tag in the table  qtype_questionpy_tags.
-     *
-     * @param bool $asuser
-     * @return int the ID of the inserted record in the DB
+     * @param int $packageid
+     * @param bool $isfromserver
+     * @param bool $createall
+     * @return int
      * @throws moodle_exception
      */
-    public function store(bool $asuser): int {
+    private function store_pkgversion(int $packageid, bool $isfromserver, bool $createall = false): int {
         global $DB;
 
-        $timestamp = time();
+        $pkgversionid = $DB->insert_record('qtype_questionpy_pkgversion', [
+            'packageid' => $packageid,
+            'hash' => $this->hash,
+            'version' => $this->version,
+            'isfromserver' => $isfromserver,
+        ]);
 
+        if ($createall) {
+            $this->store_source($pkgversionid, $createall);
+        }
+
+        return $pkgversionid;
+    }
+
+    /**
+     * Persists a package source in the database.
+     *
+     * @param int $pkgversionid
+     * @param bool $createall
+     * @throws moodle_exception
+     */
+    private function store_source(int $pkgversionid, bool $createall = false): void {
+        global $DB, $USER;
+
+        // Create package source.
+        $sourceid = $DB->insert_record('qtype_questionpy_source', [
+            'pkgversionid' => $pkgversionid,
+            'userid' => $USER->id,
+            'timecreated' => $this->dbtimestamp,
+        ]);
+
+        if ($createall) {
+            $this->store_visibility($sourceid);
+        }
+    }
+
+    /**
+     * Persists a package visibility in the database.
+     *
+     * @param int $sourceid
+     * @throws moodle_exception
+     */
+    private function store_visibility(int $sourceid): void {
+        global $DB;
+
+        $DB->insert_record('qtype_questionpy_visibility', [
+            'sourceid' => $sourceid,
+            'contextid' => $this->dbcontextid,
+            'timecreated' => $this->dbtimestamp,
+        ]);
+    }
+
+    /**
+     * @throws moodle_exception
+     */
+    public function store_as_server(): int {
+        global $DB;
+        $this->dbtimestamp = time();
         $packageid = $DB->get_field('qtype_questionpy_package', 'id', [
             'shortname' => $this->shortname,
             'namespace' => $this->namespace,
@@ -181,46 +214,87 @@ class package_raw extends package_base {
         if (!$packageid) {
             // Package does not exist -> add it.
             $transaction = $DB->start_delegated_transaction();
-            $packageid = $this->store_package($timestamp);
-        } else {
-            // Package does already exist - check if the version also exists.
-            $pkgversion = package_version::get_by_package_and_version($packageid, $this->version);
-            if ($pkgversion) {
-                // Package version does already exist.
-                if ($pkgversion->hash !== $this->hash) {
-                    // Version does not match existing hash.
-                    /*
-                     * TODO: Prioritize package versions from the application server.
-                     *       If the package version comes from the application server, change the version string of the
-                     *       existing package version in the database and store the current package version?
-                     */
-                    throw new moodle_exception('same_version_different_hash_error', 'qtype_questionpy');
-                }
-
-                // Check if the current user / application server already uploaded the package.
-                if ($asuser && $pkgversion->ismine) {
-                    // Version was already uploaded by the current user.
-                    throw new moodle_exception('version_is_already_stored_error', 'qtype_questionpy');
-                } else if (!$asuser && $pkgversion->istrusted) {
-                    // Version was already uploaded by the application server.
-                    return $packageid;
-                }
-
-                // Create new package version source.
-                $this->store_source($pkgversion->id, $timestamp, $asuser);
-                return $pkgversion->id;
-            }
-
-            // Package version does not exist.
-            $transaction = $DB->start_delegated_transaction();
+            $packageid = $this->store_package();
+            $pkgversionid = $this->store_pkgversion($packageid, true);
+            $transaction->allow_commit();
+            return $pkgversionid;
         }
 
-        // Create package version and source.
-        $pkgversionid = $this->store_pkgversion($packageid);
-        $this->store_source($pkgversionid, $timestamp, $asuser);
+        // Package does exist.
+        $pkgversion = $DB->get_record('qtype_questionpy_pkgversion', ['packageid' => $packageid, 'version' => $this->version],
+            'id, hash, isfromserver', IGNORE_MULTIPLE);
 
-        $transaction->allow_commit();
-        return $pkgversionid;
+        if (!$pkgversion) {
+            $transaction = $DB->start_delegated_transaction();
+            $pkgversionid = $this->store_pkgversion($packageid, true);
+            $transaction->allow_commit();
+            return $pkgversionid;
+        }
+
+        if ($pkgversion->hash !== $this->hash) {
+            // Version does not match existing hash.
+            /*
+             * TODO: Prioritize package versions from the application server.
+             *       Change the version string of the existing package version in the database and store the current
+             *       package version?
+             */
+            throw new moodle_exception('same_version_different_hash_error', 'qtype_questionpy');
+        }
+        if (!$pkgversion->isfromserver) {
+            // Version was not uploaded by the application server.
+            $DB->update_record('qtype_questionpy_pkgversion', (object) [
+                'id' => $pkgversion->id,
+                'isfromserver' => 1,
+            ]);
+        }
+        return $pkgversion->id;
+    }
+
+    /**
+     * @throws moodle_exception
+     */
+    public function store_as_user(int $contextid) {
+        global $DB, $USER;
+        $this->dbtimestamp = time();
+        $this->dbcontextid = $contextid;
+        $packageid = $DB->get_field('qtype_questionpy_package', 'id', [
+            'shortname' => $this->shortname,
+            'namespace' => $this->namespace,
+        ]);
+
+        if (!$packageid) {
+            // Package does not exist -> add it.
+            $transaction = $DB->start_delegated_transaction();
+            $pkgversionid = $this->store_package(true);
+            $transaction->allow_commit();
+            return $pkgversionid;
+        }
+
+        // Package does exist.
+        $pkgversion = $DB->get_record('qtype_questionpy_pkgversion', ['packageid' => $packageid, 'version' => $this->version],
+            'id, hash', IGNORE_MULTIPLE);
+
+        if (!$pkgversion) {
+            $transaction = $DB->start_delegated_transaction();
+            $pkgversionid = $this->store_pkgversion($packageid, false, true);
+            $transaction->allow_commit();
+            return $pkgversionid;
+        }
+
+        if ($pkgversion->hash !== $this->hash) {
+            // Version does not match existing hash.
+            throw new moodle_exception('same_version_different_hash_error', 'qtype_questionpy');
+        }
+
+        $sourceid = $DB->get_field('qtype_questionpy_source', 'id', ['pkgversionid' => $pkgversion->id, 'userid' => $USER->id]);
+        if (!$sourceid) {
+            $transaction = $DB->start_delegated_transaction();
+            $this->store_source($pkgversion->id, true);
+            $transaction->allow_commit();
+            return $pkgversion->id;
+        }
+
+        throw new moodle_exception('version_is_already_stored_error', 'qtype_questionpy');
     }
 }
 

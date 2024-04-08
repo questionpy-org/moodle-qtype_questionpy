@@ -57,7 +57,7 @@ class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $package = package_provider();
-        $pkgversionid = $package->store(true);
+        $pkgversionid = $package->store_as_server();
         $statestr = $this->setup_question($pkgversionid);
 
         $result = $this->questionservice->get_question(1);
@@ -93,11 +93,11 @@ class question_service_test extends \advanced_testcase {
     public function test_upsert_question_should_update_existing_record_if_changed() {
         $this->resetAfterTest();
 
-        $oldpackageid = package_provider(["version" => "0.1.0"])->store(true);
+        $oldpackageid = package_provider(["version" => "0.1.0"])->store_as_server();
         $oldstate = $this->setup_question($oldpackageid);
 
         $newpackage = package_provider(["version" => "0.2.0"]);
-        $newpackageid = $newpackage->store(true);
+        $newpackageid = $newpackage->store_as_server();
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -131,7 +131,7 @@ class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $package = package_provider();
-        $packageid = $package->store(true);
+        $packageid = $package->store_as_server();
 
         $oldstate = $this->setup_question($packageid);
 
@@ -167,7 +167,7 @@ class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $package = package_provider();
-        $packageid = $package->store(true);
+        $packageid = $package->store_as_server();
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -218,7 +218,7 @@ class question_service_test extends \advanced_testcase {
     public function test_delete_question() {
         $this->resetAfterTest();
 
-        $pkgversionid = package_provider()->store(true);
+        $pkgversionid = package_provider()->store_as_server();
         $this->setup_question($pkgversionid);
 
         global $DB;

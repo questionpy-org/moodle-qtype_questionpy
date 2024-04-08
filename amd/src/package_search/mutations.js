@@ -192,7 +192,7 @@ export default class {
         const state = stateManager.state;
         try {
             this._setLoading(stateManager, true);
-            const successful = await favouritePackage(packageid, favourite);
+            const successful = await favouritePackage(packageid, favourite, this.options.contextid);
             if (!successful) {
                 return;
             }

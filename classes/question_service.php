@@ -171,6 +171,6 @@ class question_service {
         if (!$package) {
             return null;
         }
-        return $package->store(false);
+        return $package->store_as_server();
     }
 }

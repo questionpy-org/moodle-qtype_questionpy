@@ -156,7 +156,7 @@ class package_raw_test extends \advanced_testcase {
      * @throws moodle_exception
      */
     public function test_store_package($packagedata) {
-        global $DB, $USER;
+        global $DB, $USER, $PAGE;
         $this->resetAfterTest();
 
         // Create and set example user.
@@ -166,7 +166,7 @@ class package_raw_test extends \advanced_testcase {
         $timestamp = time();
 
         $rawpackage = array_converter::from_array(package_raw::class, $packagedata);
-        $rawpackage->store(true);
+        $rawpackage->store_as_user($PAGE->context->id);
 
         // Check qtype_questionpy_pkgversion table.
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgversion'));
@@ -221,19 +221,38 @@ class package_raw_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_store_package_twice_without_user() {
+    public function test_store_package_twice_as_server() {
         global $DB;
         $this->resetAfterTest();
 
         $rawpackage = package_provider(['languages' => ['en', 'de'], 'tags' => ['tag_0', 'tag_1']]);
-        $rawpackage->store(false);
-        $rawpackage->store(false);
+        $rawpackage->store_as_server();
+        $rawpackage->store_as_server();
 
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgversion'));
-        $this->assertEquals(1, $DB->count_records('qtype_questionpy_source'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_source'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_source'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(2, $DB->count_records('qtype_questionpy_language'));
         $this->assertEquals(2, $DB->count_records('qtype_questionpy_tags'));
+    }
+
+    /**
+     * Tests that storing same package as user in same course throws.
+     *
+     * @covers \package::store
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_store_package_twice_as_user_throws() {
+        global $PAGE;
+        $this->resetAfterTest();
+        $this->expectException(moodle_exception::class);
+        $this->expectExceptionMessage('The package version was already stored by the current user.');
+
+        $rawpackage = package_provider(['languages' => ['en', 'de'], 'tags' => ['tag_0', 'tag_1']]);
+        $rawpackage->store_as_user($PAGE->context->id);
+        $rawpackage->store_as_user($PAGE->context->id);
     }
 
     /**
@@ -243,14 +262,15 @@ class package_raw_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_store_package_twice_as_user_throws() {
+    public function test_store_package_twice_as_user_throwss() {
+        global $PAGE;
         $this->resetAfterTest();
         $this->expectException(moodle_exception::class);
         $this->expectExceptionMessage('The package version was already stored by the current user.');
 
         $rawpackage = package_provider(['languages' => ['en', 'de'], 'tags' => ['tag_0', 'tag_1']]);
-        $rawpackage->store(true);
-        $rawpackage->store(true);
+        $rawpackage->store_as_user($PAGE->context->id);
+        $rawpackage->store_as_user($PAGE->context->id);
     }
 
     /**
@@ -269,8 +289,8 @@ class package_raw_test extends \advanced_testcase {
         $rawpackage2 = clone $rawpackage1;
         $rawpackage2->hash .= 'faulty';
 
-        $rawpackage1->store(false);
-        $rawpackage2->store(false);
+        $rawpackage1->store_as_server();
+        $rawpackage2->store_as_server();
     }
 
     /**
@@ -287,11 +307,11 @@ class package_raw_test extends \advanced_testcase {
         $rawpackage1 = package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag_0']]);
         $rawpackage2 = package_provider(['version' => '2.0.0', 'languages' => ['en'], 'tags' => ['tag_0']]);
 
-        $rawpackage1->store(false);
-        $rawpackage2->store(false);
+        $rawpackage1->store_as_server();
+        $rawpackage2->store_as_server();
 
         $this->assertEquals(2, $DB->count_records('qtype_questionpy_pkgversion'));
-        $this->assertEquals(2, $DB->count_records('qtype_questionpy_source'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_source'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_language'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_tags'));

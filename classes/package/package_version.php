@@ -58,32 +58,78 @@ class package_version {
     /**
      * @var bool package is provided by the application server
      */
-    public bool $istrusted;
+    public bool $isfromserver;
 
     /**
      * Constructs sql fragment used to retrieve package versions.
+     *
+     * Following table aliases are used:
+     *  pv (qtype_questionpy_pkgversion),
+     *  s  (qtype_questionpy_source),
+     *  v  (qtype_questionpy_visibility).
+     *
+     * Used by {@see get_where} and {@see get_many_where}.
      *
      * @param string $where
      * @param array $params
      * @return array A list containing the constructed sql fragment and an array of parameters.
      */
-    public static function sql_get(string $where = '', array $params = []): array {
+    public static function sql_get_where(string $where = '', array $params = []): array {
         global $USER;
         if (!empty($where)) {
             $where = "WHERE $where";
         }
         $sql = "
-            SELECT pv.id, pv.packageid, pv.hash, pv.version,
-                   CASE WHEN s1.id IS NULL THEN 0 ELSE 1 END AS ismine,
-                   CASE WHEN s2.id IS NULL THEN 0 ELSE 1 END AS istrusted
+            SELECT pv.id, pv.packageid, pv.hash, pv.version, pv.isfromserver,
+                   CASE WHEN s.userid = :currentuserid THEN 1 ELSE 0 END AS ismine
             FROM {qtype_questionpy_pkgversion} pv
-            LEFT JOIN {qtype_questionpy_source} s1
-            ON pv.id = s1.pkgversionid AND s1.userid = :userid
-            LEFT JOIN {qtype_questionpy_source} s2
-            ON pv.id = s2.pkgversionid AND s2.userid IS NULL
+            LEFT JOIN {qtype_questionpy_source} s
+            ON pv.id = s.pkgversionid
+            LEFT JOIN {qtype_questionpy_visibility} v
+            ON s.id = v.sourceid
             $where
         ";
-        return [$sql, array_merge(['userid' => $USER->id], $params)];
+        return [$sql, array_merge(['currentuserid' => $USER->id], $params)];
+    }
+
+    /**
+     *
+     * For a list of available table aliases look at {@see sql_get_where}.
+     *
+     * @param string $where
+     * @param array $params
+     * @return package_version|null
+     * @throws moodle_exception
+     */
+    public static function get_where(string $where = '', array $params = []): ?package_version {
+        global $DB;
+        [$sql, $params] = self::sql_get_where($where, $params);
+        $record = $DB->get_record_sql($sql, $params);
+        if (!$record) {
+            return null;
+        }
+        return array_converter::from_array(self::class, (array) $record);
+    }
+
+    /**
+     * Retrieves many packages from the database.
+     *
+     * For a list of available table aliases look at {@see sql_get_where}.
+     *
+     * @param string $where
+     * @param array $params
+     * @return package_version[]
+     * @throws moodle_exception
+     */
+    public static function get_many_where(string $where = '', array $params = []): array {
+        global $DB;
+        [$sql, $params] = self::sql_get_where($where, $params);
+        $records = $DB->get_records_sql($sql, $params);
+        $packages = [];
+        foreach ($records as $record) {
+            $packages[] = array_converter::from_array(self::class, (array) $record);
+        }
+        return $packages;
     }
 
     /**
@@ -93,11 +139,8 @@ class package_version {
      * @return package_version
      * @throws moodle_exception
      */
-    public static function get_by_id(int $pkgversionid): package_version {
-        global $DB;
-        [$sql, $params] = self::sql_get('pv.id = :id', ['id' => $pkgversionid]);
-        $record = $DB->get_record_sql($sql, $params);
-        return array_converter::from_array(self::class, (array) $record);
+    public static function get_by_id(int $pkgversionid): ?package_version {
+        return self::get_where('pv.id = :id', ['id' => $pkgversionid]);
     }
 
     /**
@@ -107,30 +150,8 @@ class package_version {
      * @return package_version
      * @throws moodle_exception
      */
-    public static function get_by_hash(string $hash): package_version {
-        global $DB;
-        [$sql, $params] = self::sql_get('pv.hash = :hash', ['hash' => $hash]);
-        $record = $DB->get_record_sql($sql, $params);
-        return array_converter::from_array(self::class, (array) $record);
-    }
-
-    /**
-     * Retrieves a package version by its package and version string.
-     *
-     * @param int $packageid
-     * @param string $version
-     * @return false|package_version
-     * @throws moodle_exception
-     */
-    public static function get_by_package_and_version(int $packageid, string $version) {
-        global $DB;
-        [$joinsql, $joinparams] = self::sql_get('pv.packageid = :packageid AND pv.version = :version',
-            ['packageid' => $packageid, 'version' => $version]);
-        $record = $DB->get_record_sql($joinsql, $joinparams);
-        if (!$record) {
-            return false;
-        }
-        return array_converter::from_array(self::class, (array) $record);
+    public static function get_by_hash(string $hash): ?package_version {
+        return self::get_where('pv.hash = :hash', ['hash' => $hash]);
     }
 
     /**
@@ -140,14 +161,31 @@ class package_version {
      * @throws moodle_exception
      */
     public static function get_by_server(): array {
-        global $DB;
-        $packages = [];
-        [$joinsql, $joinparams] = self::sql_get('s2.id IS NOT NULL');
-        $records = $DB->get_records_sql($joinsql, $joinparams);
-        foreach ($records as $record) {
-            $packages[] = array_converter::from_array(self::class, (array) $record);
-        }
-        return $packages;
+        return self::get_many_where('pv.isfromserver = 1');
+    }
+
+    /**
+     * Deletes the package source from the database as a user.
+     *
+     * If a package version has only one source, the package version is also deleted.
+     * If the package has only one version, the package related data is also deleted.
+     *
+     * @throws moodle_exception
+     */
+    public function delete_as_user(): void {
+        $this->delete(true);
+    }
+
+    /**
+     * Deletes the package version source from the database as the server.
+     *
+     * If a package version has only one source, the package version is also deleted.
+     * If the package has only one version, the package related data is also deleted.
+     *
+     * @throws moodle_exception
+     */
+    public function delete_as_server(): void {
+        $this->delete(false);
     }
 
     /**
@@ -156,10 +194,9 @@ class package_version {
      * If a package version has only one source, the package version is also deleted.
      * If the package has only one version, the package related data is also deleted.
      *
-     * @param bool $asuser
      * @throws moodle_exception
      */
-    public function delete(bool $asuser): void {
+    private function delete(bool $asuser): void {
         global $DB, $USER;
 
         $transaction = $DB->start_delegated_transaction();
@@ -167,15 +204,18 @@ class package_version {
         // Delete a source of the package version.
         if ($asuser) {
             if (!$this->ismine) {
-                throw new moodle_exception('');
+                throw new moodle_exception('version_was_not_stored_by_user_error', 'qtype_questionpy');
             }
+            $sourceid = $DB->get_field('qtype_questionpy_source', 'id', ['pkgversionid' => $this->id, 'userid' => $USER->id]);
             $DB->delete_records('qtype_questionpy_source', ['pkgversionid' => $this->id, 'userid' => $USER->id]);
-        } else {
-            $DB->delete_records('qtype_questionpy_source', ['pkgversionid' => $this->id, 'userid' => null]);
+            $DB->delete_records('qtype_questionpy_visibility', ['sourceid' => $sourceid]);
         }
 
         if ($DB->count_records('qtype_questionpy_source', ['pkgversionid' => $this->id]) > 0) {
             // There are still other sources for the package version.
+            if ($asuser) {
+                $DB->update_record('qtype_questionpy_pkgversion', (object) ['id' => $this->id, 'isfromserver' => 0]);
+            }
             return;
         }
 

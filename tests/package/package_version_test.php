@@ -46,7 +46,7 @@ class package_version_test extends \advanced_testcase {
         $hash = 'hash';
         $version = '1.0.0';
 
-        $pkgversionid = package_provider(['hash' => $hash, 'version' => $version])->store(true);
+        $pkgversionid = package_provider(['hash' => $hash, 'version' => $version])->store_as_server();
         $package = package_version::get_by_id($pkgversionid);
 
         $this->assertEquals($hash, $package->hash);
@@ -67,7 +67,7 @@ class package_version_test extends \advanced_testcase {
         $hash = 'hash';
         $version = '1.0.0';
 
-        package_provider(['hash' => $hash, 'version' => $version])->store(true);
+        package_provider(['hash' => $hash, 'version' => $version])->store_as_server();
         $package = package_version::get_by_hash($hash);
 
         $this->assertEquals($hash, $package->hash);
@@ -86,11 +86,11 @@ class package_version_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store a package.
-        $pkgversionid = package_provider()->store(true);
+        $pkgversionid = package_provider()->store_as_server();
         $package = package_version::get_by_id($pkgversionid);
 
         // Delete the package.
-        $package->delete(true);
+        $package->delete_as_server();
 
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
@@ -110,14 +110,14 @@ class package_version_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store two packages.
-        $pkgversionid1 = package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag']])->store(true);
+        $pkgversionid1 = package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag']])->store_as_server();
         $package1 = package_version::get_by_id($pkgversionid1);
 
-        $pkgversionid2 = package_provider(['version' => '2.0.0', 'languages' => ['de'], 'tags' => ['tag']])->store(true);
+        $pkgversionid2 = package_provider(['version' => '2.0.0', 'languages' => ['de'], 'tags' => ['tag']])->store_as_server();
         $package2 = package_version::get_by_id($pkgversionid2);
 
         // Delete the first package.
-        $package1->delete(true);
+        $package1->delete_as_server();
 
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_package'));
@@ -125,7 +125,7 @@ class package_version_test extends \advanced_testcase {
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_tags'));
 
         // Delete the second package.
-        $package2->delete(true);
+        $package2->delete_as_server();
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_language'));

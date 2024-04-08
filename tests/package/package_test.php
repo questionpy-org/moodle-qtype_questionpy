@@ -44,7 +44,7 @@ class package_test extends \advanced_testcase {
 
         // Store a package.
         $rawpackage = package_provider();
-        $pkgversionid = $rawpackage->store(true);
+        $pkgversionid = $rawpackage->store_as_server();
 
         // Get the package.
         package::get_by_version($pkgversionid);
@@ -63,7 +63,7 @@ class package_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store a package.
-        $pkgversionid = package_provider(['languages' => ['en', 'de'], 'tags' => ['tag_0']])->store(true);
+        $pkgversionid = package_provider(['languages' => ['en', 'de'], 'tags' => ['tag_0']])->store_as_server();
         $package = package::get_by_version($pkgversionid);
 
         // Delete the package.
@@ -88,8 +88,8 @@ class package_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store two versions of the same package.
-        package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store(true);
-        $pkgversionid = package_provider(['version' => '2.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store(true);
+        package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store_as_server();
+        $pkgversionid = package_provider(['version' => '2.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store_as_server();
         $package = package::get_by_version($pkgversionid);
 
         // Delete the package.

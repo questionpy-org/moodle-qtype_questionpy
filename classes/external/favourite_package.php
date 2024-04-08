@@ -22,7 +22,6 @@ global $CFG;
 require_once($CFG->libdir . "/externallib.php");
 
 use context;
-use context_system;
 use context_user;
 use external_api;
 use external_function_parameters;
@@ -48,7 +47,31 @@ class favourite_package extends external_api {
         return new external_function_parameters([
             'packageid' => new external_value(PARAM_INT),
             'favourite' => new external_value(PARAM_BOOL),
+            'contextid' => new external_value(PARAM_INT),
         ]);
+    }
+
+    /**
+     * Checks if a package should be accessible by the user in the given context.
+     *
+     * @param int $packageid
+     * @param int $contextid
+     * @return bool
+     * @throws moodle_exception
+     */
+    private static function package_is_accessible(int $packageid, int $contextid): bool {
+        global $DB, $USER;
+
+        // Check if at least one package version of the given package is accessible for the user.
+        return $DB->record_exists_sql("
+            SELECT pv.id
+            FROM {qtype_questionpy_pkgversion} pv
+            LEFT JOIN {qtype_questionpy_source} s
+            ON pv.id = s.pkgversionid
+            LEFT JOIN {qtype_questionpy_visibility} v
+            ON s.id = v.sourceid
+            WHERE (pv.packageid = :packageid) AND (pv.isfromserver = 1 OR s.userid = :userid OR v.contextid = :contextid)
+        ", ['packageid' => $packageid, 'userid' => $USER->id, 'contextid' => $contextid]);
     }
 
     /**
@@ -59,19 +82,23 @@ class favourite_package extends external_api {
      *
      * @param int $packageid
      * @param bool $favourite
+     * @param int $contextid
      * @return bool
      * @throws moodle_exception
      */
-    public static function execute(int $packageid, bool $favourite): bool {
-        global $DB, $USER;
-
-        self::validate_context(context_system::instance());
+    public static function execute(int $packageid, bool $favourite, int $contextid): bool {
+        global $USER;
 
         // Basic parameter validation.
         $params = self::validate_parameters(self::execute_parameters(), [
             'packageid' => $packageid,
             'favourite' => $favourite,
+            'contextid' => $contextid,
         ]);
+
+        // Validate given context id.
+        $context = context::instance_by_id($params['contextid'], IGNORE_MISSING);
+        self::validate_context($context);
 
         // Get user favourite service.
         $usercontext = context_user::instance($USER->id);
@@ -93,10 +120,10 @@ class favourite_package extends external_api {
         }
 
         // Mark package as favourite if it is accessible by the user.
-        if ($exists = $DB->record_exists('qtype_questionpy_pkgversion', ['packageid' => $params['packageid']])) {
+        if ($accessible = self::package_is_accessible($params['packageid'], $context->id)) {
             $ufservice->create_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
         }
-        return $exists;
+        return $accessible;
     }
 
     /**

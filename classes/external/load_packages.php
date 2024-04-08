@@ -65,14 +65,14 @@ class load_packages extends external_api {
         // Remove every package version that was received from the application server.
         $versions = package_version::get_by_server();
         foreach ($versions as $version) {
-            $version->delete(false);
+            $version->delete_as_server();
         }
 
         // Load packages from the application server.
         $api = new api();
         $packages = $api->get_packages();
         foreach ($packages as $package) {
-            $package->store(false);
+            $package->store_as_server();
         }
 
         $transaction->allow_commit();

@@ -56,6 +56,7 @@ $string['server_info_requests_in_queue'] = 'Requests in queue';
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
 $string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
 $string['version_is_already_stored_error'] = 'The package version was already stored by the current user.';
+$string['version_was_not_stored_by_user_error'] = 'The package version was not uploaded by the current user.';
 
 // Package selection.
 $string['selection_title'] = 'Select QuestionPy Package';

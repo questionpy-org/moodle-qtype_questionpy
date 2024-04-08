@@ -27,14 +27,16 @@ import Ajax from 'core/ajax';
  *
  * @param {number} packageid
  * @param {boolean} favourite
+ * @param {number} contextid
  * @returns {Promise<boolean>}
  */
-export const favouritePackage = async(packageid, favourite) => {
+export const favouritePackage = async(packageid, favourite, contextid) => {
     return await Ajax.call([{
         methodname: "qtype_questionpy_favourite_package",
         args: {
             packageid: packageid,
             favourite: favourite,
+            contextid: contextid,
         },
     }])[0];
 };

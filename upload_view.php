@@ -81,7 +81,7 @@ if ($mform->is_cancelled()) {
 
         // Save package info in the DB.
         $package = array_converter::from_array(package_raw::class, $response->get_data());
-        $package->store($context->id);
+        $package->store_as_user($context->id);
 
     } catch (moodle_exception $e) {
         // If anything goes wrong while saving the file, rollback.

@@ -72,14 +72,15 @@ export function initActionButton(card, selected) {
  *
  * @param {HTMLDivElement} card
  * @param {number} packageId
+ * @param {number} contextId
  */
-export function initFavouriteButton(card, packageId) {
+export function initFavouriteButton(card, packageId, contextId) {
     const button = card.querySelector('[data-for="favourite-button"]');
     const isFavouriteAttributeName = "data-is-favourite";
     button.addEventListener("click", async() => {
         try {
             const isFavourite = button.hasAttribute(isFavouriteAttributeName);
-            const successful = await favouritePackage(packageId, !isFavourite);
+            const successful = await favouritePackage(packageId, !isFavourite, contextId);
             if (successful) {
                 button.toggleAttribute(isFavouriteAttributeName, !isFavourite);
             }
