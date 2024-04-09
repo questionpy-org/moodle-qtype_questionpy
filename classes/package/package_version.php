@@ -205,6 +205,7 @@ class package_version {
         // Delete a source of the package version.
         if ($asuser) {
             if (!$this->ismine) {
+                $transaction->allow_commit();
                 throw new moodle_exception('version_was_not_stored_by_user_error', 'qtype_questionpy');
             }
             $sourceid = $DB->get_field('qtype_questionpy_source', 'id', ['pkgversionid' => $this->id, 'userid' => $USER->id]);
@@ -217,12 +218,14 @@ class package_version {
             if ($asuser) {
                 $DB->update_record('qtype_questionpy_pkgversion', (object) ['id' => $this->id, 'isfromserver' => 0]);
             }
+            $transaction->allow_commit();
             return;
         }
 
         $DB->delete_records('qtype_questionpy_pkgversion', ['packageid' => $this->packageid, 'hash' => $this->hash]);
         if ($DB->count_records('qtype_questionpy_pkgversion', ['packageid' => $this->packageid]) > 0) {
             // There are still other package versions.
+            $transaction->allow_commit();
             return;
         }
 
