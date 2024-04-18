@@ -90,7 +90,7 @@ class package_version_test extends \advanced_testcase {
         $package = package_version::get_by_id($pkgversionid);
 
         // Delete the package.
-        $package->delete();
+        $package->delete(true);
 
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
@@ -117,7 +117,7 @@ class package_version_test extends \advanced_testcase {
         $package2 = package_version::get_by_id($pkgversionid2);
 
         // Delete the first package.
-        $package1->delete();
+        $package1->delete(true);
 
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_package'));
@@ -125,7 +125,7 @@ class package_version_test extends \advanced_testcase {
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_tags'));
 
         // Delete the second package.
-        $package2->delete();
+        $package2->delete(true);
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_language'));

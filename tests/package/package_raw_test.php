@@ -156,7 +156,7 @@ class package_raw_test extends \advanced_testcase {
      * @throws moodle_exception
      */
     public function test_store_package($packagedata) {
-        global $DB, $USER;
+        global $DB;
         $this->resetAfterTest();
 
         // Create and set example user.
@@ -173,9 +173,6 @@ class package_raw_test extends \advanced_testcase {
         $record = $DB->get_record('qtype_questionpy_pkgversion', ['hash' => $packagedata['package_hash']]);
         $this->assertNotFalse($record);
         $this->assertEquals($packagedata['version'], $record->version);
-        $this->assertGreaterThanOrEqual($timestamp, $record->timecreated);
-        $this->assertEquals($USER->id, $record->userid);
-
         $packageid = $record->packageid;
 
         // Check qtype_questionpy_package table.
@@ -212,13 +209,13 @@ class package_raw_test extends \advanced_testcase {
     }
 
     /**
-     * Tests the method store when it's called multiple times on the same package.
+     * Tests that storing same package without user should not throw an exception and only store the source once.
      *
      * @covers \package::store
      * @return void
      * @throws moodle_exception
      */
-    public function test_store_package_twice() {
+    public function test_store_package_twice_without_user() {
         global $DB;
         $this->resetAfterTest();
 
@@ -230,6 +227,26 @@ class package_raw_test extends \advanced_testcase {
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(2, $DB->count_records('qtype_questionpy_language'));
         $this->assertEquals(2, $DB->count_records('qtype_questionpy_tags'));
+    }
+
+    /**
+     * Tests that storing same package as user should throw an exception.
+     *
+     * @covers \package::store
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_store_already_existing_package_with_different_hash_throws() {
+        $this->resetAfterTest();
+        $this->expectException(moodle_exception::class);
+        $this->expectExceptionMessage('A package with the same version but different hash already exists.');
+
+        $rawpackage1 = package_provider();
+        $rawpackage2 = clone $rawpackage1;
+        $rawpackage2->hash .= 'faulty';
+
+        $rawpackage1->store();
+        $rawpackage2->store();
     }
 
     /**

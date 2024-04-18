@@ -45,6 +45,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     private string $packagehash;
     /** @var string */
     private string $questionstate;
+    /** @var stored_file|null */
+    private ?stored_file $packagefile;
 
     // Properties which do change between attempts (i.e. are modified by start_attempt and apply_attempt_state).
     /** @var string */
@@ -59,12 +61,14 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *
      * @param string $packagehash
      * @param string $questionstate
+     * @param stored_file|null $packagefile
      */
-    public function __construct(string $packagehash, string $questionstate) {
+    public function __construct(string $packagehash, string $questionstate, ?stored_file $packagefile) {
         parent::__construct();
         $this->api = new api();
         $this->packagehash = $packagehash;
         $this->questionstate = $questionstate;
+        $this->packagefile = $packagefile;
     }
 
     /**
@@ -85,7 +89,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function start_attempt(question_attempt_step $step, $variant): void {
-        $attempt = $this->api->start_attempt($this->packagehash, $this->questionstate, $variant);
+        $attempt = $this->api->package($this->packagehash, $this->packagefile)->start_attempt($this->questionstate, $variant);
 
         $this->attemptstate = $attempt->attemptstate;
         $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
@@ -120,8 +124,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $this->scoringstate = $step->get_qt_var(self::QT_VAR_SCORING_STATE);
 
         // TODO: We probably want to pass the last response here, but don't have an obvious way to get it.
-        $attempt = $this->api->view_attempt($this->packagehash, $this->questionstate, $this->attemptstate,
-            $this->scoringstate);
+        $attempt = $this->api->package($this->packagehash, $this->packagefile)->view_attempt($this->questionstate,
+            $this->attemptstate, $this->scoringstate);
         $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
     }
 
@@ -218,10 +222,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function grade_response(array $response): array {
-        $attemptscored = $this->api->score_attempt(
-            $this->packagehash, $this->questionstate, $this->attemptstate, $this->scoringstate,
-            $response
-        );
+        $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt($this->questionstate,
+            $this->attemptstate, $this->scoringstate, $response);
         $this->ui = new question_ui_renderer($attemptscored->ui->content, $attemptscored->ui->placeholders);
         // TODO: Persist scoring state. We need to set a qtvar, but we don't have access to the pending step here.
         $this->scoringstate = $attemptscored->scoringstate;

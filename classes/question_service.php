@@ -35,13 +35,18 @@ class question_service {
     /** @var api */
     private api $api;
 
+    /** @var package_service */
+    private package_service $packageservice;
+
     /**
      * Initializes the instance to use the given {@see api}.
      *
      * @param api $api
+     * @param package_service $packageservice
      */
-    public function __construct(api $api) {
+    public function __construct(api $api, package_service $packageservice) {
         $this->api = $api;
+        $this->packageservice = $packageservice;
     }
 
     /** @var string table containing our question data, 0-1 record per question */
@@ -55,23 +60,40 @@ class question_service {
      * @throws moodle_exception
      */
     public function get_question(int $questionid): object {
-        global $DB;
+        global $DB, $PAGE;
 
+        $record = $DB->get_record(self::QUESTION_TABLE, ['questionid' => $questionid]);
         $result = new stdClass();
-        $record = $DB->get_record(self::QUESTION_TABLE, ["questionid" => $questionid]);
-        if ($record) {
-            $package = package_version::get_by_id($record->pkgversionid);
-            if (!$package) {
+
+        if ($record === false) {
+            return $result;
+        }
+
+        if ($record->islocal) {
+            // Package was uploaded.
+            $filestorage = get_file_storage();
+            $files = $filestorage->get_area_files($PAGE->context->get_course_context()->id, 'qtype_questionpy',
+                'package', $record->id, 'itemid, filepath, filename', false);
+            if (count($files) === 0) {
                 throw new \coding_exception(
-                    "No package version record with ID '{$record->pkgversionid}' was found despite being referenced" .
+                    "No local package version file with hash '{$record->pkgversionhash}' was found despite being referenced" .
                     " by question {$questionid}"
                 );
             }
-
-            $result->qpy_package_hash = $package->hash;
-            $result->qpy_state = $record->state;
+        } else {
+            // Package was selected.
+            $package = package_version::get_by_id($record->pkgversionid);
+            if (is_null($package)) {
+                throw new \coding_exception(
+                    "No package versiotsetn record with ID '{$record->pkgversionid}' was found despite being referenced" .
+                    " by question {$questionid}"
+                );
+            }
         }
-
+        $result->qpy_id = $record->id;
+        $result->qpy_package_hash = $record->pkgversionhash;
+        $result->qpy_state = $record->state;
+        $result->qpy_is_local = $record->islocal;
         return $result;
     }
 
@@ -84,57 +106,76 @@ class question_service {
      * @throws moodle_exception
      */
     public function upsert_question(object $question): void {
+        global $DB;
+
         if (!isset($question->qpy_form)) {
             // This happens when the package defines an empty options form, which we do want to support.
             $question->qpy_form = [];
         }
 
-        global $DB;
+        $question->qpy_package_hash ??= $question->qpy_package_file_hash;
 
-        $pkgversionid = $this->get_package($question->qpy_package_hash);
-        if (!$pkgversionid) {
-            throw new moodle_exception(
-                "package_not_found", "qtype_questionpy", "",
-                (object)["packagehash" => $question->qpy_package_hash]
-            );
+        $file = null;
+        $pkgversionid = null;
+        if ($question->qpy_package_source === 'upload') {
+            $file = $this->packageservice->get_draft_file($question->qpy_package_file);
+        } else if ($question->qpy_package_source === 'local') {
+            $existingrecord = $DB->get_record(self::QUESTION_TABLE, [
+                'questionid' => $question->oldparent,
+            ]);
+            $file = $this->packageservice->get_file($existingrecord->id, $question->context->id);
+        } else {
+            $pkgversionid = $this->get_package($question->qpy_package_hash);
+            if (!$pkgversionid) {
+                throw new moodle_exception(
+                    'package_not_found', 'qtype_questionpy', '',
+                    (object)['packagehash' => $question->qpy_package_hash]
+                );
+            }
         }
 
         $existingrecord = $DB->get_record(self::QUESTION_TABLE, [
-            "questionid" => $question->id,
+            'questionid' => $question->oldparent,
         ]);
 
         // Repetition_elements may produce numeric arrays with gaps. We want them to become JSON arrays, so we reindex.
         // Form element names may not begin with a digit, so this won't accidentally change them.
         utils::reindex_integer_arrays($question->qpy_form);
 
-        $response = $this->api->create_question(
-            $question->qpy_package_hash,
+        $response = $this->api->package($question->qpy_package_hash, $file)->create_question(
             $existingrecord ? $existingrecord->state : null,
             (object)$question->qpy_form
         );
 
         if ($existingrecord) {
             // Question record already exists, update it if necessary.
-            $update = ["id" => $existingrecord->id];
+            $update = ['id' => $existingrecord->id, 'questionid' => $question->id];
 
             if ($existingrecord->state !== $response->state) {
-                $update["state"] = $response->state;
+                $update['state'] = $response->state;
             }
             if ($pkgversionid !== $existingrecord->pkgversionid) {
-                $update["pkgversionid"] = $pkgversionid;
+                $update['pkgversionid'] = $pkgversionid;
             }
 
-            if (count($update) > 1) {
-                $DB->update_record(self::QUESTION_TABLE, (object)$update);
+            if (count($update) > 2) {
+                $DB->update_record(self::QUESTION_TABLE, (object) $update);
             }
         } else {
             // Insert a new record with the question state only containing the options.
-            $DB->insert_record(self::QUESTION_TABLE, [
-                "questionid" => $question->id,
-                "feedback" => "",
-                "pkgversionid" => $pkgversionid,
-                "state" => $response->state,
+            $questionid = $DB->insert_record(self::QUESTION_TABLE, [
+                'questionid' => $question->id,
+                'feedback' => '',
+                'pkgversionhash' => $question->qpy_package_hash,
+                'pkgversionid' => $pkgversionid,
+                'islocal' => $question->qpy_package_source !== 'search',
+                'state' => $response->state,
             ]);
+            if ($question->qpy_package_source === 'upload') {
+                // Get draft file and store the file.
+                file_save_draft_area_files($question->qpy_package_file, $question->context->id,
+                    'qtype_questionpy', 'package', $questionid);
+            }
         }
     }
 
@@ -151,13 +192,13 @@ class question_service {
     }
 
     /**
-     * Get the package with the given hash from the DB or the QuestionPy server API.
+     * Get the package id with the given hash from the DB or the QuestionPy server API.
      *
      * If the package isn't found in the DB, then it is retrieved from the API and stored in the DB. If it isn't found
      * by the API either, `null` is returned.
      *
      * @param string $hash hash of the package to look for
-     * @return ?array [id of database record, package instance] or null if package not found in DB or API
+     * @return int|null
      * @throws dml_exception
      * @throws moodle_exception
      */

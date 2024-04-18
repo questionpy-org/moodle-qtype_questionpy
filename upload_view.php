@@ -72,16 +72,9 @@ if ($mform->is_cancelled()) {
         // Try to post the file to the server.
         $filesystem = $fs->get_file_system();
         $path = $filesystem->get_local_path_from_storedfile($storedfile, true);
-        $response = api::package_extract_info($filename, $path);
-
-        if ($response->code != 201) {
-            throw new moodle_exception('serverconnection', 'error', '', null,
-                "Server response code: $response->code \n Server response: {$response->get_data()}");
-        }
-
+        $package = api::extract_package_info($path);
         // Save package info in the DB.
-        $package = array_converter::from_array(package_raw::class, $response->get_data());
-        $package->store($context->id);
+        $package->store();
 
     } catch (moodle_exception $e) {
         // If anything goes wrong while saving the file, rollback.

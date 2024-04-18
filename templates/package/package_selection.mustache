@@ -33,11 +33,11 @@
     * name - QuestionPy package name,
     * description - QuestionPy package description,
     * icon - QuestionPy package icon,
-    * versions - If 'selected' is true, include only the selected package; else, include every available package,
+    * versions - If 'isselected' is true, include only the selected package; else, include every available package,
     * url - The url of the QuestionPy package,
-    * selected - Whether the current QuestionPy package is selected or not,
+    * isselected - Whether the current QuestionPy package is selected or not,
+    * islocal - Whether the current QuestionPy package was uplaoded by a user or not,
     * isfavourite - Whether the current QuestionPy package is marked as favourite or not,
-    * contextid - The current context id.
 
     Example context (json):
     {
@@ -48,16 +48,16 @@
         "icon": "https://picsum.photos/48/48?grayscale",
         "versions": [{"hash": "example_hash", "version": "0.1.0"}],
         "url": "https://example.com",
-        "selected": true,
-        "isfavourite": false,
-        "contextid": 0
+        "isselected": true,
+        "islocal": false,
+        "isfavourite": false
     }
 }}
 {{<qtype_questionpy/package/package_base}}
     {{$action}}
         <div class="qpy-card-action">
             <div class="qpy-card-action-options">
-                <select class="qpy-version-selection" {{#selected}}disabled{{/selected}} aria-label="{{#str}}select_package_element_aria, qtype_questionpy{{/str}}">
+                <select class="qpy-version-selection" {{#isselected}} disabled {{/isselected}} aria-label="{{#str}} select_package_element_aria, qtype_questionpy {{/str}}">
                     {{#versions}}
                         <option value="{{hash}}">{{version}}</option>
                     {{/versions}}
@@ -67,14 +67,16 @@
                         {{#pix}} i/moremenu {{/pix}}
                     </a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#" data-for="favourite-button" {{#isfavourite}} data-is-favourite {{/isfavourite}}>
+                        {{^islocal}}
+                            <a class="dropdown-item" href="#" data-for="favourite-button" {{#isfavourite}} data-is-favourite {{/isfavourite}}>
                             <span class="qpy-favourite-button-text">
                                 {{#pix}} i/star-rating {{/pix}}{{#str}} mark_as_favourite, qtype_questionpy {{/str}}
                             </span>
-                            <span class="qpy-unfavourite-button-text">
+                                <span class="qpy-unfavourite-button-text">
                                 {{#pix}} i/star-o {{/pix}}{{#str}} unmark_as_favourite, qtype_questionpy {{/str}}
                             </span>
-                        </a>
+                            </a>
+                        {{/islocal}}
                         {{#url}}
                             <a class="dropdown-item" href="{{url}}" target="_blank">{{#pix}} i/mnethost {{/pix}}{{#str}} open_website, qtype_questionpy {{/str}}</a>
                         {{/url}}
@@ -82,21 +84,21 @@
                 </div>
             </div>
 
-            {{^selected}}
+            {{^isselected}}
                 <button class="btn btn-primary qpy-version-selection-button">{{#str}} select_package, qtype_questionpy {{/str}}</button>
-            {{/selected}}
-            {{#selected}}
+            {{/isselected}}
+            {{#isselected}}
                 <button class="btn btn-danger qpy-version-selection-button">{{#str}} change_package, qtype_questionpy {{/str}}</button>
-            {{/selected}}
+            {{/isselected}}
         </div>
     {{/action}}
 {{/qtype_questionpy/package/package_base}}
 {{#js}}
     require(['qtype_questionpy/edit_question'], function(module) {
         const card = document.getElementById("qpy-card-{{uniqid}}");
-        module.initActionButton(card, {{selected}});
-        {{#selected}}
-            module.initFavouriteButton(card, {{id}}, {{contextid}});
-        {{/selected}}
+        module.initActionButton(card, {{isselected}});
+        {{#isselected}}
+            module.initFavouriteButton(card, {{id}});
+        {{/isselected}}
     });
 {{/js}}

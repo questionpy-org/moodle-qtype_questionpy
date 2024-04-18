@@ -51,43 +51,55 @@ class package_version {
     public string $version;
 
     /**
-     * Retrieves a package version by its id.
+     * Constructs sql fragment used to retrieve package versions.
      *
-     * @param int $pkgversionid
-     * @return package_version
+     * @param string $where
+     * @param array $params
+     * @return array A list containing the constructed sql fragment and an array of parameters.
+     */
+    public static function sql_get(string $where = '', array $params = []): array {
+        if (!empty($where)) {
+            $where = "WHERE $where";
+        }
+        $sql = "
+            SELECT id, packageid, hash, version
+            FROM {qtype_questionpy_pkgversion}
+            $where
+        ";
+        return [$sql, $params];
+    }
+
+    /**
+     * Retrieves a package version from the database.
+     *
+     * @param string $where
+     * @param array $params
+     * @return package_version|null
      * @throws moodle_exception
      */
-    public static function get_by_id(int $pkgversionid): package_version {
+    public static function get(string $where = '', array $params = []): ?package_version {
         global $DB;
-        $record = $DB->get_record('qtype_questionpy_pkgversion', ['id' => $pkgversionid]);
+        [$sql, $params] = self::sql_get($where, $params);
+        $record = $DB->get_record_sql($sql, $params);
+        if ($record === false) {
+            return null;
+        }
         return array_converter::from_array(self::class, (array) $record);
     }
 
     /**
-     * Retrieves a package version by its hash.
+     * Retrieves many package versions from the database.
      *
-     * @param string $hash
-     * @return package_version
-     * @throws moodle_exception
-     */
-    public static function get_by_hash(string $hash): package_version {
-        global $DB;
-        $record = $DB->get_record('qtype_questionpy_pkgversion', ['hash' => $hash]);
-        return array_converter::from_array(self::class, (array) $record);
-    }
-
-    /**
-     * Get packages from the db matching given conditions. Note: only conditions stored in the package version table
-     * are applicable.
-     *
-     * @param array|null $conditions
+     * @param string $where
+     * @param array $params
      * @return package_version[]
      * @throws moodle_exception
      */
-    public static function get_records(?array $conditions = null): array {
+    public static function get_many(string $where = '', array $params = []): array {
         global $DB;
         $packages = [];
-        $records = $DB->get_records('qtype_questionpy_pkgversion', $conditions);
+        [$sql, $params] = self::sql_get($where, $params);
+        $records = $DB->get_records_sql($sql, $params);
         foreach ($records as $record) {
             $packages[] = array_converter::from_array(self::class, (array) $record);
         }
@@ -95,7 +107,42 @@ class package_version {
     }
 
     /**
+     * Retrieves a package version by its id.
+     *
+     * @param int $pkgversionid
+     * @return package_version|null
+     * @throws moodle_exception
+     */
+    public static function get_by_id(int $pkgversionid): ?package_version {
+        return self::get('id = :id', ['id' => $pkgversionid]);
+    }
+
+    /**
+     * Retrieves a package version by its hash.
+     *
+     * @param string $hash
+     * @return package_version|null
+     * @throws moodle_exception
+     */
+    public static function get_by_hash(string $hash): ?package_version {
+        return self::get('hash = :hash', ['hash' => $hash]);
+    }
+
+    /**
+     * Retrieves a package version by its package and version string.
+     *
+     * @param int $packageid
+     * @param string $version
+     * @return package_version|null
+     * @throws moodle_exception
+     */
+    public static function get_by_package_and_version(int $packageid, string $version): ?package_version {
+        return self::get('packageid = :packageid AND version = :version', ['packageid' => $packageid, 'version' => $version]);
+    }
+
+    /**
      * Deletes the package version from the database.
+     *
      * If the package has only one version, the package related data is also deleted.
      *
      * @throws moodle_exception
@@ -104,15 +151,17 @@ class package_version {
         global $DB;
 
         $transaction = $DB->start_delegated_transaction();
-        $versioncount = $DB->count_records('qtype_questionpy_pkgversion', ['packageid' => $this->packageid]);
-        $DB->delete_records('qtype_questionpy_pkgversion', ['hash' => $this->hash, 'packageid' => $this->packageid]);
 
-        if ($versioncount === 1) {
-            // Only one package version exists, therefore we also delete package related data.
-            $DB->delete_records('qtype_questionpy_language', ['packageid' => $this->packageid]);
-            $DB->delete_records('qtype_questionpy_tags', ['packageid' => $this->packageid]);
-            $DB->delete_records('qtype_questionpy_package', ['id' => $this->packageid]);
+        $DB->delete_records('qtype_questionpy_pkgversion', ['packageid' => $this->packageid, 'hash' => $this->hash]);
+        if ($DB->count_records('qtype_questionpy_pkgversion', ['packageid' => $this->packageid]) > 0) {
+            // There are still other package versions.
+            return;
         }
+
+        // Delete package related data.
+        $DB->delete_records('qtype_questionpy_language', ['packageid' => $this->packageid]);
+        $DB->delete_records('qtype_questionpy_tags', ['packageid' => $this->packageid]);
+        $DB->delete_records('qtype_questionpy_package', ['id' => $this->packageid]);
 
         $transaction->allow_commit();
     }

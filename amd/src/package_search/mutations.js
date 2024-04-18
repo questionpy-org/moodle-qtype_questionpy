@@ -103,7 +103,7 @@ export default class {
         args = args || {};
 
         // Search through every category if no categories are provided.
-        categories = categories || ["all", "recentlyused", "favourites", "mine"];
+        categories = categories || ["all", "recentlyused", "favourites"];
 
         // Update general data.
         stateManager.setReadOnly(false);
@@ -168,7 +168,7 @@ export default class {
      * @param {string} order
      */
     async changeSort(stateManager, sort, order) {
-        await this.searchPackages(stateManager, {sort: sort, order: order}, ["all", "favourites", "mine"]);
+        await this.searchPackages(stateManager, {sort: sort, order: order}, ["all", "favourites"]);
     }
 
     /**
@@ -192,12 +192,12 @@ export default class {
         const state = stateManager.state;
         try {
             this._setLoading(stateManager, true);
-            const successful = await favouritePackage(packageid, favourite, this.options.contextid);
+            const successful = await favouritePackage(packageid, favourite);
             if (!successful) {
                 return;
             }
             stateManager.setReadOnly(false);
-            for (const category of ["all", "mine", "recentlyused"]) {
+            for (const category of ["all", "recentlyused"]) {
                 const pkg = state[`${category}Packages`].get(packageid);
                 if (pkg) {
                     pkg.isfavourite = favourite;
