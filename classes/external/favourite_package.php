@@ -22,6 +22,7 @@ global $CFG;
 require_once($CFG->libdir . "/externallib.php");
 
 use context;
+use context_system;
 use context_user;
 use external_api;
 use external_function_parameters;
@@ -47,40 +48,7 @@ class favourite_package extends external_api {
         return new external_function_parameters([
             'packageid' => new external_value(PARAM_INT),
             'favourite' => new external_value(PARAM_BOOL),
-            'contextid' => new external_value(PARAM_INT),
         ]);
-    }
-
-    /**
-     * Checks if a package should be accessible by the user in the given context.
-     *
-     * @param int $packageid
-     * @param context $context
-     * @return bool
-     * @throws moodle_exception
-     */
-    private static function package_is_accessible(int $packageid, context $context): bool {
-        global $DB, $USER;
-
-        // Path of the current context.
-        $paths['path'] = $context->path;
-
-        // If the current context if part of a course, add 'child context path'-pattern.
-        $childpathsql = "";
-        if ($coursecontext = $context->get_course_context(false)) {
-            $childpathsql = 'OR c.path LIKE :childpath';
-            $paths['path'] = $coursecontext->path;
-            $paths['childpath'] = $coursecontext->path . '/%';
-        }
-
-        // Check if at least one package version of the given package is accessible for the user.
-        return $DB->record_exists_sql("
-            SELECT pv.id
-            FROM {qtype_questionpy_pkgversion} pv
-            LEFT JOIN {context} c
-            ON c.id = pv.contextid
-            WHERE (pv.packageid = :packageid) AND (pv.userid IS NULL OR pv.userid = :userid OR c.path LIKE :path $childpathsql)
-        ", array_merge($paths, ['packageid' => $packageid, 'userid' => $USER->id]));
     }
 
     /**
@@ -91,23 +59,19 @@ class favourite_package extends external_api {
      *
      * @param int $packageid
      * @param bool $favourite
-     * @param int $contextid
      * @return bool
      * @throws moodle_exception
      */
-    public static function execute(int $packageid, bool $favourite, int $contextid): bool {
-        global $USER;
+    public static function execute(int $packageid, bool $favourite): bool {
+        global $DB, $USER;
+
+        self::validate_context(context_system::instance());
 
         // Basic parameter validation.
         $params = self::validate_parameters(self::execute_parameters(), [
             'packageid' => $packageid,
             'favourite' => $favourite,
-            'contextid' => $contextid,
         ]);
-
-        // Validate given context id.
-        $context = context::instance_by_id($params['contextid'], IGNORE_MISSING);
-        self::validate_context($context);
 
         // Get user favourite service.
         $usercontext = context_user::instance($USER->id);
@@ -129,10 +93,10 @@ class favourite_package extends external_api {
         }
 
         // Mark package as favourite if it is accessible by the user.
-        if ($accessible = self::package_is_accessible($params['packageid'], $context)) {
+        if ($exists = $DB->record_exists('qtype_questionpy_pkgversion', ['packageid' => $params['packageid']])) {
             $ufservice->create_favourite('qtype_questionpy', 'package', $params['packageid'], $usercontext);
         }
-        return $accessible;
+        return $exists;
     }
 
     /**

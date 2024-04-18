@@ -117,26 +117,4 @@ class package_test extends \advanced_testcase {
         $this->assertEmpty($difference);
         $this->assertTrue($package1->equals($package2));
     }
-
-    /**
-     * Stores two packages in the DB.
-     * Queries the two packages by the hash and tests if the original package is in the query result.
-     *
-     * @covers \qtype_questionpy\package::get_records
-     * @return void
-     * @throws moodle_exception
-     */
-    public function test_get_records() {
-        global $DB;
-        $this->resetAfterTest();
-
-        $rawpackage1 = package_provider();
-        $rawpackage2 = package_provider();
-        $package1id = $rawpackage1->store();
-        $rawpackage2->store();
-
-        $this->assertCount(1, $DB->get_records('qtype_questionpy_pkgversion', ['id' => $package1id]));
-        $this->assertCount(1, $DB->get_records('qtype_questionpy_pkgversion',
-            ['hash' => $rawpackage1->hash]));
-    }
 }

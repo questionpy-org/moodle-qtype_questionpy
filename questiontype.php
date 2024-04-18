@@ -23,6 +23,7 @@
  */
 
 use qtype_questionpy\api\api;
+use qtype_questionpy\package_service;
 use qtype_questionpy\question_service;
 
 defined('MOODLE_INTERNAL') || die();
@@ -38,12 +39,14 @@ require_once($CFG->dirroot . '/question/type/questionpy/question.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy extends question_type {
-
-    /** @var question_service */
-    private question_service $questiondb;
-
     /** @var api */
     private api $api;
+
+    /** @var package_service */
+    private package_service $packageservice;
+
+    /** @var question_service */
+    private question_service $questionservice;
 
     /**
      * Initializes the instance. Called by Moodle.
@@ -51,7 +54,8 @@ class qtype_questionpy extends question_type {
     public function __construct() {
         parent::__construct();
         $this->api = new api();
-        $this->questiondb = new question_service($this->api);
+        $this->packageservice = new package_service($this->api);
+        $this->questionservice = new question_service($this->api, $this->packageservice);
     }
 
     /**
@@ -86,6 +90,24 @@ class qtype_questionpy extends question_type {
         parent::delete_question($questionid, $contextid);
     }
 
+    public function move_files($questionid, $oldcontextid, $newcontextid) {
+        parent::move_files($questionid, $oldcontextid, $newcontextid);
+        $this->move_files_in_answers($questionid, $oldcontextid, $newcontextid);
+        $this->move_files_in_hints($questionid, $oldcontextid, $newcontextid);
+
+        $fs = get_file_storage();
+        $fs->move_area_files_to_new_context($oldcontextid, $newcontextid, 'qtype_questionpy', 'package', $questionid);
+    }
+
+    protected function delete_files($questionid, $contextid) {
+        parent::delete_files($questionid, $contextid);
+        $this->delete_files_in_answers($questionid, $contextid);
+        $this->delete_files_in_hints($questionid, $contextid);
+
+        $fs = get_file_storage();
+        $fs->delete_area_files($contextid, 'qtype_questionpy', 'package', $questionid);
+    }
+
     /**
      * Calculate the score a monkey would get on a question by clicking randomly.
      *
@@ -107,12 +129,7 @@ class qtype_questionpy extends question_type {
      * @throws moodle_exception
      */
     public function save_question_options($question) {
-        if (!isset($question->qpy_package_hash)) {
-            // A package has not yet been selected, so there is no package-specific data to save.
-            return;
-        }
-
-        $this->questiondb->upsert_question($question);
+        $this->questionservice->upsert_question($question);
     }
 
     /**
@@ -128,7 +145,7 @@ class qtype_questionpy extends question_type {
             return false;
         }
 
-        foreach ($this->questiondb->get_question($question->id) as $key => $value) {
+        foreach ($this->questionservice->get_question($question->id) as $key => $value) {
             $question->{$key} = $value;
         }
 
@@ -138,11 +155,17 @@ class qtype_questionpy extends question_type {
     /**
      * Create an appropriate question_definition for the question of this type
      * using data loaded from the database.
+     *
      * @param object $questiondata the question data loaded from the database.
      * @return question_definition an instance of the appropriate question_definition subclass.
      *      Still needs to be initialised.
+     * @throws moodle_exception
      */
     protected function make_question_instance($questiondata) {
-        return new qtype_questionpy_question($questiondata->qpy_package_hash, $questiondata->qpy_state);
+        $packagefile = null;
+        if ($questiondata->qpy_is_local) {
+            $packagefile = $this->packageservice->get_file($questiondata->qpy_id, $questiondata->contextid);
+        }
+        return new qtype_questionpy_question($questiondata->qpy_package_hash, $questiondata->qpy_state, $packagefile);
     }
 }

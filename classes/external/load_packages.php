@@ -32,8 +32,7 @@ use qtype_questionpy\package\package_version;
 /**
  * This service loads QuestionPy packages from the application server into the database.
  *
- * Before doing so, it removes previously loaded packages from the database - packages that were uploaded by a trainer
- * will not be removed.
+ * Before doing so, it removes previously stored packages from the database.
  *
  * @package    qtype_questionpy
  * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
@@ -62,17 +61,17 @@ class load_packages extends external_api {
 
         $transaction = $DB->start_delegated_transaction();
 
-        // Remove every package version that was received from the application server.
-        $versions = package_version::get_records(['userid' => null]);
+        // Remove every package version.
+        $versions = package_version::get_many();
         foreach ($versions as $version) {
             $version->delete();
         }
 
-        // Load packages from the application server.
+        // Load and store packages from the application server.
         $api = new api();
         $packages = $api->get_packages();
         foreach ($packages as $package) {
-            $package->store(0, false);
+            $package->store();
         }
 
         $transaction->allow_commit();

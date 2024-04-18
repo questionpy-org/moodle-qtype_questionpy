@@ -54,6 +54,8 @@ $string['server_info_requests_in_queue'] = 'Requests in queue';
 
 // Package upload.
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
+$string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
+$string['version_is_already_stored_error'] = 'The package version was already stored by the current user.';
 
 // Package selection.
 $string['selection_title'] = 'Select QuestionPy Package';
@@ -75,13 +77,15 @@ $string['search_bar_label_aria'] = 'Search Bar';
 $string['search_all_header'] = 'All ({$a})';
 $string['search_recentlyused_header'] = 'Recently Used ({$a})';
 $string['search_favourites_header'] = 'Favourites ({$a})';
-$string['search_mine_header'] = 'Mine ({$a})';
 $string['search_pagination_label_aria'] = 'Search results pages';
 $string['search_pagination_previous_aria'] = 'Previous';
 $string['search_pagination_next_aria'] = 'Next';
 $string['search_sort_label_aria'] = 'Sorting';
 $string['search_sort_alphabetical'] = 'Alphabetical';
 $string['search_sort_creation_date'] = 'Creation Date';
+
+$string['question_package_search'] = 'Select an existing package';
+$string['question_package_upload'] = 'Upload your own';
 
 // Package options form.
 $string['form_fallback_element_text'] = "The QuestionPy package is using a form element not supported by the Moodle"

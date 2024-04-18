@@ -22,6 +22,7 @@ global $CFG;
 require_once($CFG->libdir . "/externallib.php");
 
 use context;
+use context_system;
 use context_user;
 use external_api;
 use external_function_parameters;
@@ -31,6 +32,7 @@ use external_value;
 use invalid_parameter_exception;
 use moodle_exception;
 use qtype_questionpy\localizer;
+use qtype_questionpy\package\package_version;
 
 /**
  * This service can be used to search and filter for packages in the database.
@@ -42,7 +44,7 @@ use qtype_questionpy\localizer;
 class search_packages extends external_api {
 
     /** @var string[] Valid categories. */
-    const CATEGORIES = ['all', 'recentlyused', 'favourites', 'mine'];
+    const CATEGORIES = ['all', 'recentlyused', 'favourites'];
     /** @var string[] Valid kinds of sorting. */
     const SORT = ['alpha', 'date'];
     /** @var string[] Valid sorting direction. */
@@ -62,7 +64,7 @@ class search_packages extends external_api {
             'order' => new external_value(PARAM_ALPHA),
             'limit' => new external_value(PARAM_INT),
             'page' => new external_value(PARAM_INT),
-            'contextid' => new external_value(PARAM_INT),
+            'contextid' => new external_value(PARAM_INT, 'Required when category is "recentlyused"', VALUE_DEFAULT, null),
         ]);
     }
 
@@ -78,6 +80,9 @@ class search_packages extends external_api {
         if (!in_array($params['category'], self::CATEGORIES)) {
             $validparameters = implode(', ', self::CATEGORIES);
             throw new invalid_parameter_exception("Unknown category. Valid parameters are: $validparameters");
+        }
+        if ($params['category'] === 'recentlyused' && !isset($params['contextid'])) {
+            throw new invalid_parameter_exception('A context id must be provided if category is "recentlyused".');
         }
         if (!in_array($params['sort'], self::SORT)) {
             $validparameters = implode(', ', self::SORT);
@@ -138,6 +143,9 @@ class search_packages extends external_api {
             $parts[] = '(' . implode(' AND ', $segments[$fieldname]) . ')';
         }
         $sql = implode(' OR ', $parts);
+        if (!empty($sql)) {
+            $sql = "WHERE $sql";
+        }
         return [$sql, $params];
     }
 
@@ -145,12 +153,11 @@ class search_packages extends external_api {
      * Retrieves the tags and package versions of multiple packages given their ids.
      *
      * @param int[] $packageids Package ids.
-     * @param int[] $contextids Context ids.
      * @return array[] A list containing the tags and versions.
      * @throws moodle_exception
      */
-    private static function get_tags_and_versions(array $packageids, array $contextids): array {
-        global $DB, $USER;
+    private static function get_tags_and_versions(array $packageids): array {
+        global $DB;
 
         if (empty($packageids)) {
             return [[], []];
@@ -158,8 +165,6 @@ class search_packages extends external_api {
 
         // Create sql fragments and parameters.
         [$inpackagesql, $inpackageparams] = $DB->get_in_or_equal($packageids, SQL_PARAMS_NAMED, 'packageid');
-        [$incontextsql, $incontextparams] = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'contextid');
-        [$inusersql, $inuserparams] = $DB->get_in_or_equal($USER->id, SQL_PARAMS_NAMED, 'userid');
 
         // Get tags.
         $tagsraw = $DB->get_records_sql("
@@ -177,19 +182,14 @@ class search_packages extends external_api {
         }
 
         // Get relevant package versions.
-        $versionsraw = $DB->get_records_sql("
-            SELECT id, packageid, hash, version, userid
-            FROM {qtype_questionpy_pkgversion}
-            WHERE packageid {$inpackagesql} AND (userid IS NULL OR userid {$inusersql} OR contextid {$incontextsql})
-        ", array_merge($inpackageparams, $incontextparams, $inuserparams));
-
+        [$sql, $params] = package_version::sql_get("packageid {$inpackagesql}", $inpackageparams);
+        $versionsraw = $DB->get_records_sql($sql, $params);
         $versions = [];
         foreach ($versionsraw as $version) {
             $versions[$version->packageid][] = [
                 'id' => $version->id,
                 'hash' => $version->hash,
                 'version' => $version->version,
-                'ismine' => $version->userid === $USER->id,
             ];
         }
 
@@ -270,99 +270,28 @@ class search_packages extends external_api {
     }
 
     /**
-     * Returns a valid WHERE-clause if a condition is given else ''.
-     *
-     * @param string $condition
-     * @return string
-     */
-    private static function sql_where(string $condition): string {
-        if (trim($condition) === '') {
-            return '';
-        }
-        return "WHERE $condition";
-    }
-
-    /**
-     * Returns a list of relevant context ids related to the given context.
-     *
-     * If the given context is part of a course context, the course context id and every child context id are returned.
-     * Else, only the id of the given context is returned inside the array.
-     *
-     * @param context $context
-     * @return int[] relevant context ids
-     * @throws moodle_exception
-     */
-    private static function get_relevant_context_ids(context $context): array {
-        // If context is part of a course, get every context of that course.
-        $coursecontext = $context->get_course_context(false);
-        if ($coursecontext) {
-            // Context is part of a course.
-            $contexts = $coursecontext->get_child_contexts();
-            $contextids = array_keys($contexts);
-            $contextids[] = $coursecontext->id;
-        } else {
-            // Context is not part of a course.
-            $contextids[] = $context->id;
-        }
-        return $contextids;
-    }
-
-    /**
-     * Constructs sql fragment used to guard packages which should not be visible for the current user.
-     *
-     * Only packages with relevant context ids, packages from the current user or packages
-     * from the application server should be retrieved.
-     *
-     * @param array $contextids relevant context ids
-     * @param bool $onlymine only packages falling under the 'mine' category should be considered
-     * @return array A list containing the sql fragment and two parameter arrays.
-     * @throws moodle_exception
-     */
-    private static function create_package_guard(array $contextids, bool $onlymine): array {
-        global $DB, $USER;
-        [$incontextsql, $incontextparams] = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'guard_contextid');
-        [$inusersql, $inuserparams] = $DB->get_in_or_equal($USER->id, SQL_PARAMS_NAMED, 'guard_userid');
-        $withserversql = '';
-        if (!$onlymine) {
-            $withserversql = 'pv.userid IS NULL OR';
-        }
-        $joinguardsql = "
-            JOIN {qtype_questionpy_pkgversion} pv
-            ON p.id = pv.packageid AND ($withserversql pv.userid {$inusersql} OR pv.contextid {$incontextsql})
-        ";
-
-        return [$joinguardsql, $incontextparams, $inuserparams];
-    }
-
-    /**
      * Constructs sql fragment used to retrieve recently used packages given a context id.
      *
-     * @param array $contextids
+     * @param int $contextid
      * @return array A list containing the constructed sql fragment and an array of parameters.
-     * @throws moodle_exception
      */
-    private static function create_recently_used_sql(array $contextids): array {
-        global $DB;
-
+    private static function create_recently_used_sql(int $contextid): array {
         // Create relevant sql fragment.
-        [$incontextsql, $incontextparams] = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'contextid');
         $joinlastusedsql = "
             JOIN {qtype_questionpy_lastused} lu
-            ON lu.packageid = p.id AND lu.contextid {$incontextsql}
+            ON lu.packageid = p.id AND lu.contextid = :contextid
         ";
 
-        return [$joinlastusedsql, $incontextparams];
+        return [$joinlastusedsql, ['contextid' => $contextid]];
     }
 
     /**
      * Constructs the sql query used for searching through packages.
      *
      * @param mixed $params The parameters.
-     * @param array $contextids The relevant context ids.
      * @return array
-     * @throws moodle_exception
      */
-    public static function create_sql($params, array $contextids): array {
+    private static function create_sql($params): array {
         global $USER;
 
         // Order the results.
@@ -376,12 +305,7 @@ class search_packages extends external_api {
         [$jointagssql, $jointagsparams] = self::create_tag_filter_sql($params['tags']);
 
         // Prepare query.
-        [$likesql, $likeparams] = self::create_text_search_sql(['name', 'description'], $params['query']);
-        $wherelikesql = self::sql_where($likesql);
-
-        // Create package guard.
-        $onlymine = $params['category'] === 'mine';
-        [$joinguardsql, $incontextparams, $inuserparams] = self::create_package_guard($contextids, $onlymine);
+        [$wherelikesql, $wherelikeparams] = self::create_text_search_sql(['name', 'description'], $params['query']);
 
         // Get the favourite-status of a package.
         $usercontext = context_user::instance($USER->id);
@@ -389,15 +313,14 @@ class search_packages extends external_api {
         [$joinfavsql, $joinfavparams] = $ufservice->get_join_sql_by_type('qtype_questionpy', 'package', 'f', 'p.id');
 
         // Merge existing parameters.
-        $finalparams = array_merge($joinlangsparams, $jointagsparams, $likeparams, $incontextparams, $inuserparams,
-                                   $joinfavparams);
+        $finalparams = array_merge($joinlangsparams, $jointagsparams, $wherelikeparams, $joinfavparams);
 
         // Search through recently used packages if the category is set.
         $selecttimeusedsql = '';
-        $recentlyusedsql = '';
+        $joinrecentlyusedsql = '';
         $wherefavsql = '';
         if ($isrecentylusedcategory) {
-            [$recentlyusedsql, $recentlyusedparams] = self::create_recently_used_sql($contextids);
+            [$joinrecentlyusedsql, $recentlyusedparams] = self::create_recently_used_sql($params['contextid']);
             // Merge new parameters with existing ones.
             $finalparams = array_merge($finalparams, $recentlyusedparams);
             $selecttimeusedsql = ', lu.timeused';
@@ -415,9 +338,8 @@ class search_packages extends external_api {
                                 -- Transform the favourite-ID into 0 and 1; the service converts them into booleans.
                                 CASE WHEN f.id IS NULL THEN 0 ELSE 1 END AS isfavourite
                 FROM {qtype_questionpy_package} p
-                $joinguardsql
                 $joinfavsql
-                $recentlyusedsql
+                $joinrecentlyusedsql
                 $joinlangssql
                 $jointagssql
                 $wherefavsql
@@ -439,12 +361,12 @@ class search_packages extends external_api {
      * @param string $order
      * @param int $limit
      * @param int $page
-     * @param int $contextid
+     * @param int|null $contextid
      * @return array
      * @throws moodle_exception
      */
     public static function execute(string $query, array $tags, string $category, string $sort, string $order,
-                                   int $limit, int $page, int $contextid): array {
+                                   int $limit, int $page, ?int $contextid): array {
         global $DB;
 
         // Basic parameter validation.
@@ -459,25 +381,25 @@ class search_packages extends external_api {
             'contextid' => $contextid,
         ]);
 
-        // Validate given context id.
-        $context = context::instance_by_id($contextid, IGNORE_MISSING);
-        self::validate_context($context);
+        // Validate context id.
+        if (is_null($params['contextid'])) {
+            self::validate_context(context_system::instance());
+        } else {
+            self::validate_context(context::instance_by_id($params['contextid'], IGNORE_MISSING));
+        }
 
         // In addition to the basic parameter validation we also want to validate the values.
         self::validate_parameter_values($params);
 
-        // Get relevant context ids.
-        $contextids = self::get_relevant_context_ids($context);
-
         // Generate sql and parameters.
-        [$finalsql, $finalparams] = self::create_sql($params, $contextids);
+        [$finalsql, $finalparams] = self::create_sql($params);
 
         // Execute the sql query and set the limit and offset.
         $packagesraw = $DB->get_records_sql($finalsql, $finalparams, $params['limit'] * $params['page'], $params['limit']);
 
         // Get package tag and versions.
         $ids = array_column($packagesraw, 'id');
-        [$tags, $versions] = self::get_tags_and_versions($ids, $contextids);
+        [$tags, $versions] = self::get_tags_and_versions($ids);
 
         // Set the tags and package versions.
         foreach ($packagesraw as $package) {
@@ -512,7 +434,6 @@ class search_packages extends external_api {
                     'id' => new external_value(PARAM_INT),
                     'hash' => new external_value(PARAM_ALPHANUM),
                     'version' => new external_value(PARAM_TEXT),
-                    'ismine' => new external_value(PARAM_BOOL),
                 ])),
                 'author' => new external_value(PARAM_RAW),
                 'name' => new external_value(PARAM_TEXT),

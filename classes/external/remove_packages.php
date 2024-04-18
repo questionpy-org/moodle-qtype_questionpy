@@ -29,7 +29,7 @@ use moodle_exception;
 use qtype_questionpy\package\package_version;
 
 /**
- * This service removes packages from the database that were not uploaded by a trainer.
+ * This service removes every package from the database.
  *
  * @package    qtype_questionpy
  * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
@@ -58,8 +58,7 @@ class remove_packages extends external_api {
 
         $transaction = $DB->start_delegated_transaction();
 
-        // Only delete package versions that were not uploaded by a user.
-        $versions = package_version::get_records(['userid' => null]);
+        $versions = package_version::get_many();
         foreach ($versions as $version) {
             $version->delete();
         }
