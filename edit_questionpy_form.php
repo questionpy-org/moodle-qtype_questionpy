@@ -27,6 +27,7 @@ use qtype_questionpy\api\api;
 use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\localizer;
 use qtype_questionpy\package\package;
+use qtype_questionpy\package\package_base;
 use qtype_questionpy\package\package_version;
 use qtype_questionpy\package_service;
 
@@ -96,23 +97,33 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * Renders question edit form of a specific package version.
      *
      * @param MoodleQuickForm $mform the form being built.
-     * @param array $packagearray
+     * @param package_base $package
      * @param string $packagehash
+     * @param string $packageversion
+     * @param bool $isfavourite
      * @param stored_file|null $file
-     * @throws coding_exception
      * @throws moodle_exception
      */
-    private function definition_package_settings(MoodleQuickForm $mform, array $packagearray, string $packagehash,
+    private function definition_package_settings(MoodleQuickForm $mform, package_base $package, string $packagehash,
+                                                 string $packageversion, bool $isfavourite,
                                                  ?stored_file $file = null): void {
-        global $OUTPUT;
+        global $OUTPUT, $PAGE;
+
+        // Get localized package array.
+        $languages = localizer::get_preferred_languages();
+        $packagearray = $package->as_localized_array($languages);
+        $packagearray['contextid'] = $PAGE->context->get_course_context()->id;
+        $packagearray['isselected'] = true;
+        $packagearray['versions'] = ['hash' => $packagehash, 'version' => $packageversion];
+        $packagearray['islocal'] = !is_null($file);
+        $packagearray['isfavourite'] = $isfavourite;
+
         $group = [];
         $group[] = $mform->createElement(
             'html', $OUTPUT->render_from_template('qtype_questionpy/package/package_selection', $packagearray)
         );
         $mform->addGroup($group, '', get_string('selection_title_selected', 'qtype_questionpy'));
 
-        // Render question edit form.
-        $response = $this->api->package($packagehash, $file)->get_question_edit_form($this->question->qpy_state ?? null);
         // Stores the currently selected package hash.
         if ($file) {
             $mform->addElement('hidden', 'qpy_package_file_hash', $packagehash);
@@ -122,6 +133,8 @@ class qtype_questionpy_edit_form extends question_edit_form {
             $mform->setType('qpy_package_hash', PARAM_RAW);
         }
 
+        // Render question edit form.
+        $response = $this->api->package($packagehash, $file)->get_question_edit_form($this->question->qpy_state ?? null);
         $context = new root_render_context($this, $mform, 'qpy_form', $response->formdata);
         $response->definition->render_to($context);
 
@@ -152,28 +165,14 @@ class qtype_questionpy_edit_form extends question_edit_form {
         }
         $package = api::extract_package_info($file);
 
-        // Get localized package array.
-        $languages = localizer::get_preferred_languages();
-        $packagearray = $package->as_localized_array($languages);
-
-        $contextid = $PAGE->context->get_course_context()->id;
-        $packagearray['contextid'] = $contextid;
-        $packagearray['isselected'] = true;
-        $packagearray['versions'] = ['hash' => $package->hash, 'version' => $package->version];
-
-        // Uploaded packages can not be marked as favourite.
-        $packagearray['isfavourite'] = false;
-        $packagearray['islocal'] = true;
-
-        $this->definition_package_settings($mform, $packagearray, $package->hash, $file);
+        $this->definition_package_settings($mform, $package, $package->hash, $package->version, false, $file);
     }
 
     /**
      * @throws moodle_exception
      */
     private function definition_package_settings_search(MoodleQuickForm $mform) {
-        global $USER, $PAGE;
-        $usercontext = context_user::instance($USER->id);
+        global $USER;
 
         $mform->addElement('hidden', 'qpy_package_source', 'search');
         $mform->setType('qpy_package_source', PARAM_ALPHA);
@@ -183,21 +182,12 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $pkgversion = package_version::get_by_hash($packagehash);
         $package = package::get_by_version($pkgversion->id);
 
-        // Get localized package array.
-        $languages = localizer::get_preferred_languages();
-        $packagearray = $package->as_localized_array($languages);
-
-        $contextid = $PAGE->context->get_course_context()->id;
-        $packagearray['contextid'] = $contextid;
-        $packagearray['isselected'] = true;
-        $packagearray['versions'] = ['hash' => $packagehash, 'version' => $pkgversion->version];
-
         // Get favourite status.
+        $usercontext = context_user::instance($USER->id);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
-        $packagearray['isfavourite'] = $ufservice->favourite_exists('qtype_questionpy', 'package', $package->id, $usercontext);
-        $packagearray['islocal'] = false;
+        $isfavourite = $ufservice->favourite_exists('qtype_questionpy', 'package', $package->id, $usercontext);
 
-        $this->definition_package_settings($mform, $packagearray, $packagehash);
+        $this->definition_package_settings($mform, $package, $pkgversion->hash, $pkgversion->version, $isfavourite);
     }
 
     /**
