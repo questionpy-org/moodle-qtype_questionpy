@@ -90,6 +90,14 @@ class qtype_questionpy extends question_type {
         parent::delete_question($questionid, $contextid);
     }
 
+    /**
+     * Move all the files belonging to this question from one context to another.
+     *
+     * @param $questionid
+     * @param $oldcontextid
+     * @param $newcontextid
+     * @return void
+     */
     public function move_files($questionid, $oldcontextid, $newcontextid) {
         parent::move_files($questionid, $oldcontextid, $newcontextid);
         $this->move_files_in_answers($questionid, $oldcontextid, $newcontextid);
@@ -99,6 +107,13 @@ class qtype_questionpy extends question_type {
         $fs->move_area_files_to_new_context($oldcontextid, $newcontextid, 'qtype_questionpy', 'package', $questionid);
     }
 
+    /**
+     * Delete all the files belonging to this question.
+     *
+     * @param $questionid
+     * @param $contextid
+     * @return void
+     */
     protected function delete_files($questionid, $contextid) {
         parent::delete_files($questionid, $contextid);
         $this->delete_files_in_answers($questionid, $contextid);

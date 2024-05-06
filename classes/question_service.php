@@ -118,12 +118,12 @@ class question_service {
         $file = null;
         $pkgversionid = null;
         if ($question->qpy_package_source === 'upload') {
-            $file = $this->packageservice->get_draft_file($question->qpy_package_file);
-        } else if ($question->qpy_package_source === 'local') {
-            $existingrecord = $DB->get_record(self::QUESTION_TABLE, [
-                'questionid' => $question->oldparent,
-            ]);
-            $file = $this->packageservice->get_file($existingrecord->id, $question->context->id);
+            if (isset($question->qpy_package_path_name_hash)) {
+                $filestorage = get_file_storage();
+                $file = $filestorage->get_file_by_hash($question->qpy_package_path_name_hash);
+            } else {
+                $file = $this->packageservice->get_draft_file($question->qpy_package_file);
+            }
         } else {
             $pkgversionid = $this->get_package($question->qpy_package_hash);
             if (!$pkgversionid) {
@@ -135,7 +135,7 @@ class question_service {
         }
 
         $existingrecord = $DB->get_record(self::QUESTION_TABLE, [
-            'questionid' => $question->oldparent,
+            'questionid' => $question->id,
         ]);
 
         // Repetition_elements may produce numeric arrays with gaps. We want them to become JSON arrays, so we reindex.
@@ -149,7 +149,7 @@ class question_service {
 
         if ($existingrecord) {
             // Question record already exists, update it if necessary.
-            $update = ['id' => $existingrecord->id, 'questionid' => $question->id];
+            $update = ['id' => $existingrecord->id];
 
             if ($existingrecord->state !== $response->state) {
                 $update['state'] = $response->state;
@@ -158,23 +158,30 @@ class question_service {
                 $update['pkgversionid'] = $pkgversionid;
             }
 
-            if (count($update) > 2) {
+            if (count($update) > 1) {
                 $DB->update_record(self::QUESTION_TABLE, (object) $update);
             }
         } else {
+            $islocal = $question->qpy_package_source === 'upload';
             // Insert a new record with the question state only containing the options.
             $questionid = $DB->insert_record(self::QUESTION_TABLE, [
                 'questionid' => $question->id,
                 'feedback' => '',
                 'pkgversionhash' => $question->qpy_package_hash,
                 'pkgversionid' => $pkgversionid,
-                'islocal' => $question->qpy_package_source !== 'search',
+                'islocal' => $islocal,
                 'state' => $response->state,
             ]);
-            if ($question->qpy_package_source === 'upload') {
-                // Get draft file and store the file.
-                file_save_draft_area_files($question->qpy_package_file, $question->context->id,
-                    'qtype_questionpy', 'package', $questionid);
+            if ($islocal) {
+                if (isset($question->qpy_package_path_name_hash)) {
+                    $filestorage->create_file_from_storedfile([
+                        'itemid' => $questionid,
+                    ], $file);
+                } else {
+                    // Get draft file and store the file.
+                    file_save_draft_area_files($question->qpy_package_file, $question->context->id,
+                        'qtype_questionpy', 'package', $questionid);
+                }
             }
         }
     }

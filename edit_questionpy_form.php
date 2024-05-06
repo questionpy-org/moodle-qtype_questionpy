@@ -83,12 +83,12 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @throws moodle_exception
      */
     private function definition_package_search_container(MoodleQuickForm $mform): void {
-        global $OUTPUT, $PAGE;
+        global $OUTPUT;
 
         // Create a group which contains the package container - the group is used to simplify the styling.
         // TODO: get limit from settings.
         $group[] = $mform->createElement('html', $OUTPUT->render_from_template('qtype_questionpy/package_search/area',
-            ['contextid' => $PAGE->context->get_course_context()->id, 'limit' => 10]));
+            ['contextid' => $this->context->get_course_context()->id, 'limit' => 10]));
         $mform->addGroup($group, 'qpy_package_container');
         $mform->hideIf('qpy_package_container', 'qpy_package_source', 'neq', 'search');
     }
@@ -107,12 +107,12 @@ class qtype_questionpy_edit_form extends question_edit_form {
     private function definition_package_settings(MoodleQuickForm $mform, package_base $package, string $packagehash,
                                                  string $packageversion, bool $isfavourite,
                                                  ?stored_file $file = null): void {
-        global $OUTPUT, $PAGE;
+        global $OUTPUT;
 
         // Get localized package array.
         $languages = localizer::get_preferred_languages();
         $packagearray = $package->as_localized_array($languages);
-        $packagearray['contextid'] = $PAGE->context->get_course_context()->id;
+        $packagearray['contextid'] = $this->context->get_course_context()->id;
         $packagearray['isselected'] = true;
         $packagearray['versions'] = ['hash' => $packagehash, 'version' => $packageversion];
         $packagearray['islocal'] = !is_null($file);
@@ -143,25 +143,26 @@ class qtype_questionpy_edit_form extends question_edit_form {
     }
 
     /**
+     * Renders question edit form of a specific package version that was or is uploaded by the user.
+     *
+     * @param MoodleQuickForm $mform the form being built.
+     * @param bool $fromdraft
      * @throws moodle_exception
      */
-    private function definition_package_settings_upload(MoodleQuickForm $mform, bool $isediting) {
-        global $PAGE;
+    private function definition_package_settings_upload(MoodleQuickForm $mform, bool $fromdraft) {
+        $mform->addElement('hidden', 'qpy_package_source', 'upload');
+        $mform->setType('qpy_package_source', PARAM_ALPHA);
 
-        if ($isediting) {
-            $qpyid = $this->question->qpy_id;
-            $file = $this->packageservice->get_file($qpyid, $PAGE->context->get_course_context()->id);
-
-            $mform->addElement('hidden', 'qpy_package_source', 'local');
-            $mform->setType('qpy_package_source', PARAM_ALPHA);
-        } else {
-            $mform->addElement('hidden', 'qpy_package_source', 'upload');
-            $mform->setType('qpy_package_source', PARAM_ALPHA);
-
+        if ($fromdraft) {
             $draftid = $this->optional_param('qpy_package_file', null, PARAM_INT);
             $mform->addElement('hidden', 'qpy_package_file', $draftid);
             $mform->setType('qpy_package_file', PARAM_INT);
             $file = $this->packageservice->get_draft_file($draftid);
+        } else {
+            $qpyid = $this->question->qpy_id;
+            $file = $this->packageservice->get_file($qpyid, $this->context->get_course_context()->id);
+            $mform->addElement('hidden', 'qpy_package_path_name_hash', $file->get_pathnamehash());
+            $mform->setType('qpy_package_path_name_hash', PARAM_ALPHANUM);
         }
         $package = api::extract_package_info($file);
 
@@ -169,6 +170,9 @@ class qtype_questionpy_edit_form extends question_edit_form {
     }
 
     /**
+     * Renders question edit form of a specific package version that was or is selected by the user.
+     *
+     * @param MoodleQuickForm $mform the form being built.
      * @throws moodle_exception
      */
     private function definition_package_settings_search(MoodleQuickForm $mform) {
@@ -198,16 +202,18 @@ class qtype_questionpy_edit_form extends question_edit_form {
      */
     protected function definition_inner($mform): void {
         $source = $this->optional_param('qpy_package_source', null, PARAM_ALPHA);
-        $isediting = isset($this->question->qpy_id);
-        $selected = !is_null($source) || $isediting;
+        $hash = $this->optional_param('qpy_package_hash', null, PARAM_ALPHANUM) ??
+            $this->optional_param('qpy_package_file_hash', null, PARAM_ALPHANUM);
+        $selected = $this->optional_param('qpy_package_selected', !is_null($hash), PARAM_BOOL);
+        $uploading = $selected && $source === 'upload';
+        $searching = $selected && $source === 'search';
+        $editing = is_null($source) && isset($this->question->qpy_id);
 
-        if ($selected) {
-            // A package is currently selected.
-            if ($source === 'upload' || ($this->question->qpy_is_local ?? false)) {
-                self::definition_package_settings_upload($mform, $isediting);
-            } else {
-                self::definition_package_settings_search($mform);
-            }
+        if ($uploading || ($editing && $this->question->qpy_is_local)) {
+            $pathnamehash = $this->optional_param('qpy_package_path_name_hash', null, PARAM_ALPHANUM);
+            self::definition_package_settings_upload($mform, $uploading && is_null($pathnamehash));
+        } else if ($searching || ($editing && !$this->question->qpy_is_local)) {
+            self::definition_package_settings_search($mform);
         } else {
             // View package search container and file picker.
             $searchorupload = [
@@ -238,9 +244,9 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
         // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
         // package has simply been changed. The hidden element is enabled from JS when a package is selected or changed.
-        $mform->registerNoSubmitButton('qpy_package_changed');
-        $mform->addElement('hidden', 'qpy_package_changed', '1', ['disabled' => 'disabled']);
-        $mform->setType('qpy_package_changed', PARAM_BOOL);
+        $mform->registerNoSubmitButton('qpy_package_selected');
+        $mform->addElement('hidden', 'qpy_package_selected', isset($this->question->qpy_id), ['disabled' => 'disabled']);
+        $mform->setType('qpy_package_selected', PARAM_BOOL);
     }
 
     /**
@@ -279,9 +285,15 @@ class qtype_questionpy_edit_form extends question_edit_form {
             }
         } else if ($source == 'upload') {
             $filestorage = get_file_storage();
-            $usercontext = context_user::instance($USER->id);
-            if (!$filestorage->get_area_files($usercontext->id, 'user', 'draft', $data['qpy_package_file'])) {
-                $errors['qpy_package_file'] = get_string('required');
+            if (isset($data['qpy_package_path_name_hash'])) {
+                if (!$filestorage->file_exists_by_hash($data['qpy_package_path_name_hash'])) {
+                    $errors['qpy_package_file'] = get_string('required');
+                }
+            } else {
+                $usercontext = context_user::instance($USER->id);
+                if (!$filestorage->get_area_files($usercontext->id, 'user', 'draft', $data['qpy_package_file'])) {
+                    $errors['qpy_package_file'] = get_string('required');
+                }
             }
         }
 

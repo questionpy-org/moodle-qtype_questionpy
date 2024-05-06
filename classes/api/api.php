@@ -74,6 +74,13 @@ class api {
         return array_converter::from_array(package_raw::class, $response->get_data());
     }
 
+    /**
+     * Returns the {@see package_api} of a specific package.
+     *
+     * @param string $hash the hash of the package
+     * @param stored_file|null $file the package file if any
+     * @return package_api
+     */
     public function package(string $hash, ?stored_file $file = null): package_api {
         return new package_api($hash, $file);
     }
@@ -81,7 +88,7 @@ class api {
     /**
      * Get a {@see package_raw} from a file.
      *
-     * @param string $filepath
+     * @param stored_file $file
      * @return package_raw
      * @throws moodle_exception
      */

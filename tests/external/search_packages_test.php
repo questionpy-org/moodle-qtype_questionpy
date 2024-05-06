@@ -488,9 +488,8 @@ class search_packages_test extends \externallib_advanced_testcase {
      *
      * A test for the `recentlyused`-category can be found at {@see test_date_sort_with_recentlyused_category}.
      *
-     * @param string $category
-     * @covers \qtype_questionpy\external\search_packages::execute
      * @throws moodle_exception
+     * @covers \qtype_questionpy\external\search_packages::execute
      */
     public function test_date_sort(): void {
         // Create multiple packages with different creation times.
