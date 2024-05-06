@@ -76,6 +76,7 @@ class package_raw extends package_base {
      * Persists a package version in the database.
      *
      * @param int $packageid
+     * @param int $timecreated
      * @return int
      * @throws moodle_exception
      */

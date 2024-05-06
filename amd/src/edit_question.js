@@ -31,8 +31,7 @@ import {favouritePackage} from 'qtype_questionpy/utils';
  * @param {boolean} selected
  */
 export function initActionButton(card, selected) {
-    const packageChanged = document.querySelector('input[name="qpy_package_changed"]');
-    const packageHash = document.querySelector('input[name="qpy_package_hash"]');
+    const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
 
     if (selected) {
         // Initialize the button to change the package.
@@ -41,14 +40,15 @@ export function initActionButton(card, selected) {
             e.preventDefault();
 
             // Remove package hash.
-            packageChanged.removeAttribute("disabled");
-            packageHash.value = '';
+            packageSelected.value = false;
+            packageSelected.removeAttribute("disabled");
 
             // We do not want any form checking when changing a package.
             resetFormDirtyState(changeButton);
             e.target.form.submit();
         });
     } else {
+        const packageHash = document.querySelector('input[name="qpy_package_hash"]');
         const selectedHash = card.getElementsByClassName("qpy-version-selection")[0];
         const selectButton = card.getElementsByClassName("qpy-version-selection-button")[0];
 
@@ -56,7 +56,8 @@ export function initActionButton(card, selected) {
             e.preventDefault();
 
             // Set package hash.
-            packageChanged.removeAttribute("disabled");
+            packageSelected.value = true;
+            packageSelected.removeAttribute("disabled");
             packageHash.value = selectedHash.value;
 
             // We do not want any form checking when selecting a package.
