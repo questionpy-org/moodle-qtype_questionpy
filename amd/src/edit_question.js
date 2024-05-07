@@ -68,6 +68,21 @@ export function initActionButton(card, selected) {
 }
 
 /**
+ * This function enables an auto-submit of the form if a package gets uploaded.
+ */
+export function initUploadForm() {
+    const input = document.querySelector('input[name="qpy_package_file"]');
+    const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
+    input.addEventListener("change", (e) => {
+        packageSelected.value = true;
+        packageSelected.removeAttribute("disabled");
+        // We do not want any form checking when uploading a package.
+        resetFormDirtyState(input);
+        e.target.form.submit();
+    });
+}
+
+/**
  * This function is called by the <code>package_selection</code>-template and initializes the favourite button, when
  * a package is already selected.
  *
