@@ -83,7 +83,8 @@ class qtype_questionpy extends question_type {
      * Deletes the question-type specific data when a question is deleted.
      *
      * @param int $questionid the question being deleted.
-     * @param int $contextid  the context this question belongs to.
+     * @param int $contextid the context this question belongs to.
+     * @throws moodle_exception
      */
     public function delete_question($questionid, $contextid) {
         question_service::delete_question($questionid);
@@ -93,9 +94,9 @@ class qtype_questionpy extends question_type {
     /**
      * Move all the files belonging to this question from one context to another.
      *
-     * @param $questionid
-     * @param $oldcontextid
-     * @param $newcontextid
+     * @param int $questionid
+     * @param int $oldcontextid
+     * @param int $newcontextid
      * @return void
      */
     public function move_files($questionid, $oldcontextid, $newcontextid) {
@@ -110,8 +111,8 @@ class qtype_questionpy extends question_type {
     /**
      * Delete all the files belonging to this question.
      *
-     * @param $questionid
-     * @param $contextid
+     * @param int $questionid
+     * @param int $contextid
      * @return void
      */
     protected function delete_files($questionid, $contextid) {
