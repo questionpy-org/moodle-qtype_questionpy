@@ -68,12 +68,16 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @throws moodle_exception
      */
     private function definition_package_upload(MoodleQuickForm $mform) {
+        global $PAGE;
+
         $maxkb = get_config('qtype_questionpy', 'max_package_size_kb');
         $mform->addElement(
             'filepicker', 'qpy_package_file', null, null,
             ['maxbytes' => $maxkb * 1024, 'accepted_types' => ['.qpy']]
         );
         $mform->hideIf('qpy_package_file', 'qpy_package_source', 'neq', 'upload');
+
+        $PAGE->requires->js_call_amd('qtype_questionpy/edit_question', 'initUploadForm');
     }
 
     /**
@@ -245,7 +249,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
         // package has simply been changed. The hidden element is enabled from JS when a package is selected or changed.
         $mform->registerNoSubmitButton('qpy_package_selected');
-        $mform->addElement('hidden', 'qpy_package_selected', isset($this->question->qpy_id), ['disabled' => 'disabled']);
+        $mform->addElement('hidden', 'qpy_package_selected', !is_null($hash), ['disabled' => 'disabled']);
         $mform->setType('qpy_package_selected', PARAM_BOOL);
     }
 
