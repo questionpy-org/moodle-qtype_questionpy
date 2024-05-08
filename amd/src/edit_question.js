@@ -34,17 +34,23 @@ export function initActionButton(card, selected) {
     const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
 
     if (selected) {
+        const packageFile = document.querySelector('input[name="qpy_package_file"]');
+
         // Initialize the button to change the package.
         const changeButton = card.getElementsByClassName("qpy-version-selection-button")[0];
         changeButton.addEventListener("click", (e) => {
             e.preventDefault();
 
-            // Remove package hash.
             packageSelected.value = false;
             packageSelected.removeAttribute("disabled");
+            if (packageFile) {
+                // We want to prevent, that the same draft id will be used when changing a package.
+                packageFile.disabled = true;
+            }
 
             // We do not want any form checking when changing a package.
             resetFormDirtyState(changeButton);
+
             e.target.form.submit();
         });
     } else {
@@ -55,13 +61,13 @@ export function initActionButton(card, selected) {
         selectButton.addEventListener("click", (e) => {
             e.preventDefault();
 
-            // Set package hash.
             packageSelected.value = true;
             packageSelected.removeAttribute("disabled");
             packageHash.value = selectedHash.value;
 
             // We do not want any form checking when selecting a package.
             resetFormDirtyState(selectButton);
+
             e.target.form.submit();
         });
     }
@@ -71,13 +77,13 @@ export function initActionButton(card, selected) {
  * This function enables an auto-submit of the form if a package gets uploaded.
  */
 export function initUploadForm() {
-    const input = document.querySelector('input[name="qpy_package_file"]');
+    const packageFile = document.querySelector('input[name="qpy_package_file"]');
     const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
-    input.addEventListener("change", (e) => {
+    packageFile.addEventListener("change", (e) => {
         packageSelected.value = true;
         packageSelected.removeAttribute("disabled");
         // We do not want any form checking when uploading a package.
-        resetFormDirtyState(input);
+        resetFormDirtyState(packageFile);
         e.target.form.submit();
     });
 }
