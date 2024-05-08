@@ -209,14 +209,16 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $hash = $this->optional_param('qpy_package_hash', null, PARAM_ALPHANUM) ??
             $this->optional_param('qpy_package_file_hash', null, PARAM_ALPHANUM);
         $selected = $this->optional_param('qpy_package_selected', !is_null($hash), PARAM_BOOL);
-        $uploading = $selected && $source === 'upload';
-        $searching = $selected && $source === 'search';
+
+        // We are editing an existing question, if no source is set but the qpy_id is.
         $editing = is_null($source) && isset($this->question->qpy_id);
 
-        if ($uploading || ($editing && $this->question->qpy_is_local)) {
+        if (($uploading = ($selected && $source === 'upload')) || ($editing && $this->question->qpy_is_local)) {
+            // We are either uploading a package or editing a question with an uploaded package.
             $pathnamehash = $this->optional_param('qpy_package_path_name_hash', null, PARAM_ALPHANUM);
             self::definition_package_settings_upload($mform, $uploading && is_null($pathnamehash));
-        } else if ($searching || ($editing && !$this->question->qpy_is_local)) {
+        } else if (($selected && $source === 'search') || ($editing && !$this->question->qpy_is_local)) {
+            // We are either selecting a package or editing a question with a selected package.
             self::definition_package_settings_search($mform);
         } else {
             // View package search container and file picker.
