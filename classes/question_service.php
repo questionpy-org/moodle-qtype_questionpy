@@ -113,13 +113,13 @@ class question_service {
             $question->qpy_form = [];
         }
 
+        $filestorage = get_file_storage();
         $question->qpy_package_hash ??= $question->qpy_package_file_hash;
 
         $file = null;
         $pkgversionid = null;
         if ($question->qpy_package_source === 'upload') {
             if (isset($question->qpy_package_path_name_hash)) {
-                $filestorage = get_file_storage();
                 $file = $filestorage->get_file_by_hash($question->qpy_package_path_name_hash);
             } else {
                 $file = $this->packageservice->get_draft_file($question->qpy_package_file);
