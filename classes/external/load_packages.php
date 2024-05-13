@@ -16,6 +16,11 @@
 
 namespace qtype_questionpy\external;
 
+defined('MOODLE_INTERNAL') || die;
+
+global $CFG;
+require_once($CFG->libdir . "/externallib.php");
+
 use external_api;
 use external_function_parameters;
 use external_single_structure;
@@ -23,11 +28,6 @@ use external_value;
 use moodle_exception;
 use qtype_questionpy\api\api;
 use qtype_questionpy\package\package_version;
-
-defined('MOODLE_INTERNAL') || die;
-
-global $CFG;
-require_once($CFG->libdir . "/externallib.php");
 
 /**
  * This service loads QuestionPy packages from the application server into the database.
