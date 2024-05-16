@@ -40,6 +40,7 @@ use qtype_questionpy\form\elements\radio_group_element;
 use qtype_questionpy\form\elements\repetition_element;
 use qtype_questionpy\form\elements\select_element;
 use qtype_questionpy\form\elements\static_text_element;
+use qtype_questionpy\form\elements\text_area_element;
 use qtype_questionpy\form\elements\text_input_element;
 use qtype_questionpy\package\package_raw;
 
@@ -132,5 +133,6 @@ function element_provider(): array {
         ],
         ["static_text", new static_text_element("my_text", "Label", "Lorem ipsum dolor sit amet.")],
         ["input", new text_input_element("my_field", "Label", true, "default", "placeholder")],
+        ["textarea", new text_area_element("my_field", "Label", true, "default", "placeholder")],
     ];
 }
