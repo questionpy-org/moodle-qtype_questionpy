@@ -45,5 +45,6 @@ array_converter::configure(form_element::class, function (converter_config $conf
         ->variant("select", select_element::class)
         ->variant("static_text", static_text_element::class)
         ->variant("input", text_input_element::class)
-        ->variant("textarea", text_area_element::class);
+        ->variant("textarea", text_area_element::class)
+        ->fallback_variant(fallback_element::class);
 });

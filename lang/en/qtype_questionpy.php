@@ -83,6 +83,10 @@ $string['search_sort_label_aria'] = 'Sorting';
 $string['search_sort_alphabetical'] = 'Alphabetical';
 $string['search_sort_creation_date'] = 'Creation Date';
 
+// Package options form.
+$string['form_fallback_element_text'] = "The QuestionPy package is using a form element not supported by the Moodle"
+    . " plugin. Please ensure you are using a compatible package or contact your administrators.";
+
 // Question management.
 $string['package_not_found'] = 'The requested package {$a->packagehash} does not exist.';
 
