@@ -29,7 +29,7 @@ use qtype_questionpy\localizer;
 use qtype_questionpy\package\package;
 use qtype_questionpy\package\package_base;
 use qtype_questionpy\package\package_version;
-use qtype_questionpy\package_service;
+use qtype_questionpy\package_file_service;
 
 /**
  * QuestionPy question editing form definition.
@@ -56,7 +56,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
     public function __construct(string $submiturl, object $question, object $category, question_edit_contexts $contexts,
                                 bool $formeditable = true) {
         $this->api = new api();
-        $this->packageservice = new package_service($this->api);
+        $this->packagefileservice = new package_file_service();
 
         parent::__construct($submiturl, $question, $category, $contexts, $formeditable);
     }
@@ -161,10 +161,10 @@ class qtype_questionpy_edit_form extends question_edit_form {
             $draftid = $this->optional_param('qpy_package_file', null, PARAM_INT);
             $mform->addElement('hidden', 'qpy_package_file', $draftid);
             $mform->setType('qpy_package_file', PARAM_INT);
-            $file = $this->packageservice->get_draft_file($draftid);
+            $file = $this->packagefileservice->get_draft_file($draftid);
         } else {
             $qpyid = $this->question->qpy_id;
-            $file = $this->packageservice->get_file($qpyid, $this->context->get_course_context()->id);
+            $file = $this->packagefileservice->get_file($qpyid, $this->context->get_course_context()->id);
             $mform->addElement('hidden', 'qpy_package_path_name_hash', $file->get_pathnamehash());
             $mform->setType('qpy_package_path_name_hash', PARAM_ALPHANUM);
         }
@@ -208,7 +208,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $source = $this->optional_param('qpy_package_source', null, PARAM_ALPHA);
         $hash = $this->optional_param('qpy_package_hash', null, PARAM_ALPHANUM) ??
             $this->optional_param('qpy_package_file_hash', null, PARAM_ALPHANUM);
-        $selected = $this->optional_param('qpy_package_selected', !is_null($hash), PARAM_BOOL);
+        $selected = $this->optional_param('qpy_package_selected', !empty($hash), PARAM_BOOL);
 
         // We are editing an existing question, if no source is set but the qpy_id is.
         $editing = is_null($source) && isset($this->question->qpy_id);
@@ -251,7 +251,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
         // package has simply been changed. The hidden element is enabled from JS when a package is selected or changed.
         $mform->registerNoSubmitButton('qpy_package_selected');
-        $mform->addElement('hidden', 'qpy_package_selected', !is_null($hash), ['disabled' => 'disabled']);
+        $mform->addElement('hidden', 'qpy_package_selected', !empty($hash), ['disabled' => 'disabled']);
         $mform->setType('qpy_package_selected', PARAM_BOOL);
     }
 

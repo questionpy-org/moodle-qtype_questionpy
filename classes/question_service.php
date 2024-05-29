@@ -35,18 +35,18 @@ class question_service {
     /** @var api */
     private api $api;
 
-    /** @var package_service */
-    private package_service $packageservice;
+    /** @var package_file_service */
+    private package_file_service $packagefileservice;
 
     /**
      * Initializes the instance to use the given {@see api}.
      *
      * @param api $api
-     * @param package_service $packageservice
+     * @param package_file_service $packagefileservice
      */
-    public function __construct(api $api, package_service $packageservice) {
+    public function __construct(api $api, package_file_service $packagefileservice) {
         $this->api = $api;
-        $this->packageservice = $packageservice;
+        $this->packagefileservice = $packagefileservice;
     }
 
     /** @var string table containing our question data, 0-1 record per question */
@@ -85,7 +85,7 @@ class question_service {
             $package = package_version::get_by_id($record->pkgversionid);
             if (is_null($package)) {
                 throw new \coding_exception(
-                    "No package versiotsetn record with ID '{$record->pkgversionid}' was found despite being referenced" .
+                    "No package version record with ID '{$record->pkgversionid}' was found despite being referenced" .
                     " by question {$questionid}"
                 );
             }
@@ -122,7 +122,7 @@ class question_service {
             if (isset($question->qpy_package_path_name_hash)) {
                 $file = $filestorage->get_file_by_hash($question->qpy_package_path_name_hash);
             } else {
-                $file = $this->packageservice->get_draft_file($question->qpy_package_file);
+                $file = $this->packagefileservice->get_draft_file($question->qpy_package_file);
             }
         } else {
             $pkgversionid = $this->get_package($question->qpy_package_hash);
