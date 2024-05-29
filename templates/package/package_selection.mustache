@@ -55,6 +55,7 @@
 }}
 {{<qtype_questionpy/package/package_base}}
     {{$action}}
+        {{! TODO: Indicate wheter it is a local package or not. }}
         <div class="qpy-card-action">
             <div class="qpy-card-action-options">
                 <select class="qpy-version-selection" {{#isselected}} disabled {{/isselected}} aria-label="{{#str}} select_package_element_aria, qtype_questionpy {{/str}}">
@@ -79,6 +80,10 @@
                         {{/islocal}}
                         {{#url}}
                             <a class="dropdown-item" href="{{url}}" target="_blank">{{#pix}} i/mnethost {{/pix}}{{#str}} open_website, qtype_questionpy {{/str}}</a>
+                        {{/url}}
+                        {{^url}}
+                        {{! TODO: Remove when a menu item is added which is always present - this is only a placeholder. }}
+                            <a class="dropdown-item" href="https://example.com/" target="_blank">{{#pix}} i/mnethost {{/pix}}{{#str}} open_website, qtype_questionpy {{/str}}</a>
                         {{/url}}
                     </div>
                 </div>

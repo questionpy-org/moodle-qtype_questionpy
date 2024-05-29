@@ -51,8 +51,8 @@ class question_service_test extends \advanced_testcase {
         $this->api->method("package")
             ->willReturn($this->packageapi);
 
-        $packageservice = new package_service($this->api);
-        $this->questionservice = new question_service($this->api, $packageservice);
+        $packagefileservice = new package_file_service();
+        $this->questionservice = new question_service($this->api, $packagefileservice);
     }
 
     /**

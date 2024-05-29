@@ -18,9 +18,6 @@ namespace qtype_questionpy;
 
 use coding_exception;
 use context_user;
-use moodle_exception;
-use qtype_questionpy\api\api;
-use qtype_questionpy\package\package_version;
 use stored_file;
 
 /**
@@ -31,22 +28,10 @@ use stored_file;
  * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class package_service {
-
-    /** @var api */
-    private api $api;
+class package_file_service {
 
     /**
-     * Initializes the instance.
-     *
-     * @param api $api
-     */
-    public function __construct(api $api) {
-        $this->api = $api;
-    }
-
-    /**
-     * Get the draft {@see stored_file} with the given ID.
+     * Get a draft {@see stored_file} with the given ID.
      *
      * @param int $draftid item id of the draft file, as contained in the form data of a file picker
      * @return stored_file
@@ -69,9 +54,9 @@ class package_service {
     }
 
     /**
-     * Get the file {@see stored_file} with the given ID.
+     * Get a {@see stored_file} with the given ID.
      *
-     * @param int $qpyid
+     * @param int $qpyid the id of the `qtype_questionpy` record
      * @param int $contextid
      * @return stored_file
      * @throws coding_exception if no such draft file exists

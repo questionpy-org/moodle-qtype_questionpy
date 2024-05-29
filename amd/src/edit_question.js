@@ -31,6 +31,7 @@ import {favouritePackage} from 'qtype_questionpy/utils';
  * @param {boolean} selected
  */
 export function initActionButton(card, selected) {
+    const packageHash = document.querySelector('input[name="qpy_package_hash"]');
     const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
 
     if (selected) {
@@ -43,9 +44,13 @@ export function initActionButton(card, selected) {
 
             packageSelected.value = false;
             packageSelected.removeAttribute("disabled");
+
             if (packageFile) {
                 // We want to prevent, that the same draft id will be used when changing a package.
                 packageFile.disabled = true;
+            }
+            if (packageHash) {
+                packageHash.value = '';
             }
 
             // We do not want any form checking when changing a package.
@@ -54,7 +59,6 @@ export function initActionButton(card, selected) {
             e.target.form.submit();
         });
     } else {
-        const packageHash = document.querySelector('input[name="qpy_package_hash"]');
         const selectedHash = card.getElementsByClassName("qpy-version-selection")[0];
         const selectButton = card.getElementsByClassName("qpy-version-selection-button")[0];
 

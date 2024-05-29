@@ -23,7 +23,7 @@
  */
 
 use qtype_questionpy\api\api;
-use qtype_questionpy\package_service;
+use qtype_questionpy\package_file_service;
 use qtype_questionpy\question_service;
 
 defined('MOODLE_INTERNAL') || die();
@@ -42,8 +42,8 @@ class qtype_questionpy extends question_type {
     /** @var api */
     private api $api;
 
-    /** @var package_service */
-    private package_service $packageservice;
+    /** @var package_file_service */
+    private package_file_service $packagefileservice;
 
     /** @var question_service */
     private question_service $questionservice;
@@ -54,8 +54,8 @@ class qtype_questionpy extends question_type {
     public function __construct() {
         parent::__construct();
         $this->api = new api();
-        $this->packageservice = new package_service($this->api);
-        $this->questionservice = new question_service($this->api, $this->packageservice);
+        $this->packagefileservice = new package_file_service();
+        $this->questionservice = new question_service($this->api, $this->packagefileservice);
     }
 
     /**
@@ -180,7 +180,7 @@ class qtype_questionpy extends question_type {
     protected function make_question_instance($questiondata) {
         $packagefile = null;
         if ($questiondata->qpy_is_local) {
-            $packagefile = $this->packageservice->get_file($questiondata->qpy_id, $questiondata->contextid);
+            $packagefile = $this->packagefileservice->get_file($questiondata->qpy_id, $questiondata->contextid);
         }
         return new qtype_questionpy_question($questiondata->qpy_package_hash, $questiondata->qpy_state, $packagefile);
     }
