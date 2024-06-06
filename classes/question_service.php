@@ -19,6 +19,7 @@ namespace qtype_questionpy;
 use dml_exception;
 use moodle_exception;
 use qtype_questionpy\api\api;
+use qtype_questionpy\package\package;
 use qtype_questionpy\package\package_version;
 use stdClass;
 
@@ -139,6 +140,8 @@ class question_service {
                     (object)['packagehash' => $question->qpy_package_hash]
                 );
             }
+            $packageid = package::get_by_version($pkgversionid)->id;
+            last_used_service::add($question->context->id, $packageid);
         }
 
         $existingrecord = $DB->get_record(self::QUESTION_TABLE, [

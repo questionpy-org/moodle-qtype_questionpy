@@ -20,6 +20,7 @@ use dml_exception;
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\last_used_service;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -181,7 +182,7 @@ class package extends package_base {
      * Deletes the package and every version from the database.
      *
      * @return void
-     * @throws dml_exception
+     * @throws moodle_exception
      */
     public function delete(): void {
         global $DB;
@@ -190,6 +191,7 @@ class package extends package_base {
         $DB->delete_records('qtype_questionpy_language', ['packageid' => $this->id]);
         $DB->delete_records('qtype_questionpy_tags', ['packageid' => $this->id]);
         $DB->delete_records('qtype_questionpy_package', ['id' => $this->id]);
+        last_used_service::remove_by_package($this->id);
         $transaction->allow_commit();
     }
 
