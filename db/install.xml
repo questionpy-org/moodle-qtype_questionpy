@@ -28,6 +28,7 @@
         <FIELD NAME="feedback" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Feedback shown for any response."/>
         <FIELD NAME="pkgversionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="state" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="shuffleanswers" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Whether the content of a qpy:shuffle-contents can be randomly shuffled."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" />

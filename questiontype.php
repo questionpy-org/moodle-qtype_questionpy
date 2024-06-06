@@ -145,4 +145,14 @@ class qtype_questionpy extends question_type {
     protected function make_question_instance($questiondata) {
         return new qtype_questionpy_question($questiondata->qpy_package_hash, $questiondata->qpy_state);
     }
+
+  /**
+   * Initialise the question_definition fields.
+   * @param question_definition $question the question_definition we are creating.
+   * @param object $questiondata the question data loaded from the database.
+   */
+    protected function initialise_question_instance(question_definition $question, $questiondata) {
+        parent::initialise_question_instance($question, $questiondata);
+        $question->shuffleanswers = $questiondata->shuffleanswers;
+    }
 }

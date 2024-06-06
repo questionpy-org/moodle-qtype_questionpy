@@ -56,7 +56,7 @@ if ($ADMIN->fulltree) {
     // Package settings.
     $settings->add(new admin_setting_heading(
         'qtype_questionpy/heading_packages',
-        'Packages',
+        new lang_string('heading_packages', 'qtype_questionpy'),
         null
     ));
 
@@ -71,6 +71,12 @@ if ($ADMIN->fulltree) {
         5
     ));
 
+    // Question settings.
+    $settings->add(new admin_setting_configcheckbox('qtype_questionpy/shuffleanswers',
+        new lang_string('shuffleanswers', 'qtype_questionpy'),
+        new lang_string('shuffleanswers_desc', 'qtype_questionpy'), '1'));
+
+    // Server Status/Info.
     $settings->add(new admin_setting_heading(
         'qtype_questionpy/server_info',
         new lang_string('server_info_heading', 'qtype_questionpy'),
