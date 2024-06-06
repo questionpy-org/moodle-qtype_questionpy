@@ -25,10 +25,14 @@ use qtype_questionpy\form\form_help;
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
- * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_input_element extends form_element {
+
+    /** @var string moodle form element name, overridden by {@see text_area_element} */
+    protected const MFORM_ELEMENT = "text";
+
     /** @var string */
     public string $name;
     /** @var string */
@@ -74,7 +78,9 @@ class text_input_element extends form_element {
         $attributes = $this->placeholder ? ["placeholder" => $context->contextualize($this->placeholder)] : [];
 
         $element = $context->add_element(
-            "text", $this->name, $context->contextualize($this->label), $attributes);
+            get_class($this)::MFORM_ELEMENT, $this->name,
+            $context->contextualize($this->label), $attributes
+        );
         $context->set_type($this->name, PARAM_TEXT);
 
         if ($this->default) {

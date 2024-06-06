@@ -66,6 +66,9 @@ class array_converter {
             $discriminator = $raw[$config->discriminator] ?? null;
             unset($raw[$config->discriminator]);
 
+            /* When a class uses polymorphism with a discriminator, deserialization to specific variants of that class.
+               For example, form_element uses discrimination, but checkbox_group_element->checkboxes knows that it wants
+               checkbox_elements only. In that case, we only want to check that the wrong variant isn't given. */
             $expected = array_flip($config->variants)[$class] ?? null;
             if ($expected) {
                 // Deserialization target is a specific variant.
@@ -81,10 +84,13 @@ class array_converter {
                 // Deserialization target is any variant. We check the discriminator field to decide.
                 $class = $config->variants[$discriminator] ?? null;
                 if ($class === null) {
-                    throw new moodle_exception(
-                        "cannotgetdata", "error", "", null,
-                        "Unknown value for discriminator '$config->discriminator': $discriminator"
-                    );
+                    $message = "Unknown value for discriminator '$config->discriminator': '$discriminator'.";
+                    if ($config->fallbackvariant) {
+                        debugging($message . " Using fallback variant '$config->fallbackvariant'.");
+                        $class = $config->fallbackvariant;
+                    } else {
+                        throw new moodle_exception("cannotgetdata", "error", "", null, $message);
+                    }
                 }
             }
 

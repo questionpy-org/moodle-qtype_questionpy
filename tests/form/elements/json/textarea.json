@@ -1,0 +1,11 @@
+{
+  "kind": "textarea",
+  "name": "my_field",
+  "label": "Label",
+  "default": "default",
+  "placeholder": "placeholder",
+  "required": true,
+  "disable_if": [],
+  "hide_if": [],
+  "help": null
+}

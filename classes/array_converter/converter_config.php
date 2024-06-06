@@ -36,6 +36,8 @@ class converter_config {
     public ?string $discriminator = null;
     /** @var string[] mapping from discriminator values to concrete classes */
     public array $variants = [];
+    /** @var string|null if an unknown discriminator is given, warn and use this class */
+    public ?string $fallbackvariant;
 
     /** @var string[] mapping from property names to the classes of their array elements */
     public array $elementclasses = [];
@@ -95,9 +97,26 @@ class converter_config {
      * @param string $classname     the concrete class to convert to when the discriminator is encountered
      * @return $this for chaining
      * @see self::discriminate_by()
+     * @see self::fallback_variant()
      */
     public function variant(string $discriminator, string $classname): self {
         $this->variants[$discriminator] = $classname;
+        return $this;
+    }
+
+    /**
+     * Sets the fallback variant for polymorphic deserialization.
+     *
+     * When a discriminator is encountered which isn't {@see variant registered}, the default behaviour is to throw an
+     * exception. Instead, you can register a fallback class to be used. A debugging message will still be emitted.
+     *
+     * @param string $classname the concrete class to convert to when an unknown discriminator is encountered
+     * @return $this for chaining
+     * @see self::discriminate_by()
+     * @see self::variant()
+     */
+    public function fallback_variant(string $classname): self {
+        $this->fallbackvariant = $classname;
         return $this;
     }
 
