@@ -41,7 +41,8 @@ export default class extends Component {
     }
 
     stateReady() {
-        this.addEventListener(this.getElement(this.selectors.FAVOURITE_BUTTON), "click", () => {
+        this.addEventListener(this.getElement(this.selectors.FAVOURITE_BUTTON), "click", (event) => {
+            event.preventDefault();
             this.reactive.dispatch("favourite", this.packageid, !this.isFavourite());
         });
     }

@@ -63,6 +63,9 @@ $string['selection_title_selected'] = 'Selected Package';
 $string['selection_no_icon'] = 'Could not load the icon.';
 $string['selection_required'] = 'Please select a package.';
 
+$string['selection_local_header'] = 'Local Package';
+$string['selection_local_text'] = 'This package was uploaded by a user and might not appear in the package search.';
+
 $string['select_package'] = 'Select';
 $string['select_package_element_aria'] = 'Choose version.';
 $string['change_package'] = 'Change';
