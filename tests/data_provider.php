@@ -105,9 +105,13 @@ function element_provider(): array {
         ],
         ["checkbox_group", new checkbox_group_element(
             (new checkbox_element(
-                "my_checkbox", "Left", "Right",
-                true, true
-            ))->help("Help text")),
+                "my_checkbox",
+                "Left",
+                "Right",
+                true,
+                true
+            ))->help("Help text")
+        ),
         ],
         ["group", (new group_element("my_group", "Name", [
             new text_input_element("first_name", "", true, null, "Vorname"),

@@ -72,7 +72,9 @@ class array_render_context extends render_context {
     public function __construct(render_context $parent, string $prefix) {
         $this->parent = $parent;
         parent::__construct(
-            $parent->moodleform, $parent->mform, $prefix,
+            $parent->moodleform,
+            $parent->mform,
+            $prefix,
             utils::array_get_nested($parent->data, $prefix) ?? []
         );
     }
@@ -130,10 +132,11 @@ class array_render_context extends render_context {
      * @param bool $force             force the rule to be applied, even if the target form element does not exist.
      * @see \MoodleQuickForm::addRule()
      */
-    public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
+    public function add_rule(string $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
         utils::ensure_exists(
-            $this->rules, $this->mangle_name($name)
+            $this->rules,
+            $this->mangle_name($name)
         )[] = [$message, $type, $format, $validation, $reset, $force];
     }
 

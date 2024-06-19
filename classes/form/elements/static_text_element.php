@@ -29,14 +29,15 @@ use qtype_questionpy\form\form_help;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class static_text_element extends form_element {
+    use form_conditions;
+    use form_help;
+
     /** @var string */
     public string $name;
     /** @var string */
     public string $label;
     /** @var string */
     public string $text;
-
-    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -58,8 +59,10 @@ class static_text_element extends form_element {
      */
     public function render_to(render_context $context): void {
         $element = $context->add_element(
-            "static", $this->name,
-            $context->contextualize($this->label), $context->contextualize($this->text)
+            "static",
+            $this->name,
+            $context->contextualize($this->label),
+            $context->contextualize($this->text)
         );
 
         $this->render_conditions($context, $this->name);

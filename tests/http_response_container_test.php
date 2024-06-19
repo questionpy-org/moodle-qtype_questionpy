@@ -27,7 +27,6 @@ use qtype_questionpy\api\http_response_container;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class http_response_container_test extends \advanced_testcase {
-
     /**
      * Tests the function get_data with json.
      *
@@ -75,5 +74,4 @@ class http_response_container_test extends \advanced_testcase {
         self::expectException(moodle_exception::class);
         $response->get_data();
     }
-
 }

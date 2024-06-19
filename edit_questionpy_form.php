@@ -38,7 +38,6 @@ use qtype_questionpy\package_file_service;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy_edit_form extends question_edit_form {
-
     /** @var array current form data set in {@see definition_inner} and added to the question in {@see set_data}. */
     private array $currentdata = [];
 
@@ -72,7 +71,10 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
         $maxkb = get_config('qtype_questionpy', 'max_package_size_kb');
         $mform->addElement(
-            'filepicker', 'qpy_package_file', null, null,
+            'filepicker',
+            'qpy_package_file',
+            null,
+            null,
             ['maxbytes' => $maxkb * 1024, 'accepted_types' => ['.qpy']]
         );
         $mform->hideIf('qpy_package_file', 'qpy_package_source', 'neq', 'upload');
@@ -91,8 +93,10 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
         // Create a group which contains the package container - the group is used to simplify the styling.
         // TODO: get limit from settings.
-        $group[] = $mform->createElement('html', $OUTPUT->render_from_template('qtype_questionpy/package_search/area',
-            ['contextid' => $this->context->get_course_context()->id, 'limit' => 10]));
+        $group[] = $mform->createElement('html', $OUTPUT->render_from_template(
+            'qtype_questionpy/package_search/area',
+            ['contextid' => $this->context->get_course_context()->id, 'limit' => 10]
+        ));
         $mform->addGroup($group, 'qpy_package_container');
         $mform->hideIf('qpy_package_container', 'qpy_package_source', 'neq', 'search');
     }
@@ -124,7 +128,8 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
         $group = [];
         $group[] = $mform->createElement(
-            'html', $OUTPUT->render_from_template('qtype_questionpy/package/package_selection', $packagearray)
+            'html',
+            $OUTPUT->render_from_template('qtype_questionpy/package/package_selection', $packagearray)
         );
         $mform->addGroup($group, '', get_string('selection_title_selected', 'qtype_questionpy'));
 
@@ -224,18 +229,26 @@ class qtype_questionpy_edit_form extends question_edit_form {
             // View package search container and file picker.
             $searchorupload = [
                 $mform->createElement(
-                    'radio', 'qpy_package_source', null,
-                    get_string('question_package_search', 'qtype_questionpy'), 'search'
+                    'radio',
+                    'qpy_package_source',
+                    null,
+                    get_string('question_package_search', 'qtype_questionpy'),
+                    'search'
                 ),
                 $mform->createElement(
-                    'radio', 'qpy_package_source', null,
-                    get_string('question_package_upload', 'qtype_questionpy'), 'upload'
+                    'radio',
+                    'qpy_package_source',
+                    null,
+                    get_string('question_package_upload', 'qtype_questionpy'),
+                    'upload'
                 ),
             ];
             $mform->addGroup(
-                $searchorupload, 'qpy_package_source_group',
+                $searchorupload,
+                'qpy_package_source_group',
                 get_string('selection_title', 'qtype_questionpy'),
-                null, false
+                null,
+                false
             );
             $mform->setDefault('qpy_package_source', 'search');
             $mform->addRule('qpy_package_source_group', null, 'required');

@@ -24,8 +24,6 @@ namespace qtype_questionpy;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_type_test extends \advanced_testcase {
-
-
     /**
      * Dummy Test (replace when we have real methods testing the question type).
      *

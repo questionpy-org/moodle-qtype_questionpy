@@ -27,7 +27,6 @@ use qtype_questionpy\form\elements\repetition_element;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class utils {
-
     /**
      * Returns `$array[$key]` after setting it to a new array if it does not exist.
      *

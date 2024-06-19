@@ -42,7 +42,6 @@ use qtype_questionpy\package\package_version;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class search_packages extends external_api {
-
     /** @var string[] Valid categories. */
     const CATEGORIES = ['all', 'recentlyused', 'favourites'];
     /** @var string[] Valid kinds of sorting. */

@@ -29,7 +29,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy_renderer extends qtype_renderer {
-
     /**
      * Return any HTML that needs to be included in the page's <head> when this
      * question is used.
@@ -79,8 +78,11 @@ class qtype_questionpy_renderer extends qtype_renderer {
         $hint = null;
 
         if ($options->feedback) {
-            $output .= html_writer::nonempty_tag('div', $question->ui->render_specific_feedback($qa, $options) ?? "",
-                ['class' => 'specificfeedback']);
+            $output .= html_writer::nonempty_tag(
+                'div',
+                $question->ui->render_specific_feedback($qa, $options) ?? "",
+                ['class' => 'specificfeedback']
+            );
             $hint = $qa->get_applicable_hint();
         }
 
@@ -93,13 +95,19 @@ class qtype_questionpy_renderer extends qtype_renderer {
         }
 
         if ($options->generalfeedback) {
-            $output .= html_writer::nonempty_tag('div', $question->ui->render_general_feedback($qa, $options) ?? "",
-                ['class' => 'generalfeedback']);
+            $output .= html_writer::nonempty_tag(
+                'div',
+                $question->ui->render_general_feedback($qa, $options) ?? "",
+                ['class' => 'generalfeedback']
+            );
         }
 
         if ($options->rightanswer) {
-            $output .= html_writer::nonempty_tag('div', $question->ui->render_right_answer($qa, $options) ?? "",
-                ['class' => 'rightanswer']);
+            $output .= html_writer::nonempty_tag(
+                'div',
+                $question->ui->render_right_answer($qa, $options) ?? "",
+                ['class' => 'rightanswer']
+            );
         }
 
         return $output;

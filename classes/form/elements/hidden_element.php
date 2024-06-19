@@ -28,12 +28,12 @@ use qtype_questionpy\form\form_conditions;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class hidden_element extends form_element {
+    use form_conditions;
+
     /** @var string */
     public string $name;
     /** @var string */
     public string $value;
-
-    use form_conditions;
 
     /**
      * Initializes the element.

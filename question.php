@@ -32,7 +32,6 @@ use qtype_questionpy\question_ui_renderer;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy_question extends question_graded_automatically_with_countback {
-
     /** @var string */
     private const QT_VAR_ATTEMPT_STATE = "_attemptstate";
     /** @var string */
@@ -124,8 +123,11 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $this->scoringstate = $step->get_qt_var(self::QT_VAR_SCORING_STATE);
 
         // TODO: We probably want to pass the last response here, but don't have an obvious way to get it.
-        $attempt = $this->api->package($this->packagehash, $this->packagefile)->view_attempt($this->questionstate,
-            $this->attemptstate, $this->scoringstate);
+        $attempt = $this->api->package($this->packagehash, $this->packagefile)->view_attempt(
+            $this->questionstate,
+            $this->attemptstate,
+            $this->scoringstate
+        );
         $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
     }
 
@@ -222,8 +224,12 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function grade_response(array $response): array {
-        $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt($this->questionstate,
-            $this->attemptstate, $this->scoringstate, $response);
+        $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt(
+            $this->questionstate,
+            $this->attemptstate,
+            $this->scoringstate,
+            $response
+        );
         $this->ui = new question_ui_renderer($attemptscored->ui->content, $attemptscored->ui->placeholders);
         // TODO: Persist scoring state. We need to set a qtvar, but we don't have access to the pending step here.
         $this->scoringstate = $attemptscored->scoringstate;

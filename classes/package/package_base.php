@@ -27,7 +27,6 @@ use qtype_questionpy\array_converter\array_converter;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package_base {
-
     /**
      * @var string package shortname
      */
@@ -100,8 +99,8 @@ class package_base {
      */
     public function __construct(string $shortname, string $namespace, array $name, string $type,
                                 ?string $author = null, ?string $url = null, ?array $languages = null,
-                                ?array  $description = null, ?string $icon = null, ?string $license = null,
-                                ?array  $tags = null) {
+                                ?array $description = null, ?string $icon = null, ?string $license = null,
+                                ?array $tags = null) {
         $this->shortname = $shortname;
         $this->namespace = $namespace;
         $this->name = $name;

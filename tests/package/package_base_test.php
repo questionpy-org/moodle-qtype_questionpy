@@ -24,7 +24,6 @@ namespace qtype_questionpy\package;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package_base_test extends \advanced_testcase {
-
     /**
      * Tests the method get_localized_name.
      *
@@ -61,8 +60,16 @@ class package_base_test extends \advanced_testcase {
      */
     public function test_get_localized_description(): void {
         $description = ['en' => 'english_description', 'de' => 'german_description', 'fr' => 'french_description'];
-        $package = new package_base('shortname', 'default', ['en' => 'english_name'],
-            'question', 'author', 'url', [], $description);
+        $package = new package_base(
+            'shortname',
+            'default',
+            ['en' => 'english_name'],
+            'question',
+            'author',
+            'url',
+            [],
+            $description
+        );
 
         // Every language in package exists in preferred language.
         $languages = ['en', 'de', 'fr'];
@@ -78,20 +85,44 @@ class package_base_test extends \advanced_testcase {
 
         // Preferred language and fallback language in package does not exist.
         $description = ['de' => 'german_description', 'fr' => 'french_description'];
-        $package = new package_base('shortname', 'default', ['en' => 'english_name'],
-            'question', 'author', 'url', [], $description);
+        $package = new package_base(
+            'shortname',
+            'default',
+            ['en' => 'english_name'],
+            'question',
+            'author',
+            'url',
+            [],
+            $description
+        );
         $this->assertEquals($description['de'], $package->get_localized_description($languages));
 
         // Description is empty.
         $description = [];
-        $package = new package_base('shortname', 'default', ['en' => 'english_name'],
-            'question', 'author', 'url', [], $description);
+        $package = new package_base(
+            'shortname',
+            'default',
+            ['en' => 'english_name'],
+            'question',
+            'author',
+            'url',
+            [],
+            $description
+        );
         $this->assertEquals('', $package->get_localized_description($languages));
 
         // Description is not set.
         $description = null;
-        $package = new package_base('shortname', 'default', ['en' => 'english_name'],
-            'question', 'author', 'url', [], $description);
+        $package = new package_base(
+            'shortname',
+            'default',
+            ['en' => 'english_name'],
+            'question',
+            'author',
+            'url',
+            [],
+            $description
+        );
         $this->assertEquals('', $package->get_localized_description($languages));
     }
 }

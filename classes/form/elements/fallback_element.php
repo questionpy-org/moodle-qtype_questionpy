@@ -45,8 +45,10 @@ class fallback_element extends form_element {
         }
 
         $context->add_element(
-            "warning", $name,
-            null, get_string("form_fallback_element_text", "qtype_questionpy")
+            "warning",
+            $name,
+            null,
+            get_string("form_fallback_element_text", "qtype_questionpy")
         );
     }
 }

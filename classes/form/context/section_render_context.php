@@ -41,7 +41,8 @@ class section_render_context extends mform_render_context {
     public function __construct(render_context $parent, string $name) {
         $this->parent = $parent;
         parent::__construct(
-            $parent->moodleform, $parent->mform,
+            $parent->moodleform,
+            $parent->mform,
             $parent->mangle_name($name),
             utils::array_get_nested($parent->data, $name) ?? []
         );

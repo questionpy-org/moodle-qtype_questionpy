@@ -30,7 +30,6 @@ use TypeError;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class api {
-
     /**
      * Retrieves QuestionPy packages from the application server.
      *

@@ -38,7 +38,6 @@ use question_display_options;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_ui_renderer {
-
     /** @var string XML namespace for XHTML */
     public const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
     /** @var string XML namespace for our custom things */
@@ -175,10 +174,12 @@ class question_ui_renderer {
             }
 
             /** @var DOMElement $element */
-            foreach ($xpath->query(
-                "/qpy:question/qpy:formulation
+            foreach (
+                $xpath->query(
+                    "/qpy:question/qpy:formulation
                 //*[self::xhtml:input or self::xhtml:select or self::xhtml:textarea or self::xhtml:button]"
-            ) as $element) {
+                ) as $element
+            ) {
                 $name = $element->getAttribute("name");
                 if ($name) {
                     $this->metadata->expecteddata[$name] = PARAM_RAW;
@@ -252,8 +253,10 @@ class question_ui_renderer {
         foreach (iterator_to_array($xpath->query("//*[@qpy:feedback]")) as $element) {
             $feedback = $element->getAttributeNS(self::QPY_NAMESPACE, "feedback");
 
-            if (($feedback == "general" && !$options->generalfeedback)
-                || ($feedback == "specific" && !$options->feedback)) {
+            if (
+                ($feedback == "general" && !$options->generalfeedback)
+                || ($feedback == "specific" && !$options->feedback)
+            ) {
                 $element->parentNode->removeChild($element);
             }
         }
@@ -313,8 +316,10 @@ class question_ui_renderer {
         /** @var DOMElement $indexelement */
         foreach (iterator_to_array($xpath->query(".//qpy:shuffled-index", $element)) as $indexelement) {
             // phpcs:ignore Squiz.ControlStructures.ForLoopDeclaration.SpacingAfterSecond
-            for ($ancestor = $indexelement->parentNode; $ancestor !== null && $ancestor !== $indexelement;
-                 $ancestor = $ancestor->parentNode) {
+            for (
+                $ancestor = $indexelement->parentNode; $ancestor !== null && $ancestor !== $indexelement;
+                 $ancestor = $ancestor->parentNode
+            ) {
                 assert($ancestor instanceof DOMElement);
                 if ($ancestor->hasAttributeNS(self::QPY_NAMESPACE, "shuffle-contents")) {
                     // The index element is in a nested shuffle-contents.
@@ -357,12 +362,14 @@ class question_ui_renderer {
      */
     private function mangle_ids_and_names(\DOMXPath $xpath, question_attempt $qa): void {
         /** @var DOMAttr $attr */
-        foreach ($xpath->query("
+        foreach (
+            $xpath->query("
                 //xhtml:*/@id | //xhtml:label/@for | //xhtml:output/@for | //xhtml:input/@list |
                 (//xhtml:button | //xhtml:form | //xhtml:fieldset | //xhtml:iframe | //xhtml:input | //xhtml:object |
                  //xhtml:output | //xhtml:select | //xhtml:textarea | //xhtml:map)/@name |
                 //xhtml:img/@usemap
-                ") as $attr) {
+                ") as $attr
+        ) {
             $original = $attr->value;
             if ($attr->name === "usemap" && utils::str_starts_with($original, "#")) {
                 // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/useMap.
@@ -386,7 +393,7 @@ class question_ui_renderer {
      * @param question_display_options $options
      * @return void
      */
-    private function set_input_values_and_readonly(DOMXPath                 $xpath, question_attempt $qa,
+    private function set_input_values_and_readonly(DOMXPath $xpath, question_attempt $qa,
                                                    question_display_options $options): void {
         /** @var DOMElement $element */
         foreach ($xpath->query("//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea") as $element) {
@@ -543,16 +550,20 @@ class question_ui_renderer {
      */
     private function add_styles(DOMXPath $xpath): void {
         /** @var DOMElement $element */
-        foreach ($xpath->query("
+        foreach (
+            $xpath->query("
                 //xhtml:input[@type != 'checkbox' and @type != 'radio' and
                               @type != 'button' and @type != 'submit' and @type != 'reset']
                 | //xhtml:select | //xhtml:textarea
-                ") as $element) {
+                ") as $element
+        ) {
             $this->add_class_names($element, "form-control", "qpy-input");
         }
 
-        foreach ($xpath->query("//xhtml:input[@type = 'button' or @type = 'submit' or @type = 'reset']
-                                | //xhtml:button") as $element) {
+        foreach (
+            $xpath->query("//xhtml:input[@type = 'button' or @type = 'submit' or @type = 'reset']
+                                | //xhtml:button") as $element
+        ) {
             $this->add_class_names($element, "btn", "btn-primary", "qpy-input");
         }
 
@@ -600,10 +611,12 @@ class question_ui_renderer {
             $isscorer = has_capability("mod/quiz:grade", $options->context);
             $isdeveloper = $isteacher && debugging();
 
-            if (!(in_array("teacher", $allowedroles) && $isteacher
+            if (
+                !(in_array("teacher", $allowedroles) && $isteacher
                 || in_array("proctor", $allowedroles) && $isteacher
                 || in_array("scorer", $allowedroles) && $isscorer
-                || in_array("developer", $allowedroles) && $isdeveloper)) {
+                || in_array("developer", $allowedroles) && $isdeveloper)
+            ) {
                 $attr->ownerElement->parentNode->removeChild($attr->ownerElement);
             }
         }

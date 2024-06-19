@@ -25,7 +25,6 @@ namespace qtype_questionpy\form\conditions;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class condition_with_value extends condition {
-
     /** @var mixed value which the target element value will be compared with */
     public $value;
 

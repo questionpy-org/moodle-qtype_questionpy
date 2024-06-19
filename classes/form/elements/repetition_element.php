@@ -58,7 +58,7 @@ class repetition_element extends form_element {
      * @param form_element[] $elements
      */
     public function __construct(string $name, int $initialrepetitions, int $increment, ?string $buttonlabel,
-                                array  $elements) {
+                                array $elements) {
         $this->name = $name;
         $this->initialrepetitions = $initialrepetitions;
         $this->increment = $increment;

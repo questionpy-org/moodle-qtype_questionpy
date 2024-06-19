@@ -25,7 +25,6 @@ namespace qtype_questionpy;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_metadata {
-
     /**
      * @var array|null if known, an array of `name => correct_value` entries for the expected response fields
      * @see \qtype_renderer::correct_response()
@@ -54,7 +53,7 @@ class question_metadata {
      * @param string[] $requiredfields an array of required field names
      */
     public function __construct(?array $correctresponse = null, array $expecteddata = [],
-                                array  $requiredfields = []) {
+                                array $requiredfields = []) {
         $this->correctresponse = $correctresponse;
         $this->expecteddata = $expecteddata;
         $this->requiredfields = $requiredfields;

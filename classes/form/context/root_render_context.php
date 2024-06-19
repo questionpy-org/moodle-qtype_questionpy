@@ -25,7 +25,6 @@ namespace qtype_questionpy\form\context;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class root_render_context extends mform_render_context {
-
     /** @var int the next int which will be returned by {@see next_unique_int} */
     private int $nextuniqueint = 1;
 

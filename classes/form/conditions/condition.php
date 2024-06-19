@@ -30,7 +30,6 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class condition {
-
     /** @var string $name name of the target element */
     public string $name;
 

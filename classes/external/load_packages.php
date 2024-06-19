@@ -39,7 +39,6 @@ use qtype_questionpy\package\package_version;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class load_packages extends external_api {
-
     /**
      * Used to verify the parameters passed to the service - this services does not allow any parameters.
      *

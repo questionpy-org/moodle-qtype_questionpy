@@ -34,6 +34,9 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class select_element extends form_element {
+    use form_conditions;
+    use form_help;
+
     /** @var string */
     public string $name;
     /** @var string */
@@ -45,8 +48,6 @@ class select_element extends form_element {
     /** @var bool */
     public bool $required = false;
 
-    use form_conditions, form_help;
-
     /**
      * Initializes the element.
      *
@@ -57,7 +58,7 @@ class select_element extends form_element {
      * @param bool $required
      */
     public function __construct(string $name, string $label, array $options, bool $multiple = false,
-                                bool   $required = false) {
+                                bool $required = false) {
         $this->name = $name;
         $this->label = $label;
         $this->options = $options;
@@ -83,8 +84,11 @@ class select_element extends form_element {
         // phpcs:disable moodle.Commenting.InlineComment.DocBlock
         /** @var $element HTML_QuickForm_select */
         $element = $context->add_element(
-            "select", $this->name,
-            $context->contextualize($this->label), $optionsassociative);
+            "select",
+            $this->name,
+            $context->contextualize($this->label),
+            $optionsassociative
+        );
 
         $element->setMultiple($this->multiple);
         if ($selected) {

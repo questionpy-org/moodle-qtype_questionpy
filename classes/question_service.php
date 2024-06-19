@@ -31,7 +31,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_service {
-
     /** @var api */
     private api $api;
 
@@ -72,8 +71,14 @@ class question_service {
         if ($record->islocal) {
             // Package was uploaded.
             $filestorage = get_file_storage();
-            $files = $filestorage->get_area_files($PAGE->context->get_course_context()->id, 'qtype_questionpy',
-                'package', $record->id, 'itemid, filepath, filename', false);
+            $files = $filestorage->get_area_files(
+                $PAGE->context->get_course_context()->id,
+                'qtype_questionpy',
+                'package',
+                $record->id,
+                'itemid, filepath, filename',
+                false
+            );
             if (count($files) === 0) {
                 throw new \coding_exception(
                     "No local package version file with hash '{$record->pkgversionhash}' was found despite being referenced" .
@@ -128,7 +133,9 @@ class question_service {
             $pkgversionid = $this->get_package($question->qpy_package_hash);
             if (!$pkgversionid) {
                 throw new moodle_exception(
-                    'package_not_found', 'qtype_questionpy', '',
+                    'package_not_found',
+                    'qtype_questionpy',
+                    '',
                     (object)['packagehash' => $question->qpy_package_hash]
                 );
             }
@@ -179,8 +186,13 @@ class question_service {
                     ], $file);
                 } else {
                     // Get draft file and store the file.
-                    file_save_draft_area_files($question->qpy_package_file, $question->context->id,
-                        'qtype_questionpy', 'package', $questionid);
+                    file_save_draft_area_files(
+                        $question->qpy_package_file,
+                        $question->context->id,
+                        'qtype_questionpy',
+                        'package',
+                        $questionid
+                    );
                 }
             }
         }

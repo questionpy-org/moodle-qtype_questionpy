@@ -27,7 +27,6 @@ use HTML_QuickForm_element;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 trait form_help {
-
     /** @var string|null */
     public ?string $help = null;
 
