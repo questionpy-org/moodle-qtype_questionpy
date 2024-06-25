@@ -33,7 +33,6 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package extends package_base {
-
     /**
      * @var int package id
      */
@@ -61,7 +60,17 @@ class package extends package_base {
                                 ?array $tags = null) {
         $this->id = $id;
         parent::__construct(
-            $shortname, $namespace, $name, $type, $author, $url, $languages, $description, $icon, $license, $tags
+            $shortname,
+            $namespace,
+            $name,
+            $type,
+            $author,
+            $url,
+            $languages,
+            $description,
+            $icon,
+            $license,
+            $tags
         );
     }
 

@@ -29,7 +29,6 @@ use qtype_questionpy\utils;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class mform_render_context extends render_context {
-
     /**
      * Create, add and return an element.
      *
@@ -83,7 +82,7 @@ abstract class mform_render_context extends render_context {
      * @param bool $force             force the rule to be applied, even if the target form element does not exist.
      * @see \MoodleQuickForm::addRule()
      */
-    public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
+    public function add_rule(string $name, ?string $message, string $type, ?string $format = null,
                              ?string $validation = "server", bool $reset = false, bool $force = false): void {
         $this->mform->addRule($this->mangle_name($name), $message, $type, $format, $validation, $reset, $force);
     }

@@ -36,8 +36,7 @@ use stdClass;
  * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class dynamic_help_icon implements renderable, named_templatable {
-
+class dynamic_help_icon implements named_templatable, renderable {
     /** @var string|null */
     private ?string $title;
     /** @var string */

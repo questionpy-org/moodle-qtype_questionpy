@@ -35,14 +35,15 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class group_element extends form_element {
+    use form_conditions;
+    use form_help;
+
     /** @var string */
     public string $name;
     /** @var string */
     public string $label;
     /** @var form_element[] */
     public array $elements;
-
-    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -72,9 +73,12 @@ class group_element extends form_element {
         }
 
         $element = $context->add_element(
-            "group", $groupname,
+            "group",
+            $groupname,
             $context->contextualize($this->label),
-            $innercontext->elements, null, false
+            $innercontext->elements,
+            null,
+            false
         );
 
         foreach ($innercontext->types as $name => $type) {

@@ -76,5 +76,3 @@ array_converter::configure(question_response::class, function (converter_config 
         ->rename("rendereveryview", "render_every_view")
         ->rename("generalfeedback", "general_feedback");
 });
-
-

@@ -114,7 +114,7 @@ abstract class render_context {
      * @param bool $force             force the rule to be applied, even if the target form element does not exist.
      * @see MoodleQuickForm::addRule
      */
-    abstract public function add_rule(string  $name, ?string $message, string $type, ?string $format = null,
+    abstract public function add_rule(string $name, ?string $message, string $type, ?string $format = null,
                                       ?string $validation = "server", bool $reset = false, bool $force = false): void;
 
     /**

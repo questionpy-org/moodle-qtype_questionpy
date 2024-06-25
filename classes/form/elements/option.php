@@ -42,7 +42,7 @@ class option {
     public function __construct(
         string $label,
         string $value,
-        bool   $selected = false
+        bool $selected = false
     ) {
         $this->label = $label;
         $this->value = $value;

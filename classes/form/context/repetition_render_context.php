@@ -30,7 +30,6 @@ use qtype_questionpy\form\elements\repetition_element;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class repetition_render_context extends section_render_context {
-
     /** @var int running number of this repetition iteration, starting at 1 and not counting removed reps */
     private int $humanrepno;
 

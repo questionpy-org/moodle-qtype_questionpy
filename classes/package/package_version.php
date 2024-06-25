@@ -29,7 +29,6 @@ use qtype_questionpy\array_converter\array_converter;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package_version {
-
     /**
      * @var int package version id
      */

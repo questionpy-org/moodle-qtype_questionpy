@@ -27,7 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 use qtype_questionpy\package_settings;
 
 if ($ADMIN->fulltree) {
-
     // General server settings.
     $settings->add(new admin_setting_configtext(
         'qtype_questionpy/server_url',
@@ -79,4 +78,3 @@ if ($ADMIN->fulltree) {
         ])
     ));
 }
-

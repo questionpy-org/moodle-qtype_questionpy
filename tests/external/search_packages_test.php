@@ -48,7 +48,6 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class search_packages_test extends \externallib_advanced_testcase {
-
     /**
      * This method is called before each test.
      */

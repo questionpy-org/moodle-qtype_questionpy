@@ -33,7 +33,6 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package_raw extends package_base {
-
     /**
      * @var string package hash
      */
@@ -68,7 +67,17 @@ class package_raw extends package_base {
         $this->hash = $hash;
         $this->version = $version;
         parent::__construct(
-            $shortname, $namespace, $name, $type, $author, $url, $languages, $description, $icon, $license, $tags
+            $shortname,
+            $namespace,
+            $name,
+            $type,
+            $author,
+            $url,
+            $languages,
+            $description,
+            $icon,
+            $license,
+            $tags
         );
     }
 

@@ -33,7 +33,6 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class form_section implements qpy_renderable {
-
     /** @var string */
     public string $name;
 

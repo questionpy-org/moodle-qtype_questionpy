@@ -32,7 +32,6 @@ require_once(dirname(__DIR__) . '/data_provider.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package_raw_test extends \advanced_testcase {
-
     /**
      * Provides valid package data.
      *

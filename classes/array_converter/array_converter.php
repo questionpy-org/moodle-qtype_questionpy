@@ -31,7 +31,6 @@ use ReflectionNamedType;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class array_converter {
-
     /** @var callable[] associative array of class names to configuration hook functions for those classes */
     private static array $hooks = [];
 
@@ -75,7 +74,10 @@ class array_converter {
                 if ($discriminator !== null && $discriminator !== $expected) {
                     // If the wrong discriminator is given, it is an error.
                     throw new moodle_exception(
-                        "cannotgetdata", "error", "", null,
+                        "cannotgetdata",
+                        "error",
+                        "",
+                        null,
                         "Expected '$config->discriminator' value '$expected', but got '$discriminator'"
                     );
                 }
@@ -188,7 +190,10 @@ class array_converter {
                     $args[] = $parameter->getDefaultValue();
                 } else if (!$parameter->isVariadic()) {
                     throw new moodle_exception(
-                        "cannotgetdata", "error", "", null,
+                        "cannotgetdata",
+                        "error",
+                        "",
+                        null,
                         "No value provided for required field '$parameter->name' of '{$reflect->getName()}'"
                     );
                 }
@@ -212,7 +217,7 @@ class array_converter {
      * @throws moodle_exception if a value in the raw array cannot be converted to the type of the matching property
      */
     private static function set_properties(ReflectionClass $reflect, converter_config $config,
-                                           object          $instance, array &$raw): void {
+                                           object $instance, array &$raw): void {
         $properties = $reflect->getProperties();
         foreach ($properties as $property) {
             if ($property->isStatic()) {
@@ -232,7 +237,8 @@ class array_converter {
 
             $property->setAccessible(true);
             $property->setValue(
-                $instance, self::convert_to_required_type($property->getType(), $config, $property->name, $value)
+                $instance,
+                self::convert_to_required_type($property->getType(), $config, $property->name, $value)
             );
             unset($raw[$key]);
         }
@@ -274,7 +280,7 @@ class array_converter {
      * @throws moodle_exception if the value cannot be converted to the given type
      */
     private static function convert_to_required_type(?ReflectionNamedType $type, converter_config $config,
-                                                     string               $propname, $value) {
+                                                     string $propname, $value) {
         if (!is_array($value) || !$type) {
             // For scalars and untyped properties / parameters, no conversion is done.
             return $value;
@@ -299,7 +305,10 @@ class array_converter {
 
         $actualtype = gettype($value);
         throw new moodle_exception(
-            "cannotgetdata", "error", "", null,
+            "cannotgetdata",
+            "error",
+            "",
+            null,
             "Cannot convert value of type '$actualtype' to type '{$type->getName()}'"
         );
     }

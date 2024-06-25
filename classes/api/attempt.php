@@ -25,7 +25,6 @@ namespace qtype_questionpy\api;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class attempt {
-
     /** @var int */
     public int $variant;
 

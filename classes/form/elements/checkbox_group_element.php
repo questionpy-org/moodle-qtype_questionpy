@@ -40,7 +40,7 @@ class checkbox_group_element extends form_element {
      *
      * @param checkbox_element ...$checkboxes
      */
-    public function __construct(checkbox_element...$checkboxes) {
+    public function __construct(checkbox_element ...$checkboxes) {
         $this->checkboxes = $checkboxes;
     }
 

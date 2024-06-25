@@ -33,6 +33,9 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class radio_group_element extends form_element {
+    use form_conditions;
+    use form_help;
+
     /** @var string */
     public string $name;
     /** @var string */
@@ -41,8 +44,6 @@ class radio_group_element extends form_element {
     public array $options;
     /** @var bool */
     public bool $required = false;
-
-    use form_conditions, form_help;
 
     /**
      * Initializes the element.
@@ -74,14 +75,21 @@ class radio_group_element extends form_element {
             }
 
             $radioarray[] = $context->mform->createElement(
-                "radio", $mangledname, null,
-                $context->contextualize($option->label), $option->value
+                "radio",
+                $mangledname,
+                null,
+                $context->contextualize($option->label),
+                $option->value
             );
         }
 
         $group = $context->add_element(
-            "group", "radio_group_" . $this->name, $context->contextualize($this->label),
-            $radioarray, null, false
+            "group",
+            "radio_group_" . $this->name,
+            $context->contextualize($this->label),
+            $radioarray,
+            null,
+            false
         );
 
         if ($default) {

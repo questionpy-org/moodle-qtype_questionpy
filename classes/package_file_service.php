@@ -29,7 +29,6 @@ use stored_file;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package_file_service {
-
     /**
      * Get a draft {@see stored_file} with the given ID.
      *
@@ -44,8 +43,12 @@ class package_file_service {
 
         $fs = get_file_storage();
         $files = $fs->get_area_files(
-            $usercontext->id, 'user', 'draft', $draftid,
-            'itemid, filepath, filename', false
+            $usercontext->id,
+            'user',
+            'draft',
+            $draftid,
+            'itemid, filepath, filename',
+            false
         );
         if (!$files) {
             throw new coding_exception("draft file with id '$draftid' does not exist");
@@ -64,8 +67,12 @@ class package_file_service {
     public function get_file(int $qpyid, int $contextid): stored_file {
         $fs = get_file_storage();
         $files = $fs->get_area_files(
-            $contextid, 'qtype_questionpy', 'package', $qpyid,
-            'itemid, filepath, filename', false
+            $contextid,
+            'qtype_questionpy',
+            'package',
+            $qpyid,
+            'itemid, filepath, filename',
+            false
         );
         if (!$files) {
             throw new coding_exception("package file with qpy id '$qpyid' does not exist");

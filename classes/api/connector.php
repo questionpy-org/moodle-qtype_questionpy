@@ -26,7 +26,6 @@ use moodle_exception;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class connector {
-
     /**
      * @var string server url
      */
@@ -60,8 +59,11 @@ class connector {
 
         if (!$this->curlhandle) {
             throw new moodle_exception(
-                'curl_init_error', 'qtype_questionpy', '',
-                curl_errno($this->curlhandle), curl_error($this->curlhandle)
+                'curl_init_error',
+                'qtype_questionpy',
+                '',
+                curl_errno($this->curlhandle),
+                curl_error($this->curlhandle)
             );
         }
 
@@ -105,8 +107,11 @@ class connector {
 
         if (!$success) {
             throw new moodle_exception(
-                'curl_set_opt_error', 'qtype_questionpy', '',
-                curl_errno($this->curlhandle), curl_error($this->curlhandle)
+                'curl_set_opt_error',
+                'qtype_questionpy',
+                '',
+                curl_errno($this->curlhandle),
+                curl_error($this->curlhandle)
             );
         }
     }
@@ -122,8 +127,11 @@ class connector {
 
         if (!$success) {
             throw new moodle_exception(
-                'curl_set_opt_error', 'qtype_questionpy', '',
-                curl_errno($this->curlhandle), curl_error($this->curlhandle)
+                'curl_set_opt_error',
+                'qtype_questionpy',
+                '',
+                curl_errno($this->curlhandle),
+                curl_error($this->curlhandle)
             );
         }
     }
@@ -151,8 +159,11 @@ class connector {
         // Check for cURL failure.
         if ($data === false) {
             throw new moodle_exception(
-                'curl_exec_error', 'qtype_questionpy', '',
-                curl_errno($this->curlhandle), curl_error($this->curlhandle)
+                'curl_exec_error',
+                'qtype_questionpy',
+                '',
+                curl_errno($this->curlhandle),
+                curl_error($this->curlhandle)
             );
         }
 
@@ -208,5 +219,4 @@ class connector {
         // Execute POST request.
         return $this->exec();
     }
-
 }

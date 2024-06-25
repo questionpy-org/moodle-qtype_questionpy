@@ -34,6 +34,9 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class checkbox_element extends form_element {
+    use form_conditions;
+    use form_help;
+
     /** @var string */
     public string $name;
     /** @var string|null */
@@ -45,8 +48,6 @@ class checkbox_element extends form_element {
     /** @var bool */
     public bool $selected = false;
 
-    use form_conditions, form_help;
-
     /**
      * Initializes the element.
      *
@@ -57,7 +58,7 @@ class checkbox_element extends form_element {
      * @param bool $selected
      */
     public function __construct(string $name, ?string $leftlabel = null, ?string $rightlabel = null,
-                                bool   $required = false, bool $selected = false) {
+                                bool $required = false, bool $selected = false) {
         $this->name = $name;
         $this->leftlabel = $leftlabel;
         $this->rightlabel = $rightlabel;
@@ -75,7 +76,8 @@ class checkbox_element extends form_element {
      */
     public function render_to(render_context $context, ?int $group = null): void {
         $element = $context->add_element(
-            "advcheckbox", $this->name,
+            "advcheckbox",
+            $this->name,
             $context->contextualize($this->leftlabel),
             $context->contextualize($this->rightlabel),
             $group ? ["group" => $group] : null

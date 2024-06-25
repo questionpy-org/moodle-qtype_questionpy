@@ -46,7 +46,6 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class favourite_package_test extends \externallib_advanced_testcase {
-
     /**
      * This method is called before each test.
      */

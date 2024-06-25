@@ -29,7 +29,6 @@ use qtype_questionpy\form\form_help;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_area_element extends text_input_element {
-
     /** @var string */
     protected const MFORM_ELEMENT = "textarea";
 }

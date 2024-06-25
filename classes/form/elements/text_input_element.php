@@ -29,6 +29,8 @@ use qtype_questionpy\form\form_help;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_input_element extends form_element {
+    use form_conditions;
+    use form_help;
 
     /** @var string moodle form element name, overridden by {@see text_area_element} */
     protected const MFORM_ELEMENT = "text";
@@ -44,8 +46,6 @@ class text_input_element extends form_element {
     /** @var string|null */
     public ?string $placeholder = null;
 
-    use form_conditions, form_help;
-
     /**
      * Initializes the element.
      *
@@ -56,9 +56,9 @@ class text_input_element extends form_element {
      * @param string|null $placeholder
      */
     public function __construct(
-        string  $name,
-        string  $label,
-        bool    $required = false,
+        string $name,
+        string $label,
+        bool $required = false,
         ?string $default = null,
         ?string $placeholder = null
     ) {
@@ -78,8 +78,10 @@ class text_input_element extends form_element {
         $attributes = $this->placeholder ? ["placeholder" => $context->contextualize($this->placeholder)] : [];
 
         $element = $context->add_element(
-            get_class($this)::MFORM_ELEMENT, $this->name,
-            $context->contextualize($this->label), $attributes
+            get_class($this)::MFORM_ELEMENT,
+            $this->name,
+            $context->contextualize($this->label),
+            $attributes
         );
         $context->set_type($this->name, PARAM_TEXT);
 

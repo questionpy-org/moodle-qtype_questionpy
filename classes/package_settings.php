@@ -28,15 +28,18 @@ use moodle_exception;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package_settings extends admin_setting {
-
     /**
      * Constructor for custom package settings.
      */
     public function __construct() {
         $this->nosave = true;
         $this->plugin = 'qtype_questionpy';
-        parent::__construct('qtype_questionpy/persist_packages', new lang_string('packages_subheading', 'qtype_questionpy'),
-            null, null);
+        parent::__construct(
+            'qtype_questionpy/persist_packages',
+            new lang_string('packages_subheading', 'qtype_questionpy'),
+            null,
+            null
+        );
     }
 
     /**

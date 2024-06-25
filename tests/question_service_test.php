@@ -33,7 +33,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_service_test extends \advanced_testcase {
-
     /** @var api */
     private api $api;
 
@@ -76,7 +75,8 @@ class question_service_test extends \advanced_testcase {
                 "qpy_package_hash" => $package->hash,
                 "qpy_state" => $statestr,
                 "qpy_is_local" => "0",
-            ], $result
+            ],
+            $result
         );
     }
 

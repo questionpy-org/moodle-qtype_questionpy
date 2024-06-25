@@ -25,7 +25,6 @@ namespace qtype_questionpy\form\conditions;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class does_not_equal extends condition_with_value {
-
     /**
      * Return the condition string to pass to {@see \MoodleQuickForm::disabledIf()} or {@see \MoodleQuickForm::hideIf()}
      * after the depended on element's name.

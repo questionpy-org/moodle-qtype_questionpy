@@ -53,5 +53,3 @@ array_converter::configure(question_edit_form_response::class, function (convert
     $config
         ->rename("formdata", "form_data");
 });
-
-

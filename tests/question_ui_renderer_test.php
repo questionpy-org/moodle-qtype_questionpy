@@ -28,7 +28,6 @@ use DOMException;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_ui_renderer_test extends \advanced_testcase {
-
     /**
      * Tests that metadata is correctly extracted from the UI's input elements.
      *

@@ -38,7 +38,6 @@ use qtype_questionpy\utils;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class favourite_package extends external_api {
-
     /**
      * Used to verify the parameters passed to the service.
      *
