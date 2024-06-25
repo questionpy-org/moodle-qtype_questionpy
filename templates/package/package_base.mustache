@@ -40,19 +40,21 @@
     <div class="qpy-card-content">
         <h5 class="qpy-card-title">{{name}} <small class="text-muted">{{namespace}}</small></h5>
         <div class="qpy-show-more" id="qpy-show-more-{{uniqid}}">
-            <div class="collapse" role="region" aria-label="description" id="collapse-{{uniqid}}" aria-expanded="false">
-                {{{description}}}
+            <div class="qpy-show-more-container collapse" role="region" aria-label="description" id="collapse-{{uniqid}}" aria-expanded="false">
+                <div class="qpy-card-description">
+                    {{{description}}}
+                </div>
             </div>
             <button
               type="button"
-              class="btn btn-sm btn-link p-0 d-none"
+              class="qpy-show-more-button btn btn-sm btn-link p-0 d-none"
               data-toggle="collapse"
               data-target="#collapse-{{uniqid}}"
               aria-expanded="false"
               aria-controls="collapse-{{uniqid}}"
             >
-                <span class="qpy-show-more-btn"> {{#str}} showmore, core {{/str}} {{#pix}} t/expandedchevron, core {{/pix}} </span>
-                <span class="qpy-show-less-btn d-none"> {{#str}} showless, core {{/str}} {{#pix}} t/collapsedchevron_up, core {{/pix}} </span>
+                <span class="qpy-show-more-button-more"> {{#str}} showmore, core {{/str}} {{#pix}} t/expandedchevron, core {{/pix}} </span>
+                <span class="qpy-show-more-button-less"> {{#str}} showless, core {{/str}} {{#pix}} t/collapsedchevron_up, core {{/pix}} </span>
           </button>
         </div>
     </div>

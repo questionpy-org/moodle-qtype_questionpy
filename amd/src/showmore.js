@@ -19,17 +19,15 @@
  * @module qtype_questionpy/showmore
  */
 
-import $ from "jquery";
-
 
 /**
  * Return `true` if the element is overflowing.
  *
- * @param {jQuery} element
+ * @param {HTMLElement} element
  * @returns {boolean}
  */
 const isOverflowing = (element) => {
-    return element[0].scrollHeight > element.height();
+    return element.scrollHeight > element.clientHeight;
 };
 
 
@@ -39,26 +37,14 @@ const isOverflowing = (element) => {
  * @param {string} id
  */
 export const init = (id) => {
-    const element = $(`#${id}`);
+    const element = document.getElementById(id);
 
-    const container = element.find("div");
-    const button = element.find("button");
+    const container = element.querySelector(".qpy-show-more-container");
+    const button = element.querySelector(".qpy-show-more-button");
 
     window.addEventListener("resize", () => {
-        button.toggleClass("d-none", !isOverflowing(container));
+        button.classList.toggle("d-none", !isOverflowing(container));
     });
 
-    button.toggleClass("d-none", !isOverflowing(container));
-
-    const showLessButton = element.find(".qpy-show-less-btn");
-    const showMoreButton = element.find(".qpy-show-more-btn");
-
-    element.on("show.bs.collapse", () => {
-        showLessButton.toggleClass("d-none", false);
-        showMoreButton.toggleClass("d-none", true);
-    });
-    element.on("hide.bs.collapse", () => {
-        showLessButton.toggleClass("d-none", true);
-        showMoreButton.toggleClass("d-none", false);
-    });
+    button.classList.toggle("d-none", !isOverflowing(container));
 };
