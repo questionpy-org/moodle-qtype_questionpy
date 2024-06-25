@@ -37,9 +37,16 @@
     }
 }}
 <div class="qpy-package-search-area qpy-loading" id="qpy-package-search-area-{{uniqid}}">
-    <!-- SEARCH BAR -->
-    <div data-for="search-bar-container">
-        <input type="text" class="form-control" data-for="search-bar" aria-label="{{#cleanstr}} search_bar_label_aria, qtype_questionpy {{/cleanstr}}" placeholder="{{#cleanstr}} search_bar, qtype_questionpy {{/cleanstr}}">
+    <div class="qpy-package-search-bars">
+        <!-- SEARCH BAR -->
+        <div class="qpy-search-bar" data-for="search-bar-container">
+            <input type="text" class="form-control" data-for="search-bar" aria-label="{{#cleanstr}} search_bar_label_aria, qtype_questionpy {{/cleanstr}}" placeholder="{{#cleanstr}} search_bar, qtype_questionpy {{/cleanstr}}">
+        </div>
+
+        <!-- TAG BAR -->
+        <div class="qpy-tag-bar" data-for="tag-bar">
+            <select class="d-none" aria-label="{{#cleanstr}} tag_bar_label_aria, qtype_questionpy {{/cleanstr}}" multiple></select>
+        </div>
     </div>
 
     <!-- PACKAGE CONTAINER -->

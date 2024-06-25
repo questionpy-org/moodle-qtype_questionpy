@@ -89,12 +89,13 @@ class package_version_test extends \advanced_testcase {
         $package = package_version::get_by_id($pkgversionid);
 
         // Delete the package.
-        $package->delete(true);
+        $package->delete();
 
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tags'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgtag'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tag'));
     }
 
     /**
@@ -116,18 +117,20 @@ class package_version_test extends \advanced_testcase {
         $package2 = package_version::get_by_id($pkgversionid2);
 
         // Delete the first package.
-        $package1->delete(true);
+        $package1->delete();
 
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(1, $DB->count_records('qtype_questionpy_tags'));
+        $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgtag'));
+        $this->assertEquals(1, $DB->count_records('qtype_questionpy_tag'));
 
         // Delete the second package.
-        $package2->delete(true);
+        $package2->delete();
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tags'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgtag'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tag'));
     }
 }

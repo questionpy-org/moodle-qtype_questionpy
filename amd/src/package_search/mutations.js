@@ -109,7 +109,7 @@ export default class {
         stateManager.setReadOnly(false);
         this._setLoading(stateManager, true);
         state.general.query = (typeof args.query === "string") ? args.query : state.general.query;
-        state.general.tags = [];
+        state.general.tags = args.tags || state.general.tags;
         state.general.sorting = {
             sort: args.sort || state.general.sorting.sort,
             order: args.order || state.general.sorting.order,
@@ -147,6 +147,17 @@ export default class {
      */
     async searchPackagesByQuery(stateManager, query) {
         await this.searchPackages(stateManager, {page: 0, query: query});
+    }
+
+  /**
+   * Used to filter packages only by providing tags.
+   *
+   * @param {StateManager} stateManager
+   * @param {int[]} tags
+   * @returns {Promise<void>}
+   */
+    async filterPackagesByTags(stateManager, tags) {
+        await this.searchPackages(stateManager, {tags: tags});
     }
 
     /**

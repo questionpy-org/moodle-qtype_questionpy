@@ -77,6 +77,9 @@ $string['unmark_as_favourite'] = 'Favourite';
 // Package search.
 $string['search_bar'] = 'Search...';
 $string['search_bar_label_aria'] = 'Search Bar';
+$string['tag_bar'] = 'Tags...';
+$string['tag_bar_label_aria'] = 'Tags';
+$string['tag_bar_no_selection'] = '';
 $string['search_all_header'] = 'All ({$a})';
 $string['search_recentlyused_header'] = 'Recently Used ({$a})';
 $string['search_favourites_header'] = 'Favourites ({$a})';

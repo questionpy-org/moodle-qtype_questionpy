@@ -71,7 +71,8 @@ class package_test extends \advanced_testcase {
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tags'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgtag'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tag'));
     }
 
     /**
@@ -97,7 +98,8 @@ class package_test extends \advanced_testcase {
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(0, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tags'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgtag'));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tag'));
     }
 
 

@@ -101,6 +101,26 @@ class package_raw extends package_base {
     }
 
     /**
+     * Persists a package tag in the database.
+     *
+     * @param string $tag
+     * @return int
+     * @throws moodle_exception
+     */
+    private function store_tag(string $tag): int {
+        global $DB;
+
+        $record = ['tag' => $tag];
+
+        $id = $DB->get_field('qtype_questionpy_tag', 'id', $record);
+        if ($id === false) {
+            // TODO: store them in upper- or lowercase?
+            return $DB->insert_record('qtype_questionpy_tag', $record);
+        }
+        return $id;
+    }
+
+    /**
      * Persists a package in the database.
      *
      * @param int $timestamp
@@ -142,10 +162,10 @@ class package_raw extends package_base {
             foreach ($this->tags as $tag) {
                 $tagsdata[] = [
                     'packageid' => $packageid,
-                    'tag' => $tag,
+                    'tagid' => $this->store_tag($tag),
                 ];
             }
-            $DB->insert_records('qtype_questionpy_tags', $tagsdata);
+            $DB->insert_records('qtype_questionpy_pkgtag', $tagsdata);
         }
         return $packageid;
     }

@@ -198,23 +198,28 @@ class package_raw_test extends \advanced_testcase {
             $this->assertEquals($packagedata['description'][$language], $record->description);
         }
 
-        // Check qtype_questionpy_tags table.
+        // Check qtype_questionpy_tag and qtype_questionpy_pkgtag table.
         $tags = $packagedata['tags'] ?? [];
-        $this->assertEquals(count($tags), $DB->count_records('qtype_questionpy_tags'));
+        $tagscount = count($tags);
+        $this->assertEquals($tagscount, $DB->count_records('qtype_questionpy_tag'));
+        $this->assertEquals($tagscount, $DB->count_records('qtype_questionpy_pkgtag'));
         foreach ($tags as $tag) {
-            $record = $DB->get_record('qtype_questionpy_tags', ['packageid' => $packageid, 'tag' => $tag]);
+            $tagid = $DB->get_field('qtype_questionpy_tag', 'id', ['tag' => $tag]);
+            $this->assertNotFalse($tagid);
+
+            $record = $DB->get_record('qtype_questionpy_pkgtag', ['packageid' => $packageid, 'tagid' => $tagid]);
             $this->assertNotFalse($record);
         }
     }
 
     /**
-     * Tests that storing same package without user should not throw an exception and only store the source once.
+     * Tests that storing same package should not throw an exception and only store it once.
      *
      * @covers \package::store
      * @return void
      * @throws moodle_exception
      */
-    public function test_store_package_twice_without_user() {
+    public function test_store_package_twice() {
         global $DB;
         $this->resetAfterTest();
 
@@ -225,7 +230,8 @@ class package_raw_test extends \advanced_testcase {
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(2, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(2, $DB->count_records('qtype_questionpy_tags'));
+        $this->assertEquals(2, $DB->count_records('qtype_questionpy_pkgtag'));
+        $this->assertEquals(2, $DB->count_records('qtype_questionpy_tag'));
     }
 
     /**
@@ -268,6 +274,7 @@ class package_raw_test extends \advanced_testcase {
         $this->assertEquals(2, $DB->count_records('qtype_questionpy_pkgversion'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_package'));
         $this->assertEquals(1, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(1, $DB->count_records('qtype_questionpy_tags'));
+        $this->assertEquals(1, $DB->count_records('qtype_questionpy_pkgtag'));
+        $this->assertEquals(1, $DB->count_records('qtype_questionpy_tag'));
     }
 }

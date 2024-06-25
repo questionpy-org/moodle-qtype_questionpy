@@ -167,9 +167,11 @@ class search_packages extends external_api {
 
         // Get tags.
         $tagsraw = $DB->get_records_sql("
-            SELECT id, packageid, tag
-            FROM {qtype_questionpy_tags}
-            WHERE packageid {$inpackagesql}
+            SELECT pt.id as ptid, t.id, t.tag, pt.packageid
+            FROM {qtype_questionpy_pkgtag} pt
+            JOIN {qtype_questionpy_tag} t
+            ON pt.tagid = t.id
+            WHERE pt.packageid {$inpackagesql}
         ", $inpackageparams);
 
         $tags = [];
@@ -224,19 +226,26 @@ class search_packages extends external_api {
      *
      * @param array $tags
      * @return array A list containing the constructed sql fragment and an array of parameters.
+     * @throws moodle_exception
      */
     private static function create_tag_filter_sql(array $tags): array {
-        $joinsql = '';
-        $params = [];
-        foreach ($tags as $i => $tag) {
-            $jointagsparam = "tag$i";
-            $params[$jointagsparam] = $tag;
-            $joinsql .= "
-                JOIN {qtype_questionpy_tags} t$i
-                ON t$i.packageid = p.id AND t$i.id = :$jointagsparam
-            ";
+        global $DB;
+
+        if (empty($tags)) {
+            return ['', []];
         }
-        return [$joinsql, $params];
+
+        [$insql, $inparams] = $DB->get_in_or_equal($tags, SQL_PARAMS_NAMED, 'tag');
+        $count = count($tags);
+        $wheresql = "
+            (
+                SELECT COUNT(DISTINCT pt.tagid)
+                FROM {qtype_questionpy_pkgtag} pt
+                WHERE pt.packageid = p.id
+                      AND pt.tagid $insql
+            ) = $count
+        ";
+        return [$wheresql, $inparams];
     }
 
     /**
@@ -285,10 +294,35 @@ class search_packages extends external_api {
     }
 
     /**
+     * Construct a conjunctive where clause.
+     *
+     * @param string ...$clauses
+     * @return string
+     */
+    private static function sql_where(string ...$clauses): string {
+        $where = '';
+
+        foreach ($clauses as $clause) {
+            if ($clause === '') {
+                continue;
+            }
+            $where .= "({$clause}) AND ";
+        }
+        if ($where !== '') {
+            // Remove last ' AND '.
+            $where = substr($where, 0, -5);
+            $where = "WHERE $where";
+        }
+
+        return $where;
+    }
+
+    /**
      * Constructs the sql query used for searching through packages.
      *
      * @param mixed $params The parameters.
      * @return array
+     * @throws moodle_exception
      */
     private static function create_sql($params): array {
         global $USER;
@@ -301,7 +335,7 @@ class search_packages extends external_api {
         [$joinlangssql, $joinlangsparams, $coalescenamesql, $coalescedescsql] = self::create_best_language_sql();
 
         // Get only packages with specified tags.
-        [$jointagssql, $jointagsparams] = self::create_tag_filter_sql($params['tags']);
+        [$wheretagssql, $wheretagsparams] = self::create_tag_filter_sql($params['tags']);
 
         // Prepare query.
         [$wherelikesql, $wherelikeparams] = self::create_text_search_sql(['name', 'description'], $params['query']);
@@ -312,7 +346,7 @@ class search_packages extends external_api {
         [$joinfavsql, $joinfavparams] = $ufservice->get_join_sql_by_type('qtype_questionpy', 'package', 'f', 'p.id');
 
         // Merge existing parameters.
-        $finalparams = array_merge($joinlangsparams, $jointagsparams, $wherelikeparams, $joinfavparams);
+        $finalparams = array_merge($joinlangsparams, $wheretagsparams, $wherelikeparams, $joinfavparams);
 
         // Search through recently used packages if the category is set.
         $selecttimeusedsql = '';
@@ -325,8 +359,10 @@ class search_packages extends external_api {
             $selecttimeusedsql = ', lu.timeused';
         } else if ($params['category'] === 'favourites') {
             // We only want to include packages which were marked as favourite.
-            $wherefavsql = 'WHERE f.id IS NOT NULL';
+            $wherefavsql = 'f.id IS NOT NULL';
         }
+
+        $wheresql = self::sql_where($wherefavsql, $wheretagssql);
 
         // Assemble final sql query.
         $finalsql = "
@@ -340,8 +376,7 @@ class search_packages extends external_api {
                 $joinfavsql
                 $joinrecentlyusedsql
                 $joinlangssql
-                $jointagssql
-                $wherefavsql
+                $wheresql
             ) subq
             $wherelikesql
             $orderbysql
