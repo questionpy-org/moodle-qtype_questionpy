@@ -108,6 +108,9 @@
         <KEY NAME="contextid" TYPE="foreign" FIELDS="contextid" REFTABLE="context" REFFIELDS="id"/>
         <KEY NAME="packageid" TYPE="foreign" FIELDS="packageid" REFTABLE="qtype_questionpy_package" REFFIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="contextid-packageid" UNIQUE="true" FIELDS="contextid, packageid"/>
+      </INDEXES>
     </TABLE>
 
   </TABLES>

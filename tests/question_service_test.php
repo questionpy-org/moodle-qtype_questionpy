@@ -22,6 +22,7 @@ use moodle_exception;
 use qtype_questionpy\api\api;
 use qtype_questionpy\api\package_api;
 use qtype_questionpy\api\question_response;
+use qtype_questionpy\package\package;
 use stdClass;
 
 /**
@@ -100,6 +101,7 @@ class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_update_existing_record_if_changed() {
+        global $PAGE;
         $this->resetAfterTest();
 
         $oldpackage = package_provider(["version" => "0.1.0"]);
@@ -125,6 +127,7 @@ class question_service_test extends \advanced_testcase {
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
+                "context" => $PAGE->context,
             ]
         );
 
@@ -140,6 +143,7 @@ class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_do_nothing_if_unchanged() {
+        global $PAGE;
         $this->resetAfterTest();
 
         $package = package_provider();
@@ -162,6 +166,7 @@ class question_service_test extends \advanced_testcase {
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
+                "context" => $PAGE->context,
             ]
         );
 
@@ -178,6 +183,7 @@ class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_upsert_question_should_insert_record() {
+        global $PAGE;
         $this->resetAfterTest();
 
         $package = package_provider();
@@ -199,6 +205,7 @@ class question_service_test extends \advanced_testcase {
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
+                "context" => $PAGE->context,
             ]
         );
 
@@ -224,6 +231,115 @@ class question_service_test extends \advanced_testcase {
                 "qpy_package_source" => "search",
             ]
         );
+    }
+
+    /**
+     * Tests {@see question_service::upsert_question()} adds current package to the
+     * <code>qtype_questionpy_lastused</code> table.
+     *
+     * @throws moodle_exception
+     * @throws coding_exception
+     * @throws dml_exception
+     * @covers \qtype_questionpy\question_service::upsert_question
+     */
+    public function test_upsert_question_should_add_package_to_last_used_table() {
+        global $DB, $PAGE;
+        $this->resetAfterTest();
+
+        $rawpackage = package_provider();
+        $pkgversionid = $rawpackage->store();
+
+        $package = package::get_by_version($pkgversionid);
+
+        $newstate = json_encode(["this is" => "new state"]);
+        $formdata = ["this is" => "form data"];
+
+        $this->packageapi
+            ->expects($this->once())
+            ->method("create_question")
+            ->with(null, (object) $formdata)
+            ->willReturn(new question_response($newstate, ""));
+
+        $this->questionservice->upsert_question(
+            (object)[
+                "id" => 42, // Does not exist in the qtype_questionpy table yet.
+                "qpy_package_hash" => $rawpackage->hash,
+                "qpy_form" => $formdata,
+                "qpy_package_source" => "search",
+                "oldparent" => 1,
+                "context" => $PAGE->context,
+            ]
+        );
+
+        $record = $DB->get_record('qtype_questionpy_lastused', ['contextid' => $PAGE->context->id, 'packageid' => $package->id]);
+        $this->assertNotFalse($record);
+        $this->assertTimeCurrent($record->timeused);
+    }
+
+    /**
+     * Tests {@see question_service::upsert_question()} adds current package to the
+     * <code>qtype_questionpy_lastused</code> table.
+     *
+     * @throws moodle_exception
+     * @throws coding_exception
+     * @throws dml_exception
+     * @covers \qtype_questionpy\question_service::upsert_question
+     */
+    public function test_upsert_question_in_same_context_with_same_package_should_only_update_time_used_in_last_used_table() {
+        global $DB, $PAGE;
+        $this->resetAfterTest();
+
+        $rawpackage = package_provider();
+        $pkgversionid = $rawpackage->store();
+
+        $package = package::get_by_version($pkgversionid);
+
+        $newstate = json_encode(["this is" => "new state"]);
+        $formdata = ["this is" => "form data"];
+
+        $this->packageapi
+            ->expects($this->exactly(2))
+            ->method("create_question")
+            ->with(null, (object) $formdata)
+            ->willReturn(new question_response($newstate, ""));
+
+        $this->questionservice->upsert_question(
+            (object)[
+                "id" => 42, // Does not exist in the qtype_questionpy table yet.
+                "qpy_package_hash" => $rawpackage->hash,
+                "qpy_form" => $formdata,
+                "qpy_package_source" => "search",
+                "oldparent" => 1,
+                "context" => $PAGE->context,
+            ]
+        );
+
+        $oldrecord = $DB->get_record(
+            'qtype_questionpy_lastused',
+            ['contextid' => $PAGE->context->id, 'packageid' => $package->id]
+        );
+        $this->waitForSecond();
+
+        $this->questionservice->upsert_question(
+            (object)[
+                "id" => 43, // Does not exist in the qtype_questionpy table yet.
+                "qpy_package_hash" => $rawpackage->hash,
+                "qpy_form" => $formdata,
+                "qpy_package_source" => "search",
+                "oldparent" => 1,
+                "context" => $PAGE->context,
+            ]
+        );
+
+        $total = $DB->count_records('qtype_questionpy_lastused');
+        $this->assertEquals(1, $total);
+
+        $newrecord = $DB->get_record(
+            'qtype_questionpy_lastused',
+            ['contextid' => $PAGE->context->id, 'packageid' => $package->id]
+        );
+        $this->assertTimeCurrent($newrecord->timeused);
+        $this->assertGreaterThan($oldrecord->timeused, $newrecord->timeused);
     }
 
     /**

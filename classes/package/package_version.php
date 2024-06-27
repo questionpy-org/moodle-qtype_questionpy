@@ -18,6 +18,7 @@ namespace qtype_questionpy\package;
 
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\last_used_service;
 
 /**
  * Represents a QuestionPy package version stored in the database.
@@ -161,6 +162,9 @@ class package_version {
         $DB->delete_records('qtype_questionpy_language', ['packageid' => $this->packageid]);
         $DB->delete_records('qtype_questionpy_tags', ['packageid' => $this->packageid]);
         $DB->delete_records('qtype_questionpy_package', ['id' => $this->packageid]);
+
+        // Remove the package from the last used table.
+        last_used_service::remove_by_package($this->packageid);
 
         $transaction->allow_commit();
     }
