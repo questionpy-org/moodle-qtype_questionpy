@@ -163,8 +163,8 @@
     mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
 }
 
-.qpy-show-more [aria-expanded="true"] .qpy-show-more-button-more,
-.qpy-show-more [aria-expanded="false"] .qpy-show-more-button-less {
+.qpy-show-more :not(.collapsed) .qpy-show-more-button-more,
+.qpy-show-more .collapsed .qpy-show-more-button-less {
     display: none;
 }
 
