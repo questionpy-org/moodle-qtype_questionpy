@@ -43,7 +43,9 @@ export const init = (id) => {
     const button = element.querySelector(".qpy-show-more-button");
 
     window.addEventListener("resize", () => {
-        button.classList.toggle("d-none", !isOverflowing(container));
+        if (button.classList.contains("collapsed")) {
+            button.classList.toggle("d-none", !isOverflowing(container));
+        }
     });
 
     button.classList.toggle("d-none", !isOverflowing(container));
