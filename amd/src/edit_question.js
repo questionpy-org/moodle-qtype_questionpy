@@ -31,27 +31,26 @@ import {favouritePackage} from 'qtype_questionpy/utils';
  * @param {boolean} selected
  */
 export function initActionButton(card, selected) {
-    const packageHash = document.querySelector('input[name="qpy_package_hash"]');
     const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
 
     if (selected) {
-        const packageFile = document.querySelector('input[name="qpy_package_file"]');
-
         // Initialize the button to change the package.
         const changeButton = card.getElementsByClassName("qpy-version-selection-button")[0];
         changeButton.addEventListener("click", (e) => {
             e.preventDefault();
 
-            packageSelected.value = false;
-            packageSelected.removeAttribute("disabled");
+            // We want to reduce the amount of unnecessary data exchange.
+            const qpyElements = document.querySelectorAll('[name^="qpy_"]:not(input[name="qpy_package_source"])');
+            for (const qpyElement of qpyElements) {
+                qpyElement.disabled = true;
+            }
 
-            if (packageFile) {
-                // We want to prevent, that the same draft id will be used when changing a package.
-                packageFile.disabled = true;
-            }
-            if (packageHash) {
-                packageHash.value = '';
-            }
+            // When unselecting, view the search container, even if the current package was uploaded.
+            const packageSource = document.querySelector('input[name="qpy_package_source"]');
+            packageSource.value = 'search';
+
+            packageSelected.value = false;
+            packageSelected.disabled = false;
 
             // We do not want any form checking when changing a package.
             resetFormDirtyState(changeButton);
@@ -59,6 +58,7 @@ export function initActionButton(card, selected) {
             e.target.form.submit();
         });
     } else {
+        const packageHash = document.querySelector('input[name="qpy_package_hash"]');
         const selectedHash = card.getElementsByClassName("qpy-version-selection")[0];
         const selectButton = card.getElementsByClassName("qpy-version-selection-button")[0];
 
@@ -66,7 +66,7 @@ export function initActionButton(card, selected) {
             e.preventDefault();
 
             packageSelected.value = true;
-            packageSelected.removeAttribute("disabled");
+            packageSelected.disabled = false;
             packageHash.value = selectedHash.value;
 
             // We do not want any form checking when selecting a package.

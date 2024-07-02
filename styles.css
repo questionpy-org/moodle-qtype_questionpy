@@ -35,7 +35,7 @@
     display: flex;
     flex-flow: column;
     row-gap: 5px;
-    overflow-y: scroll;
+    overflow: auto;
     max-height: 400px;
 }
 
@@ -45,9 +45,10 @@
     display: flex;
     gap: 10px;
     align-items: stretch;
-    height: 120px;
+    min-height: 120px;
     width: var(--qpy-card-width);
     padding: 10px;
+    flex: none;
 }
 
 .qpy-card-image {
@@ -70,12 +71,6 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-}
-
-.qpy-card-description {
-    flex: 1;
-    overflow-y: auto;
-    margin: 0;
 }
 
 .qpy-card-action {
@@ -149,4 +144,36 @@
 .qpy-server-info-section-title {
     padding-left: 5px;
     margin-top: 20px;
+}
+
+.qpy-card-description {
+    text-align: justify;
+}
+.qpy-show-more .collapse:not(.show) {
+    display: block;
+    overflow: hidden;
+}
+
+.qpy-show-more .collapse:not(.show),
+.qpy-show-more .collapsing {
+    height: 4rem;
+    -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+}
+
+.qpy-show-more :not(.collapsed) .qpy-show-more-button-more,
+.qpy-show-more .collapsed .qpy-show-more-button-less {
+    display: none;
+}
+
+.qpy-show-more .collapsing > :first-child,
+.qpy-show-more .collapse > :first-child {
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.qpy-show-more .collapsing > :last-child,
+.qpy-show-more .collapse > :last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
 }
