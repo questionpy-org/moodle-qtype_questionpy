@@ -157,7 +157,7 @@ export default class {
    * @returns {Promise<void>}
    */
     async filterPackagesByTags(stateManager, tags) {
-        await this.searchPackages(stateManager, {tags: tags});
+        await this.searchPackages(stateManager, {page: 0, tags: tags});
     }
 
     /**
