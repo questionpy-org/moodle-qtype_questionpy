@@ -31,36 +31,61 @@ defined('MOODLE_INTERNAL') || die;
  */
 class attempt_ui {
     /** @var string */
-    public string $content;
+    public string $formulation;
 
-    /** @var array string to string mapping of placeholder names to the values (to be replaced in the content) */
+    /** @var string|null */
+    public ?string $generalfeedback = null;
+
+    /** @var string|null */
+    public ?string $specificfeedback = null;
+
+    /** @var string|null */
+    public ?string $rightanswer = null;
+
+    /** @var array<string, string> string to string mapping of placeholder names to the values (to be replaced in the content) */
     public array $placeholders = [];
 
-    /** @var string|null specifics TBD */
-    public ?string $includeinlinecss = null;
+    /** @var string[]|null */
+    public ?array $cssfiles = null;
 
-    /** @var string|null specifics TBD */
-    public ?string $includecssfile = null;
+    /** @var array<string, attempt_file> specifics TBD */
+    public array $files = [];
 
     /** @var string specifics TBD */
-    public string $cachecontrol = "private";
-
-    /** @var object[] specifics TBD */
-    public array $files = [];
+    public string $cachecontrol = "PRIVATE_CACHE";
 
     /**
      * Initializes a new instance.
      *
-     * @param string $content
+     * @param string $formulation
+     * @param string|null $generalfeedback
+     * @param string|null $specificfeedback
+     * @param string|null $rightanswer
+     * @param array $placeholders
+     * @param array|null $cssfiles
+     * @param array $files
+     * @param string $cachecontrol
      */
-    public function __construct(string $content) {
-        $this->content = $content;
+    public function __construct(string $formulation, ?string $generalfeedback = null, ?string $specificfeedback = null,
+                                ?string $rightanswer = null, array $placeholders = [], ?array $cssfiles = null, array $files = [],
+                                string $cachecontrol = "PRIVATE_CACHE") {
+        $this->formulation = $formulation;
+        $this->generalfeedback = $generalfeedback;
+        $this->specificfeedback = $specificfeedback;
+        $this->rightanswer = $rightanswer;
+        $this->placeholders = $placeholders;
+        $this->cssfiles = $cssfiles;
+        $this->files = $files;
+        $this->cachecontrol = $cachecontrol;
     }
 }
 
 array_converter::configure(attempt_ui::class, function (converter_config $config) {
     $config
-        ->rename("includeinlinecss", "include_inline_css")
-        ->rename("includecssfile", "include_css_file")
-        ->rename("cachecontrol", "cache_control");
+        ->rename("generalfeedback", "general_feedback")
+        ->rename("specificfeedback", "specific_feedback")
+        ->rename("rightanswer", "right_answer")
+        ->rename("cssfiles", "css_files")
+        ->rename("cachecontrol", "cache_control")
+        ->array_elements("files", attempt_file::class);
 });

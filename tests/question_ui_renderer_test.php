@@ -17,7 +17,7 @@
 namespace qtype_questionpy;
 
 use coding_exception;
-use DOMException;
+use DOMDocument;
 
 /**
  * Unit tests for {@see question_ui_renderer}.
@@ -29,44 +29,13 @@ use DOMException;
  */
 class question_ui_renderer_test extends \advanced_testcase {
     /**
-     * Tests that metadata is correctly extracted from the UI's input elements.
-     *
-     * @covers \qtype_questionpy\question_ui_renderer::get_metadata
-     * @covers \qtype_questionpy\question_metadata
-     */
-    public function test_should_extract_correct_metadata() {
-        $input = file_get_contents(__DIR__ . "/question_uis/metadata.xhtml");
-
-        $ui = new question_ui_renderer($input, []);
-        $metadata = $ui->get_metadata();
-
-        $this->assertEquals(new question_metadata([
-            "my_number" => "42",
-            "my_select" => "1",
-            "my_radio" => "2",
-            "my_text" => "Lorem ipsum dolor sit amet.",
-        ], [
-            "my_number" => PARAM_RAW,
-            "my_select" => PARAM_RAW,
-            "my_radio" => PARAM_RAW,
-            "my_text" => PARAM_RAW,
-            "my_button" => PARAM_RAW,
-            "only_lowercase_letters" => PARAM_RAW,
-            "between_5_and_10_chars" => PARAM_RAW,
-        ], ["my_number"]), $metadata);
-    }
-
-    /**
      * Tests that inline feedback is hidden when the {@see \question_display_options} say so.
      *
      * @throws coding_exception
-     * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_hide_inline_feedback() {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
-
-        $ui = new question_ui_renderer($input, []);
 
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
@@ -74,11 +43,12 @@ class question_ui_renderer_test extends \advanced_testcase {
         $opts = new \question_display_options();
         $opts->hide_all_feedback();
 
-        $result = $ui->render_formulation($qa, $opts);
+        $ui = new question_ui_renderer($input, [], $opts, $qa);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
-        <span>No feedback</span>
+        <div>
+            <span>No feedback</span>
         </div>
         EXPECTED, $result);
     }
@@ -87,150 +57,37 @@ class question_ui_renderer_test extends \advanced_testcase {
      * Tests that inline feedback is shown when the {@see \question_display_options} say so.
      *
      * @throws coding_exception
-     * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_show_inline_feedback() {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
-
-        $ui = new question_ui_renderer($input, []);
 
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
             ->willReturn(mt_rand());
         $opts = new \question_display_options();
 
-        $result = $ui->render_formulation($qa, $opts);
+        $ui = new question_ui_renderer($input, [], $opts, $qa);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
-        <span>No feedback</span>
-        <span>General feedback</span>
-        <span>Specific feedback</span>
+        <div>
+            <span>No feedback</span>
+            <span>General feedback</span>
+            <span>Specific feedback</span>
         </div>
         EXPECTED, $result);
-    }
-
-    /**
-     * Tests that general feedback is extracted correctly.
-     *
-     * @throws coding_exception
-     * @throws DOMException
-     * @covers \qtype_questionpy\question_ui_renderer::render_general_feedback
-     */
-    public function test_should_render_general_feedback_part_when_present() {
-        $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
-
-        $ui = new question_ui_renderer($input, []);
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
-
-        $result = $ui->render_general_feedback($qa, new \question_display_options());
-
-        $this->assertXmlStringEqualsXmlString(
-            '<div xmlns="http://www.w3.org/1999/xhtml">General feedback part</div>',
-            $result
-        );
-    }
-
-    /**
-     * Tests that specific feedback is extracted correctly.
-     *
-     * @throws coding_exception
-     * @throws DOMException
-     * @covers \qtype_questionpy\question_ui_renderer::render_specific_feedback
-     */
-    public function test_should_render_specific_feedback_part_when_present() {
-        $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
-
-        $ui = new question_ui_renderer($input, []);
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
-
-        $result = $ui->render_specific_feedback($qa, new \question_display_options());
-
-        $this->assertXmlStringEqualsXmlString(
-            '<div xmlns="http://www.w3.org/1999/xhtml">Specific feedback part</div>',
-            $result
-        );
-    }
-
-    /**
-     * Tests that the right answer explanation is extracted correctly.
-     *
-     * @throws coding_exception
-     * @throws DOMException
-     * @covers \qtype_questionpy\question_ui_renderer::render_right_answer
-     */
-    public function test_should_render_right_answer_part_when_present() {
-        $input = file_get_contents(__DIR__ . "/question_uis/all-parts.xhtml");
-
-        $ui = new question_ui_renderer($input, []);
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
-
-        $result = $ui->render_right_answer($qa, new \question_display_options());
-
-        $this->assertXmlStringEqualsXmlString(
-            '<div xmlns="http://www.w3.org/1999/xhtml">Right answer part</div>',
-            $result
-        );
-    }
-
-    /**
-     * Tests that `null` is returned when any of the optional parts of the XML are missing.
-     *
-     * @throws coding_exception
-     * @throws DOMException
-     * @covers \qtype_questionpy\question_ui_renderer::render_general_feedback
-     * @covers \qtype_questionpy\question_ui_renderer::render_specific_feedback
-     * @covers \qtype_questionpy\question_ui_renderer::render_right_answer
-     */
-    public function test_should_return_null_when_optional_part_is_missing() {
-        $input = file_get_contents(__DIR__ . "/question_uis/no-parts.xhtml");
-
-        $ui = new question_ui_renderer($input, []);
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
-
-        $this->assertNull($ui->render_general_feedback($qa, new \question_display_options()));
-        $this->assertNull($ui->render_specific_feedback($qa, new \question_display_options()));
-        $this->assertNull($ui->render_right_answer($qa, new \question_display_options()));
-    }
-
-    /**
-     * Tests that an exception is thrown when the question formulation is missing.
-     *
-     * @covers \qtype_questionpy\question_ui_renderer::render_formulation
-     * @throws DOMException
-     */
-    public function test_should_throw_when_formulation_is_missing() {
-        $input = file_get_contents(__DIR__ . "/question_uis/no-parts.xhtml");
-
-        $ui = new question_ui_renderer($input, []);
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
-
-        $this->expectException(coding_exception::class);
-        $ui->render_formulation($qa, new \question_display_options());
     }
 
     /**
      * Tests that `name` attributes in most elements are mangled correctly.
      *
      * @throws coding_exception
-     * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_mangle_names() {
         $input = file_get_contents(__DIR__ . "/question_uis/ids_and_names.xhtml");
 
-        $ui = new question_ui_renderer($input, []);
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
             ->willReturn(mt_rand());
@@ -239,30 +96,29 @@ class question_ui_renderer_test extends \advanced_testcase {
                 return "mangled:$name";
             });
 
-        $result = $ui->render_formulation($qa, new \question_display_options());
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
-            <div id="mangled:my_div">
-                <datalist id="mangled:my_list">
-                    <option>42</option>
-                </datalist>
-                <label>Wrapping label <input class="form-control qpy-input" name="mangled:my_number"
-                                             type="number" list="mangled:my_list"/></label>
-                <label for="mangled:my_select">Separate label</label>
-                <select class="form-control qpy-input" id="mangled:my_select" name="mangled:my_select">
-                    <option value="1">One</option>
-                    <option value="2">Two</option>
-                </select>
-                <input class="qpy-input" type="radio" name="mangled:my_radio" value="1">One</input>
-                <input class="qpy-input" type="radio" name="mangled:my_radio" value="2">Two</input>
-                <textarea class="form-control qpy-input" name="mangled:my_text"/>
-                <button class="btn btn-primary qpy-input" name="mangled:my_button">Click me!</button>
-                <map name="mangled:my_map">
-                    <area shape="circle" coords="1, 2, 3"/>
-                </map>
-                <img src="https://picsum.photos/200/300" usemap="#mangled:my_map"/>
-            </div>
+        <div id="mangled:my_div">
+            <datalist id="mangled:my_list">
+                <option>42</option>
+            </datalist>
+            <label>Wrapping label <input class="form-control qpy-input" name="mangled:my_number"
+                                         type="number" list="mangled:my_list"/></label>
+            <label for="mangled:my_select">Separate label</label>
+            <select class="form-control qpy-input" id="mangled:my_select" name="mangled:my_select">
+                <option value="1">One</option>
+                <option value="2">Two</option>
+            </select>
+            <input class="qpy-input" type="radio" name="mangled:my_radio" value="1">One</input>
+            <input class="qpy-input" type="radio" name="mangled:my_radio" value="2">Two</input>
+            <textarea class="form-control qpy-input" name="mangled:my_text"/>
+            <button class="btn btn-primary qpy-input" name="mangled:my_button">Click me!</button>
+            <map name="mangled:my_map">
+                <area shape="circle" coords="1, 2, 3"/>
+            </map>
+            <img src="https://picsum.photos/200/300" usemap="#mangled:my_map"/>
         </div>
         EXPECTED, $result);
     }
@@ -271,7 +127,6 @@ class question_ui_renderer_test extends \advanced_testcase {
      * Tests that `qpy:shuffle-elements` sticks to the same shuffled order as long as the seed (attempt id) is the same.
      *
      * @throws coding_exception
-     * @throws DOMException
      * @covers \qtype_questionpy\question_ui_renderer
      */
     public function test_should_shuffle_the_same_way_in_same_attempt() {
@@ -280,12 +135,9 @@ class question_ui_renderer_test extends \advanced_testcase {
         $qa->method("get_database_id")
             ->willReturn(mt_rand());
 
-        $firstresult = (new question_ui_renderer($input, []))
-            ->render_formulation($qa, new \question_display_options());
+        $firstresult = (new question_ui_renderer($input, [], new \question_display_options(), $qa))->render();
         for ($i = 0; $i < 10; $i++) {
-            $result = (new question_ui_renderer($input, []))
-                ->render_formulation($qa, new \question_display_options());
-
+            $result = (new question_ui_renderer($input, [], new \question_display_options(), $qa))->render();
             $this->assertEquals($firstresult, $result);
         }
     }
@@ -294,7 +146,6 @@ class question_ui_renderer_test extends \advanced_testcase {
      * Tests that placeholders are replaced.
      *
      * @return void
-     * @throws DOMException
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
@@ -306,12 +157,13 @@ class question_ui_renderer_test extends \advanced_testcase {
 
         $ui = new question_ui_renderer($input, [
             "param" => "Value of param <b>one</b>.<script>'Oh no, danger!'</script>",
-        ]);
-
-        $result = $ui->render_formulation($qa, new \question_display_options());
+            "description" => "My simple description.",
+        ], new \question_display_options(), $qa);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
+        <div>
+            <div>My simple description.</div>
             <span>By default cleaned parameter: Value of param <b>one</b>.</span>
             <span>Explicitly cleaned parameter: Value of param <b>one</b>.</span>
             <span>Noclean parameter: Value of param <b>one</b>.<script>'Oh no, danger!'</script></span>
@@ -324,7 +176,6 @@ class question_ui_renderer_test extends \advanced_testcase {
      * Tests that placeholders are just removed when the corresponding value is missing.
      *
      * @return void
-     * @throws DOMException
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
@@ -333,12 +184,13 @@ class question_ui_renderer_test extends \advanced_testcase {
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
             ->willReturn(mt_rand());
-        $ui = new question_ui_renderer($input, []);
 
-        $result = $ui->render_formulation($qa, new \question_display_options());
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
+        <div>
+            <div></div>
             <span>By default cleaned parameter: </span>
             <span>Explicitly cleaned parameter: </span>
             <span>Noclean parameter: </span>
@@ -351,7 +203,6 @@ class question_ui_renderer_test extends \advanced_testcase {
      * Tests that validation attributes from input(-like) elements are replaced so as not to prevent submission.
      *
      * @return void
-     * @throws DOMException
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
@@ -360,12 +211,12 @@ class question_ui_renderer_test extends \advanced_testcase {
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
             ->willReturn(mt_rand());
-        $ui = new question_ui_renderer($input, []);
 
-        $result = $ui->render_formulation($qa, new \question_display_options());
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
+        <div>
             <input aria-required="true" data-qpy_required="data-qpy_required"/>
             <input data-qpy_pattern="^[a-z]+$"/>
             <input data-qpy_minlength="5"/>
@@ -382,7 +233,6 @@ class question_ui_renderer_test extends \advanced_testcase {
     /**
      * Tests that submit and reset buttons (which would also affect other questions) are turned into simple ones.
      *
-     * @throws DOMException
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
@@ -391,12 +241,13 @@ class question_ui_renderer_test extends \advanced_testcase {
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
             ->willReturn(mt_rand());
-        $ui = new question_ui_renderer($input, []);
 
-        $result = $ui->render_formulation($qa, new \question_display_options());
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
+
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
+        <div>
             <button class="btn btn-primary qpy-input" type="button">Submit</button>
             <button class="btn btn-primary qpy-input" type="button">Reset</button>
             <button class="btn btn-primary qpy-input" type="button">Button</button>
@@ -411,7 +262,6 @@ class question_ui_renderer_test extends \advanced_testcase {
     /**
      * Tests that elements with `qpy:if-role` attributes are removed when the user has none of the given roles.
      *
-     * @throws DOMException
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
@@ -428,19 +278,17 @@ class question_ui_renderer_test extends \advanced_testcase {
         $options = new \question_display_options();
         $options->context = \context_course::instance($course->id);
 
-        $ui = new question_ui_renderer($input, []);
-
-        $result = $ui->render_formulation($qa, $options);
+        $ui = new question_ui_renderer($input, [], $options, $qa);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml"></div>
+        <div></div>
         EXPECTED, $result);
     }
 
     /**
      * Tests that elements with `qpy:if-role` attributes are left be when the user has at least one of the given roles.
      *
-     * @throws DOMException
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
@@ -457,12 +305,12 @@ class question_ui_renderer_test extends \advanced_testcase {
         $options = new \question_display_options();
         $options->context = \context_course::instance($course->id);
 
-        $ui = new question_ui_renderer($input, []);
+        $ui = new question_ui_renderer($input, [], $options, $qa);
 
-        $result = $ui->render_formulation($qa, $options);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
+        <div>
             <div>You're a teacher!</div>
             <div>You're a developer!</div>
             <div>You're a scorer!</div>
@@ -475,7 +323,6 @@ class question_ui_renderer_test extends \advanced_testcase {
     /**
      * Tests `qpy:format-float` elements when the current language is en.
      *
-     * @throws DOMException
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
@@ -484,20 +331,20 @@ class question_ui_renderer_test extends \advanced_testcase {
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
             ->willReturn(mt_rand());
-        $ui = new question_ui_renderer($input, []);
 
-        $result = $ui->render_formulation($qa, new \question_display_options());
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
 
         $this->assertXmlStringEqualsXmlString(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
-                Just the decsep: 1.23456
-                Thousands sep without decimals: 1,000,000,000
-                Thousands sep with decimals: 10,000,000,000.123
-                Round down: 1.11
-                Round up: 1.12
-                Pad with zeros: 1.10000
-                Strip zeros: 1.1
-            </div>
+        <div>
+            Just the decsep: 1.23456
+            Thousands sep without decimals: 1,000,000,000
+            Thousands sep with decimals: 10,000,000,000.123
+            Round down: 1.11
+            Round up: 1.12
+            Pad with zeros: 1.10000
+            Strip zeros: 1.1
+        </div>
         EXPECTED, $result);
     }
 }

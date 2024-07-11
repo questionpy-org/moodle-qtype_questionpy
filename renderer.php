@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\question_ui_renderer;
+
 /**
  * Generates the output for QuestionPy questions.
  *
@@ -42,7 +44,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
 
     /**
      * Generate the display of the formulation part of the question. This is the
-     * area that contains the quetsion text, and the controls for students to
+     * area that contains the question text, and the controls for students to
      * input their answers. Some question types also embed bits of feedback, for
      * example ticks and crosses, in this area.
      *
@@ -54,7 +56,8 @@ class qtype_questionpy_renderer extends qtype_renderer {
     public function formulation_and_controls(question_attempt $qa, question_display_options $options): string {
         $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
-        return $question->ui->render_formulation($qa, $options);
+        $renderer = new question_ui_renderer($question->ui->formulation, $question->ui->placeholders, $options, $qa);
+        return $renderer->render();
     }
 
     /**
@@ -68,7 +71,6 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @param question_display_options $options controls what should and should not be displayed.
      * @return string HTML fragment.
      * @throws coding_exception
-     * @throws DOMException
      */
     public function feedback(question_attempt $qa, question_display_options $options): string {
         $question = $qa->get_question();
@@ -77,10 +79,11 @@ class qtype_questionpy_renderer extends qtype_renderer {
         $output = '';
         $hint = null;
 
-        if ($options->feedback) {
+        if ($options->feedback && !is_null($question->ui->specificfeedback)) {
+            $renderer = new question_ui_renderer($question->ui->specificfeedback, $question->ui->placeholders, $options, $qa);
             $output .= html_writer::nonempty_tag(
                 'div',
-                $question->ui->render_specific_feedback($qa, $options) ?? "",
+                $renderer->render(),
                 ['class' => 'specificfeedback']
             );
             $hint = $qa->get_applicable_hint();
@@ -94,18 +97,20 @@ class qtype_questionpy_renderer extends qtype_renderer {
             $output .= $this->hint($qa, $hint);
         }
 
-        if ($options->generalfeedback) {
+        if ($options->generalfeedback && !is_null($question->ui->generalfeedback)) {
+            $renderer = new question_ui_renderer($question->ui->generalfeedback, $question->ui->placeholders, $options, $qa);
             $output .= html_writer::nonempty_tag(
                 'div',
-                $question->ui->render_general_feedback($qa, $options) ?? "",
+                $renderer->render(),
                 ['class' => 'generalfeedback']
             );
         }
 
-        if ($options->rightanswer) {
+        if ($options->rightanswer && !is_null($question->ui->rightanswer)) {
+            $renderer = new question_ui_renderer($question->ui->rightanswer, $question->ui->placeholders, $options, $qa);
             $output .= html_writer::nonempty_tag(
                 'div',
-                $question->ui->render_right_answer($qa, $options) ?? "",
+                $renderer->render(),
                 ['class' => 'rightanswer']
             );
         }

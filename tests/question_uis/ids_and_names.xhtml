@@ -1,27 +1,40 @@
-<qpy:question xmlns="http://www.w3.org/1999/xhtml" xmlns:qpy="http://questionpy.org/ns/question">
-    <qpy:formulation>
-        <div id="my_div">
-            <datalist id="my_list">
-                <option>42</option>
-            </datalist>
-            <label>Wrapping label <input name="my_number" type="number" list="my_list"/></label>
+<!--
+  - This file is part of the QuestionPy Moodle plugin - https://questionpy.org
+  -
+  - Moodle is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - Moodle is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU General Public License for more details.
+  -
+  - You should have received a copy of the GNU General Public License
+  - along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+  -->
 
-            <label for="my_select">Separate label</label>
-            <select id="my_select" name="my_select">
-                <option value="1">One</option>
-                <option value="2">Two</option>
-            </select>
+<div xmlns="http://www.w3.org/1999/xhtml" id="my_div">
+    <datalist id="my_list">
+        <option>42</option>
+    </datalist>
+    <label>Wrapping label <input name="my_number" type="number" list="my_list"/></label>
 
-            <input type="radio" name="my_radio" value="1">One</input>
-            <input type="radio" name="my_radio" value="2">Two</input>
+    <label for="my_select">Separate label</label>
+    <select id="my_select" name="my_select">
+        <option value="1">One</option>
+        <option value="2">Two</option>
+    </select>
 
-            <textarea name="my_text"/>
-            <button name="my_button">Click me!</button>
+    <input type="radio" name="my_radio" value="1">One</input>
+    <input type="radio" name="my_radio" value="2">Two</input>
 
-            <map name="my_map">
-                <area shape="circle" coords="1, 2, 3"/>
-            </map>
-            <img src="https://picsum.photos/200/300" usemap="#my_map"/>
-        </div>
-    </qpy:formulation>
-</qpy:question>
+    <textarea name="my_text"/>
+    <button name="my_button">Click me!</button>
+
+    <map name="my_map">
+        <area shape="circle" coords="1, 2, 3"/>
+    </map>
+    <img src="https://picsum.photos/200/300" usemap="#my_map"/>
+</div>

@@ -15,6 +15,11 @@
   - along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<qpy:question xmlns="http://www.w3.org/1999/xhtml" xmlns:qpy="http://questionpy.org/ns/question">
-    <qpy:formulation><div qpy:if-role="teacher">You're a teacher!</div><div qpy:if-role="developer">You're a developer!</div><div qpy:if-role="scorer">You're a scorer!</div><div qpy:if-role="proctor">You're a proctor!</div><div qpy:if-role="teacher developer scorer proctor">You're any of the above!</div></qpy:formulation>
-</qpy:question>
+<div xmlns="http://www.w3.org/1999/xhtml" xmlns:qpy="http://questionpy.org/ns/question">
+    <div qpy:if-role="teacher">You're a teacher!</div>
+    <div qpy:if-role="developer">You're a developer!</div>
+    <div qpy:if-role="scorer">You're a scorer!</div>
+    <div qpy:if-role="proctor">You're a proctor!</div>
+    <div qpy:if-role="teacher|developer   scorer
+    proctor">You're any of the above!</div>
+</div>
