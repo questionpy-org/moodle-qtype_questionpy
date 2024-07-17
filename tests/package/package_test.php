@@ -50,6 +50,17 @@ class package_test extends \advanced_testcase {
     }
 
 
+    /**
+     * Asserts that the record counts are equal to the expected counts.
+     *
+     * @param int $pkgversion
+     * @param int $package
+     * @param int $language
+     * @param int $pkgtag
+     * @param int $tag
+     * @return void
+     * @throws moodle_exception
+     */
     private function assert_records_count(int $pkgversion, int $package, int $language, int $pkgtag, int $tag) {
         global $DB;
 
@@ -110,7 +121,6 @@ class package_test extends \advanced_testcase {
      * @throws moodle_exception
      */
     public function test_delete_with_multiple_packages() {
-        global $DB;
         $this->resetAfterTest();
 
         // Store two packages.
