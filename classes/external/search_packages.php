@@ -236,14 +236,14 @@ class search_packages extends external_api {
         }
 
         [$insql, $inparams] = $DB->get_in_or_equal($tags, SQL_PARAMS_NAMED, 'tag');
-        $count = count($tags);
+        $inparams['tagcount'] = count($tags);
         $wheresql = "
             (
                 SELECT COUNT(DISTINCT pt.tagid)
                 FROM {qtype_questionpy_pkgtag} pt
                 WHERE pt.packageid = p.id
                       AND pt.tagid $insql
-            ) = $count
+            ) = :tagcount
         ";
         return [$wheresql, $inparams];
     }
@@ -300,20 +300,10 @@ class search_packages extends external_api {
      * @return string
      */
     private static function sql_where(string ...$clauses): string {
-        $where = '';
-
-        foreach ($clauses as $clause) {
-            if ($clause === '') {
-                continue;
-            }
-            $where .= "({$clause}) AND ";
-        }
+        $where = implode(') AND (', array_filter($clauses, 'strlen'));
         if ($where !== '') {
-            // Remove last ' AND '.
-            $where = substr($where, 0, -5);
-            $where = "WHERE $where";
+            $where = "WHERE ($where)";
         }
-
         return $where;
     }
 

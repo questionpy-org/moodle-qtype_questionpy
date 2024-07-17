@@ -92,6 +92,9 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="tag" UNIQUE="true" FIELDS="tag"/>
+      </INDEXES>
     </TABLE>
 
     <TABLE NAME="qtype_questionpy_pkgtag" COMMENT="Table storing package-tag relation.">

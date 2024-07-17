@@ -21,15 +21,22 @@
 
 import Component from 'qtype_questionpy/package_search/component';
 import Autocomplete from 'core/form-autocomplete';
-import Ajax from 'core/ajax';
 import {debounce} from 'core/utils';
 import {getString} from 'core/str';
 
-export const TagBar = class extends Component {
-    async create() {
+export default class extends Component {
+    create() {
         this.selectors = {
             TAG_BAR: '[data-for="tag-bar"] > select',
         };
+    }
+
+    async stateReady() {
+        this.addEventListener(
+            this.getElement(this.selectors.TAG_BAR),
+            'change',
+            debounce((event) => this.filterPackages(event.target.selectedOptions), 300)
+        );
 
         Autocomplete.enhance(
             // The selector to the select element.
@@ -37,7 +44,7 @@ export const TagBar = class extends Component {
             // No custom words allowed.
             false,
             // We want to use ajax.
-            'qtype_questionpy/package_search/components/tag_bar',
+            'qtype_questionpy/package_search/components/_tag_bar_async',
             // The placeholder.
             await getString('tag_bar', 'qtype_questionpy'),
             // We do not want to be case-sensitive.
@@ -51,17 +58,8 @@ export const TagBar = class extends Component {
             // We want to overwrite the layout.
             {
                 layout: 'qtype_questionpy/package_search/tag_bar/layout',
-                input: 'qtype_questionpy/package_search/tag_bar/input',
                 selection: 'qtype_questionpy/package_search/tag_bar/selection',
             },
-        );
-    }
-
-    stateReady() {
-        this.addEventListener(
-            this.getElement(this.selectors.TAG_BAR),
-            'change',
-            debounce((event) => this.filterPackages(event.target.selectedOptions), 300)
         );
     }
 
@@ -77,42 +75,4 @@ export const TagBar = class extends Component {
         }
         this.reactive.dispatch('filterPackagesByTags', tags);
     }
-};
-
-/**
- * Source of data for Ajax element.
- *
- * @param {String} selector The selector of the auto complete element.
- * @param {String} query The query string.
- * @param {Function} callback A callback function receiving an array of results.
- * @param {Function} failure A callback function to be called in case of failure, receiving the error message.
- */
-export const transport = (selector, query, callback, failure) => {
-    const promise = Ajax.call([{
-        methodname: 'qtype_questionpy_get_tags',
-        args: {
-            query: query
-        }
-    }])[0];
-
-    // eslint-disable-next-line promise/no-callback-in-promise
-    return promise.then(callback).catch(failure);
-};
-
-/**
- * Process the results for auto complete elements.
- *
- * @param {string} selector The selector of the auto complete element.
- * @param {array} results An array or results.
- * @return {array} New array of results.
- */
-export const processResults = (selector, results) => {
-    const tags = [];
-    for (const result of results) {
-        tags.push({
-            value: result.id,
-            label: result.tag,
-        });
-    }
-    return tags;
-};
+}

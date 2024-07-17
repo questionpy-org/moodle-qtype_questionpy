@@ -22,7 +22,7 @@
 import Component from 'qtype_questionpy/package_search/component';
 import Container from 'qtype_questionpy/package_search/components/container';
 import SearchBar from 'qtype_questionpy/package_search/components/search_bar';
-import {TagBar} from 'qtype_questionpy/package_search/components/tag_bar';
+import TagBar from 'qtype_questionpy/package_search/components/tag_bar';
 
 export default class extends Component {
     getWatchers() {

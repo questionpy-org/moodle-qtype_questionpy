@@ -189,21 +189,15 @@ class package extends package_base {
         $transaction = $DB->start_delegated_transaction();
         $DB->delete_records('qtype_questionpy_pkgversion', ['packageid' => $this->id]);
         $DB->delete_records('qtype_questionpy_language', ['packageid' => $this->id]);
-        $sql = "
+        $DB->delete_records('qtype_questionpy_pkgtag', ['packageid' => $this->id]);
+        $DB->execute("
             DELETE
             FROM {qtype_questionpy_tag}
-            WHERE id IN (
-                SELECT t.id
-                FROM {qtype_questionpy_tag} t
-                JOIN {qtype_questionpy_pkgtag} pt
-                ON t.id = pt.tagid
-                WHERE pt.packageid = :packageid
-                GROUP BY t.id
-                HAVING COUNT(t.id) = 1
+            WHERE id NOT IN (
+                SELECT tagid
+                FROM {qtype_questionpy_pkgtag}
             )
-        ";
-        $DB->execute($sql, ['packageid' => $this->id]);
-        $DB->delete_records('qtype_questionpy_pkgtag', ['packageid' => $this->id]);
+        ");
         $DB->delete_records('qtype_questionpy_package', ['id' => $this->id]);
         last_used_service::remove_by_package($this->id);
         $transaction->allow_commit();

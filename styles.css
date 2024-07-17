@@ -116,13 +116,13 @@
     align-items: center;
 }
 
-.qpy-search-bar {
-    padding: 2px 0;
-}
-
-.qpy-tag-bar-input {
+.qpy-tag-bar-top > div:first-of-type {
     width: 150px;
     padding: 2px;
+}
+
+.qpy-search-bar {
+    padding: 2px 0;
 }
 
 .qpy-tag-bar-selection {

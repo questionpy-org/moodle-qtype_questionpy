@@ -26,25 +26,24 @@
     * none
 
     Context variables required for this template:
-    * multiple True if this field allows multiple selections
     * selectionId The dom id of the current selection list.
     * items List of items with label and value fields (used by the partial).
     * noSelectionString String to use when no items are selected (used by the partial).
 
     Example context (json):
-    { "multiple": true, "selectionId": 1, "items": [
+    { "selectionId": 1, "items": [
         { "label": "Item label with <strong>tags</strong>", "value": "5" },
         { "label": "Another item label with <strong>tags</strong>", "value": "4" }
     ], "noSelectionString": "No selection" }
 }}
 <span class="sr-only" id="{{selectionId}}-label">{{#str}}selecteditems, form{{/str}}</span>
 <div{{!
-    }} class="qpy-tag-bar-selection {{#multiple}}form-autocomplete-multiple{{/multiple}}"{{!
+    }} class="qpy-tag-bar-selection form-autocomplete-multiple"{{!
     }} id="{{selectionId}}"{{!
     }} aria-labelledby="{{selectionId}}-label"{{!
     }} role="listbox"{{!
     }} aria-atomic="true"{{!
     }} tabindex="0"{{!
-    }} {{#multiple}}aria-multiselectable="true"{{/multiple}}>
+    }} aria-multiselectable="true">
     {{> core/form_autocomplete_selection_items }}
 </div>

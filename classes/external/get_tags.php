@@ -30,7 +30,7 @@ use external_value;
 use moodle_exception;
 
 /**
- * This service localised package tags.
+ * This service returns localised package tags.
  *
  * @package    qtype_questionpy
  * @copyright  2024 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
@@ -98,8 +98,8 @@ class get_tags extends external_api {
             ORDER BY
                 $casesql
                 usage_count DESC,
-                t.tag;
-        ", $sqlparams);
+                t.tag
+        ", $sqlparams, 0, 25);
     }
 
     /**
