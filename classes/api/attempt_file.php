@@ -37,7 +37,7 @@ class attempt_file {
     public ?string $mimetype = null;
 
     /** @var string $data */
-    public string $data;
+    public string $data; // TODO: replace by QPy-URL when functionality is implemented.
 
     /**
      * Initializes a new instance.
