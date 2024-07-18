@@ -58,25 +58,9 @@ class attempt_ui {
      * Initializes a new instance.
      *
      * @param string $formulation
-     * @param string|null $generalfeedback
-     * @param string|null $specificfeedback
-     * @param string|null $rightanswer
-     * @param array $placeholders
-     * @param array|null $cssfiles
-     * @param array $files
-     * @param string $cachecontrol
      */
-    public function __construct(string $formulation, ?string $generalfeedback = null, ?string $specificfeedback = null,
-                                ?string $rightanswer = null, array $placeholders = [], ?array $cssfiles = null, array $files = [],
-                                string $cachecontrol = "PRIVATE_CACHE") {
+    public function __construct(string $formulation) {
         $this->formulation = $formulation;
-        $this->generalfeedback = $generalfeedback;
-        $this->specificfeedback = $specificfeedback;
-        $this->rightanswer = $rightanswer;
-        $this->placeholders = $placeholders;
-        $this->cssfiles = $cssfiles;
-        $this->files = $files;
-        $this->cachecontrol = $cachecontrol;
     }
 }
 
