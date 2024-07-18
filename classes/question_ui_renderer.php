@@ -37,11 +37,6 @@ use question_display_options;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_ui_renderer {
-    /** @var string XML namespace for XHTML */
-    private const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
-    /** @var string XML namespace for our custom things */
-    private const QPY_NAMESPACE = "http://questionpy.org/ns/question";
-
     /** @var DOMDocument $xml */
     private DOMDocument $xml;
 
@@ -75,8 +70,8 @@ class question_ui_renderer {
         $this->xml->normalizeDocument();
 
         $this->xpath = new DOMXPath($this->xml);
-        $this->xpath->registerNamespace("xhtml", self::XHTML_NAMESPACE);
-        $this->xpath->registerNamespace("qpy", self::QPY_NAMESPACE);
+        $this->xpath->registerNamespace("xhtml", constants::NAMESPACE_XHTML);
+        $this->xpath->registerNamespace("qpy", constants::NAMESPACE_QPY);
 
         $this->placeholders = $placeholders;
         $this->options = $options;
@@ -131,7 +126,7 @@ class question_ui_renderer {
     private function hide_unwanted_feedback(): void {
         /** @var DOMElement $element */
         foreach (iterator_to_array($this->xpath->query("//*[@qpy:feedback]")) as $element) {
-            $feedback = $element->getAttributeNS(self::QPY_NAMESPACE, "feedback");
+            $feedback = $element->getAttributeNS(constants::NAMESPACE_QPY, "feedback");
 
             if (
                 ($feedback == "general" && !$this->options->generalfeedback)
@@ -152,7 +147,7 @@ class question_ui_renderer {
     private function shuffle_contents(): void {
         /** @var DOMElement $element */
         foreach (iterator_to_array($this->xpath->query("//*[@qpy:shuffle-contents]")) as $element) {
-            $element->removeAttributeNS(self::QPY_NAMESPACE, "shuffle-contents");
+            $element->removeAttributeNS(constants::NAMESPACE_QPY, "shuffle-contents");
             $newelement = $element->cloneNode();
 
             // We want to shuffle elements while leaving other nodes (such as text, spacing) where they are.
@@ -199,7 +194,7 @@ class question_ui_renderer {
                 $ancestor = $ancestor->parentNode
             ) {
                 assert($ancestor instanceof DOMElement);
-                if ($ancestor->hasAttributeNS(self::QPY_NAMESPACE, "shuffle-contents")) {
+                if ($ancestor->hasAttributeNS(constants::NAMESPACE_QPY, "shuffle-contents")) {
                     // The index element is in a nested shuffle-contents.
                     // We want it to be replaced with the index of the inner shuffle, so we ignore it for now.
                     continue 2;
@@ -321,9 +316,6 @@ class question_ui_renderer {
                 $node->parentNode->removeChild($node);
             }
         }
-        /** @var DOMElement $root */
-        $root = $this->xml->documentElement;
-        $root->removeAttributeNS(self::XHTML_NAMESPACE, "");
     }
 
     /**

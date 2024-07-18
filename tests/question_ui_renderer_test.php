@@ -70,7 +70,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div>
+        <div xmlns="http://www.w3.org/1999/xhtml">
             <span>No feedback</span>
         </div>
         EXPECTED, $result);
@@ -94,7 +94,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div>
+        <div xmlns="http://www.w3.org/1999/xhtml">
             <span>No feedback</span>
             <span>General feedback</span>
             <span>Specific feedback</span>
@@ -123,7 +123,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div id="mangled:my_div">
+        <div xmlns="http://www.w3.org/1999/xhtml" id="mangled:my_div">
             <datalist id="mangled:my_list">
                 <option>42</option>
             </datalist>
@@ -185,7 +185,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div>
+        <div xmlns="http://www.w3.org/1999/xhtml">
             <div>My simple description.</div>
             <span>By default cleaned parameter: Value of param <b>one</b>.</span>
             <span>Explicitly cleaned parameter: Value of param <b>one</b>.</span>
@@ -213,7 +213,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div>
+        <div xmlns="http://www.w3.org/1999/xhtml">
             <div></div>
             <span>By default cleaned parameter: </span>
             <span>Explicitly cleaned parameter: </span>
@@ -240,7 +240,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div>
+        <div xmlns="http://www.w3.org/1999/xhtml">
             <input aria-required="true" data-qpy_required="data-qpy_required"/>
             <input data-qpy_pattern="^[a-z]+$"/>
             <input data-qpy_minlength="5"/>
@@ -270,7 +270,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div>
+        <div xmlns="http://www.w3.org/1999/xhtml">
             <button class="btn btn-primary qpy-input" type="button">Submit</button>
             <button class="btn btn-primary qpy-input" type="button">Reset</button>
             <button class="btn btn-primary qpy-input" type="button">Button</button>
@@ -305,7 +305,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div></div>
+        <div xmlns="http://www.w3.org/1999/xhtml"></div>
         EXPECTED, $result);
     }
 
@@ -333,7 +333,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div>
+        <div xmlns="http://www.w3.org/1999/xhtml">
             <div>You're a teacher!</div>
             <div>You're a developer!</div>
             <div>You're a scorer!</div>
@@ -359,7 +359,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div>
+        <div xmlns="http://www.w3.org/1999/xhtml">
             Just the decsep: 1.23456
             Thousands sep without decimals: 1,000,000,000
             Thousands sep with decimals: 10,000,000,000.123

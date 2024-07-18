@@ -30,11 +30,6 @@ use DOMXPath;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_ui_metadata_extractor {
-    /** @var string XML namespace for XHTML */
-    private const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
-    /** @var string XML namespace for our custom things */
-    private const QPY_NAMESPACE = "http://questionpy.org/ns/question";
-
     /** @var DOMDocument $xml */
     private DOMDocument $xml;
 
@@ -54,8 +49,8 @@ class question_ui_metadata_extractor {
         $this->xml->loadXML($xml);
 
         $this->xpath = new DOMXPath($this->xml);
-        $this->xpath->registerNamespace("xhtml", self::XHTML_NAMESPACE);
-        $this->xpath->registerNamespace("qpy", self::QPY_NAMESPACE);
+        $this->xpath->registerNamespace("xhtml", constants::NAMESPACE_XHTML);
+        $this->xpath->registerNamespace("qpy", constants::NAMESPACE_QPY);
     }
 
     /**
