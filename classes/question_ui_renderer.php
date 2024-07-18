@@ -119,8 +119,7 @@ class question_ui_renderer {
             mt_srand($nextseed);
         }
 
-        $this->html = $this->xml->saveXML();
-        $this->html = substr($this->html, 21); /* 21 chars: '<?xml version="1.0"?>'. */
+        $this->html = $this->xml->saveHTML();
         return $this->html;
     }
 
@@ -322,8 +321,8 @@ class question_ui_renderer {
                 $node->parentNode->removeChild($node);
             }
         }
-        /** @var DOMNode $root */
-        $root = $this->xpath->document->documentElement;
+        /** @var DOMElement $root */
+        $root = $this->xml->documentElement;
         $root->removeAttributeNS(self::XHTML_NAMESPACE, "");
     }
 

@@ -17,7 +17,6 @@
 namespace qtype_questionpy;
 
 use coding_exception;
-use DOMDocument;
 
 /**
  * Unit tests for {@see question_ui_renderer}.
@@ -28,6 +27,30 @@ use DOMDocument;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_ui_renderer_test extends \advanced_testcase {
+    /**
+     * Asserts that two html strings are equal.
+     *
+     * @param string $expectedhtml
+     * @param string $actualhtml
+     * @return void
+     */
+    private function assert_html_string_equals_html_string(string $expectedhtml, string $actualhtml) {
+        // Remove whitespace as `preserveWhiteSpace = false` does not seem to work as expected.
+        $expectedhtml = preg_replace('/>\s+</', '><', $expectedhtml);
+        $actualhtml = preg_replace('/>\s+</', '><', $actualhtml);
+
+        // We need these flags to parse HTML5 and prevent the html-tag, body-tag and doctype to be added.
+        $flags = LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOERROR;
+
+        $expected = new \DOMDocument();
+        $expected->loadHTML($expectedhtml, $flags);
+
+        $actual = new \DOMDocument();
+        $actual->loadHTML($actualhtml, $flags);
+
+        $this->assertEquals($expected, $actual);
+    }
+
     /**
      * Tests that inline feedback is hidden when the {@see \question_display_options} say so.
      *
@@ -46,7 +69,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], $opts, $qa);
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div>
             <span>No feedback</span>
         </div>
@@ -70,7 +93,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], $opts, $qa);
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div>
             <span>No feedback</span>
             <span>General feedback</span>
@@ -99,7 +122,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div id="mangled:my_div">
             <datalist id="mangled:my_list">
                 <option>42</option>
@@ -111,8 +134,8 @@ class question_ui_renderer_test extends \advanced_testcase {
                 <option value="1">One</option>
                 <option value="2">Two</option>
             </select>
-            <input class="qpy-input" type="radio" name="mangled:my_radio" value="1">One</input>
-            <input class="qpy-input" type="radio" name="mangled:my_radio" value="2">Two</input>
+            <input class="qpy-input" type="radio" name="mangled:my_radio" value="1"/>
+            <input class="qpy-input" type="radio" name="mangled:my_radio" value="2"/>
             <textarea class="form-control qpy-input" name="mangled:my_text"/>
             <button class="btn btn-primary qpy-input" name="mangled:my_button">Click me!</button>
             <map name="mangled:my_map">
@@ -161,13 +184,14 @@ class question_ui_renderer_test extends \advanced_testcase {
         ], new \question_display_options(), $qa);
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div>
             <div>My simple description.</div>
             <span>By default cleaned parameter: Value of param <b>one</b>.</span>
             <span>Explicitly cleaned parameter: Value of param <b>one</b>.</span>
             <span>Noclean parameter: Value of param <b>one</b>.<script>'Oh no, danger!'</script></span>
-            <span>Plain parameter: <![CDATA[Value of param <b>one</b>.<script>'Oh no, danger!'</script>]]></span>
+            <span>Plain parameter: Value of param &lt;b>one&lt;/b>.&lt;script>'Oh no, danger!'&lt;/script>
+            </span>
         </div>
         EXPECTED, $result);
     }
@@ -188,7 +212,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div>
             <div></div>
             <span>By default cleaned parameter: </span>
@@ -215,7 +239,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div>
             <input aria-required="true" data-qpy_required="data-qpy_required"/>
             <input data-qpy_pattern="^[a-z]+$"/>
@@ -245,8 +269,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
 
-
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div>
             <button class="btn btn-primary qpy-input" type="button">Submit</button>
             <button class="btn btn-primary qpy-input" type="button">Reset</button>
@@ -281,7 +304,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], $options, $qa);
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div></div>
         EXPECTED, $result);
     }
@@ -309,7 +332,7 @@ class question_ui_renderer_test extends \advanced_testcase {
 
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div>
             <div>You're a teacher!</div>
             <div>You're a developer!</div>
@@ -335,7 +358,7 @@ class question_ui_renderer_test extends \advanced_testcase {
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
 
-        $this->assertXmlStringEqualsXmlString(<<<EXPECTED
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div>
             Just the decsep: 1.23456
             Thousands sep without decimals: 1,000,000,000
