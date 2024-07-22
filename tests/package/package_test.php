@@ -127,7 +127,7 @@ class package_test extends \advanced_testcase {
         $package1 = package_provider(['namespace' => 'ns1', 'tags' => ['a', 'b']])->store();
         $package1 = package::get_by_version($package1);
 
-        $package2 = package_provider(['namepsace' => 'ns2', 'tags' => ['b', 'c']])->store();
+        $package2 = package_provider(['namespace' => 'ns2', 'tags' => ['b', 'c']])->store();
         $package2 = package::get_by_version($package2);
 
         $package1->delete();
