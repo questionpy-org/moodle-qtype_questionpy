@@ -160,7 +160,15 @@ class package_version {
 
         // Delete package related data.
         $DB->delete_records('qtype_questionpy_language', ['packageid' => $this->packageid]);
-        $DB->delete_records('qtype_questionpy_tags', ['packageid' => $this->packageid]);
+        $DB->delete_records('qtype_questionpy_pkgtag', ['packageid' => $this->packageid]);
+        $DB->execute("
+            DELETE
+            FROM {qtype_questionpy_tag}
+            WHERE id NOT IN (
+                SELECT tagid
+                FROM {qtype_questionpy_pkgtag}
+            )
+        ");
         $DB->delete_records('qtype_questionpy_package', ['id' => $this->packageid]);
 
         // Remove the package from the last used table.

@@ -832,5 +832,42 @@ class search_packages_test extends \externallib_advanced_testcase {
         }
     }
 
-    // TODO: add tests for filtering by tags when localized tags are supported.
+    /**
+     * Tests that only packages with the chosen tags are returned.
+     *
+     * @covers \qtype_questionpy\external\search_packages::execute
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_search_with_tags() {
+        global $DB;
+
+        package_provider(['namespace' => 'ns1', 'tags' => ['a']])->store();
+        package_provider(['namespace' => 'ns2', 'tags' => ['a', 'b']])->store();
+
+        $taga = $DB->get_field('qtype_questionpy_tag', 'id', ['tag' => 'a']);
+        $tagb = $DB->get_field('qtype_questionpy_tag', 'id', ['tag' => 'b']);
+
+        // Searching with tag 'a' should return both packages.
+        $res = search_packages::execute('', [$taga], 'all', 'alpha', 'asc', 2, 0, null);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 2, 2);
+
+        // Searching with tag 'b' should only return the second package.
+        $res = search_packages::execute('', [$tagb], 'all', 'alpha', 'asc', 1, 0, null);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 1, 1);
+        $this->assertEquals('ns2', $res['packages'][0]['namespace']);
+
+        // Searching with tag 'a' and 'b' should only return the second package.
+        $res = search_packages::execute('', [$taga, $tagb], 'all', 'alpha', 'asc', 1, 0, null);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 1, 1);
+        $this->assertEquals('ns2', $res['packages'][0]['namespace']);
+
+        // Searching with a non-existing tag should return nothing.
+        $res = search_packages::execute('', [-1], 'all', 'alpha', 'asc', 1, 0, null);
+        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
+        $this->assert_count_and_total($res, 0, 0);
+    }
 }

@@ -53,4 +53,11 @@ $functions = [
         'ajax' => true,
         'loginrequired' => true,
     ],
+    'qtype_questionpy_get_tags' => [
+        'classname' => 'qtype_questionpy\external\get_tags',
+        'description' => 'Get available package tags.',
+        'type' => 'read',
+        'ajax' => true,
+        'loginrequired' => true,
+    ],
 ];

@@ -26,10 +26,6 @@
 }
 
 /* Style package selection container */
-.qpy-package-search-container {
-    width: var(--qpy-card-width);
-    margin: 2px;
-}
 
 .qpy-tab-content {
     display: flex;
@@ -95,8 +91,43 @@
     display: none;
 }
 
+.qpy-package-search-area {
+    width: var(--qpy-card-width);
+}
+
 .qpy-package-search-area:not(.qpy-loading) .qpy-loading-indicator {
     visibility: hidden;
+}
+
+.qpy-package-search-bars {
+    display: flex;
+    margin-bottom: 5px;
+}
+
+.qpy-tag-bar {
+    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.qpy-tag-bar-top {
+    display: flex;
+    align-items: center;
+}
+
+.qpy-tag-bar-top > div:first-of-type {
+    width: 150px;
+    padding: 2px;
+}
+
+.qpy-search-bar {
+    padding: 2px 0;
+}
+
+.qpy-tag-bar-selection {
+    overflow-x: auto;
+    white-space: nowrap;
 }
 
 .qpy-repetition {

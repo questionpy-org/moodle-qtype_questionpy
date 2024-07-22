@@ -49,6 +49,7 @@ export default class extends Reactive {
                       order: "asc",
                     },
                     query: "",
+                    tags: [],
                 },
                 all: {
                     count: 0,

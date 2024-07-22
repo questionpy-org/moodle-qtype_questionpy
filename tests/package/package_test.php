@@ -49,6 +49,28 @@ class package_test extends \advanced_testcase {
         package::get_by_version($pkgversionid);
     }
 
+
+    /**
+     * Asserts that the record counts are equal to the expected counts.
+     *
+     * @param int $pkgversion
+     * @param int $package
+     * @param int $language
+     * @param int $pkgtag
+     * @param int $tag
+     * @return void
+     * @throws moodle_exception
+     */
+    private function assert_records_count(int $pkgversion, int $package, int $language, int $pkgtag, int $tag) {
+        global $DB;
+
+        $this->assertEquals($pkgversion, $DB->count_records('qtype_questionpy_pkgversion'), 'pkgversion');
+        $this->assertEquals($package, $DB->count_records('qtype_questionpy_package'), 'package');
+        $this->assertEquals($language, $DB->count_records('qtype_questionpy_language'), 'language');
+        $this->assertEquals($pkgtag, $DB->count_records('qtype_questionpy_pkgtag'), 'pkgtag');
+        $this->assertEquals($tag, $DB->count_records('qtype_questionpy_tag'), 'tag');
+    }
+
     /**
      * Tests the method delete_from_db.
      *
@@ -58,20 +80,15 @@ class package_test extends \advanced_testcase {
      * @throws moodle_exception
      */
     public function test_delete() {
-        global $DB;
         $this->resetAfterTest();
 
         // Store a package.
-        $pkgversionid = package_provider(['languages' => ['en', 'de'], 'tags' => ['tag_0']])->store();
+        $pkgversionid = package_provider(['languages' => ['en', 'de'], 'tags' => ['a']])->store();
         $package = package::get_by_version($pkgversionid);
 
         // Delete the package.
         $package->delete();
-
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tags'));
+        $this->assert_records_count(0, 0, 0, 0, 0);
     }
 
     /**
@@ -83,23 +100,42 @@ class package_test extends \advanced_testcase {
      * @throws moodle_exception
      */
     public function test_delete_with_multiple_versions() {
-        global $DB;
         $this->resetAfterTest();
 
         // Store two versions of the same package.
-        package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store();
-        $pkgversionid = package_provider(['version' => '2.0.0', 'languages' => ['en'], 'tags' => ['tag_0']])->store();
+        package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['a']])->store();
+        $pkgversionid = package_provider(['version' => '2.0.0', 'languages' => ['en'], 'tags' => ['a']])->store();
         $package = package::get_by_version($pkgversionid);
 
         // Delete the package.
         $package->delete();
-
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_pkgversion'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_package'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_language'));
-        $this->assertEquals(0, $DB->count_records('qtype_questionpy_tags'));
+        $this->assert_records_count(0, 0, 0, 0, 0);
     }
 
+    /**
+     * Tests the method delete with multiple versions of the same package.
+     *
+     * @covers \package::delete
+     * @depends test_get_by_version
+     * @return void
+     * @throws moodle_exception
+     */
+    public function test_delete_with_multiple_packages() {
+        $this->resetAfterTest();
+
+        // Store two packages.
+        $package1 = package_provider(['namespace' => 'ns1', 'tags' => ['a', 'b']])->store();
+        $package1 = package::get_by_version($package1);
+
+        $package2 = package_provider(['namespace' => 'ns2', 'tags' => ['b', 'c']])->store();
+        $package2 = package::get_by_version($package2);
+
+        $package1->delete();
+        $this->assert_records_count(1, 1, 2, 2, 2);
+
+        $package2->delete();
+        $this->assert_records_count(0, 0, 0, 0, 0);
+    }
 
     /**
      * Tests if the difference between two semantically equal packages is empty.

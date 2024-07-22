@@ -22,6 +22,7 @@
 import Component from 'qtype_questionpy/package_search/component';
 import Container from 'qtype_questionpy/package_search/components/container';
 import SearchBar from 'qtype_questionpy/package_search/components/search_bar';
+import TagBar from 'qtype_questionpy/package_search/components/tag_bar';
 
 export default class extends Component {
     getWatchers() {
@@ -36,6 +37,13 @@ export default class extends Component {
         new SearchBar({
             element: this.getElement('[data-for="search-bar-container"'),
             name: "search_bar",
+            reactive: descriptor.reactive,
+        });
+        // Register tag bar.
+        // TODO: register component inside mustache template.
+        new TagBar({
+            element: this.getElement('[data-for="tag-bar"]'),
+            name: "tag_bar",
             reactive: descriptor.reactive,
         });
         // Register package container.

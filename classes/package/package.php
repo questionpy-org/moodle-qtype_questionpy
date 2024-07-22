@@ -162,7 +162,7 @@ class package extends package_base {
     }
 
     /**
-     * Get the records from the qtype_questionpy_tags table given the foreign key packageid.
+     * Get the package tags.
      *
      * @param int $packageid
      * @return array
@@ -170,12 +170,12 @@ class package extends package_base {
      */
     private static function get_tag_data(int $packageid): array {
         global $DB;
-        $tagdata = $DB->get_records('qtype_questionpy_tags', ['packageid' => $packageid]);
-        $tags = [];
-        foreach ($tagdata as $record) {
-            $tags[] = $record->tag;
-        }
-        return $tags;
+        return $DB->get_fieldset_sql("
+            SELECT DISTINCT t.tag
+            FROM {qtype_questionpy_tag} t
+            JOIN {qtype_questionpy_pkgtag} pt
+            ON pt.id = :packageid AND pt.tagid = t.id
+        ", ['packageid' => $packageid]);
     }
 
     /**
@@ -189,7 +189,15 @@ class package extends package_base {
         $transaction = $DB->start_delegated_transaction();
         $DB->delete_records('qtype_questionpy_pkgversion', ['packageid' => $this->id]);
         $DB->delete_records('qtype_questionpy_language', ['packageid' => $this->id]);
-        $DB->delete_records('qtype_questionpy_tags', ['packageid' => $this->id]);
+        $DB->delete_records('qtype_questionpy_pkgtag', ['packageid' => $this->id]);
+        $DB->execute("
+            DELETE
+            FROM {qtype_questionpy_tag}
+            WHERE id NOT IN (
+                SELECT tagid
+                FROM {qtype_questionpy_pkgtag}
+            )
+        ");
         $DB->delete_records('qtype_questionpy_package', ['id' => $this->id]);
         last_used_service::remove_by_package($this->id);
         $transaction->allow_commit();
