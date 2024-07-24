@@ -119,7 +119,8 @@ class question_ui_renderer {
     }
 
     /**
-     * Hides elements marked with `qpy:feedback` if the type of feedback is disabled in {@see question_display_options}.
+     * Hides elements marked with `qpy:feedback` if the type of feedback is disabled in {@see question_display_options}
+     * or if it does not exist.
      *
      * @return void
      */
@@ -129,7 +130,8 @@ class question_ui_renderer {
             $feedback = $element->getAttributeNS(constants::NAMESPACE_QPY, "feedback");
 
             if (
-                ($feedback == "general" && !$this->options->generalfeedback)
+                !in_array($feedback, ["general", "specific"])
+                || ($feedback == "general" && !$this->options->generalfeedback)
                 || ($feedback == "specific" && !$this->options->feedback)
             ) {
                 $element->parentNode->removeChild($element);
