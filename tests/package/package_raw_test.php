@@ -31,7 +31,7 @@ require_once(dirname(__DIR__) . '/data_provider.php');
  * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class package_raw_test extends \advanced_testcase {
+final class package_raw_test extends \advanced_testcase {
     /**
      * Provides valid package data.
      *
@@ -138,7 +138,7 @@ class package_raw_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_faulty_from_array() {
+    public function test_faulty_from_array(): void {
         $this->expectException(moodle_exception::class);
         $faulty = ['faulty' => 'hash'];
         array_converter::from_array(package_raw::class, $faulty);
@@ -154,7 +154,7 @@ class package_raw_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_store_package($packagedata) {
+    public function test_store_package($packagedata): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -219,7 +219,7 @@ class package_raw_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_store_package_twice() {
+    public function test_store_package_twice(): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -241,7 +241,7 @@ class package_raw_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_store_already_existing_package_with_different_hash_throws() {
+    public function test_store_already_existing_package_with_different_hash_throws(): void {
         $this->resetAfterTest();
         $this->expectException(moodle_exception::class);
         $this->expectExceptionMessage('A package with the same version but different hash already exists.');
@@ -261,7 +261,7 @@ class package_raw_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_store_different_versions_of_a_package() {
+    public function test_store_different_versions_of_a_package(): void {
         global $DB;
         $this->resetAfterTest();
 

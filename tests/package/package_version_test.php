@@ -31,14 +31,14 @@ require_once(dirname(__DIR__) . '/data_provider.php');
  * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class package_version_test extends \advanced_testcase {
+final class package_version_test extends \advanced_testcase {
     /**
      * Tests the get_by_id method.
      *
      * @covers \package_version::get_by_id
      * @throws moodle_exception
      */
-    public function test_get_by_id() {
+    public function test_get_by_id(): void {
         $this->resetAfterTest();
 
         // Store a package.
@@ -59,7 +59,7 @@ class package_version_test extends \advanced_testcase {
      * @depends test_get_by_id
      * @throws moodle_exception
      */
-    public function test_get_by_hash() {
+    public function test_get_by_hash(): void {
         $this->resetAfterTest();
 
         // Store a package.
@@ -80,7 +80,7 @@ class package_version_test extends \advanced_testcase {
      * @depends test_get_by_id
      * @throws moodle_exception
      */
-    public function test_delete() {
+    public function test_delete(): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -105,7 +105,7 @@ class package_version_test extends \advanced_testcase {
      * @depends test_get_by_id
      * @throws moodle_exception
      */
-    public function test_delete_where_multiple_versions_exist() {
+    public function test_delete_where_multiple_versions_exist(): void {
         global $DB;
         $this->resetAfterTest();
 

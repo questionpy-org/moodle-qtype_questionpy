@@ -26,7 +26,7 @@ use qtype_questionpy\api\http_response_container;
  * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class http_response_container_test extends \advanced_testcase {
+final class http_response_container_test extends \advanced_testcase {
     /**
      * Tests the function get_data with json.
      *
@@ -59,7 +59,7 @@ class http_response_container_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_get_data_not_json() {
+    public function test_get_data_not_json(): void {
         $code = 200;
         $data = 'This is not a json.';
 

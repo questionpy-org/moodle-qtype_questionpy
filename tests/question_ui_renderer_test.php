@@ -26,7 +26,7 @@ use coding_exception;
  * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_ui_renderer_test extends \advanced_testcase {
+final class question_ui_renderer_test extends \advanced_testcase {
     /**
      * Asserts that two html strings are equal.
      *
@@ -57,7 +57,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_hide_inline_feedback() {
+    public function test_should_hide_inline_feedback(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
 
         $qa = $this->createStub(\question_attempt::class);
@@ -82,7 +82,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_show_inline_feedback() {
+    public function test_should_show_inline_feedback(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
 
         $qa = $this->createStub(\question_attempt::class);
@@ -108,7 +108,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_mangle_names() {
+    public function test_should_mangle_names(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/ids_and_names.xhtml");
 
         $qa = $this->createStub(\question_attempt::class);
@@ -152,7 +152,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_shuffle_the_same_way_in_same_attempt() {
+    public function test_should_shuffle_the_same_way_in_same_attempt(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/shuffle.xhtml");
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
@@ -172,7 +172,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_resolve_placeholders() {
+    public function test_should_resolve_placeholders(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/placeholder.xhtml");
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
@@ -203,7 +203,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_remove_placeholders_when_no_corresponding_value() {
+    public function test_should_remove_placeholders_when_no_corresponding_value(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/placeholder.xhtml");
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
@@ -230,7 +230,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_soften_validations() {
+    public function test_should_soften_validations(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/validations.xhtml");
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
@@ -260,7 +260,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_defuse_buttons() {
+    public function test_should_defuse_buttons(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/buttons.xhtml");
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
@@ -288,7 +288,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_remove_element_with_if_role_attribute() {
+    public function test_should_remove_element_with_if_role_attribute(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/if-role.xhtml");
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
@@ -315,7 +315,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_not_remove_element_with_if_role_attribute() {
+    public function test_should_not_remove_element_with_if_role_attribute(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/if-role.xhtml");
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")
@@ -349,7 +349,7 @@ class question_ui_renderer_test extends \advanced_testcase {
      * @throws coding_exception
      * @covers \qtype_questionpy\question_ui_renderer
      */
-    public function test_should_format_floats_in_en() {
+    public function test_should_format_floats_in_en(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/format-floats.xhtml");
         $qa = $this->createStub(\question_attempt::class);
         $qa->method("get_database_id")

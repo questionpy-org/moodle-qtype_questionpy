@@ -32,7 +32,7 @@ use function qtype_questionpy\element_provider;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class element_html_test extends \advanced_testcase {
+final class element_html_test extends \advanced_testcase {
     /**
      * Implements a snapshot testing approach similar to that of {@link https://jestjs.io/docs/snapshot-testing Jest}.
      *

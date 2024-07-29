@@ -47,7 +47,7 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
  * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class search_packages_test extends \externallib_advanced_testcase {
+final class search_packages_test extends \externallib_advanced_testcase {
     /**
      * This method is called before each test.
      */
@@ -839,7 +839,7 @@ class search_packages_test extends \externallib_advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_search_with_tags() {
+    public function test_search_with_tags(): void {
         global $DB;
 
         package_provider(['namespace' => 'ns1', 'tags' => ['a']])->store();

@@ -23,7 +23,7 @@ namespace qtype_questionpy;
  * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class localizer_test extends \advanced_testcase {
+final class localizer_test extends \advanced_testcase {
     /**
      * Test the default of the function get_preferred_language.
      *

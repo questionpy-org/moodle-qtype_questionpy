@@ -23,14 +23,14 @@ namespace qtype_questionpy;
  * @copyright  2022 Martin Gauk, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_type_test extends \advanced_testcase {
+final class question_type_test extends \advanced_testcase {
     /**
      * Dummy Test (replace when we have real methods testing the question type).
      *
      * @coversNothing
      * @return void
      */
-    public function test_dummy() {
+    public function test_dummy(): void {
         $this->assertTrue(true);
     }
 }
