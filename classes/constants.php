@@ -14,18 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace qtype_questionpy;
+
 /**
- * Version information for the QuestionPy question type.
+ * Constants used in multiple places.
  *
  * @package    qtype_questionpy
- * @copyright  2022 Martin Gauk, TU Berlin, innoCampus - www.questionpy.org
+ * @author     Jan Britz
+ * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'qtype_questionpy';
-$plugin->version = 2025041806;
-$plugin->requires = 2022041901;
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1';
+class constants {
+    /** @var string XML namespace for XHTML */
+    public const NAMESPACE_XHTML = 'http://www.w3.org/1999/xhtml';
+    /** @var string XML namespace for our custom things */
+    public const NAMESPACE_QPY = 'http://questionpy.org/ns/question';
+}

@@ -20,7 +20,6 @@ use coding_exception;
 use DOMAttr;
 use DOMDocument;
 use DOMElement;
-use DOMException;
 use DOMNameSpaceNode;
 use DOMNode;
 use DOMProcessingInstruction;
@@ -38,224 +37,103 @@ use question_display_options;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_ui_renderer {
-    /** @var string XML namespace for XHTML */
-    public const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
-    /** @var string XML namespace for our custom things */
-    public const QPY_NAMESPACE = "http://questionpy.org/ns/question";
+    /** @var DOMDocument $xml */
+    private DOMDocument $xml;
 
-    /** @var DOMDocument $question */
-    private DOMDocument $question;
+    /** @var DOMXPath $xpath */
+    private DOMXPath $xpath;
+
+    /** @var string|null $html */
+    private ?string $html = null;
 
     /** @var array $placeholders */
     private array $placeholders;
 
-    /** @var question_metadata|null $metadata */
-    private ?question_metadata $metadata = null;
+    /** @var question_display_options $options */
+    private question_display_options $options;
+
+    /** @var question_attempt $attempt */
+    private question_attempt $attempt;
 
     /**
      * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
      *
      * @param string $xml         XML as returned by the QPy Server
      * @param array $placeholders string to string mapping of placeholder names to the values
+     * @param question_display_options $options
+     * @param question_attempt $attempt
      */
-    public function __construct(string $xml, array $placeholders) {
-        $this->question = new DOMDocument();
-        $this->question->loadXML($xml);
-        $this->question->normalizeDocument();
+    public function __construct(string $xml, array $placeholders, question_display_options $options, question_attempt $attempt) {
+        $this->xml = new DOMDocument();
+        $this->xml->preserveWhiteSpace = false;
+        $this->xml->loadXML($xml);
+        $this->xml->normalizeDocument();
+
+        $this->xpath = new DOMXPath($this->xml);
+        $this->xpath->registerNamespace("xhtml", constants::NAMESPACE_XHTML);
+        $this->xpath->registerNamespace("qpy", constants::NAMESPACE_QPY);
 
         $this->placeholders = $placeholders;
+        $this->options = $options;
+        $this->attempt = $attempt;
     }
 
     /**
-     * Renders the contents of the `qpy:formulation` element. Throws an exception if there is none.
+     * Renders the given XML to HTML.
      *
-     * @param question_attempt $qa
-     * @param question_display_options $options
-     * @return string
-     * @throws DOMException
+     * @return string rendered html
      * @throws coding_exception
      */
-    public function render_formulation(question_attempt $qa, question_display_options $options): string {
-        $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "formulation");
-        if ($elements->length < 1) {
-            // TODO: Helpful exception.
-            throw new coding_exception("Question UI XML contains no 'qpy:formulation' element");
+    public function render(): string {
+        if (!is_null($this->html)) {
+            return $this->html;
         }
-
-        return $this->render_part($elements->item(0), $qa, $options);
-    }
-
-    /**
-     * Renders the contents of the `qpy:general-feedback` element or returns null if there is none.
-     *
-     * @param question_attempt $qa
-     * @param question_display_options $options
-     * @return string|null
-     * @throws DOMException
-     * @throws coding_exception
-     */
-    public function render_general_feedback(question_attempt $qa, question_display_options $options): ?string {
-        $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "general-feedback");
-        if ($elements->length < 1) {
-            return null;
-        }
-
-        return $this->render_part($elements->item(0), $qa, $options);
-    }
-
-    /**
-     * Renders the contents of the `qpy:specific-feedback` element or returns null if there is none.
-     *
-     * @param question_attempt $qa
-     * @param question_display_options $options
-     * @return string|null
-     * @throws DOMException
-     * @throws coding_exception
-     */
-    public function render_specific_feedback(question_attempt $qa, question_display_options $options): ?string {
-        $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "specific-feedback");
-        if ($elements->length < 1) {
-            return null;
-        }
-
-        return $this->render_part($elements->item(0), $qa, $options);
-    }
-
-    /**
-     * Renders the contents of the `qpy:right-answer` element or returns null if there is none.
-     *
-     * @param question_attempt $qa
-     * @param question_display_options $options
-     * @return string|null
-     * @throws DOMException
-     * @throws coding_exception
-     */
-    public function render_right_answer(question_attempt $qa, question_display_options $options): ?string {
-        $elements = $this->question->getElementsByTagNameNS(self::QPY_NAMESPACE, "right-answer");
-        if ($elements->length < 1) {
-            return null;
-        }
-
-        return $this->render_part($elements->item(0), $qa, $options);
-    }
-
-    /**
-     * Extracts metadata from the question UI.
-     *
-     * @return question_metadata
-     */
-    public function get_metadata(): question_metadata {
-        if (!$this->metadata) {
-            $xpath = new DOMXPath($this->question);
-            $xpath->registerNamespace("xhtml", self::XHTML_NAMESPACE);
-            $xpath->registerNamespace("qpy", self::QPY_NAMESPACE);
-
-            $this->metadata = new question_metadata();
-            /** @var DOMAttr $attr */
-            foreach ($xpath->query("/qpy:question/qpy:formulation//@qpy:correct-response") as $attr) {
-                /** @var DOMElement $element */
-                $element = $attr->ownerElement;
-                $name = $element->getAttribute("name");
-                if (!$name) {
-                    continue;
-                }
-
-                if (is_null($this->metadata->correctresponse)) {
-                    $this->metadata->correctresponse = [];
-                }
-
-                if ($element->tagName == "input" && $element->getAttribute("type") == "radio") {
-                    // On radio buttons, we expect the correct option to be marked with correct-response.
-                    $radiovalue = $element->getAttribute("value");
-                    $this->metadata->correctresponse[$name] = $radiovalue;
-                } else {
-                    $this->metadata->correctresponse[$name] = $attr->value;
-                }
-            }
-
-            /** @var DOMElement $element */
-            foreach (
-                $xpath->query(
-                    "/qpy:question/qpy:formulation
-                //*[self::xhtml:input or self::xhtml:select or self::xhtml:textarea or self::xhtml:button]"
-                ) as $element
-            ) {
-                $name = $element->getAttribute("name");
-                if ($name) {
-                    $this->metadata->expecteddata[$name] = PARAM_RAW;
-
-                    if ($element->hasAttribute("required")) {
-                        $this->metadata->requiredfields[] = $name;
-                    }
-                }
-            }
-        }
-
-        return $this->metadata;
-    }
-
-    /**
-     * Applies transformations to the descendants of a given node and returns the resulting HTML.
-     *
-     * @param DOMNode $part
-     * @param question_attempt $qa
-     * @param question_display_options $options
-     * @return string
-     * @throws DOMException
-     * @throws coding_exception
-     */
-    private function render_part(DOMNode $part, question_attempt $qa, question_display_options $options): string {
-        $newdoc = new DOMDocument();
-        $div = $newdoc->appendChild($newdoc->createElementNS(self::XHTML_NAMESPACE, "div"));
-        foreach ($part->childNodes as $child) {
-            $div->appendChild($newdoc->importNode($child, true));
-        }
-
-        $xpath = new DOMXPath($newdoc);
-        $xpath->registerNamespace("xhtml", self::XHTML_NAMESPACE);
-        $xpath->registerNamespace("qpy", self::QPY_NAMESPACE);
 
         $nextseed = mt_rand();
-        if ($qa->get_database_id() === null) {
+        $id = $this->attempt->get_database_id();
+        if ($id === null) {
             throw new coding_exception("question_attempt does not have an id");
         }
-        mt_srand($qa->get_database_id());
+
+        mt_srand($id);
         try {
-            $this->resolve_placeholders($xpath);
-            $this->hide_unwanted_feedback($xpath, $options);
-            $this->hide_if_role($xpath, $options);
-            $this->set_input_values_and_readonly($xpath, $qa, $options);
-            $this->soften_validation($xpath);
-            $this->defuse_buttons($xpath);
-            $this->shuffle_contents($xpath);
-            $this->add_styles($xpath);
-            $this->format_floats($xpath);
-            $this->mangle_ids_and_names($xpath, $qa);
-            $this->clean_up($xpath);
+            $this->resolve_placeholders();
+            $this->hide_unwanted_feedback();
+            $this->hide_if_role();
+            $this->set_input_values_and_readonly();
+            $this->soften_validation();
+            $this->defuse_buttons();
+            $this->shuffle_contents();
+            $this->add_styles();
+            $this->format_floats();
+            $this->mangle_ids_and_names();
+            $this->clean_up();
         } finally {
             // I'm not sure whether it is strictly necessary to reset the PRNG seed here, but it feels safer.
             // Resetting it to its original state would be ideal, but that doesn't seem to be possible.
             mt_srand($nextseed);
         }
 
-        return $newdoc->saveHTML();
+        $this->html = $this->xml->saveHTML();
+        return $this->html;
     }
 
     /**
-     * Hides elements marked with `qpy:feedback` if the type of feedback is disabled in {@see question_display_options}.
+     * Hides elements marked with `qpy:feedback` if the type of feedback is disabled in {@see question_display_options}
+     * or if it does not exist.
      *
-     * @param DOMXPath $xpath
-     * @param question_display_options $options
      * @return void
      */
-    private function hide_unwanted_feedback(\DOMXPath $xpath, question_display_options $options): void {
+    private function hide_unwanted_feedback(): void {
         /** @var DOMElement $element */
-        foreach (iterator_to_array($xpath->query("//*[@qpy:feedback]")) as $element) {
-            $feedback = $element->getAttributeNS(self::QPY_NAMESPACE, "feedback");
+        foreach (iterator_to_array($this->xpath->query("//*[@qpy:feedback]")) as $element) {
+            $feedback = $element->getAttributeNS(constants::NAMESPACE_QPY, "feedback");
 
             if (
-                ($feedback == "general" && !$options->generalfeedback)
-                || ($feedback == "specific" && !$options->feedback)
+                !(
+                    ($feedback == "general" && $this->options->generalfeedback)
+                    || ($feedback == "specific" && $this->options->feedback)
+                )
             ) {
                 $element->parentNode->removeChild($element);
             }
@@ -267,13 +145,12 @@ class question_ui_renderer {
      *
      * Also replaces `qpy:shuffled-index` elements which are descendants of each child with the new index of the child.
      *
-     * @param DOMXPath $xpath
      * @throws coding_exception
      */
-    private function shuffle_contents(\DOMXPath $xpath): void {
+    private function shuffle_contents(): void {
         /** @var DOMElement $element */
-        foreach (iterator_to_array($xpath->query("//*[@qpy:shuffle-contents]")) as $element) {
-            $element->removeAttributeNS(self::QPY_NAMESPACE, "shuffle-contents");
+        foreach (iterator_to_array($this->xpath->query("//*[@qpy:shuffle-contents]")) as $element) {
+            $element->removeAttributeNS(constants::NAMESPACE_QPY, "shuffle-contents");
             $newelement = $element->cloneNode();
 
             // We want to shuffle elements while leaving other nodes (such as text, spacing) where they are.
@@ -294,7 +171,7 @@ class question_ui_renderer {
                 if ($child instanceof DOMElement) {
                     $child = array_pop($childelements);
                     $newelement->appendChild($child);
-                    $this->replace_shuffled_indices($xpath, $child, $i++);
+                    $this->replace_shuffled_indices($child, $i++);
                 } else {
                     $newelement->appendChild($child);
                 }
@@ -307,21 +184,20 @@ class question_ui_renderer {
     /**
      * Among the descendants of `$element`, finds `qpy:shuffled-index` elements and replaces them with `$index`.
      *
-     * @param DOMXPath $xpath
      * @param DOMNode $element
      * @param int $index
      * @throws coding_exception
      */
-    private function replace_shuffled_indices(DOMXPath $xpath, DOMNode $element, int $index): void {
+    private function replace_shuffled_indices(DOMNode $element, int $index): void {
         /** @var DOMElement $indexelement */
-        foreach (iterator_to_array($xpath->query(".//qpy:shuffled-index", $element)) as $indexelement) {
+        foreach (iterator_to_array($this->xpath->query(".//qpy:shuffled-index", $element)) as $indexelement) {
             // phpcs:ignore Squiz.ControlStructures.ForLoopDeclaration.SpacingAfterSecond
             for (
                 $ancestor = $indexelement->parentNode; $ancestor !== null && $ancestor !== $indexelement;
-                 $ancestor = $ancestor->parentNode
+                $ancestor = $ancestor->parentNode
             ) {
                 assert($ancestor instanceof DOMElement);
-                if ($ancestor->hasAttributeNS(self::QPY_NAMESPACE, "shuffle-contents")) {
+                if ($ancestor->hasAttributeNS(constants::NAMESPACE_QPY, "shuffle-contents")) {
                     // The index element is in a nested shuffle-contents.
                     // We want it to be replaced with the index of the inner shuffle, so we ignore it for now.
                     continue 2;
@@ -356,14 +232,12 @@ class question_ui_renderer {
     /**
      * Mangles element IDs and names so that they are unique when multiple questions are shown at once.
      *
-     * @param DOMXPath $xpath
-     * @param question_attempt $qa
      * @return void
      */
-    private function mangle_ids_and_names(\DOMXPath $xpath, question_attempt $qa): void {
+    private function mangle_ids_and_names(): void {
         /** @var DOMAttr $attr */
         foreach (
-            $xpath->query("
+            $this->xpath->query("
                 //xhtml:*/@id | //xhtml:label/@for | //xhtml:output/@for | //xhtml:input/@list |
                 (//xhtml:button | //xhtml:form | //xhtml:fieldset | //xhtml:iframe | //xhtml:input | //xhtml:object |
                  //xhtml:output | //xhtml:select | //xhtml:textarea | //xhtml:map)/@name |
@@ -373,9 +247,9 @@ class question_ui_renderer {
             $original = $attr->value;
             if ($attr->name === "usemap" && utils::str_starts_with($original, "#")) {
                 // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/useMap.
-                $attr->value = "#" . $qa->get_qt_field_name(substr($original, 1));
+                $attr->value = "#" . $this->attempt->get_qt_field_name(substr($original, 1));
             } else {
-                $attr->value = $qa->get_qt_field_name($original);
+                $attr->value = $this->attempt->get_qt_field_name($original);
             }
         }
     }
@@ -388,16 +262,12 @@ class question_ui_renderer {
      *
      * Requires the unmangled name of the element, so must be called _before_ {@see mangle_ids_and_names}.
      *
-     * @param DOMXPath $xpath
-     * @param question_attempt $qa
-     * @param question_display_options $options
      * @return void
      */
-    private function set_input_values_and_readonly(DOMXPath $xpath, question_attempt $qa,
-                                                   question_display_options $options): void {
+    private function set_input_values_and_readonly(): void {
         /** @var DOMElement $element */
-        foreach ($xpath->query("//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea") as $element) {
-            if ($options->readonly) {
+        foreach ($this->xpath->query("//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea") as $element) {
+            if ($this->options->readonly) {
                 $element->setAttribute("disabled", "disabled");
             }
 
@@ -414,7 +284,7 @@ class question_ui_renderer {
             }
 
             // Set the last saved value.
-            $lastvalue = $qa->get_last_qt_var($name);
+            $lastvalue = $this->attempt->get_last_qt_var($name);
             if (!is_null($lastvalue)) {
                 if (($type === "checkbox" || $type === "radio") && $element->getAttribute("value") === $lastvalue) {
                     $element->setAttribute("checked", "checked");
@@ -438,12 +308,11 @@ class question_ui_renderer {
     /**
      * Removes remaining QuestionPy elements and attributes as well as comments and xmlns declarations.
      *
-     * @param DOMXPath $xpath
      * @return void
      */
-    private function clean_up(DOMXPath $xpath): void {
+    private function clean_up(): void {
         /** @var DOMNode|DOMNameSpaceNode $node */
-        foreach (iterator_to_array($xpath->query("//qpy:* | //@qpy:* | //comment() | //namespace::*")) as $node) {
+        foreach (iterator_to_array($this->xpath->query("//qpy:* | //@qpy:* | //comment() | //namespace::*")) as $node) {
             if ($node instanceof DOMAttr || $node instanceof DOMNameSpaceNode) {
                 $node->parentNode->removeAttributeNS($node->namespaceURI, $node->localName);
             } else {
@@ -458,12 +327,11 @@ class question_ui_renderer {
      * Since QPy transformations should not be applied to the content of the placeholders, this method should be called
      * last.
      *
-     * @param DOMXPath $xpath
      * @return void
      */
-    private function resolve_placeholders(DOMXPath $xpath): void {
+    private function resolve_placeholders(): void {
         /** @var DOMProcessingInstruction $pi */
-        foreach (iterator_to_array($xpath->query("//processing-instruction('p')")) as $pi) {
+        foreach (iterator_to_array($this->xpath->query("//processing-instruction('p')")) as $pi) {
             $parts = preg_split("/\s+/", trim($pi->data));
             $key = $parts[0];
             $cleanoption = $parts[1] ?? "clean";
@@ -474,10 +342,10 @@ class question_ui_renderer {
                 $rawvalue = $this->placeholders[$key];
                 if (strcasecmp($cleanoption, "clean") == 0) {
                     // Allow (X)HTML, but clean using Moodle's clean_text to prevent XSS.
-                    $element = $xpath->document->createDocumentFragment();
+                    $element = $this->xpath->document->createDocumentFragment();
                     $element->appendXML(clean_text($rawvalue));
                 } else if (strcasecmp($cleanoption, "noclean") == 0) {
-                    $element = $xpath->document->createDocumentFragment();
+                    $element = $this->xpath->document->createDocumentFragment();
                     $element->appendXML($rawvalue);
                 } else {
                     if (strcasecmp($cleanoption, "plain") != 0) {
@@ -498,43 +366,42 @@ class question_ui_renderer {
      *
      * The standard attributes are replaced with `data-qpy_X`, which are then evaluated in JS.
      *
-     * @param DOMXPath $xpath
      * @return void
      */
-    private function soften_validation(DOMXPath $xpath): void {
+    private function soften_validation(): void {
         /** @var DOMElement $element */
-        foreach ($xpath->query("//xhtml:input[@pattern]") as $element) {
+        foreach ($this->xpath->query("//xhtml:input[@pattern]") as $element) {
             $pattern = $element->getAttribute("pattern");
             $element->removeAttribute("pattern");
             $element->setAttribute("data-qpy_pattern", $pattern);
         }
 
-        foreach ($xpath->query("(//xhtml:input | //xhtml:select | //xhtml:textarea)[@required]") as $element) {
+        foreach ($this->xpath->query("(//xhtml:input | //xhtml:select | //xhtml:textarea)[@required]") as $element) {
             $element->removeAttribute("required");
             $element->setAttribute("data-qpy_required", "data-qpy_required");
             $element->setAttribute("aria-required", "true");
         }
 
-        foreach ($xpath->query("(//xhtml:input | //xhtml:textarea)[@minlength]") as $element) {
+        foreach ($this->xpath->query("(//xhtml:input | //xhtml:textarea)[@minlength]") as $element) {
             $minlength = $element->getAttribute("minlength");
             $element->removeAttribute("minlength");
             $element->setAttribute("data-qpy_minlength", $minlength);
         }
 
-        foreach ($xpath->query("(//xhtml:input | //xhtml:textarea)[@maxlength]") as $element) {
+        foreach ($this->xpath->query("(//xhtml:input | //xhtml:textarea)[@maxlength]") as $element) {
             $maxlength = $element->getAttribute("maxlength");
             $element->removeAttribute("maxlength");
             $element->setAttribute("data-qpy_maxlength", $maxlength);
         }
 
-        foreach ($xpath->query("//xhtml:input[@min]") as $element) {
+        foreach ($this->xpath->query("//xhtml:input[@min]") as $element) {
             $min = $element->getAttribute("min");
             $element->removeAttribute("min");
             $element->setAttribute("data-qpy_min", $min);
             $element->setAttribute("aria-valuemin", $min);
         }
 
-        foreach ($xpath->query("//xhtml:input[@max]") as $element) {
+        foreach ($this->xpath->query("//xhtml:input[@max]") as $element) {
             $max = $element->getAttribute("max");
             $element->removeAttribute("max");
             $element->setAttribute("data-qpy_max", $max);
@@ -545,13 +412,12 @@ class question_ui_renderer {
     /**
      * Adds CSS classes to various elements to style them similarly to Moodle's own question types.
      *
-     * @param DOMXPath $xpath
      * @return void
      */
-    private function add_styles(DOMXPath $xpath): void {
+    private function add_styles(): void {
         /** @var DOMElement $element */
         foreach (
-            $xpath->query("
+            $this->xpath->query("
                 //xhtml:input[@type != 'checkbox' and @type != 'radio' and
                               @type != 'button' and @type != 'submit' and @type != 'reset']
                 | //xhtml:select | //xhtml:textarea
@@ -561,13 +427,13 @@ class question_ui_renderer {
         }
 
         foreach (
-            $xpath->query("//xhtml:input[@type = 'button' or @type = 'submit' or @type = 'reset']
+            $this->xpath->query("//xhtml:input[@type = 'button' or @type = 'submit' or @type = 'reset']
                                 | //xhtml:button") as $element
         ) {
             $this->add_class_names($element, "btn", "btn-primary", "qpy-input");
         }
 
-        foreach ($xpath->query("//xhtml:input[@type = 'checkbox' or @type = 'radio']") as $element) {
+        foreach ($this->xpath->query("//xhtml:input[@type = 'checkbox' or @type = 'radio']") as $element) {
             $this->add_class_names($element, "qpy-input");
         }
     }
@@ -578,12 +444,11 @@ class question_ui_renderer {
      * When multiple questions are shown on the same page, they share a form, so one question must not reset or submit
      * the entire form.
      *
-     * @param DOMXPath $xpath
      * @return void
      */
-    private function defuse_buttons(DOMXPath $xpath): void {
+    private function defuse_buttons(): void {
         /** @var DOMElement $element */
-        foreach ($xpath->query("(//xhtml:input | //xhtml:button)[@type = 'submit' or @type = 'reset']") as $element) {
+        foreach ($this->xpath->query("(//xhtml:input | //xhtml:button)[@type = 'submit' or @type = 'reset']") as $element) {
             $element->setAttribute("type", "button");
         }
     }
@@ -598,17 +463,15 @@ class question_ui_renderer {
      * - The user is a scorer if they have the `mod/quiz:grade` capability.
      * - The user is a developer if they are a teacher AND debugging is turned on. (As per {@see debugging}.)
      *
-     * @param DOMXPath $xpath
-     * @param question_display_options $options
      * @throws coding_exception
      */
-    public function hide_if_role(DOMXPath $xpath, question_display_options $options): void {
+    private function hide_if_role(): void {
         /** @var DOMAttr $attr */
-        foreach (iterator_to_array($xpath->query("//@qpy:if-role")) as $attr) {
+        foreach (iterator_to_array($this->xpath->query("//@qpy:if-role")) as $attr) {
             $allowedroles = preg_split("/[\s|]+/", $attr->value, -1, PREG_SPLIT_NO_EMPTY);
 
-            $isteacher = has_capability("mod/quiz:viewreports", $options->context);
-            $isscorer = has_capability("mod/quiz:grade", $options->context);
+            $isteacher = has_capability("mod/quiz:viewreports", $this->options->context);
+            $isscorer = has_capability("mod/quiz:grade", $this->options->context);
             $isdeveloper = $isteacher && debugging();
 
             if (
@@ -625,13 +488,12 @@ class question_ui_renderer {
     /**
      * Handles `qpy:format-float`. Uses {@see format_float} and optionally adds thousands separators.
      *
-     * @param DOMXPath $xpath
      * @return void
      * @throws coding_exception
      */
-    private function format_floats(DOMXPath $xpath): void {
+    private function format_floats(): void {
         /** @var DOMElement $element */
-        foreach (iterator_to_array($xpath->query("//qpy:format-float")) as $element) {
+        foreach (iterator_to_array($this->xpath->query("//qpy:format-float")) as $element) {
             $float = floatval($element->textContent);
 
             $precision = intval($element->hasAttribute("precision") ? $element->getAttribute("precision") : -1);

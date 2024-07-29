@@ -23,7 +23,8 @@
  */
 
 use qtype_questionpy\api\api;
-use qtype_questionpy\question_ui_renderer;
+use qtype_questionpy\api\attempt_ui;
+use qtype_questionpy\question_ui_metadata_extractor;
 
 /**
  * Represents a QuestionPy question.
@@ -52,8 +53,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public string $attemptstate;
     /** @var string|null */
     public ?string $scoringstate;
-    /** @var question_ui_renderer */
-    public question_ui_renderer $ui;
+    /** @var attempt_ui */
+    public attempt_ui $ui;
+    /** @var question_ui_metadata_extractor $metadata */
+    public question_ui_metadata_extractor $metadata;
 
     /**
      * Initialize a new question. Called from {@see qtype_questionpy::make_question_instance()}.
@@ -68,6 +71,16 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $this->packagehash = $packagehash;
         $this->questionstate = $questionstate;
         $this->packagefile = $packagefile;
+    }
+
+    /**
+     * Updates the ui property and metadata extractor.
+     *
+     * @param attempt_ui $ui
+     */
+    private function update_ui(attempt_ui $ui): void {
+        $this->ui = $ui;
+        $this->metadata = new question_ui_metadata_extractor($this->ui->formulation);
     }
 
     /**
@@ -93,8 +106,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $this->attemptstate = $attempt->attemptstate;
         $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
         $this->scoringstate = null;
-
-        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
+        $this->update_ui($attempt->ui);
     }
 
     /**
@@ -128,7 +140,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $this->attemptstate,
             $this->scoringstate
         );
-        $this->ui = new question_ui_renderer($attempt->ui->content, $attempt->ui->placeholders);
+        $this->update_ui($attempt->ui);
     }
 
     /**
@@ -143,7 +155,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *      meaning take all the raw submitted data belonging to this question.
      */
     public function get_expected_data(): array {
-        return $this->ui->get_metadata()->expecteddata;
+        return $this->metadata->extract()->expecteddata;
     }
 
     /**
@@ -155,7 +167,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return array|null parameter name => value.
      */
     public function get_correct_response(): ?array {
-        return $this->ui->get_metadata()->correctresponse;
+        return $this->metadata->extract()->correctresponse;
     }
 
     /**
@@ -168,7 +180,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return bool whether this response is a complete answer to this question.
      */
     public function is_complete_response(array $response): bool {
-        foreach ($this->ui->get_metadata()->requiredfields as $requiredfield) {
+        foreach ($this->metadata->extract()->requiredfields as $requiredfield) {
             if (!isset($response[$requiredfield]) || $response[$requiredfield] === "") {
                 return false;
             }
@@ -230,7 +242,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $this->scoringstate,
             $response
         );
-        $this->ui = new question_ui_renderer($attemptscored->ui->content, $attemptscored->ui->placeholders);
+        $this->update_ui($attemptscored->ui);
         // TODO: Persist scoring state. We need to set a qtvar, but we don't have access to the pending step here.
         $this->scoringstate = $attemptscored->scoringstate;
         switch ($attemptscored->scoringcode) {
