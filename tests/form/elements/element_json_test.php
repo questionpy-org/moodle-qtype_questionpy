@@ -31,7 +31,7 @@ use function qtype_questionpy\element_provider;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class element_json_test extends \advanced_testcase {
+final class element_json_test extends \advanced_testcase {
     /**
      * Serializes values and compares resulting JSON to an expected file.
      *

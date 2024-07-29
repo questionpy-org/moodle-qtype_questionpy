@@ -30,7 +30,7 @@ require_once(dirname(__DIR__) . '/data_provider.php');
  * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class package_test extends \advanced_testcase {
+final class package_test extends \advanced_testcase {
     /**
      * Tests the method get_by_version.
      *
@@ -38,7 +38,7 @@ class package_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_get_by_version() {
+    public function test_get_by_version(): void {
         $this->resetAfterTest();
 
         // Store a package.
@@ -79,7 +79,7 @@ class package_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_delete() {
+    public function test_delete(): void {
         $this->resetAfterTest();
 
         // Store a package.
@@ -99,7 +99,7 @@ class package_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_delete_with_multiple_versions() {
+    public function test_delete_with_multiple_versions(): void {
         $this->resetAfterTest();
 
         // Store two versions of the same package.
@@ -120,7 +120,7 @@ class package_test extends \advanced_testcase {
      * @return void
      * @throws moodle_exception
      */
-    public function test_delete_with_multiple_packages() {
+    public function test_delete_with_multiple_packages(): void {
         $this->resetAfterTest();
 
         // Store two packages.
@@ -144,7 +144,7 @@ class package_test extends \advanced_testcase {
      * @covers \qtype_questionpy\package::equals
      * @return void
      */
-    public function test_difference_from() {
+    public function test_difference_from(): void {
         $package1 = new package(0, 'shortname', 'namespace', [], 'type', 'author', 'url', ['en', 'de']);
         $package2 = new package(1, 'shortname', 'namespace', [], 'type', 'author', 'url', ['de', 'en']);
 

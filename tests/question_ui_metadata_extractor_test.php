@@ -24,14 +24,14 @@ namespace qtype_questionpy;
  * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_ui_metadata_extractor_test extends \advanced_testcase {
+final class question_ui_metadata_extractor_test extends \advanced_testcase {
     /**
      * Tests that metadata is correctly extracted from the UI's input elements.
      *
      * @covers \qtype_questionpy\question_ui_metadata_extractor
      * @covers \qtype_questionpy\question_metadata
      */
-    public function test_should_extract_correct_metadata() {
+    public function test_should_extract_correct_metadata(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/metadata.xhtml");
 
         $metadata = new question_ui_metadata_extractor($input);

@@ -23,7 +23,7 @@ namespace qtype_questionpy\package;
  * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class package_base_test extends \advanced_testcase {
+final class package_base_test extends \advanced_testcase {
     /**
      * Tests the method get_localized_name.
      *

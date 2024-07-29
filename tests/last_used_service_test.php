@@ -25,14 +25,14 @@ use moodle_exception;
  * @copyright  2024 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class last_used_service_test extends \advanced_testcase {
+final class last_used_service_test extends \advanced_testcase {
     /**
      * Tests {@see last_used_service::add()} create correct timestamp.
      *
      * @throws moodle_exception
      * @covers \qtype_questionpy\last_used_service::add
      */
-    public function test_add_creates_entry() {
+    public function test_add_creates_entry(): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -53,7 +53,7 @@ class last_used_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\last_used_service::add
      */
-    public function test_add_updates_timestamp_if_package_was_already_used() {
+    public function test_add_updates_timestamp_if_package_was_already_used(): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -81,7 +81,7 @@ class last_used_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\last_used_service::add
      */
-    public function test_add_inserts_entries_if_packages_differ() {
+    public function test_add_inserts_entries_if_packages_differ(): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -107,7 +107,7 @@ class last_used_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\last_used_service::add
      */
-    public function test_add_inserts_entries_if_contexts_differ() {
+    public function test_add_inserts_entries_if_contexts_differ(): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -133,7 +133,7 @@ class last_used_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\last_used_service::add
      */
-    public function test_add_inserts_entries_if_packages_and_contexts_differ() {
+    public function test_add_inserts_entries_if_packages_and_contexts_differ(): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -175,7 +175,7 @@ class last_used_service_test extends \advanced_testcase {
      * @dataProvider context_count_provider
      * @covers \qtype_questionpy\last_used_service::remove_by_package
      */
-    public function test_remove_by_package_removes_the_entries(int $contexts) {
+    public function test_remove_by_package_removes_the_entries(int $contexts): void {
         global $DB;
         $this->resetAfterTest();
 
@@ -197,7 +197,7 @@ class last_used_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\last_used_service::remove_by_package
      */
-    public function test_remove_by_package_only_removes_the_given_package() {
+    public function test_remove_by_package_only_removes_the_given_package(): void {
         global $DB;
         $this->resetAfterTest();
 

@@ -33,7 +33,7 @@ use stdClass;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class question_service_test extends \advanced_testcase {
+final class question_service_test extends \advanced_testcase {
     /** @var api */
     private api $api;
 
@@ -61,7 +61,7 @@ class question_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\question_service::get_question
      */
-    public function test_get_question_should_load_package_and_state() {
+    public function test_get_question_should_load_package_and_state(): void {
         $this->resetAfterTest();
 
         $package = package_provider();
@@ -88,7 +88,7 @@ class question_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\question_service::get_question
      */
-    public function test_get_question_should_return_empty_object_when_no_record() {
+    public function test_get_question_should_return_empty_object_when_no_record(): void {
         $this->assertEquals(new stdClass(), $this->questionservice->get_question(42));
     }
 
@@ -100,7 +100,7 @@ class question_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
-    public function test_upsert_question_should_update_existing_record_if_changed() {
+    public function test_upsert_question_should_update_existing_record_if_changed(): void {
         global $PAGE;
         $this->resetAfterTest();
 
@@ -142,7 +142,7 @@ class question_service_test extends \advanced_testcase {
      * @throws dml_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
-    public function test_upsert_question_should_do_nothing_if_unchanged() {
+    public function test_upsert_question_should_do_nothing_if_unchanged(): void {
         global $PAGE;
         $this->resetAfterTest();
 
@@ -182,7 +182,7 @@ class question_service_test extends \advanced_testcase {
      * @throws dml_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
-    public function test_upsert_question_should_insert_record() {
+    public function test_upsert_question_should_insert_record(): void {
         global $PAGE;
         $this->resetAfterTest();
 
@@ -218,7 +218,7 @@ class question_service_test extends \advanced_testcase {
      * @throws dml_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
-    public function test_upsert_question_should_throw_when_package_does_not_exist() {
+    public function test_upsert_question_should_throw_when_package_does_not_exist(): void {
         $hash = hash("sha256", rand());
 
         $this->expectException(moodle_exception::class);
@@ -242,7 +242,7 @@ class question_service_test extends \advanced_testcase {
      * @throws dml_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
-    public function test_upsert_question_should_add_package_to_last_used_table() {
+    public function test_upsert_question_should_add_package_to_last_used_table(): void {
         global $DB, $PAGE;
         $this->resetAfterTest();
 
@@ -285,7 +285,7 @@ class question_service_test extends \advanced_testcase {
      * @throws dml_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
-    public function test_upsert_question_in_same_context_with_same_package_should_only_update_time_used_in_last_used_table() {
+    public function test_upsert_question_in_same_context_with_same_package_should_only_update_time_used_in_last_used_table(): void {
         global $DB, $PAGE;
         $this->resetAfterTest();
 
@@ -348,7 +348,7 @@ class question_service_test extends \advanced_testcase {
      * @throws moodle_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
-    public function test_delete_question() {
+    public function test_delete_question(): void {
         $this->resetAfterTest();
 
         $package = package_provider();

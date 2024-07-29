@@ -44,7 +44,7 @@ require_once($CFG->dirroot . '/webservice/tests/helpers.php');
  * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class get_tags_test extends \externallib_advanced_testcase {
+final class get_tags_test extends \externallib_advanced_testcase {
     /**
      * Test that the user needs to be logged in.
      *
