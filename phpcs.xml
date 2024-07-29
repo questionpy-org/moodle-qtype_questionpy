@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="QuestionPy">
+    <rule ref="moodle-extra">
+        <exclude name="moodle.Commenting.TodoComment"/>
+        <exclude name="Squiz.Functions.MultiLineFunctionDeclaration"/>
+    </rule>
+</ruleset>
