@@ -130,9 +130,10 @@ class question_ui_renderer {
             $feedback = $element->getAttributeNS(constants::NAMESPACE_QPY, "feedback");
 
             if (
-                !in_array($feedback, ["general", "specific"])
-                || ($feedback == "general" && !$this->options->generalfeedback)
-                || ($feedback == "specific" && !$this->options->feedback)
+                !(
+                    ($feedback == "general" && $this->options->generalfeedback)
+                    || ($feedback == "specific" && $this->options->feedback)
+                )
             ) {
                 $element->parentNode->removeChild($element);
             }
