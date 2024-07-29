@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'qtype_questionpy';
-$plugin->version = 2025041806;
-$plugin->requires = 2022041901;
+$plugin->version = 2024072900;
+$plugin->requires = 2024042200;
 $plugin->maturity = MATURITY_ALPHA;
 $plugin->release = '0.1';
