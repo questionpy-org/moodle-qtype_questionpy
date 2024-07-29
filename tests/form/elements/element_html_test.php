@@ -51,11 +51,6 @@ class element_html_test extends \advanced_testcase {
      * @covers       \qtype_questionpy\form\qpy_renderable
      */
     public function test_rendered_html_should_match_snapshot(string $elementkind, qpy_renderable $element): void {
-        global $CFG;
-        if ($CFG->branch < "403") {
-            $this->markTestSkipped("Mform HTML output changes between Moodle versions so we only run them on 4.3");
-        }
-
         $snapshotfilepath = __DIR__ . "/html/" . $elementkind . ".html";
 
         // The sesskey is part of the form and therefore needs to be deterministic.
