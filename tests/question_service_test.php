@@ -45,8 +45,6 @@ final class question_service_test extends \advanced_testcase {
 
     protected function setUp(): void {
         $this->api = $this->createMock(api::class);
-        $this->api->method("get_package")
-            ->willReturn(null);
         $this->packageapi = $this->createMock(package_api::class);
         $this->api->method("package")
             ->willReturn($this->packageapi);
@@ -64,16 +62,16 @@ final class question_service_test extends \advanced_testcase {
     public function test_get_question_should_load_package_and_state(): void {
         $this->resetAfterTest();
 
-        $package = package_provider();
-        $pkgversionid = $package->store();
-        [$statestr, $qpyid] = $this->setup_question($package->hash, $pkgversionid);
+        $pvi = package_versions_info_provider();
+        [, [$pkgversionid]] = $pvi->upsert();
+        [$statestr, $qpyid] = $this->setup_question($pvi->versions[0]->hash, $pkgversionid);
 
         $result = $this->questionservice->get_question(1);
 
         $this->assertEquals(
             (object)[
                 "qpy_id" => $qpyid,
-                "qpy_package_hash" => $package->hash,
+                "qpy_package_hash" => $pvi->versions[0]->hash,
                 "qpy_state" => $statestr,
                 "qpy_is_local" => "0",
             ],
@@ -104,12 +102,10 @@ final class question_service_test extends \advanced_testcase {
         global $PAGE;
         $this->resetAfterTest();
 
-        $oldpackage = package_provider(["version" => "0.1.0"]);
-        $oldpackageid = $oldpackage->store();
-        $oldstate = $this->setup_question($oldpackage->hash, $oldpackageid)[0];
+        $pvi = package_versions_info_provider(null, [["version" => "0.2.0"], ["version" => "0.1.0"]]);
+        [, [$newpackageid, $oldpackageid]] = $pvi->upsert();
 
-        $newpackage = package_provider(["version" => "0.2.0"]);
-        $newpackageid = $newpackage->store();
+        $oldstate = $this->setup_question($pvi->versions[1]->hash, $oldpackageid)[0];
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -123,7 +119,7 @@ final class question_service_test extends \advanced_testcase {
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 1,
-                "qpy_package_hash" => $newpackage->hash,
+                "qpy_package_hash" => $pvi->versions[0]->hash,
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
@@ -146,10 +142,10 @@ final class question_service_test extends \advanced_testcase {
         global $PAGE;
         $this->resetAfterTest();
 
-        $package = package_provider();
-        $packageid = $package->store();
+        $pvi = package_versions_info_provider();
+        [, [$pkgversionid]] = $pvi->upsert();
 
-        $oldstate = $this->setup_question($package->hash, $packageid)[0];
+        $oldstate = $this->setup_question($pvi->versions[0]->hash, $pkgversionid)[0];
 
         $formdata = ["this is" => "form data"];
 
@@ -162,7 +158,7 @@ final class question_service_test extends \advanced_testcase {
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 1,
-                "qpy_package_hash" => $package->hash,
+                "qpy_package_hash" => $pvi->versions[0]->hash,
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
@@ -170,7 +166,7 @@ final class question_service_test extends \advanced_testcase {
             ]
         );
 
-        $this->assert_single_question(1, $packageid, $oldstate);
+        $this->assert_single_question(1, $pkgversionid, $oldstate);
     }
 
     /**
@@ -186,8 +182,8 @@ final class question_service_test extends \advanced_testcase {
         global $PAGE;
         $this->resetAfterTest();
 
-        $package = package_provider();
-        $packageid = $package->store();
+        $pvi = package_versions_info_provider();
+        [, [$pkgversionid]] = $pvi->upsert();
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -201,7 +197,7 @@ final class question_service_test extends \advanced_testcase {
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 42, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $package->hash,
+                "qpy_package_hash" => $pvi->versions[0]->hash,
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
@@ -209,7 +205,7 @@ final class question_service_test extends \advanced_testcase {
             ]
         );
 
-        $this->assert_single_question(42, $packageid, $newstate);
+        $this->assert_single_question(42, $pkgversionid, $newstate);
     }
 
     /**
@@ -246,8 +242,8 @@ final class question_service_test extends \advanced_testcase {
         global $DB, $PAGE;
         $this->resetAfterTest();
 
-        $rawpackage = package_provider();
-        $pkgversionid = $rawpackage->store();
+        $pvi = package_versions_info_provider();
+        [, [$pkgversionid]] = $pvi->upsert();
 
         $package = package::get_by_version($pkgversionid);
 
@@ -263,7 +259,7 @@ final class question_service_test extends \advanced_testcase {
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 42, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $rawpackage->hash,
+                "qpy_package_hash" => $pvi->versions[0]->hash,
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
@@ -289,8 +285,8 @@ final class question_service_test extends \advanced_testcase {
         global $DB, $PAGE;
         $this->resetAfterTest();
 
-        $rawpackage = package_provider();
-        $pkgversionid = $rawpackage->store();
+        $pvi = package_versions_info_provider();
+        [, [$pkgversionid]] = $pvi->upsert();
 
         $package = package::get_by_version($pkgversionid);
 
@@ -306,7 +302,7 @@ final class question_service_test extends \advanced_testcase {
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 42, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $rawpackage->hash,
+                "qpy_package_hash" => $pvi->versions[0]->hash,
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
@@ -323,7 +319,7 @@ final class question_service_test extends \advanced_testcase {
         $this->questionservice->upsert_question(
             (object)[
                 "id" => 43, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $rawpackage->hash,
+                "qpy_package_hash" => $pvi->versions[0]->hash,
                 "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
                 "oldparent" => 1,
@@ -351,9 +347,9 @@ final class question_service_test extends \advanced_testcase {
     public function test_delete_question(): void {
         $this->resetAfterTest();
 
-        $package = package_provider();
-        $pkgversionid = $package->store();
-        $this->setup_question($package->hash, $pkgversionid);
+        $pvi = package_versions_info_provider();
+        [, [$pkgversionid]] = $pvi->upsert();
+        $this->setup_question($pvi->versions[0]->hash, $pkgversionid);
 
         global $DB;
         $this->assertEquals(1, $DB->count_records("qtype_questionpy"));

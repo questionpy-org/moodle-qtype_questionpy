@@ -19,6 +19,7 @@ namespace qtype_questionpy\api;
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\package\package_raw;
+use qtype_questionpy\package\package_versions_info;
 use stored_file;
 use TypeError;
 
@@ -33,7 +34,7 @@ class api {
     /**
      * Retrieves QuestionPy packages from the application server.
      *
-     * @return package_raw[]
+     * @return package_versions_info[]
      * @throws moodle_exception
      */
     public function get_packages(): array {
@@ -45,7 +46,7 @@ class api {
         $result = [];
         foreach ($packages as $package) {
             try {
-                $result[] = array_converter::from_array(package_raw::class, $package);
+                $result[] = array_converter::from_array(package_versions_info::class, $package);
             } catch (TypeError $e) {
                 // TODO: decide what to do with faulty package.
                 debugging($e->getMessage());
@@ -53,24 +54,6 @@ class api {
         }
 
         return $result;
-    }
-
-    /**
-     * Retrieves the package with the given hash, returns null if not found.
-     *
-     * @param string $hash the hash of the package to get
-     * @return ?package_raw the package with the given hash or null if not found
-     * @throws moodle_exception
-     */
-    public function get_package(string $hash): ?package_raw {
-        $connector = connector::default();
-        $response = $connector->get("/packages/$hash");
-
-        if ($response->code === 404) {
-            return null;
-        }
-        $response->assert_2xx();
-        return array_converter::from_array(package_raw::class, $response->get_data());
     }
 
     /**

@@ -65,6 +65,7 @@ class package_version {
             SELECT id, packageid, hash, version
             FROM {qtype_questionpy_pkgversion}
             $where
+            ORDER BY versionorder
         ";
         return [$sql, $params];
     }

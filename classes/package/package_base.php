@@ -30,57 +30,57 @@ class package_base {
     /**
      * @var string package shortname
      */
-    protected string $shortname;
+    public readonly string $shortname;
 
     /**
      * @var string package namespace
      */
-    protected string $namespace;
+    public readonly string $namespace;
 
     /**
      * @var array package name
      */
-    protected array $name;
+    public readonly array $name;
 
     /**
      * @var string package type
      */
-    protected string $type;
+    public readonly string $type;
 
     /**
      * @var string|null package author
      */
-    protected ?string $author;
+    public readonly ?string $author;
 
     /**
      * @var string|null package url
      */
-    protected ?string $url;
+    public readonly ?string $url;
 
     /**
      * @var array|null package languages
      */
-    protected ?array $languages;
+    public readonly ?array $languages;
 
     /**
      * @var array|null package description
      */
-    protected ?array $description;
+    public readonly ?array $description;
 
     /**
      * @var string|null package icon
      */
-    protected ?string $icon;
+    public readonly ?string $icon;
 
     /**
      * @var string|null package license
      */
-    protected ?string $license;
+    public readonly ?string $license;
 
     /**
      * @var array|null package tags
      */
-    protected ?array $tags;
+    public readonly ?array $tags;
 
     /**
      * Constructs package class.
@@ -118,7 +118,7 @@ class package_base {
     /**
      * Creates a localized array representation of the package.
      *
-     * @param array|null $languages
+     * @param array $languages
      * @return array array representation of the package
      * @throws moodle_exception
      */

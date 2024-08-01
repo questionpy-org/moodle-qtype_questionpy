@@ -26,7 +26,7 @@ namespace qtype_questionpy\external;
 use context_user;
 use external_api;
 use moodle_exception;
-use function qtype_questionpy\package_provider;
+use function qtype_questionpy\package_versions_info_provider;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -52,18 +52,6 @@ final class favourite_package_test extends \externallib_advanced_testcase {
     public function setUp(): void {
         $this->resetAfterTest();
         $this->setGuestUser();
-    }
-
-    /**
-     * Returns the package id of the given package version id.
-     *
-     * @param int $pkgversionid
-     * @return int
-     * @throws moodle_exception
-     */
-    private static function get_id(int $pkgversionid): int {
-        global $DB;
-        return $DB->get_field('qtype_questionpy_pkgversion', 'packageid', ['id' => $pkgversionid], MUST_EXIST);
     }
 
     /**
@@ -115,7 +103,7 @@ final class favourite_package_test extends \externallib_advanced_testcase {
      */
     public function test_favourite_works_with_user_package(): void {
         global $USER;
-        $packageid = self::get_id(package_provider()->store());
+        [$packageid, ] = package_versions_info_provider()->upsert();
         $res = favourite_package::execute($packageid, true);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
@@ -130,7 +118,7 @@ final class favourite_package_test extends \externallib_advanced_testcase {
      */
     public function test_favourite_works_with_server_package(): void {
         global $USER;
-        $packageid = self::get_id(package_provider()->store());
+        [$packageid, ] = package_versions_info_provider()->upsert();
         $res = favourite_package::execute($packageid, true);
         $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
         self::assertTrue($res);
@@ -150,7 +138,7 @@ final class favourite_package_test extends \externallib_advanced_testcase {
 
         // Upload a package as user one.
         $this->setUser($user1);
-        $packageid = self::get_id(package_provider()->store());
+        [$packageid, ] = package_versions_info_provider()->upsert();
 
         // Favourite the package as user two.
         $this->setUser($user2);
@@ -169,7 +157,7 @@ final class favourite_package_test extends \externallib_advanced_testcase {
      */
     public function test_favourite_works_when_marking_same_package_multiple_times_as_favourite(): void {
         global $USER;
-        $packageid = self::get_id(package_provider()->store());
+        [$packageid, ] = package_versions_info_provider()->upsert();
         for ($i = 0; $i < 3; $i++) {
             $res = favourite_package::execute($packageid, true);
             $res = external_api::clean_returnvalue(favourite_package::execute_returns(), $res);
@@ -202,7 +190,7 @@ final class favourite_package_test extends \externallib_advanced_testcase {
         global $USER;
 
         // Create a package and favourite it via the user favourite service.
-        $packageid = self::get_id(package_provider()->store());
+        [$packageid, ] = package_versions_info_provider()->upsert();
         $context = context_user::instance($USER->id);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($context);
         $ufservice->create_favourite('qtype_questionpy', 'package', $packageid, $context);

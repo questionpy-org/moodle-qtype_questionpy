@@ -17,8 +17,7 @@
 namespace qtype_questionpy\package;
 
 use moodle_exception;
-use qtype_questionpy\package\package_version;
-use function qtype_questionpy\package_provider;
+use function qtype_questionpy\package_versions_info_provider;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -45,7 +44,7 @@ final class package_version_test extends \advanced_testcase {
         $hash = 'hash';
         $version = '1.0.0';
 
-        $pkgversionid = package_provider(['hash' => $hash, 'version' => $version])->store();
+        [, [$pkgversionid]] = package_versions_info_provider(null, [['hash' => $hash, 'version' => $version]])->upsert();
         $package = package_version::get_by_id($pkgversionid);
 
         $this->assertEquals($hash, $package->hash);
@@ -66,7 +65,7 @@ final class package_version_test extends \advanced_testcase {
         $hash = 'hash';
         $version = '1.0.0';
 
-        package_provider(['hash' => $hash, 'version' => $version])->store();
+        package_versions_info_provider(null, [['hash' => $hash, 'version' => $version]])->upsert();
         $package = package_version::get_by_hash($hash);
 
         $this->assertEquals($hash, $package->hash);
@@ -85,7 +84,7 @@ final class package_version_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store a package.
-        $pkgversionid = package_provider()->store();
+        [, [$pkgversionid]] = package_versions_info_provider()->upsert();
         $package = package_version::get_by_id($pkgversionid);
 
         // Delete the package.
@@ -110,10 +109,12 @@ final class package_version_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store two packages.
-        $pkgversionid1 = package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['tag']])->store();
-        $package1 = package_version::get_by_id($pkgversionid1);
+        [, [$pkgversionid1, $pkgversionid2]] = package_versions_info_provider(
+            ['languages' => ['en'], 'tags' => ['tag']],
+            [['version' => '2.0.0'], ['version' => '1.0.0']]
+        )->upsert();
 
-        $pkgversionid2 = package_provider(['version' => '2.0.0', 'languages' => ['de'], 'tags' => ['tag']])->store();
+        $package1 = package_version::get_by_id($pkgversionid1);
         $package2 = package_version::get_by_id($pkgversionid2);
 
         // Delete the first package.

@@ -42,30 +42,30 @@ use qtype_questionpy\form\elements\select_element;
 use qtype_questionpy\form\elements\static_text_element;
 use qtype_questionpy\form\elements\text_area_element;
 use qtype_questionpy\form\elements\text_input_element;
-use qtype_questionpy\package\package_raw;
+use qtype_questionpy\package\package_versions_info;
 
 
 /**
- * Returns a raw package object which can be modified by an array of attributes.
+ * Returns a {@see package_versions_info}-object which can be modified.
  *
  * The languages array gets generated when it is not set inside {@see $attributes}.
  *
- * @param array $attributes
- * @return package_raw
+ * @param array|null $packageinfo
+ * @param array|null $versions
+ * @return package_versions_info
  * @throws moodle_exception
  */
-function package_provider(array $attributes = []): package_raw {
-    $data = array_merge([
+function package_versions_info_provider(?array $packageinfo = null, ?array $versions = null): package_versions_info {
+    $packageinfo = array_merge([
         'short_name' => 'my_short_name',
         'namespace' => 'my_namespace',
         'name' => [
             'en' => 'en: My Name',
             'de' => 'de: My Name',
         ],
-        'version' => '0.1.0',
         'type' => 'questiontype',
         'author' => 'John Doe',
-        'url' => 'http://www.example.com/',
+        'url' => 'https://www.example.com/',
         'languages' => ['en', 'de'],
         'description' => [
             'en' => 'en: Lorem ipsum dolor sit amet.',
@@ -74,22 +74,27 @@ function package_provider(array $attributes = []): package_raw {
         'icon' => 'https://placehold.jp/40e47e/598311/150x150.png',
         'license' => 'MIT',
         'tags' => ['my_tag_0', 'my_tag_1', 'my_tag_2'],
-    ], $attributes);
+    ], $packageinfo ?? []);
 
     // Create 'languages' array based on provided 'name' and 'description' translations if none is provided.
     if ((isset($attributes['name']) || isset($attributes['description'])) && !isset($attributes['languages'])) {
         foreach (['name', 'description'] as $field) {
-            $data['languages'] = array_merge($data['languages'], array_keys($data[$field]));
+            $packageinfo['languages'] = array_merge($packageinfo['languages'], array_keys($packageinfo[$field]));
         }
-        $data['languages'] = array_values(array_unique($data['languages']));
+        $packageinfo['languages'] = array_values(array_unique($packageinfo['languages']));
     }
 
-    // Calculate package hash if none is provided.
-    if (!isset($attributes['package_hash'])) {
-        $data['package_hash'] = hash('sha256', $data['short_name'] . $data['namespace'] . $data['version']);
+    $versions ??= [['version' => '0.1.0']];
+
+    foreach ($versions as &$version) {
+        // Calculate package hash if none is provided.
+        if (!isset($version['hash'])) {
+            $version['hash'] = hash('sha256', $packageinfo['short_name'] . $packageinfo['namespace'] . $version['version']);
+        }
     }
 
-    return array_converter::from_array(package_raw::class, $data);
+
+    return array_converter::from_array(package_versions_info::class, ['manifest' => $packageinfo, 'versions' => $versions]);
 }
 
 /**
