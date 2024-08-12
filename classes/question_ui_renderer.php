@@ -25,6 +25,7 @@ use DOMNode;
 use DOMProcessingInstruction;
 use DOMText;
 use DOMXPath;
+use qtype_questionpy_question;
 use question_attempt;
 use question_display_options;
 
@@ -63,7 +64,14 @@ class question_ui_renderer {
      * @param question_display_options $options
      * @param question_attempt $attempt
      */
-    public function __construct(string $xml, array $placeholders, question_display_options $options, question_attempt $attempt) {
+    public function __construct(string $xml, array $placeholders, question_display_options $options,
+                                question_attempt $attempt) {
+        $this->placeholders = $placeholders;
+        $this->options = $options;
+        $this->attempt = $attempt;
+
+        $xml = $this->replace_qpy_urls($xml);
+
         $this->xml = new DOMDocument();
         $this->xml->preserveWhiteSpace = false;
         $this->xml->loadXML($xml);
@@ -72,10 +80,6 @@ class question_ui_renderer {
         $this->xpath = new DOMXPath($this->xml);
         $this->xpath->registerNamespace("xhtml", constants::NAMESPACE_XHTML);
         $this->xpath->registerNamespace("qpy", constants::NAMESPACE_QPY);
-
-        $this->placeholders = $placeholders;
-        $this->options = $options;
-        $this->attempt = $attempt;
     }
 
     /**
@@ -546,5 +550,35 @@ class question_ui_renderer {
         }
 
         $element->setAttribute("class", implode(" ", $classarray));
+    }
+
+    /**
+     * Replaces QPy-URIs such as `qpy:acme/great_package/static/css/styles.css` with functioning pluginfile URLs.
+     *
+     * @param string $input
+     * @return string
+     */
+    private function replace_qpy_urls(string $input): string {
+        $question = $this->attempt->get_question();
+        assert($question instanceof qtype_questionpy_question);
+
+        return preg_replace_callback(
+            // The first two path segments are namespace and short name, and so more restrictive.
+            ";qpy://static(/(?:[a-z_][a-z0-9_]{1,127}){2}(?:/[\w\-@:%+.~=]+)+);",
+            function (array $match) use ($question) {
+                $path = $match[1];
+                $url = \moodle_url::make_pluginfile_url(
+                    $question->contextid,
+                    "qtype_questionpy",
+                    "static",
+                    null,
+                    "/" . $question->packagehash . dirname($path) . "/",
+                    basename($path)
+                );
+
+                return $url->out();
+            },
+            $input
+        );
     }
 }

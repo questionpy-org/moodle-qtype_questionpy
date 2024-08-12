@@ -16,7 +16,14 @@
 
 namespace qtype_questionpy\api;
 
+use coding_exception;
+use core\http_client;
+use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\InvalidArgumentException;
+use GuzzleHttp\Utils;
 use moodle_exception;
+use Psr\Http\Message\ResponseInterface;
 use qtype_questionpy\array_converter\array_converter;
 use stored_file;
 
@@ -31,22 +38,22 @@ use stored_file;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class package_api {
-    /** @var string */
-    private string $hash;
-
-    /** @var stored_file|null */
-    private ?stored_file $file;
-
     /**
      * Initialize a new instance.
      *
-     * @param string $hash           package hash
+     * @param qpy_http_client $client Guzzle client
+     * @param string $hash package hash
      * @param stored_file|null $file package file or null. If this is not provided and the package is not available to
      *                               the server, operations will fail
      */
-    public function __construct(string $hash, ?stored_file $file = null) {
-        $this->hash = $hash;
-        $this->file = $file;
+    public function __construct(
+        /** @var qpy_http_client $client */
+        private readonly qpy_http_client $client,
+        /** @var string $hash */
+        private readonly string $hash,
+        /** @var stored_file|null $file */
+        private readonly ?stored_file $file = null
+    ) {
     }
 
     /**
@@ -157,6 +164,94 @@ class package_api {
     }
 
     /**
+     * Send a POST request and retry if the server doesn't have the package file cached, but we have it available.
+     *
+     * @param string $uri can be absolute or relative to the base url
+     * @param array $options request options as per
+     *                       {@link https://docs.guzzlephp.org/en/stable/request-options.html Guzzle docs}
+     * @param bool $allowretry if set to false, retry won't be attempted if the package file isn't cached, instead
+     *                         throwing a {@see coding_exception}
+     * @return ResponseInterface
+     * @throws coding_exception if the request is unsuccessful for any other reason
+     * @see post_and_maybe_retry
+     */
+    private function guzzle_post_and_maybe_retry(string $uri, array $options = [], bool $allowretry = true): ResponseInterface {
+        try {
+            return $this->client->post($uri, $options);
+        } catch (BadResponseException $e) {
+            if (!$allowretry || !$this->file || $e->getResponse()->getStatusCode() != 404) {
+                throw $e;
+            }
+
+            try {
+                $json = Utils::jsonDecode($e->getResponse()->getBody(), assoc: true);
+            } catch (InvalidArgumentException) {
+                // Not valid JSON, so the problem probably isn't a missing package file.
+                throw $e;
+            }
+
+            if ($json['what'] ?? null !== 'PACKAGE') {
+                throw $e;
+            }
+
+            // Add file to parts and resend.
+
+            $fd = $this->file->get_content_file_handle();
+            try {
+                $options["multipart"][] = [
+                    "name" => "package",
+                    "contents" => $fd,
+                ];
+
+                return $this->guzzle_post_and_maybe_retry($uri, $options, allowretry: false);
+            } finally {
+                @fclose($fd);
+            }
+        } catch (GuzzleException $e) {
+            throw new coding_exception("Request to QPy server failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Downloads the given static file to the given path.
+     *
+     * In the case of non-public static files, access control must be done by the caller.
+     *
+     * @param string $namespace namespace of the package from which to retrieve the file
+     * @param string $shortname short name of the package from which to retrieve the file
+     * @param string $kind `static` for now
+     * @param string $path path of the static file in the package
+     * @param string $targetpath path where the file should be downloaded to. Anything here will be overwritten.
+     * @return string|null the mime type as reported by the server or null if the file wasn't found
+     * @throws coding_exception
+     */
+    public function download_static_file(string $namespace, string $shortname, string $kind, string $path,
+                                         string $targetpath): ?string {
+        try {
+            $res = $this->guzzle_post_and_maybe_retry(
+                "/packages/$this->hash/file/$namespace/$shortname/$kind/$path",
+                ["sink" => $targetpath]
+            );
+        } catch (BadResponseException $e) {
+            if ($e->getResponse()->getStatusCode() == 404) {
+                return null;
+            }
+
+            throw new coding_exception(
+                "Request to '{$e->getRequest()->getUri()}' unexpectedly returned status code " .
+                "'{$e->getResponse()->getStatusCode()}'"
+            );
+        }
+
+        if ($res->hasHeader("Content-Type")) {
+            return $res->getHeader("Content-Type")[0];
+        } else {
+            debugging("Server did not send Content-Type header, falling back to application/octet-stream");
+            return "application/octet-stream";
+        }
+    }
+
+    /**
      * Creates the multipart parts array.
      *
      * @param array $main main JSON part
@@ -181,6 +276,7 @@ class package_api {
      * @param array $parts    array of multipart parts
      * @return http_response_container
      * @throws moodle_exception
+     * @see guzzle_post_and_maybe_retry
      */
     private function post_and_maybe_retry(string $subpath, array $parts): http_response_container {
         $connector = connector::default();

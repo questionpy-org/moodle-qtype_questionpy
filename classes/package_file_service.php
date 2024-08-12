@@ -18,6 +18,7 @@ namespace qtype_questionpy;
 
 use coding_exception;
 use context_user;
+use dml_exception;
 use stored_file;
 
 /**
@@ -79,5 +80,29 @@ class package_file_service {
             throw new coding_exception("Package file with qpy id '$qpyid' does not exist.");
         }
         return reset($files);
+    }
+
+    /**
+     * If any question uses a manually uploaded package with the given hash, return the file. Otherwise, return null.
+     *
+     * @param string $packagehash
+     * @param int $contextid context id of the question, e.g. {@see \question_definition::$contextid}
+     * @return stored_file|null
+     * @throws dml_exception
+     * @throws coding_exception
+     */
+    public function get_file_by_package_hash(string $packagehash, int $contextid): ?stored_file {
+        global $DB;
+        $qpyid = $DB->get_field("qtype_questionpy", "id", [
+            "islocal" => true,
+            "pkgversionhash" => $packagehash,
+        ], IGNORE_MULTIPLE);
+
+        if ($qpyid === false) {
+            // No question uses an uploaded (aka local) package with that hash.
+            return null;
+        } else {
+            return $this->get_file_for_local_question($qpyid, $contextid);
+        }
     }
 }
