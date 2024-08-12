@@ -32,6 +32,17 @@ use TypeError;
  */
 class api {
     /**
+     * Initialize instance.
+     *
+     * @param qpy_http_client $client
+     */
+    public function __construct(
+        /** @var qpy_http_client */
+        private readonly qpy_http_client $client
+    ) {
+    }
+
+    /**
      * Retrieves QuestionPy packages from the application server.
      *
      * @return package_versions_info[]
@@ -64,7 +75,7 @@ class api {
      * @return package_api
      */
     public function package(string $hash, ?stored_file $file = null): package_api {
-        return new package_api($hash, $file);
+        return new package_api($this->client, $hash, $file);
     }
 
     /**

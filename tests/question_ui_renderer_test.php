@@ -16,7 +16,16 @@
 
 namespace qtype_questionpy;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once($CFG->dirroot . "/question/type/questionpy/question.php");
+
 use coding_exception;
+use PHPUnit\Framework\MockObject\Stub;
+use qtype_questionpy\api\api;
+use qtype_questionpy_question;
+use question_attempt;
 
 /**
  * Unit tests for {@see question_ui_renderer}.
@@ -60,9 +69,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_hide_inline_feedback(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
 
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
         $opts = new \question_display_options();
         $opts->hide_all_feedback();
 
@@ -85,9 +92,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_show_inline_feedback(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/feedbacks.xhtml");
 
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
         $opts = new \question_display_options();
 
         $ui = new question_ui_renderer($input, [], $opts, $qa);
@@ -111,13 +116,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
     public function test_should_mangle_names(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/ids_and_names.xhtml");
 
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
-        $qa->method("get_qt_field_name")
-            ->willReturnCallback(function ($name) {
-                return "mangled:$name";
-            });
+        $qa = $this->create_question_attempt_stub();
 
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
@@ -154,9 +153,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_shuffle_the_same_way_in_same_attempt(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/shuffle.xhtml");
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
 
         $firstresult = (new question_ui_renderer($input, [], new \question_display_options(), $qa))->render();
         for ($i = 0; $i < 10; $i++) {
@@ -174,9 +171,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_resolve_placeholders(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/placeholder.xhtml");
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
 
         $ui = new question_ui_renderer($input, [
             "param" => "Value of param <b>one</b>.<script>'Oh no, danger!'</script>",
@@ -205,9 +200,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_remove_placeholders_when_no_corresponding_value(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/placeholder.xhtml");
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
 
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
@@ -232,9 +225,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_soften_validations(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/validations.xhtml");
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
 
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
@@ -262,9 +253,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_defuse_buttons(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/buttons.xhtml");
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
 
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
@@ -290,9 +279,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_remove_element_with_if_role_attribute(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/if-role.xhtml");
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
 
         $this->resetAfterTest();
         $this->setGuestUser();
@@ -317,9 +304,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_not_remove_element_with_if_role_attribute(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/if-role.xhtml");
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
 
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -351,9 +336,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_format_floats_in_en(): void {
         $input = file_get_contents(__DIR__ . "/question_uis/format-floats.xhtml");
-        $qa = $this->createStub(\question_attempt::class);
-        $qa->method("get_database_id")
-            ->willReturn(mt_rand());
+        $qa = $this->create_question_attempt_stub();
 
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
@@ -369,5 +352,51 @@ final class question_ui_renderer_test extends \advanced_testcase {
             Strip zeros: 1.1
         </div>
         EXPECTED, $result);
+    }
+
+    /**
+     * Tests the replacement of QPy-URIs.
+     *
+     * @return void
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer::replace_qpy_urls
+     */
+    public function test_should_replace_qpy_urls(): void {
+        $input = file_get_contents(__DIR__ . "/question_uis/qpy-urls.xhtml");
+        $qa = $this->create_question_attempt_stub("deadbeef");
+
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
+
+        // phpcs:disable moodle.Files.LineLength.MaxExceeded
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            static link: <a href="https://www.example.com/moodle/pluginfile.php//qtype_questionpy/static/deadbeef/local/minimal_example/path1/path2/filename.txt">https://www.example.com/moodle/pluginfile.php//qtype_questionpy/static/deadbeef/local/minimal_example/path1/path2/filename.txt</a>
+            minimal path: <a href="https://www.example.com/moodle/pluginfile.php//qtype_questionpy/static/deadbeef/local/minimal_example/f">https://www.example.com/moodle/pluginfile.php//qtype_questionpy/static/deadbeef/local/minimal_example/f</a>
+        </div>
+        EXPECTED, $result);
+        // phpcs:enable moodle.Files.LineLength.MaxExceeded
+    }
+
+    /**
+     * Creates a stub question attempt which should fulfill the needs of most tests.
+     *
+     * @param string|null $packagehash explicit package hash. Random if unset.
+     * @return question_attempt&Stub
+     */
+    private function create_question_attempt_stub(?string $packagehash = null): question_attempt {
+        $packagehash ??= hash("sha256", random_string(64));
+        $question = new qtype_questionpy_question($packagehash, "{}", null, $this->createStub(api::class));
+
+        $qa = $this->createStub(question_attempt::class);
+        $qa->method("get_database_id")
+            ->willReturn(mt_rand());
+        $qa->method("get_question")
+            ->willReturn($question);
+        $qa->method("get_qt_field_name")
+            ->willReturnCallback(function ($name) {
+                return "mangled:$name";
+            });
+        return $qa;
     }
 }

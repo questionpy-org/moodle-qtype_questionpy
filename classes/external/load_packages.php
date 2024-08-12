@@ -21,6 +21,7 @@ defined('MOODLE_INTERNAL') || die;
 global $CFG;
 require_once($CFG->libdir . "/externallib.php");
 
+use core\di;
 use external_api;
 use external_function_parameters;
 use external_single_structure;
@@ -62,7 +63,7 @@ class load_packages extends external_api {
         $transaction = $DB->start_delegated_transaction();
 
         // Load and store packages from the application server.
-        $api = new api();
+        $api = di::get(api::class);
         $packages = $api->get_packages();
         $incomingpackageids = [];
         foreach ($packages as $package) {
