@@ -44,11 +44,11 @@ class package_file_service {
         $fs = get_file_storage();
         $files = $fs->get_area_files(
             $usercontext->id,
-            'user',
-            'draft',
-            $draftid,
-            'itemid, filepath, filename',
-            false
+            component: 'user',
+            filearea: 'draft',
+            itemid: $draftid,
+            includedirs: false,
+            limitnum: 1
         );
         if (!$files) {
             throw new coding_exception("draft file with id '$draftid' does not exist");
@@ -57,25 +57,26 @@ class package_file_service {
     }
 
     /**
-     * Get a {@see stored_file} with the given ID.
+     * Assumes that the question with the given id uses a local package and returns its package file.
      *
      * @param int $qpyid the id of the `qtype_questionpy` record
-     * @param int $contextid
+     * @param int $contextid context id of the question, e.g. {@see \question_definition::$contextid}
      * @return stored_file
-     * @throws coding_exception if no such draft file exists
+     * @throws coding_exception if no package file can be found for the given question, such as if the question isn't
+     *                          local after all.
      */
-    public function get_file(int $qpyid, int $contextid): stored_file {
+    public function get_file_for_local_question(int $qpyid, int $contextid): stored_file {
         $fs = get_file_storage();
         $files = $fs->get_area_files(
             $contextid,
-            'qtype_questionpy',
-            'package',
-            $qpyid,
-            'itemid, filepath, filename',
-            false
+            component: 'qtype_questionpy',
+            filearea: 'package',
+            itemid: $qpyid,
+            includedirs: false,
+            limitnum: 1
         );
         if (!$files) {
-            throw new coding_exception("package file with qpy id '$qpyid' does not exist");
+            throw new coding_exception("Package file with qpy id '$qpyid' does not exist.");
         }
         return reset($files);
     }

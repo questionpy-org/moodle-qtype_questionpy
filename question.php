@@ -42,7 +42,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     /** @var api */
     private api $api;
     /** @var string */
-    private string $packagehash;
+    public string $packagehash;
     /** @var string */
     private string $questionstate;
     /** @var stored_file|null */
@@ -64,10 +64,11 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @param string $packagehash
      * @param string $questionstate
      * @param stored_file|null $packagefile
+     * @param api $api
      */
-    public function __construct(string $packagehash, string $questionstate, ?stored_file $packagefile) {
+    public function __construct(string $packagehash, string $questionstate, ?stored_file $packagefile, api $api) {
         parent::__construct();
-        $this->api = new api();
+        $this->api = $api;
         $this->packagehash = $packagehash;
         $this->questionstate = $questionstate;
         $this->packagefile = $packagefile;

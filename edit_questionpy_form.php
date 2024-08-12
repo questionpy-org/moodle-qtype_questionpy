@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\di;
 use core_question\local\bank\question_edit_contexts;
 use qtype_questionpy\api\api;
 use qtype_questionpy\form\context\root_render_context;
@@ -54,8 +55,8 @@ class qtype_questionpy_edit_form extends question_edit_form {
      */
     public function __construct(string $submiturl, object $question, object $category, question_edit_contexts $contexts,
                                 bool $formeditable = true) {
-        $this->api = new api();
-        $this->packagefileservice = new package_file_service();
+        $this->api = di::get(api::class);
+        $this->packagefileservice = di::get(package_file_service::class);
 
         parent::__construct($submiturl, $question, $category, $contexts, $formeditable);
     }
@@ -169,7 +170,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
             $file = $this->packagefileservice->get_draft_file($draftid);
         } else {
             $qpyid = $this->question->qpy_id;
-            $file = $this->packagefileservice->get_file($qpyid, $this->context->get_course_context()->id);
+            $file = $this->packagefileservice->get_file_for_local_question($qpyid, $this->context->get_course_context()->id);
             $mform->addElement('hidden', 'qpy_package_path_name_hash', $file->get_pathnamehash());
             $mform->setType('qpy_package_path_name_hash', PARAM_ALPHANUM);
         }
