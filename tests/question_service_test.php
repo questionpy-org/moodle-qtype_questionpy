@@ -16,6 +16,10 @@
 
 namespace qtype_questionpy;
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . "/data_provider.php");
+
 use coding_exception;
 use dml_exception;
 use moodle_exception;

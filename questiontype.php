@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\di;
 use qtype_questionpy\api\api;
 use qtype_questionpy\package_file_service;
 use qtype_questionpy\question_service;
@@ -53,9 +54,9 @@ class qtype_questionpy extends question_type {
      */
     public function __construct() {
         parent::__construct();
-        $this->api = new api();
-        $this->packagefileservice = new package_file_service();
-        $this->questionservice = new question_service($this->api, $this->packagefileservice);
+        $this->api = di::get(api::class);
+        $this->packagefileservice = di::get(package_file_service::class);
+        $this->questionservice = di::get(question_service::class);
     }
 
     /**
@@ -180,8 +181,13 @@ class qtype_questionpy extends question_type {
     protected function make_question_instance($questiondata) {
         $packagefile = null;
         if ($questiondata->qpy_is_local) {
-            $packagefile = $this->packagefileservice->get_file($questiondata->qpy_id, $questiondata->contextid);
+            $packagefile = $this->packagefileservice->get_file_for_local_question($questiondata->qpy_id, $questiondata->contextid);
         }
-        return new qtype_questionpy_question($questiondata->qpy_package_hash, $questiondata->qpy_state, $packagefile);
+        return new qtype_questionpy_question(
+            $questiondata->qpy_package_hash,
+            $questiondata->qpy_state,
+            $packagefile,
+            $this->api
+        );
     }
 }
