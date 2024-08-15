@@ -23,7 +23,7 @@ use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 
 /**
- * Represents an overview of available QuestionPy packages on the application server.
+ * Represents an available QuestionPy package on the application server.
  *
  * @package    qtype_questionpy
  * @copyright  2024 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
@@ -31,12 +31,12 @@ use qtype_questionpy\array_converter\converter_config;
  */
 class package_info extends package_base {
     /**
-     * Checks whether this package exists or not.
+     * Gets the row id if this package is already stored in the DB, or false otherwise.
      *
-     * @return bool|int either false or the DB id
+     * @return false|int either false or the DB id
      * @throws moodle_exception
      */
-    public function exists(): bool|int {
+    public function get_id(): false|int {
         global $DB;
         return $DB->get_field('qtype_questionpy_package', 'id', [
             'shortname' => $this->shortname,

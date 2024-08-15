@@ -72,17 +72,11 @@ class load_packages extends external_api {
         // Remove old packages.
         if (empty($incomingpackageids)) {
             // There are no incoming packages -> remove every package.
-            $packages = package::get_records();
-            foreach ($packages as $package) {
-                $package->delete();
-            }
+            package::delete_all();
         } else {
-            [$sql, $params] = $DB->get_in_or_equal($incomingpackageids, SQL_PARAMS_NAMED, 'packageid', false);
+            [$sql, $params] = $DB->get_in_or_equal($incomingpackageids, SQL_PARAMS_NAMED, prefix: 'packageid', equal: false);
             $removedpackageids = $DB->get_fieldset_select('qtype_questionpy_package', 'id', "id $sql", $params);
-            foreach ($removedpackageids as $id) {
-                [$package] = package::get_records(['id' => $id]);
-                $package->delete();
-            }
+            package::delete_by_id(...$removedpackageids);
         }
 
         $transaction->allow_commit();

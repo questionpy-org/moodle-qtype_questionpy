@@ -55,10 +55,13 @@ class package_versions_info {
 
         $timestamp ??= time();
 
-        $packageid = $this->manifest->exists();
+        $packageid = $this->manifest->get_id();
         if ($packageid === false) {
             $packageid = $this->manifest->insert($timestamp);
-            $versionids = $this->insert($packageid, $timestamp);
+            $versionids = [];
+            foreach ($this->versions as $index => $version) {
+                $versionids[] = $this->insert($packageid, $version, order: $index, timestamp: $timestamp);
+            }
         } else {
             // Get the latest package version stored in the DB and check if we need to update the package info.
             $latestexisting = $DB->get_field('qtype_questionpy_pkgversion', 'hash', ['packageid' => $packageid,
@@ -73,23 +76,21 @@ class package_versions_info {
     }
 
     /**
-     * Inserts the package versions of a new package.
+     * Inserts a package version in the database.
      *
      * @param int $packageid
+     * @param package_version_specific_info $version
+     * @param int $order
      * @param int $timestamp
-     * @return array
+     * @return int
      * @throws moodle_exception
      */
-    private function insert(int $packageid, int $timestamp): array {
+    private function insert(int $packageid, package_version_specific_info $version, int $order, int $timestamp): int {
         global $DB;
 
-        $versionids = [];
-        foreach ($this->versions as $index => $version) {
-            $versionids[] = $DB->insert_record('qtype_questionpy_pkgversion', ['packageid' => $packageid,
-                'version' => $version->version, 'hash' => $version->hash, 'versionorder' => $index, 'timemodified' => $timestamp,
-                'timecreated' => $timestamp]);
-        }
-        return $versionids;
+        return $DB->insert_record('qtype_questionpy_pkgversion', ['packageid' => $packageid,
+                'version' => $version->version, 'hash' => $version->hash, 'versionorder' => $order, 'timemodified' => $timestamp,
+                'timecreated' => $timestamp], bulk: true);
     }
 
     /**
@@ -126,9 +127,7 @@ class package_versions_info {
         $new = array_flip(array_diff($incoming, $existing));
         foreach ($this->versions as $index => $version) {
             if (isset($new[$version->hash])) {
-                $versionids[] = $DB->insert_record('qtype_questionpy_pkgversion', ['packageid' => $packageid,
-                    'version' => $version->version, 'hash' => $version->hash, 'versionorder' => $index,
-                    'timemodified' => $timestamp, 'timecreated' => $timestamp]);
+                $versionids[] = $this->insert($packageid, $version, order: $index, timestamp: $timestamp);
             } else {
                 // The get_records(...) returns an array indexed by the first field which we set to be the hash of the version.
                 $versionid = $existingrecords[$version->hash]->id;
