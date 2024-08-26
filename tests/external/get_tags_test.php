@@ -25,7 +25,7 @@ namespace qtype_questionpy\external;
 
 use external_api;
 use moodle_exception;
-use function qtype_questionpy\package_provider;
+use function qtype_questionpy\package_versions_info_provider;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -132,7 +132,7 @@ final class get_tags_test extends \externallib_advanced_testcase {
         $this->setGuestUser();
 
         foreach ($packagetags as $i => $tags) {
-            package_provider(['namespace' => "ns$i", 'tags' => $tags])->store();
+            package_versions_info_provider(['namespace' => "ns$i", 'tags' => $tags])->upsert();
         }
         $tags = get_tags::execute($query);
         $tags = external_api::clean_returnvalue(get_tags::execute_returns(), $tags);

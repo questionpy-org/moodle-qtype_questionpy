@@ -27,6 +27,7 @@ use external_single_structure;
 use external_value;
 use moodle_exception;
 use qtype_questionpy\api\api;
+use qtype_questionpy\package\package;
 use qtype_questionpy\package\package_version;
 
 /**
@@ -60,17 +61,22 @@ class load_packages extends external_api {
 
         $transaction = $DB->start_delegated_transaction();
 
-        // Remove every package version.
-        $versions = package_version::get_many();
-        foreach ($versions as $version) {
-            $version->delete();
-        }
-
         // Load and store packages from the application server.
         $api = new api();
         $packages = $api->get_packages();
+        $incomingpackageids = [];
         foreach ($packages as $package) {
-            $package->store();
+            [$incomingpackageids[], ] = $package->upsert();
+        }
+
+        // Remove old packages.
+        if (empty($incomingpackageids)) {
+            // There are no incoming packages -> remove every package.
+            package::delete_all();
+        } else {
+            [$sql, $params] = $DB->get_in_or_equal($incomingpackageids, SQL_PARAMS_NAMED, prefix: 'packageid', equal: false);
+            $removedpackageids = $DB->get_fieldset_select('qtype_questionpy_package', 'id', "id $sql", $params);
+            package::delete_by_id(...$removedpackageids);
         }
 
         $transaction->allow_commit();

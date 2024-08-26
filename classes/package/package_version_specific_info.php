@@ -16,38 +16,33 @@
 
 namespace qtype_questionpy\package;
 
-use moodle_exception;
+defined('MOODLE_INTERNAL') || die;
+
 use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\array_converter\converter_config;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
- * Represents a QuestionPy package from a server.
- *
- * It contains metadata about a package version and its package.
+ * Represents a package version of an available QuestionPy package on the application server.
  *
  * @package    qtype_questionpy
- * @copyright  2023 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
+ * @copyright  2024 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class package_raw extends package_base {
+class package_version_specific_info {
     /**
-     * @var string package hash
+     * @var string $hash
      */
-    public string $hash;
+    public readonly string $hash;
 
     /**
-     * @var string package version
+     * @var string $version
      */
-    public string $version;
+    public readonly string $version;
 }
 
-array_converter::configure(package_raw::class, function (converter_config $config) {
+array_converter::configure(package_version_specific_info::class, function (converter_config $config) {
     $config
         ->rename("hash", "package_hash")
-        ->rename("shortname", "short_name")
         // The DB rows are also read using array_converter, but their columns are named differently to the json fields.
-        ->alias("hash", "hash")
-        ->alias("shortname", "shortname");
+        ->alias("hash", "hash");
 });

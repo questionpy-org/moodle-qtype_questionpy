@@ -26,7 +26,7 @@ use external_function_parameters;
 use external_single_structure;
 use external_value;
 use moodle_exception;
-use qtype_questionpy\package\package_version;
+use qtype_questionpy\package\package;
 
 /**
  * This service removes every package from the database.
@@ -55,14 +55,7 @@ class remove_packages extends external_api {
     public static function execute(): array {
         global $DB;
 
-        $transaction = $DB->start_delegated_transaction();
-
-        $versions = package_version::get_many();
-        foreach ($versions as $version) {
-            $version->delete();
-        }
-
-        $transaction->allow_commit();
+        package::delete_all();
 
         return [
             'packages' => $DB->count_records('qtype_questionpy_package'),

@@ -28,7 +28,7 @@ use context_user;
 use core_favourites\local\service\user_favourite_service;
 use external_api;
 use moodle_exception;
-use function qtype_questionpy\package_provider;
+use function qtype_questionpy\package_versions_info_provider;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -198,57 +198,6 @@ final class search_packages_test extends \externallib_advanced_testcase {
     }
 
     /**
-     * Acts as a provider for {@see test_user_and_server_versions_get_returned}.
-     *
-     * @return array[]
-     */
-    public static function as_user_provider(): array {
-        return [
-            [true],
-            [false],
-        ];
-    }
-
-    /**
-     * Tests that packages uploaded by the user and packages retrieved by the server are returned by the service.
-     *
-     * @param bool $asuser Whether the packages were uploaded as user or not.
-     * @covers \qtype_questionpy\external\search_packages::execute
-     * @dataProvider as_user_provider
-     * @throws moodle_exception
-     */
-    public function test_user_and_server_versions_get_returned(bool $asuser): void {
-        // Create packages and their versions.
-        $totalpackages = 2;
-        $totalversions = 3;
-
-        $versions = [];
-        for ($i = 0; $i < $totalpackages; $i++) {
-            $namespace = "n$i";
-            for ($j = 0; $j < $totalversions; $j++) {
-                $versionid = package_provider(['namespace' => $namespace, 'version' => "0.$j.0"])->store($asuser);
-                $versions[$namespace][] = $versionid;
-            }
-        }
-
-        // Execute service.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', $totalpackages, 0, null);
-        $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
-
-        // Check if every version in DB is returned under the correct package.
-        $this->assertCount($totalpackages, $res['packages']);
-        foreach ($res['packages'] as $package) {
-            $this->assertCount($totalversions, $package['versions']);
-            foreach ($package['versions'] as $version) {
-                $this->assertContains($version['id'], $versions[$package['namespace']]);
-            }
-        }
-
-        // The amount of package versions should not change the package count.
-        $this->assert_count_and_total($res, $totalpackages, $totalpackages);
-    }
-
-    /**
      * Acts as a provider for {@see test_query}.
      *
      * The arguments have the following format:
@@ -386,7 +335,7 @@ final class search_packages_test extends \externallib_advanced_testcase {
 
         // Store every package in the database.
         foreach ($packages as $namespace => [$names, $description]) {
-            package_provider(['namespace' => $namespace, 'name' => $names, 'description' => $description])->store();
+            package_versions_info_provider(['namespace' => $namespace, 'name' => $names, 'description' => $description])->upsert();
         }
 
         // Set current language if provided.
@@ -442,7 +391,7 @@ final class search_packages_test extends \externallib_advanced_testcase {
     public function test_alphabetical_sort(array $names): void {
         $totalpackages = count($names);
         foreach ($names as $name) {
-            package_provider(['namespace' => "ns$name", 'name' => ['en' => $name]])->store();
+            package_versions_info_provider(['namespace' => "ns$name", 'name' => ['en' => $name]])->upsert();
         }
 
         // Sort the array of names so that we can use it as a reference.
@@ -497,7 +446,7 @@ final class search_packages_test extends \externallib_advanced_testcase {
         $namespaces = [];
         for ($i = 0; $i < $totalpackages; $i++) {
             $namespaces[] = "ns$i";
-            $pkgversionid = package_provider(['namespace' => "ns$i"])->store();
+            [, [$pkgversionid]] = package_versions_info_provider(['namespace' => "ns$i"])->upsert();
             $this->modify_package_creation_time($pkgversionid, $i);
         }
 
@@ -545,7 +494,7 @@ final class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_limit_and_offset(int $limit, int $totalpackages): void {
         for ($i = 0; $i < $totalpackages; $i++) {
-            package_provider(['namespace' => "ns$i"])->store();
+            package_versions_info_provider(['namespace' => "ns$i"])->upsert();
         }
 
         // Calculate the amount of full pages and the size of the page after the last full page.
@@ -632,7 +581,7 @@ final class search_packages_test extends \externallib_advanced_testcase {
         $ids = [];
         for ($i = 0; $i < $totalpackages; $i++) {
             $namespaces[] = "ns$i";
-            $pkgversionid = package_provider(['namespace' => "ns$i"])->store();
+            [, [$pkgversionid]] = package_versions_info_provider(['namespace' => "ns$i"])->upsert();
             $ids[] = $pkgversionid;
             $this->modify_package_creation_time($pkgversionid, $i);
         }
@@ -707,9 +656,9 @@ final class search_packages_test extends \externallib_advanced_testcase {
         $this->getDataGenerator()->enrol_user($user->id, $course2->id);
 
         // Create package in one course and use it.
-        $id1 = package_provider(['namespace' => 'ns1'])->store();
+        [, [$id1]] = package_versions_info_provider(['namespace' => "ns1"])->upsert();
         self::add_last_used_entry($id1, $course1context->id);
-        $id2 = package_provider(['namespace' => 'ns2'])->store();
+        [, [$id2]] = package_versions_info_provider(['namespace' => "ns2"])->upsert();
         self::add_last_used_entry($id2, $course2context->id);
 
         // Execute service with both context ids.
@@ -743,53 +692,41 @@ final class search_packages_test extends \externallib_advanced_testcase {
     }
 
     /**
-     * Tests that only packages marked as favourite are returned. Server provided and user uploaded packages are used.
-     * It also tests that the `isfavourite`-property is set correctly.
+     * Tests that only packages marked as favourite are returned. It also tests that the `isfavourite`-property is set correctly.
      *
      * @covers \qtype_questionpy\external\search_packages::execute
      * @return void
      * @throws moodle_exception
      */
     public function test_favourites_returns_packages_marked_as_favourite_and_isfavourite_is_set_correctly(): void {
-        // Create two users and assign them to the same course.
+        // Create a user and assign them to the same course.
         $course = $this->getDataGenerator()->create_course();
-        $user1 = $this->getDataGenerator()->create_and_enrol($course);
-        $user2 = $this->getDataGenerator()->create_and_enrol($course);
+        $user = $this->getDataGenerator()->create_and_enrol($course);
+        $this->setUser($user);
 
-        // Create two packages provided by the server.
-        $pkgversionidserver = package_provider(['namespace' => 'ns1'])->store();
-        package_provider(['namespace' => 'ns2'])->store();
+        // Create two packages.
+        [, [$pkgversionid]] = package_versions_info_provider(['namespace' => "ns1"])->upsert();
+        package_versions_info_provider(['namespace' => "ns2"])->upsert();
 
-        // Upload two packages as user one.
-        $this->setUser($user1);
-        $pkgversionidotheruser = package_provider(['namespace' => 'ns3'])->store();
-        package_provider(['namespace' => 'ns4'])->store();
-
-        // Set user two and upload two packages.
-        $this->setUser($user2);
-        $pkgversioniduser = package_provider(['namespace' => 'ns5'])->store();
-        package_provider(['namespace' => 'ns6'])->store();
-
-        // Favourite one package of each kind as user two.
-        $usercontext = context_user::instance($user2->id);
+        // Favourite one package.
+        $usercontext = context_user::instance($user->id);
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
-        self::favourite($ufservice, $usercontext, $pkgversionidserver, $pkgversionidotheruser, $pkgversioniduser);
-        $favourites = ['ns1', 'ns3', 'ns5'];
+        self::favourite($ufservice, $usercontext, $pkgversionid);
 
         // Check if only packages marked as favourite are returned.
-        $res = search_packages::execute('', [], 'favourites', 'alpha', 'asc', 3, 0, null);
+        $res = search_packages::execute('', [], 'favourites', 'alpha', 'asc', 1, 0, null);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
-        $this->assert_count_and_total($res, 3, 3);
+        $this->assert_count_and_total($res, 1, 1);
         $namespaces = array_column($res['packages'], 'namespace');
-        $this->assertEqualsCanonicalizing($favourites, $namespaces);
+        $this->assertEquals(['ns1'], $namespaces);
 
         // Check if isfavourite-property is set correctly.
-        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 6, 0, null);
+        $res = search_packages::execute('', [], 'all', 'alpha', 'asc', 2, 0, null);
         $res = external_api::clean_returnvalue(search_packages::execute_returns(), $res);
-        $this->assert_count_and_total($res, 6, 6);
+        $this->assert_count_and_total($res, 2, 2);
 
         foreach ($res['packages'] as $package) {
-            if (in_array($package['namespace'], $favourites)) {
+            if ($package['namespace'] == 'ns1') {
                 self::assertTrue($package['isfavourite']);
             } else {
                 self::assertFalse($package['isfavourite']);
@@ -815,8 +752,8 @@ final class search_packages_test extends \externallib_advanced_testcase {
         $user2service = \core_favourites\service_factory::get_service_for_user_context($user2context);
 
         // Create two server packages.
-        $pkgversion1 = package_provider(['namespace' => 'ns1'])->store();
-        $pkgversion2 = package_provider(['namespace' => 'ns2'])->store();
+        [, [$pkgversion1]] = package_versions_info_provider(['namespace' => "ns1"])->upsert();
+        [, [$pkgversion2]] = package_versions_info_provider(['namespace' => "ns2"])->upsert();
 
         // Both users favourite different packages.
         self::favourite($user1service, $user1context, $pkgversion1);
@@ -842,8 +779,8 @@ final class search_packages_test extends \externallib_advanced_testcase {
     public function test_search_with_tags(): void {
         global $DB;
 
-        package_provider(['namespace' => 'ns1', 'tags' => ['a']])->store();
-        package_provider(['namespace' => 'ns2', 'tags' => ['a', 'b']])->store();
+        package_versions_info_provider(['namespace' => 'ns1', 'tags' => ['a']])->upsert();
+        package_versions_info_provider(['namespace' => 'ns2', 'tags' => ['a', 'b']])->upsert();
 
         $taga = $DB->get_field('qtype_questionpy_tag', 'id', ['tag' => 'a']);
         $tagb = $DB->get_field('qtype_questionpy_tag', 'id', ['tag' => 'b']);

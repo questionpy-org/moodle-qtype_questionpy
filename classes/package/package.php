@@ -76,17 +76,6 @@ class package extends package_base {
     }
 
     /**
-     * Retrieves each version of the package.
-     *
-     * @return array
-     * @throws moodle_exception
-     */
-    public function get_version_array(): array {
-        global $DB;
-        return $DB->get_records('qtype_questionpy_pkgversion', ['packageid' => $this->id]);
-    }
-
-    /**
      * Returns the package of the given package version id.
      *
      * @param int $pkgversionid
@@ -101,22 +90,57 @@ class package extends package_base {
     }
 
     /**
-     * Get packages from the db matching given conditions. Note: only conditions stored in the package version table
-     * are applicable.
+     * Deletes a package and every version from the database with the given id.
      *
-     * @param array|null $conditions
-     * @return package[]
+     * @param int ...$ids
      * @throws moodle_exception
      */
-    public static function get_records(?array $conditions = null): array {
+    public static function delete_by_id(int ...$ids): void {
         global $DB;
-        $packages = [];
-        $records = $DB->get_records('qtype_questionpy_package', $conditions);
-        foreach ($records as $record) {
-            $package = self::get_package_data($record->id);
-            $packages[] = array_converter::from_array(self::class, (array) $package);
+
+        if (empty($ids)) {
+            return;
         }
-        return $packages;
+
+        $transaction = $DB->start_delegated_transaction();
+        foreach ($ids as $id) {
+            $DB->delete_records('qtype_questionpy_pkgversion', ['packageid' => $id]);
+            $DB->delete_records('qtype_questionpy_language', ['packageid' => $id]);
+            $DB->delete_records('qtype_questionpy_pkgtag', ['packageid' => $id]);
+            $DB->delete_records('qtype_questionpy_package', ['id' => $id]);
+            last_used_service::remove_by_package($id);
+        }
+
+        $DB->execute("
+            DELETE
+            FROM {qtype_questionpy_tag}
+            WHERE id NOT IN (
+                SELECT tagid
+                FROM {qtype_questionpy_pkgtag}
+            )
+        ");
+        $transaction->allow_commit();
+    }
+
+    /**
+     * Deletes every package and every version from the database.
+     *
+     * @throws moodle_exception
+     */
+    public static function delete_all(): void {
+        global $DB;
+        $ids = $DB->get_fieldset('qtype_questionpy_package', 'id');
+        self::delete_by_id(...$ids);
+    }
+
+    /**
+     * Deletes the package and every version from the database.
+     *
+     * @return void
+     * @throws moodle_exception
+     */
+    public function delete(): void {
+        self::delete_by_id($this->id);
     }
 
     /**
@@ -176,31 +200,6 @@ class package extends package_base {
             JOIN {qtype_questionpy_pkgtag} pt
             ON pt.id = :packageid AND pt.tagid = t.id
         ", ['packageid' => $packageid]);
-    }
-
-    /**
-     * Deletes the package and every version from the database.
-     *
-     * @return void
-     * @throws moodle_exception
-     */
-    public function delete(): void {
-        global $DB;
-        $transaction = $DB->start_delegated_transaction();
-        $DB->delete_records('qtype_questionpy_pkgversion', ['packageid' => $this->id]);
-        $DB->delete_records('qtype_questionpy_language', ['packageid' => $this->id]);
-        $DB->delete_records('qtype_questionpy_pkgtag', ['packageid' => $this->id]);
-        $DB->execute("
-            DELETE
-            FROM {qtype_questionpy_tag}
-            WHERE id NOT IN (
-                SELECT tagid
-                FROM {qtype_questionpy_pkgtag}
-            )
-        ");
-        $DB->delete_records('qtype_questionpy_package', ['id' => $this->id]);
-        last_used_service::remove_by_package($this->id);
-        $transaction->allow_commit();
     }
 
     /**

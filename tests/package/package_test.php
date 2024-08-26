@@ -17,7 +17,7 @@
 namespace qtype_questionpy\package;
 
 use moodle_exception;
-use function qtype_questionpy\package_provider;
+use function qtype_questionpy\package_versions_info_provider;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -42,8 +42,7 @@ final class package_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store a package.
-        $rawpackage = package_provider();
-        $pkgversionid = $rawpackage->store();
+        [, [$pkgversionid]] = package_versions_info_provider()->upsert();
 
         // Get the package.
         package::get_by_version($pkgversionid);
@@ -83,7 +82,7 @@ final class package_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store a package.
-        $pkgversionid = package_provider(['languages' => ['en', 'de'], 'tags' => ['a']])->store();
+        [, [$pkgversionid]] = package_versions_info_provider(['languages' => ['en', 'de'], 'tags' => ['a']])->upsert();
         $package = package::get_by_version($pkgversionid);
 
         // Delete the package.
@@ -103,8 +102,10 @@ final class package_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store two versions of the same package.
-        package_provider(['version' => '1.0.0', 'languages' => ['en'], 'tags' => ['a']])->store();
-        $pkgversionid = package_provider(['version' => '2.0.0', 'languages' => ['en'], 'tags' => ['a']])->store();
+        [, [$pkgversionid, ]] = package_versions_info_provider(
+            ['languages' => ['en'], 'tags' => ['a']],
+            [['version' => '2.0.0'], ['version' => '1.0.0']]
+        )->upsert();
         $package = package::get_by_version($pkgversionid);
 
         // Delete the package.
@@ -124,10 +125,10 @@ final class package_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         // Store two packages.
-        $package1 = package_provider(['namespace' => 'ns1', 'tags' => ['a', 'b']])->store();
+        [, [$package1, ]] = package_versions_info_provider(['namespace' => 'ns1', 'tags' => ['a', 'b']])->upsert();
         $package1 = package::get_by_version($package1);
 
-        $package2 = package_provider(['namespace' => 'ns2', 'tags' => ['b', 'c']])->store();
+        [, [$package2, ]] = package_versions_info_provider(['namespace' => 'ns2', 'tags' => ['b', 'c']])->upsert();
         $package2 = package::get_by_version($package2);
 
         $package1->delete();
