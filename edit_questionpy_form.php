@@ -109,12 +109,12 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param package_base $package
      * @param string $packagehash
      * @param string $packageversion
-     * @param bool $isfavourite
+     * @param bool|null $isfavourite null if the package can not be marked as favourite
      * @param stored_file|null $file
      * @throws moodle_exception
      */
     private function definition_package_settings(MoodleQuickForm $mform, package_base $package, string $packagehash,
-                                                 string $packageversion, bool $isfavourite,
+                                                 string $packageversion, ?bool $isfavourite = null,
                                                  ?stored_file $file = null): void {
         global $OUTPUT;
 
@@ -126,7 +126,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $packagearray['versions'] = ['hash' => $packagehash, 'version' => $packageversion];
         $packagearray['islocal'] = !is_null($file);
         $packagearray['isfavourite'] = $isfavourite;
-
+        $packagearray['ismarkableasfavourite'] = !is_null($isfavourite);
         $group = [];
         $group[] = $mform->createElement(
             'html',
@@ -176,7 +176,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         }
         $package = api::extract_package_info($file);
 
-        $this->definition_package_settings($mform, $package, $package->hash, $package->version, false, $file);
+        $this->definition_package_settings($mform, $package, $package->hash, $package->version, file: $file);
     }
 
     /**
@@ -194,14 +194,22 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // Get package version.
         $packagehash = $this->optional_param('qpy_package_hash', $this->question->qpy_package_hash ?? null, PARAM_ALPHANUM);
         $pkgversion = package_version::get_by_hash($packagehash);
-        $package = package::get_by_version($pkgversion->id);
 
-        // Get favourite status.
-        $usercontext = context_user::instance($USER->id);
-        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
-        $isfavourite = $ufservice->favourite_exists('qtype_questionpy', 'package', $package->id, $usercontext);
+        if ($pkgversion) {
+            $package = package::get_by_version($pkgversion->id);
+            // Get favourite status.
+            $usercontext = context_user::instance($USER->id);
+            $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+            $isfavourite = $ufservice->favourite_exists('qtype_questionpy', 'package', $package->id, $usercontext);
+            $version = $pkgversion->version;
+        } else {
+            $api = new api();
+            $package = $api->get_package_info($packagehash);
+            $isfavourite = null;
+            $version = $package->version;
+        }
 
-        $this->definition_package_settings($mform, $package, $pkgversion->hash, $pkgversion->version, $isfavourite);
+        $this->definition_package_settings($mform, $package, $packagehash, $version, $isfavourite);
     }
 
     /**

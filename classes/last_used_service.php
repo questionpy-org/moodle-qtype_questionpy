@@ -52,12 +52,13 @@ class last_used_service {
     /**
      * Removes every entry with the given package id.
      *
-     * @param int $packageid
+     * @param int ...$packageids
      * @return void
      * @throws moodle_exception
      */
-    public static function remove_by_package(int $packageid): void {
+    public static function remove_by_package(int ...$packageids): void {
         global $DB;
-        $DB->delete_records('qtype_questionpy_lastused', ['packageid' => $packageid]);
+        [$insql, $inparams] = $DB->get_in_or_equal($packageids, SQL_PARAMS_NAMED, "packageids");
+        $DB->delete_records_select('qtype_questionpy_lastused', "packageid $insql", $inparams);
     }
 }
