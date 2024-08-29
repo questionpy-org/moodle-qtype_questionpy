@@ -63,8 +63,8 @@ final class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $pvi = package_versions_info_provider();
-        [, [$pkgversionid]] = $pvi->upsert();
-        [$statestr, $qpyid] = $this->setup_question($pvi->versions[0]->hash, $pkgversionid);
+        $pvi->upsert();
+        [$statestr, $qpyid] = $this->setup_question($pvi->versions[0]->hash);
 
         $result = $this->questionservice->get_question(1);
 
@@ -103,9 +103,9 @@ final class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $pvi = package_versions_info_provider(null, [["version" => "0.2.0"], ["version" => "0.1.0"]]);
-        [, [$newpackageid, $oldpackageid]] = $pvi->upsert();
+        $pvi->upsert();
 
-        $oldstate = $this->setup_question($pvi->versions[1]->hash, $oldpackageid)[0];
+        $oldstate = $this->setup_question($pvi->versions[1]->hash)[0];
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -127,7 +127,7 @@ final class question_service_test extends \advanced_testcase {
             ]
         );
 
-        $this->assert_single_question(1, $newpackageid, $newstate);
+        $this->assert_single_question(1, $pvi->versions[0]->hash, $newstate);
     }
 
     /**
@@ -143,9 +143,9 @@ final class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $pvi = package_versions_info_provider();
-        [, [$pkgversionid]] = $pvi->upsert();
+        $pvi->upsert();
 
-        $oldstate = $this->setup_question($pvi->versions[0]->hash, $pkgversionid)[0];
+        $oldstate = $this->setup_question($pvi->versions[0]->hash)[0];
 
         $formdata = ["this is" => "form data"];
 
@@ -153,7 +153,7 @@ final class question_service_test extends \advanced_testcase {
             ->expects($this->once())
             ->method("create_question")
             ->with($oldstate, (object) $formdata)
-            ->willReturn(new question_response($oldstate, "", ""));
+            ->willReturn(new question_response($oldstate, ""));
 
         $this->questionservice->upsert_question(
             (object)[
@@ -166,7 +166,7 @@ final class question_service_test extends \advanced_testcase {
             ]
         );
 
-        $this->assert_single_question(1, $pkgversionid, $oldstate);
+        $this->assert_single_question(1, $pvi->versions[0]->hash, $oldstate);
     }
 
     /**
@@ -183,7 +183,7 @@ final class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $pvi = package_versions_info_provider();
-        [, [$pkgversionid]] = $pvi->upsert();
+        $pvi->upsert();
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -192,7 +192,7 @@ final class question_service_test extends \advanced_testcase {
             ->expects($this->once())
             ->method("create_question")
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, "", ""));
+            ->willReturn(new question_response($newstate, ""));
 
         $this->questionservice->upsert_question(
             (object)[
@@ -205,7 +205,7 @@ final class question_service_test extends \advanced_testcase {
             ]
         );
 
-        $this->assert_single_question(42, $pkgversionid, $newstate);
+        $this->assert_single_question(42, $pvi->versions[0]->hash, $newstate);
     }
 
     /**
@@ -348,8 +348,8 @@ final class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $pvi = package_versions_info_provider();
-        [, [$pkgversionid]] = $pvi->upsert();
-        $this->setup_question($pvi->versions[0]->hash, $pkgversionid);
+        $pvi->upsert();
+        $this->setup_question($pvi->versions[0]->hash);
 
         global $DB;
         $this->assertEquals(1, $DB->count_records("qtype_questionpy"));
@@ -363,11 +363,10 @@ final class question_service_test extends \advanced_testcase {
      * Inserts a question using the given package into the DB and returns the state string and question id.
      *
      * @param string $pkgversionhash package version hash
-     * @param int|null $pkgversionid database ID (not hash) of a package version
      * @return array[string, int]
      * @throws dml_exception
      */
-    private function setup_question(string $pkgversionhash, ?int $pkgversionid): array {
+    private function setup_question(string $pkgversionhash): array {
         $this->resetAfterTest();
 
         $statestr = '
@@ -380,10 +379,8 @@ final class question_service_test extends \advanced_testcase {
         $qpyid = $DB->insert_record("qtype_questionpy", [
             "id" => 1,
             "questionid" => 1,
-            "feedback" => "",
             "pkgversionhash" => $pkgversionhash,
-            "pkgversionid" => $pkgversionid,
-            "islocal" => is_null($pkgversionid),
+            "islocal" => false,
             "state" => $statestr,
         ]);
 
@@ -394,19 +391,19 @@ final class question_service_test extends \advanced_testcase {
      * Asserts that a single question exists in `qtype_questionpy` and it matches the given arguments.
      *
      * @param int $id expected question id
-     * @param int $pkgversionid expected package id
+     * @param string $pkgversionhash expected package hash
      * @param string $state expected state
      * @return void
      * @throws dml_exception
      */
-    private function assert_single_question(int $id, int $pkgversionid, string $state) {
+    private function assert_single_question(int $id, string $pkgversionhash, string $state) {
         global $DB;
         $records = $DB->get_records("qtype_questionpy");
         $this->assertCount(1, $records);
         $record = current($records);
 
         $this->assertEquals((string) $id, $record->questionid);
-        $this->assertEquals((string) $pkgversionid, $record->pkgversionid);
+        $this->assertEquals((string) $pkgversionhash, $record->pkgversionhash);
         $this->assertEquals($state, $record->state);
     }
 }
