@@ -564,7 +564,7 @@ class question_ui_renderer {
 
         return preg_replace_callback(
             // The first two path segments are namespace and short name, and so more restrictive.
-            ";qpy://static(/(?:[a-z_][a-z0-9_]{1,127}){2}(?:/[\w\-@:%+.~=]+)+);",
+            ";qpy://static((?:/[a-z_][a-z0-9_]{0,126}){2}(?:/[\w\-@:%+.~=]+)+);",
             function (array $match) use ($question) {
                 $path = $match[1];
                 $url = \moodle_url::make_pluginfile_url(
