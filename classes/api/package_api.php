@@ -17,11 +17,8 @@
 namespace qtype_questionpy\api;
 
 use coding_exception;
-use core\http_client;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\InvalidArgumentException;
-use GuzzleHttp\Utils;
 use moodle_exception;
 use Psr\Http\Message\ResponseInterface;
 use qtype_questionpy\array_converter\array_converter;
@@ -183,9 +180,8 @@ class package_api {
                 throw $e;
             }
 
-            try {
-                $json = Utils::jsonDecode($e->getResponse()->getBody(), assoc: true);
-            } catch (InvalidArgumentException) {
+            $json = json_decode($e->getResponse()->getBody(), associative: true);
+            if (JSON_ERROR_NONE !== json_last_error()) {
                 // Not valid JSON, so the problem probably isn't a missing package file.
                 throw $e;
             }
