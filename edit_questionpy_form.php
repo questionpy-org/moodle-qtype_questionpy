@@ -108,7 +108,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @param package_base $package
      * @param string $packagehash
      * @param string $packageversion
-     * @param bool $isfavourite
+     * @param bool|null $isfavourite null if the package can not be marked as favourite
      * @param stored_file|null $file
      * @throws moodle_exception
      */
