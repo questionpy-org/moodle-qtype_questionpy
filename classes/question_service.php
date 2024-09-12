@@ -80,18 +80,9 @@ class question_service {
                 includedirs: false,
                 limitnum: 1,
             );
-            if (count($files) === 0) {
+            if (!$files) {
                 throw new \coding_exception(
                     "No local package version file with hash '{$record->pkgversionhash}' was found despite being referenced" .
-                    " by question {$questionid}"
-                );
-            }
-        } else {
-            // Package was selected.
-            $package = package_version::get_by_hash($record->pkgversionhash);
-            if (is_null($package)) {
-                throw new \coding_exception(
-                    "No package version record with hash '{$record->pkversionhash}' was found despite being referenced" .
                     " by question {$questionid}"
                 );
             }
@@ -135,19 +126,18 @@ class question_service {
             $pkgversionshortname = $rawpackage->shortname;
         } else {
             $pkgversion = package_version::get_by_hash($question->qpy_package_hash) ?? null;
-            if (!$pkgversion) {
-                throw new moodle_exception(
-                    'package_not_found',
-                    'qtype_questionpy',
-                    '',
-                    (object)['packagehash' => $question->qpy_package_hash]
-                );
+            if ($pkgversion) {
+                $package = package::get_by_version($pkgversion->id);
+                $pkgversionhash = $pkgversion->hash;
+                $pkgversionnamespace = $package->namespace;
+                $pkgversionshortname = $package->shortname;
+                last_used_service::add($question->context->id, $package->id);
+            } else {
+                $packageinfo = $this->api->get_package_info($question->qpy_package_hash);
+                $pkgversionhash = $packageinfo->hash;
+                $pkgversionnamespace = $packageinfo->namespace;
+                $pkgversionshortname = $packageinfo->shortname;
             }
-            $package = package::get_by_version($pkgversion->id);
-            last_used_service::add($question->context->id, $package->id);
-            $pkgversionhash = $pkgversion->hash;
-            $pkgversionnamespace = $package->namespace;
-            $pkgversionshortname = $package->shortname;
         }
 
         $existingrecord = $DB->get_record(self::QUESTION_TABLE, [

@@ -22,7 +22,9 @@ use moodle_exception;
 use qtype_questionpy\api\api;
 use qtype_questionpy\api\package_api;
 use qtype_questionpy\api\question_response;
+use qtype_questionpy\array_converter\array_converter;
 use qtype_questionpy\package\package;
+use qtype_questionpy\package\package_raw;
 use stdClass;
 
 /**
@@ -44,6 +46,7 @@ final class question_service_test extends \advanced_testcase {
     private question_service $questionservice;
 
     protected function setUp(): void {
+        $this->resetAfterTest();
         $this->api = $this->createMock(api::class);
         $this->packageapi = $this->createMock(package_api::class);
         $this->api->method("package")
@@ -60,8 +63,6 @@ final class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::get_question
      */
     public function test_get_question_should_load_package_and_state(): void {
-        $this->resetAfterTest();
-
         $pvi = package_versions_info_provider();
         $pvi->upsert();
         [$statestr, $qpyid] = $this->setup_question($pvi->versions[0]->hash);
@@ -100,7 +101,6 @@ final class question_service_test extends \advanced_testcase {
      */
     public function test_upsert_question_should_update_existing_record_if_changed(): void {
         global $PAGE;
-        $this->resetAfterTest();
 
         $pvi = package_versions_info_provider(null, [["version" => "0.2.0"], ["version" => "0.1.0"]]);
         $pvi->upsert();
@@ -140,7 +140,6 @@ final class question_service_test extends \advanced_testcase {
      */
     public function test_upsert_question_should_do_nothing_if_unchanged(): void {
         global $PAGE;
-        $this->resetAfterTest();
 
         $pvi = package_versions_info_provider();
         $pvi->upsert();
@@ -180,10 +179,14 @@ final class question_service_test extends \advanced_testcase {
      */
     public function test_upsert_question_should_insert_record(): void {
         global $PAGE;
-        $this->resetAfterTest();
 
         $pvi = package_versions_info_provider();
         $pvi->upsert();
+
+        // Since the package data is available in the database we should not contact the server.
+        $this->api
+            ->expects($this->never())
+            ->method("get_package_info");
 
         $newstate = json_encode(["this is" => "new state"]);
         $formdata = ["this is" => "form data"];
@@ -209,24 +212,48 @@ final class question_service_test extends \advanced_testcase {
     }
 
     /**
-     * Tests {@see question_service::upsert_question()} with a nonexistent package hash.
+     * Tests {@see question_service::upsert_question()} with a package hash which does not exist in the database.
      *
-     * @throws dml_exception
+     * @throws moodle_exception
      * @covers \qtype_questionpy\question_service::upsert_question
      */
-    public function test_upsert_question_should_throw_when_package_does_not_exist(): void {
-        $hash = hash("sha256", rand());
+    public function test_upsert_question_should_retrieve_package_from_server_if_not_in_db(): void {
+        global $PAGE;
 
-        $this->expectException(moodle_exception::class);
-        $this->expectExceptionMessageMatches("/package $hash does not exist/");
+        $hash = hash("sha256", rand());
+        $rawpackage = array_converter::from_array(
+            package_raw::class,
+            ["package_hash" => $hash, "short_name" => "sn", "namespace" => "ns", "name" => ["en" => "name"], "type" => "X"]
+        );
+
+        // Retrieve the package data from the application serve.
+        $this->api
+            ->expects($this->once())
+            ->method("get_package_info")
+            ->with($hash)
+            ->willReturn($rawpackage);
+
+        $newstate = json_encode(["this is" => "new state"]);
+        $formdata = ["this is" => "form data"];
+
+        $this->packageapi
+            ->expects($this->once())
+            ->method("create_question")
+            ->with(null, (object) $formdata)
+            ->willReturn(new question_response($newstate, ""));
 
         $this->questionservice->upsert_question(
             (object)[
-                "id" => 1,
+                "id" => 42, // Does not exist in the qtype_questionpy table yet.
                 "qpy_package_hash" => $hash,
+                "qpy_form" => $formdata,
                 "qpy_package_source" => "search",
+                "oldparent" => 1,
+                "context" => $PAGE->context,
             ]
         );
+
+        $this->assert_single_question(42, $hash, $newstate);
     }
 
     /**
@@ -240,7 +267,6 @@ final class question_service_test extends \advanced_testcase {
      */
     public function test_upsert_question_should_add_package_to_last_used_table(): void {
         global $DB, $PAGE;
-        $this->resetAfterTest();
 
         $pvi = package_versions_info_provider();
         [, [$pkgversionid]] = $pvi->upsert();
@@ -283,7 +309,6 @@ final class question_service_test extends \advanced_testcase {
      */
     public function test_upsert_question_in_same_context_with_same_package_should_only_update_time_used_in_last_used_table(): void {
         global $DB, $PAGE;
-        $this->resetAfterTest();
 
         $pvi = package_versions_info_provider();
         [, [$pkgversionid]] = $pvi->upsert();
@@ -345,8 +370,6 @@ final class question_service_test extends \advanced_testcase {
      * @covers \qtype_questionpy\question_service::upsert_question
      */
     public function test_delete_question(): void {
-        $this->resetAfterTest();
-
         $pvi = package_versions_info_provider();
         $pvi->upsert();
         $this->setup_question($pvi->versions[0]->hash);
@@ -367,8 +390,6 @@ final class question_service_test extends \advanced_testcase {
      * @throws dml_exception
      */
     private function setup_question(string $pkgversionhash): array {
-        $this->resetAfterTest();
-
         $statestr = '
         {
           "opt1": "opt 1 value"
