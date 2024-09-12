@@ -60,8 +60,11 @@ $string['search_sort_label_aria'] = 'Sorting';
 $string['select_package'] = 'Select';
 $string['select_package_element_aria'] = 'Choose version.';
 $string['selection_custom_package_header'] = 'Custom Package';
-$string['selection_custom_package_text'] = 'This package was uploaded by a user and might not appear in the package search.';
+$string['selection_custom_package_text'] = 'This package version was uploaded by a user and might not appear in the package"
+    . " search.';
 $string['selection_no_icon'] = 'Could not load the icon.';
+$string['selection_package_no_longer_in_database_header'] = 'Discontinued';
+$string['selection_package_no_longer_in_database_text'] = 'This package version is no longer available through the package search.';
 $string['selection_required'] = 'Please select a package.';
 $string['selection_title'] = 'Select QuestionPy Package';
 $string['selection_title_selected'] = 'Selected Package';
