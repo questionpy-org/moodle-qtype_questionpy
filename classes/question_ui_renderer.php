@@ -290,8 +290,10 @@ class question_ui_renderer {
             // Set the last saved value.
             $lastvalue = $this->attempt->get_last_qt_var($name);
             if (!is_null($lastvalue)) {
-                if (($type === "checkbox" || $type === "radio") && $element->getAttribute("value") === $lastvalue) {
-                    $element->setAttribute("checked", "checked");
+                if ($type === "checkbox" || $type === "radio") {
+                    if ($element->getAttribute("value") === $lastvalue) {
+                        $element->setAttribute("checked", "checked");
+                    }
                 } else if ($type == "select") {
                     // Find the appropriate option and mark it as selected.
                     /** @var DOMElement $option */
