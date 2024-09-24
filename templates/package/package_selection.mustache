@@ -37,6 +37,7 @@
     * url - The url of the QuestionPy package,
     * isselected - Whether the current QuestionPy package is selected or not,
     * islocal - Whether the current QuestionPy package was uplaoded by a user or not,
+    * ismarkableasfavourite - Whether the current QuestionPy package can be marked as favourite or not,
     * isfavourite - Whether the current QuestionPy package is marked as favourite or not,
 
     Example context (json):
@@ -50,6 +51,7 @@
         "url": "https://example.com",
         "isselected": true,
         "islocal": false,
+        "ismarkableasfavourite": true,
         "isfavourite": false
     }
 }}
@@ -67,7 +69,7 @@
                         {{#pix}} i/moremenu {{/pix}}
                     </a>
                     <div class="dropdown-menu">
-                        {{^islocal}}
+                        {{#ismarkableasfavourite}}
                             <a class="dropdown-item" href="#" data-for="favourite-button" {{#isfavourite}} data-is-favourite {{/isfavourite}}>
                                 <span class="qpy-favourite-button-text">
                                     {{#pix}} i/star-rating {{/pix}}{{#str}} mark_as_favourite, qtype_questionpy {{/str}}
@@ -76,7 +78,7 @@
                                     {{#pix}} i/star-o {{/pix}}{{#str}} unmark_as_favourite, qtype_questionpy {{/str}}
                                 </span>
                             </a>
-                        {{/islocal}}
+                        {{/ismarkableasfavourite}}
                         {{#url}}
                             <a class="dropdown-item" href="{{url}}" target="_blank">{{#pix}} i/mnethost {{/pix}}{{#str}} open_website, qtype_questionpy {{/str}}</a>
                         {{/url}}
@@ -97,6 +99,14 @@
                         <span class="badge badge-info user-select-none mr-auto mb-2" data-toggle="tooltip" data-placement="top" data-title="{{#cleanstr}} selection_custom_package_text, qtype_questionpy {{/cleanstr}}">
                             &#9432; {{#str}} selection_custom_package_header, qtype_questionpy {{/str}}
                         </span>
+                    {{/islocal}}
+                    {{^islocal}}
+                        {{^ismarkableasfavourite}}
+                            {{! This package was previously in the database. }}
+                            <span class="badge badge-info user-select-none mr-auto mb-2" data-toggle="tooltip" data-placement="top" data-title="{{#cleanstr}} selection_package_no_longer_in_database_text, qtype_questionpy {{/cleanstr}}">
+                                &#9432; {{#str}} selection_package_no_longer_in_database_header, qtype_questionpy {{/str}}
+                            </span>
+                        {{/ismarkableasfavourite}}
                     {{/islocal}}
                     <button class="btn btn-danger qpy-version-selection-button">{{#str}} change_package, qtype_questionpy {{/str}}</button>
                 </div>

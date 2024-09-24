@@ -103,14 +103,12 @@ class package extends package_base {
         }
 
         $transaction = $DB->start_delegated_transaction();
-        foreach ($ids as $id) {
-            $DB->delete_records('qtype_questionpy_pkgversion', ['packageid' => $id]);
-            $DB->delete_records('qtype_questionpy_language', ['packageid' => $id]);
-            $DB->delete_records('qtype_questionpy_pkgtag', ['packageid' => $id]);
-            $DB->delete_records('qtype_questionpy_package', ['id' => $id]);
-            last_used_service::remove_by_package($id);
-        }
 
+        [$insql, $inparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, "packageids");
+        $DB->delete_records_select('qtype_questionpy_pkgversion', "packageid $insql", $inparams);
+        $DB->delete_records_select('qtype_questionpy_language', "packageid $insql", $inparams);
+        $DB->delete_records_select('qtype_questionpy_package', "id $insql", $inparams);
+        $DB->delete_records_select('qtype_questionpy_pkgtag', "packageid $insql", $inparams);
         $DB->execute("
             DELETE
             FROM {qtype_questionpy_tag}
@@ -119,6 +117,13 @@ class package extends package_base {
                 FROM {qtype_questionpy_pkgtag}
             )
         ");
+        last_used_service::remove_by_package(...$ids);
+
+        $fservice = \core_favourites\service_factory::get_service_for_component('qtype_questionpy');
+        foreach ($ids as $id) {
+            $fservice->delete_favourites_by_type_and_item('package', $id);
+        }
+
         $transaction->allow_commit();
     }
 
