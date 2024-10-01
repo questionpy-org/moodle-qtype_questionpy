@@ -25,6 +25,7 @@
 use qtype_questionpy\api\api;
 use qtype_questionpy\api\attempt_ui;
 use qtype_questionpy\constants;
+use qtype_questionpy\api\scoring_code;
 use qtype_questionpy\question_ui_metadata_extractor;
 use qtype_questionpy\utils;
 
@@ -47,9 +48,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
     // Properties which do change between attempts (i.e. are modified by start_attempt and apply_attempt_state).
     /** @var string */
-    private string $attemptstate;
+    public string $attemptstate;
     /** @var string|null */
-    private ?string $scoringstate;
+    public ?string $scoringstate;
     /** @var attempt_ui */
     public attempt_ui $ui;
     /** @var question_ui_metadata_extractor $metadata */
@@ -99,15 +100,36 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *      being started. Can be used to store state.
      * @param int $variant which variant of this question to start. Will be between
      *      1 and {@see get_num_variants()} inclusive.
-     * @throws moodle_exception
+     * @throws Throwable
      */
     public function start_attempt(question_attempt_step $step, $variant): void {
-        $attempt = $this->api->package($this->packagehash, $this->packagefile)->start_attempt($this->questionstate, $variant);
+        global $PAGE;
 
-        $this->attemptstate = $attempt->attemptstate;
-        $step->set_qt_var(constants::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
-        $this->scoringstate = null;
-        $this->update_ui($attempt->ui);
+        try {
+            $attempt = $this->api->package($this->packagehash, $this->packagefile)->start_attempt($this->questionstate, $variant);
+
+            $this->attemptstate = $attempt->attemptstate;
+            $step->set_qt_var(constants::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
+            $this->scoringstate = null;
+            $this->update_ui($attempt->ui);
+        } catch (Throwable $t) {
+            // Trigger error event.
+            $qa = $this->get_behaviour()->get_qa();
+            $params = [
+                'context' => $PAGE->context,
+                'relateduserid' => $step->get_user_id(),
+                'other' => [
+                    'questionid' => $this->id,
+                    'attemptusageid' => $qa->get_usage_id(),
+                    'attemptslot' => $qa->get_slot(),
+                    'errormessage' => $t->getMessage(),
+                ],
+            ];
+            $event = \qtype_questionpy\event\starting_attempt_failed::create($params);
+            $event->trigger();
+            debugging($event->get_description());
+            throw $t;
+        }
     }
 
     /**
@@ -126,11 +148,12 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function apply_attempt_state(question_attempt_step $step) {
+        global $PAGE;
+
         $attemptstate = $step->get_qt_var(constants::QT_VAR_ATTEMPT_STATE);
         if (is_null($attemptstate)) {
-            // Start_attempt probably was never called, which it should have been.
-            $varname = constants::QT_VAR_ATTEMPT_STATE;
-            throw new coding_exception("apply_attempt_state was called, but attempt is missing qt var '$varname'");
+            // There was a request error at start_attempt.
+            return;
         }
 
         $this->attemptstate = $attemptstate;
@@ -144,14 +167,30 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
         /* TODO: This method is also called from question_attempt->regrade and
                  question_attempt->start_question_based_on, where we shouldn't need to get the UI. */
-        $attempt = $this->api->package($this->packagehash, $this->packagefile)
-            ->view_attempt(
-                $this->questionstate,
-                $this->attemptstate,
-                $this->scoringstate,
-                $lastresponse
-            );
-        $this->update_ui($attempt->ui);
+        try {
+            $attempt = $this->api->package($this->packagehash, $this->packagefile)
+                ->view_attempt(
+                    $this->questionstate,
+                    $this->attemptstate,
+                    $this->scoringstate,
+                    $lastresponse
+                );
+            $this->update_ui($attempt->ui);
+        } catch (Throwable $t) {
+            // Trigger error event.
+            $params = [
+                'context' => $PAGE->context,
+                'relateduserid' => $step->get_user_id(),
+                'other' => [
+                    'questionid' => $this->id,
+                    'questionattemptid' => $this->get_behaviour()->get_qa()->get_database_id(),
+                    'errormessage' => $t->getMessage(),
+                ],
+            ];
+            $event = \qtype_questionpy\event\viewing_attempt_failed::create($params);
+            $event->trigger();
+            debugging($event->get_description());
+        }
     }
 
     /**
@@ -175,11 +214,15 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * This information is used in calls to optional_param. The parameter name
      * has {@see question_attempt::get_field_prefix()} automatically prepended.
      *
-     * @return array variable name => PARAM_... constant, or, as a special case
+     * @return array|string variable name => PARAM_... constant, or, as a special case
      *      that should only be used in unavoidable, the constant question_attempt::USE_RAW_DATA
      *      meaning take all the raw submitted data belonging to this question.
      */
-    public function get_expected_data(): array {
+    public function get_expected_data(): array|string {
+        if (!isset($this->metadata)) {
+            // There was an error -> get all the submitted data.
+            return question_attempt::USE_RAW_DATA;
+        }
         return $this->metadata->extract()->expecteddata;
     }
 
@@ -192,6 +235,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return array|null parameter name => value.
      */
     public function get_correct_response(): ?array {
+        if (!isset($this->metadata)) {
+            // There was an error -> we cannot compute the correct response.
+            return null;
+        }
         return $this->metadata->extract()->correctresponse;
     }
 
@@ -205,6 +252,11 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return bool whether this response is a complete answer to this question.
      */
     public function is_complete_response(array $response): bool {
+        if (!isset($this->metadata)) {
+            // There was an error -> if no data was provided we want the question state to be set to INCOMPLETE.
+            return !empty($response);
+        }
+
         foreach ($this->metadata->extract()->requiredfields as $requiredfield) {
             if (!isset($response[$requiredfield]) || $response[$requiredfield] === "") {
                 return false;
@@ -261,35 +313,45 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function grade_response(array $response): array {
-        $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt(
-            $this->questionstate,
-            $this->attemptstate,
-            $this->scoringstate,
-            $response
-        );
-        $this->update_ui($attemptscored->ui);
+        global $PAGE;
+
+        try {
+            $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt(
+                $this->questionstate,
+                $this->attemptstate,
+                $this->scoringstate,
+                $response
+            );
+            $this->update_ui($attemptscored->ui);
+        } catch (Throwable $t) {
+            // Trigger error event.
+            $params = [
+                'context' => $PAGE->context,
+                // TODO: It would be nice to set a 'relateduserid'.
+                'other' => [
+                    'questionid' => $this->id,
+                    'errormessage' => $t->getMessage(),
+                ],
+            ];
+            $event = \qtype_questionpy\event\grading_response_failed::create($params);
+            $event->trigger();
+            debugging($event->get_description());
+
+            // As the server was not able to score the response, we mark this question with manual scoring.
+            return [0, question_state::$needsgrading];
+        }
 
         // Persist scoring state.
         $this->scoringstate = $attemptscored->scoringstate;
         $this->get_behaviour()->get_pending_step()
             ->set_qt_var(constants::QT_VAR_SCORING_STATE, $attemptscored->scoringstate);
 
-        switch ($attemptscored->scoringcode) {
-            case "AUTOMATICALLY_SCORED":
-                $newqstate = question_state::graded_state_for_fraction($attemptscored->score);
-                break;
-            case "NEEDS_MANUAL_SCORING":
-                $newqstate = question_state::$finished;
-                break;
-            case "RESPONSE_NOT_SCORABLE":
-                $newqstate = question_state::$gaveup;
-                break;
-            case "INVALID_RESPONSE":
-                $newqstate = question_state::$invalid;
-                break;
-            default:
-                throw new coding_exception("Unrecognized scoring code: $attemptscored->scoringcode");
-        }
+        $newqstate = match ($attemptscored->scoringcode) {
+            scoring_code::automatically_scored => question_state::graded_state_for_fraction($attemptscored->score),
+            scoring_code::needs_manual_scoring => question_state::$needsgrading,
+            scoring_code::response_not_scorable => question_state::$gaveup,
+            scoring_code::invalid_response => question_state::$invalid,
+        };
         return [$attemptscored->score, $newqstate];
     }
 
