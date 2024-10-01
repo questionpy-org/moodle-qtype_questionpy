@@ -51,11 +51,19 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @param question_attempt $qa the question attempt to display.
      * @param question_display_options $options controls what should and should not be displayed.
      * @return string HTML fragment.
-     * @throws coding_exception
+     * @throws moodle_exception
      */
     public function formulation_and_controls(question_attempt $qa, question_display_options $options): string {
         $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
+
+        if (!isset($question->ui)) {
+            return $this->output->render_from_template('qtype_questionpy/render_error', [
+                'message' => 'There was an error attempting to view the question.',
+                'info' => 'Please contact an administrator.',
+            ]);
+        }
+
         $renderer = new question_ui_renderer($question->ui->formulation, $question->ui->placeholders, $options, $qa);
         return $renderer->render();
     }
@@ -75,6 +83,11 @@ class qtype_questionpy_renderer extends qtype_renderer {
     public function feedback(question_attempt $qa, question_display_options $options): string {
         $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
+
+        if ($options->feedback && !isset($question->ui)) {
+            // We do not want to show another error message in the feedback section as there is already one in the formulations.
+            return '';
+        }
 
         $output = '';
         $hint = null;

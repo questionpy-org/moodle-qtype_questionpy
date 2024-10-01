@@ -120,6 +120,9 @@ class array_converter {
         if ($instance instanceof \BackedEnum) {
             return $instance->value;
         }
+        if ($instance instanceof \UnitEnum) {
+            throw new coding_exception("Only backed enums are supported.");
+        }
         if (is_scalar($instance) || $instance === null) {
             return $instance;
         }
