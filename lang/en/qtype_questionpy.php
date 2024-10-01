@@ -26,6 +26,7 @@ $string['change_package'] = 'Change';
 $string['curl_exec_error'] = 'Error while fetching from server. Error number: {$a}';
 $string['curl_init_error'] = 'Could not initialize cURL. Error number: {$a}';
 $string['curl_set_opt_error'] = 'Failed to set cURL option. Error number: {$a}';
+$string['event_request_failed'] = 'Server request failed';
 $string['form_fallback_element_text'] = "The QuestionPy package is using a form element not supported by the Moodle"
     . " plugin. Please ensure you are using a compatible package or contact your administrators.";
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
@@ -45,6 +46,7 @@ $string['pluginnamesummary'] = 'A comprehensive question type that allows you to
 $string['question_package_search'] = 'Select an existing package';
 $string['question_package_upload'] = 'Upload your own';
 $string['remove_packages_button'] = 'Remove Packages';
+$string['render_error_section'] = 'An error occurred';
 $string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
 $string['search_all_header'] = 'All ({$a})';
 $string['search_bar'] = 'Search...';
