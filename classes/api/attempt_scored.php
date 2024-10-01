@@ -33,8 +33,8 @@ class attempt_scored extends attempt {
     /** @var string|null */
     public ?string $scoringstate;
 
-    /** @var string */
-    public string $scoringcode;
+    /** @var scoring_code */
+    public scoring_code $scoringcode;
 
     /** @var float|null */
     public ?float $score = null;
@@ -44,10 +44,10 @@ class attempt_scored extends attempt {
      *
      * @param int $variant
      * @param attempt_ui $ui
-     * @param string $scoringcode
+     * @param scoring_code $scoringcode
      * @param string|null $scoringstate
      */
-    public function __construct(int $variant, attempt_ui $ui, string $scoringcode, ?string $scoringstate = null) {
+    public function __construct(int $variant, attempt_ui $ui, scoring_code $scoringcode, ?string $scoringstate = null) {
         parent::__construct($variant, $ui);
 
         $this->scoringstate = $scoringstate;
