@@ -30,8 +30,8 @@ defined('MOODLE_INTERNAL') || die;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class attempt_scored extends attempt {
-    /** @var string */
-    public string $scoringstate;
+    /** @var string|null */
+    public ?string $scoringstate;
 
     /** @var string */
     public string $scoringcode;
@@ -39,18 +39,15 @@ class attempt_scored extends attempt {
     /** @var float|null */
     public ?float $score = null;
 
-    /** @var classified_response[]|null */
-    public ?array $classification = null;
-
     /**
      * Initializes a new instance.
      *
      * @param int $variant
      * @param attempt_ui $ui
-     * @param string $scoringstate
      * @param string $scoringcode
+     * @param string|null $scoringstate
      */
-    public function __construct(int $variant, attempt_ui $ui, string $scoringstate, string $scoringcode) {
+    public function __construct(int $variant, attempt_ui $ui, string $scoringcode, ?string $scoringstate = null) {
         parent::__construct($variant, $ui);
 
         $this->scoringstate = $scoringstate;
