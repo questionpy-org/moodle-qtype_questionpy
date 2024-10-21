@@ -16,10 +16,7 @@
 
 namespace qtype_questionpy\api;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
-
-defined('MOODLE_INTERNAL') || die;
+use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
  * Response from the server containing server status.
@@ -37,9 +34,11 @@ class status {
     public string $version;
 
     /** @var bool */
+    #[array_key("allow_lms_packages")]
     public bool $allowlmspackages = false;
 
     /** @var string */
+    #[array_key("max_package_size")]
     public string $maxpackagesize;
 
     /** @var usage|null */
@@ -60,9 +59,3 @@ class status {
         $this->maxpackagesize = display_size($maxpackagesize, 1, 'MB');
     }
 }
-
-array_converter::configure(status::class, function (converter_config $config) {
-    $config
-        ->rename("allowlmspackages", "allow_lms_packages")
-        ->rename("maxpackagesize", "max_package_size");
-});

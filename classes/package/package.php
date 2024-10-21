@@ -19,10 +19,7 @@ namespace qtype_questionpy\package;
 use dml_exception;
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
 use qtype_questionpy\last_used_service;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Represents a QuestionPy package stored in the database.
@@ -86,7 +83,7 @@ class package extends package_base {
         global $DB;
         $packageid = $DB->get_field('qtype_questionpy_pkgversion', 'packageid', ['id' => $pkgversionid]);
         $package = self::get_package_data($packageid);
-        return array_converter::from_array(self::class, (array) $package);
+        return array_converter::from_array(self::class, (array)$package);
     }
 
     /**
@@ -222,10 +219,10 @@ class package extends package_base {
         }
 
         $difference = [];
-        $package = (array) $package;
+        $package = (array)$package;
 
         // Remove id from comparison.
-        $self = (array) $this;
+        $self = (array)$this;
         unset($self['id']);
 
         foreach ($self as $key => $value) {
@@ -255,10 +252,3 @@ class package extends package_base {
         return empty($this->difference_from($package));
     }
 }
-
-array_converter::configure(package::class, function (converter_config $config) {
-    $config
-        ->rename("shortname", "short_name")
-        // The DB rows are also read using array_converter, but their columns are named differently to the json fields.
-        ->alias("shortname", "shortname");
-});

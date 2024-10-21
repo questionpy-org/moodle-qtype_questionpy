@@ -14,39 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\api;
+namespace qtype_questionpy\array_converter\attributes;
 
-use qtype_questionpy\array_converter\attributes\array_key;
+use Attribute;
 
 /**
- * A file used in an attempt at a QuestionPy question.
+ * For an array-typed property with the given name, sets the class to use for the deserialization of its elements.
  *
  * @package    qtype_questionpy
- * @author     Jan Britz
+ * @author     Maximilian Haye
  * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class attempt_file {
-    /** @var string */
-    public string $name;
-
-    /** @var string|null */
-    #[array_key("mime_type")]
-    public ?string $mimetype = null;
-
-    /** @var string $data */
-    public string $data; // TODO: replace by QPy-URL when functionality is implemented.
-
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class array_element_class {
     /**
-     * Initializes a new instance.
+     * Initializes a new attribute instance.
      *
-     * @param string $name
-     * @param string $data
-     * @param string|null $mimetype
+     * @param class-string $class
      */
-    public function __construct(string $name, string $data, ?string $mimetype = null) {
-        $this->name = $name;
-        $this->data = $data;
-        $this->mimetype = $mimetype;
+    public function __construct(
+        /** @var class-string $class */
+        public readonly string $class
+    ) {
     }
 }

@@ -16,14 +16,11 @@
 
 namespace qtype_questionpy\form\elements;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_element_class;
 use qtype_questionpy\form\context\array_render_context;
 use qtype_questionpy\form\context\render_context;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\form_help;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Element grouping multiple elements and displaying them horizontally next to each other.
@@ -43,6 +40,7 @@ class group_element extends form_element {
     /** @var string */
     public string $label;
     /** @var form_element[] */
+    #[array_element_class(form_element::class)]
     public array $elements;
 
     /**
@@ -105,7 +103,3 @@ class group_element extends form_element {
         $this->render_help($element);
     }
 }
-
-array_converter::configure(group_element::class, function (converter_config $config) {
-    $config->array_elements("elements", form_element::class);
-});

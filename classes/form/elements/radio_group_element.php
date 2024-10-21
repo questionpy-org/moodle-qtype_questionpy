@@ -16,13 +16,10 @@
 
 namespace qtype_questionpy\form\elements;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_element_class;
 use qtype_questionpy\form\context\render_context;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\form_help;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Group of radio buttons, only at most one of which can  be selected at once.
@@ -41,6 +38,7 @@ class radio_group_element extends form_element {
     /** @var string */
     public string $label;
     /** @var option[] */
+    #[array_element_class(option::class)]
     public array $options;
     /** @var bool */
     public bool $required = false;
@@ -103,7 +101,3 @@ class radio_group_element extends form_element {
         $this->render_help($group);
     }
 }
-
-array_converter::configure(radio_group_element::class, function (converter_config $config) {
-    $config->array_elements("options", option::class);
-});

@@ -1,5 +1,5 @@
 <?php
-// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,41 +12,37 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\api;
+namespace qtype_questionpy\array_converter\test_classes;
 
+use qtype_questionpy\array_converter\attributes\array_alias;
 use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
- * A file used in an attempt at a QuestionPy question.
+ * Test class using {@see array_key} and {@see array_alias}.
  *
  * @package    qtype_questionpy
- * @author     Jan Britz
+ * @author     Maximilian Haye
  * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class attempt_file {
-    /** @var string */
-    public string $name;
-
-    /** @var string|null */
-    #[array_key("mime_type")]
-    public ?string $mimetype = null;
-
-    /** @var string $data */
-    public string $data; // TODO: replace by QPy-URL when functionality is implemented.
+class uses_rename_and_alias {
+    /** @var string $myprop1 */
+    #[array_key("my_prop_1")]
+    #[array_alias("my_alias_1")]
+    public string $myprop1;
 
     /**
      * Initializes a new instance.
      *
-     * @param string $name
-     * @param string $data
-     * @param string|null $mimetype
+     * @param string $myprop2
      */
-    public function __construct(string $name, string $data, ?string $mimetype = null) {
-        $this->name = $name;
-        $this->data = $data;
-        $this->mimetype = $mimetype;
+    public function __construct(
+        /** @var string $myprop2 */
+        #[array_key("my_prop_2")]
+        #[array_alias("my_alias_2")]
+        public string $myprop2
+    ) {
     }
 }

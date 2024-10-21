@@ -16,13 +16,10 @@
 
 namespace qtype_questionpy\form;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_element_class;
 use qtype_questionpy\form\context\render_context;
 use qtype_questionpy\form\context\section_render_context;
 use qtype_questionpy\form\elements\form_element;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Collapsible form section introduced by a header.
@@ -40,6 +37,7 @@ class form_section implements qpy_renderable {
     public string $header;
 
     /** @var form_element[] */
+    #[array_element_class(form_element::class)]
     public array $elements;
 
     /**
@@ -69,7 +67,3 @@ class form_section implements qpy_renderable {
         }
     }
 }
-
-array_converter::configure(form_section::class, function (converter_config $config) {
-    $config->array_elements("elements", form_element::class);
-});
