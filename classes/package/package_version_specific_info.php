@@ -16,10 +16,8 @@
 
 namespace qtype_questionpy\package;
 
-defined('MOODLE_INTERNAL') || die;
-
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_alias;
+use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
  * Represents a package version of an available QuestionPy package on the application server.
@@ -32,6 +30,8 @@ class package_version_specific_info {
     /**
      * @var string $hash
      */
+    #[array_key("package_hash")]
+    #[array_alias("hash")]
     public readonly string $hash;
 
     /**
@@ -39,10 +39,3 @@ class package_version_specific_info {
      */
     public readonly string $version;
 }
-
-array_converter::configure(package_version_specific_info::class, function (converter_config $config) {
-    $config
-        ->rename("hash", "package_hash")
-        // The DB rows are also read using array_converter, but their columns are named differently to the json fields.
-        ->alias("hash", "hash");
-});

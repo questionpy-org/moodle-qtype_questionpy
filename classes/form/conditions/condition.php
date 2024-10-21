@@ -16,10 +16,7 @@
 
 namespace qtype_questionpy\form\conditions;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
-
-defined('MOODLE_INTERNAL') || die;
+use qtype_questionpy\array_converter\attributes\array_polymorphic;
 
 /**
  * Base class for QuestionPy form element conditions.
@@ -29,6 +26,13 @@ defined('MOODLE_INTERNAL') || die;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[array_polymorphic("kind", variants: [
+    "is_checked" => is_checked::class,
+    "is_not_checked" => is_not_checked::class,
+    "equals" => equals::class,
+    "does_not_equal" => does_not_equal::class,
+    "in" => in::class,
+])]
 abstract class condition {
     /** @var string $name name of the target element */
     public string $name;
@@ -50,13 +54,3 @@ abstract class condition {
      */
     abstract public static function mform_type(): string;
 }
-
-array_converter::configure(condition::class, function (converter_config $config) {
-    $config
-        ->discriminate_by("kind")
-        ->variant("is_checked", is_checked::class)
-        ->variant("is_not_checked", is_not_checked::class)
-        ->variant("equals", equals::class)
-        ->variant("does_not_equal", does_not_equal::class)
-        ->variant("in", in::class);
-});

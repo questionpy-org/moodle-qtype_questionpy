@@ -16,11 +16,8 @@
 
 namespace qtype_questionpy\package;
 
-defined('MOODLE_INTERNAL') || die;
-
 use moodle_exception;
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_element_class;
 
 /**
  * Represents a QuestionPy package and its versions on the application server.
@@ -38,6 +35,7 @@ class package_versions_info {
     /**
      * @var package_version_specific_info[] $versions
      */
+    #[array_element_class(package_version_specific_info::class)]
     public array $versions;
 
     /**
@@ -89,8 +87,8 @@ class package_versions_info {
         global $DB;
 
         return $DB->insert_record('qtype_questionpy_pkgversion', ['packageid' => $packageid,
-                'version' => $version->version, 'hash' => $version->hash, 'versionorder' => $order, 'timemodified' => $timestamp,
-                'timecreated' => $timestamp], bulk: true);
+            'version' => $version->version, 'hash' => $version->hash, 'versionorder' => $order, 'timemodified' => $timestamp,
+            'timecreated' => $timestamp], bulk: true);
     }
 
     /**
@@ -139,8 +137,3 @@ class package_versions_info {
         return $versionids;
     }
 }
-
-array_converter::configure(package_versions_info::class, function (converter_config $config) {
-    $config
-        ->array_elements('versions', package_version_specific_info::class);
-});

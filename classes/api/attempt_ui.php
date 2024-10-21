@@ -16,10 +16,8 @@
 
 namespace qtype_questionpy\api;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
-
-defined('MOODLE_INTERNAL') || die;
+use qtype_questionpy\array_converter\attributes\array_element_class;
+use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
  * Model defining an attempt's UI source and associated data, such as parameters for placeholders.
@@ -34,24 +32,30 @@ class attempt_ui {
     public string $formulation;
 
     /** @var string|null */
+    #[array_key("general_feedback")]
     public ?string $generalfeedback = null;
 
     /** @var string|null */
+    #[array_key("specific_feedback")]
     public ?string $specificfeedback = null;
 
     /** @var string|null */
+    #[array_key("right_answer")]
     public ?string $rightanswer = null;
 
     /** @var array<string, string> string to string mapping of placeholder names to the values (to be replaced in the content) */
     public array $placeholders = [];
 
     /** @var string[]|null */
+    #[array_key("css_files")]
     public ?array $cssfiles = null;
 
     /** @var array<string, attempt_file> specifics TBD */
+    #[array_element_class(attempt_file::class)]
     public array $files = [];
 
     /** @var string specifics TBD */
+    #[array_key("cache_control")]
     public string $cachecontrol = "PRIVATE_CACHE";
 
     /**
@@ -63,13 +67,3 @@ class attempt_ui {
         $this->formulation = $formulation;
     }
 }
-
-array_converter::configure(attempt_ui::class, function (converter_config $config) {
-    $config
-        ->rename("generalfeedback", "general_feedback")
-        ->rename("specificfeedback", "specific_feedback")
-        ->rename("rightanswer", "right_answer")
-        ->rename("cssfiles", "css_files")
-        ->rename("cachecontrol", "cache_control")
-        ->array_elements("files", attempt_file::class);
-});

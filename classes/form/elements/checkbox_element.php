@@ -17,13 +17,10 @@
 namespace qtype_questionpy\form\elements;
 
 use coding_exception;
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_key;
 use qtype_questionpy\form\context\render_context;
 use qtype_questionpy\form\form_conditions;
 use qtype_questionpy\form\form_help;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Element displaying a labelled checkbox.
@@ -40,8 +37,10 @@ class checkbox_element extends form_element {
     /** @var string */
     public string $name;
     /** @var string|null */
+    #[array_key("left_label")]
     public ?string $leftlabel = null;
     /** @var string|null */
+    #[array_key("right_label")]
     public ?string $rightlabel = null;
     /** @var bool */
     public bool $required = false;
@@ -70,8 +69,7 @@ class checkbox_element extends form_element {
      * Render this item to the given context.
      *
      * @param render_context $context target context
-     * @param int|null $group         passed by {@see checkbox_group_element::render_to} to the checkboxes belonging to
-     *                                it
+     * @param int|null $group passed by {@see checkbox_group_element::render_to} to the checkboxes belonging to it
      * @throws coding_exception
      */
     public function render_to(render_context $context, ?int $group = null): void {
@@ -94,8 +92,3 @@ class checkbox_element extends form_element {
         $this->render_help($element);
     }
 }
-
-array_converter::configure(checkbox_element::class, function (converter_config $config) {
-    $config->rename("leftlabel", "left_label")
-        ->rename("rightlabel", "right_label");
-});

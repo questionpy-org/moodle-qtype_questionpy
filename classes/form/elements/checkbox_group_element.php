@@ -17,11 +17,8 @@
 namespace qtype_questionpy\form\elements;
 
 use coding_exception;
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_element_class;
 use qtype_questionpy\form\context\render_context;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Element grouping one or more checkboxes with a `Select all/none` button.
@@ -33,6 +30,7 @@ defined('MOODLE_INTERNAL') || die;
  */
 class checkbox_group_element extends form_element {
     /** @var checkbox_element[] */
+    #[array_element_class(checkbox_element::class)]
     public array $checkboxes = [];
 
     /**
@@ -61,7 +59,3 @@ class checkbox_group_element extends form_element {
         $context->moodleform->add_checkbox_controller($groupid);
     }
 }
-
-array_converter::configure(checkbox_group_element::class, function (converter_config $config) {
-    $config->array_elements("checkboxes", checkbox_element::class);
-});
