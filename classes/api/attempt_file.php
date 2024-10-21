@@ -17,6 +17,7 @@
 namespace qtype_questionpy\api;
 
 use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\attributes\array_key;
 use qtype_questionpy\array_converter\converter_config;
 
 defined('MOODLE_INTERNAL') || die;
@@ -34,6 +35,7 @@ class attempt_file {
     public string $name;
 
     /** @var string|null */
+    #[array_key("mime_type")]
     public ?string $mimetype = null;
 
     /** @var string $data */
