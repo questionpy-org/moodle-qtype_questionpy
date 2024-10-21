@@ -16,11 +16,7 @@
 
 namespace qtype_questionpy\api;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
-use qtype_questionpy\form\conditions\in;
-
-defined('MOODLE_INTERNAL') || die;
+use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
  * Server usage.
@@ -32,9 +28,11 @@ defined('MOODLE_INTERNAL') || die;
  */
 class usage {
     /** @var int */
+    #[array_key("requests_in_process")]
     public int $requestsinprocess;
 
     /** @var int */
+    #[array_key("requests_in_queue")]
     public int $requestsinqueue;
 
     /**
@@ -48,9 +46,3 @@ class usage {
         $this->requestsinqueue = $requestsinqueue;
     }
 }
-
-array_converter::configure(usage::class, function (converter_config $config) {
-    $config
-        ->rename("requestsinprocess", "requests_in_process")
-        ->rename("requestsinqueue", "requests_in_queue");
-});

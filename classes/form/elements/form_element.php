@@ -16,11 +16,8 @@
 
 namespace qtype_questionpy\form\elements;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_polymorphic;
 use qtype_questionpy\form\qpy_renderable;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Base class for QuestionPy form elements.
@@ -30,21 +27,17 @@ defined('MOODLE_INTERNAL') || die;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[array_polymorphic("kind", variants: [
+    "checkbox" => checkbox_element::class,
+    "checkbox_group" => checkbox_group_element::class,
+    "group" => group_element::class,
+    "hidden" => hidden_element::class,
+    "radio_group" => radio_group_element::class,
+    "repetition" => repetition_element::class,
+    "select" => select_element::class,
+    "static_text" => static_text_element::class,
+    "input" => text_input_element::class,
+    "textarea" => text_area_element::class,
+], fallbackvariant: fallback_element::class)]
 abstract class form_element implements qpy_renderable {
 }
-
-array_converter::configure(form_element::class, function (converter_config $config) {
-    $config
-        ->discriminate_by("kind")
-        ->variant("checkbox", checkbox_element::class)
-        ->variant("checkbox_group", checkbox_group_element::class)
-        ->variant("group", group_element::class)
-        ->variant("hidden", hidden_element::class)
-        ->variant("radio_group", radio_group_element::class)
-        ->variant("repetition", repetition_element::class)
-        ->variant("select", select_element::class)
-        ->variant("static_text", static_text_element::class)
-        ->variant("input", text_input_element::class)
-        ->variant("textarea", text_area_element::class)
-        ->fallback_variant(fallback_element::class);
-});

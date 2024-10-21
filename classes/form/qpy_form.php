@@ -16,12 +16,9 @@
 
 namespace qtype_questionpy\form;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_element_class;
 use qtype_questionpy\form\context\render_context;
 use qtype_questionpy\form\elements\form_element;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Question edit form of a QuestionPy question.
@@ -33,14 +30,16 @@ defined('MOODLE_INTERNAL') || die;
  */
 class qpy_form implements qpy_renderable {
     /** @var form_element[] elements to be appended to the default "General" section */
+    #[array_element_class(form_element::class)]
     public array $general;
     /** @var form_section[] additional custom sections */
+    #[array_element_class(form_section::class)]
     public array $sections;
 
     /**
      * Initialize a new form section.
      *
-     * @param form_element[] $general  elements to be appended to the default "General" section
+     * @param form_element[] $general elements to be appended to the default "General" section
      * @param form_section[] $sections additional custom sections
      */
     public function __construct(array $general = [], array $sections = []) {
@@ -63,9 +62,3 @@ class qpy_form implements qpy_renderable {
         }
     }
 }
-
-array_converter::configure(qpy_form::class, function (converter_config $config) {
-    $config
-        ->array_elements("general", form_element::class)
-        ->array_elements("sections", form_section::class);
-});

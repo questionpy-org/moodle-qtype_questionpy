@@ -18,6 +18,8 @@ namespace qtype_questionpy\package;
 
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\attributes\array_alias;
+use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
  * Represents a QuestionPy package and has useful methods for accessing localized package data.
@@ -30,6 +32,8 @@ class package_base {
     /**
      * @var string package shortname
      */
+    #[array_key("short_name")]
+    #[array_alias("shortname")]
     public readonly string $shortname;
 
     /**

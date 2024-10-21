@@ -16,10 +16,7 @@
 
 namespace qtype_questionpy\api;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
-
-defined('MOODLE_INTERNAL') || die;
+use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
  * A scored attempt at a QuestionPy question.
@@ -31,9 +28,11 @@ defined('MOODLE_INTERNAL') || die;
  */
 class attempt_scored extends attempt {
     /** @var string|null */
+    #[array_key("scoring_state")]
     public ?string $scoringstate;
 
     /** @var string */
+    #[array_key("scoring_code")]
     public string $scoringcode;
 
     /** @var float|null */
@@ -54,8 +53,3 @@ class attempt_scored extends attempt {
         $this->scoringcode = $scoringcode;
     }
 }
-
-array_converter::configure(attempt_scored::class, function (converter_config $config) {
-    $config->rename("scoringstate", "scoring_state")
-        ->rename("scoringcode", "scoring_code");
-});

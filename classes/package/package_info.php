@@ -16,11 +16,7 @@
 
 namespace qtype_questionpy\package;
 
-defined('MOODLE_INTERNAL') || die;
-
 use moodle_exception;
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
 
 /**
  * Represents an available QuestionPy package on the application server.
@@ -168,12 +164,3 @@ class package_info extends package_base {
         $transaction->allow_commit();
     }
 }
-
-array_converter::configure(package_info::class, function (converter_config $config) {
-    $config
-        ->rename("hash", "package_hash")
-        ->rename("shortname", "short_name")
-        // The DB rows are also read using array_converter, but their columns are named differently to the json fields.
-        ->alias("hash", "hash")
-        ->alias("shortname", "shortname");
-});

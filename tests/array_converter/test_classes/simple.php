@@ -1,5 +1,5 @@
 <?php
-// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,34 +12,27 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\api;
-
-use qtype_questionpy\array_converter\attributes\array_key;
+namespace qtype_questionpy\array_converter\test_classes;
 
 /**
- * Response from the server for a newly started attempt.
+ * Simple test class.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
- * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class attempt_started extends attempt {
-    /** @var string */
-    #[array_key("attempt_state")]
-    public string $attemptstate;
-
+class simple {
     /**
      * Initializes a new instance.
      *
-     * @param int $variant
-     * @param attempt_ui $ui
-     * @param string $attemptstate
+     * @param string $prop
      */
-    public function __construct(int $variant, attempt_ui $ui, string $attemptstate) {
-        parent::__construct($variant, $ui);
-        $this->attemptstate = $attemptstate;
+    public function __construct(
+        /** @var string $prop */
+        public string $prop
+    ) {
     }
 }

@@ -18,6 +18,11 @@ namespace qtype_questionpy\array_converter;
 
 use coding_exception;
 use moodle_exception;
+use qtype_questionpy\array_converter\attributes\array_alias;
+use qtype_questionpy\array_converter\attributes\array_element_class;
+use qtype_questionpy\array_converter\attributes\array_key;
+use qtype_questionpy\array_converter\attributes\array_polymorphic;
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionNamedType;
@@ -41,7 +46,7 @@ class array_converter {
      * Configuration is done in hook functions. When converting to or from a class instance, all hook function of it and
      * its superclasses and used traits are applied to a single {@see converter_config} instance.
      *
-     * @param string $class  class or trait for whom array conversion should be customized
+     * @param string $class class or trait for whom array conversion should be customized
      * @param callable $hook configuration function which takes a {@see converter_config} instance as its argument,
      *                       adds its own configuration to it, and returning nothing
      * @see converter_config for the available options
@@ -54,18 +59,24 @@ class array_converter {
      * Recursively converts an array to an instance of the given class.
      *
      * @param string $class target class
-     * @param array $raw    raw array, e.g. one parsed using {@see json_decode()}
+     * @param array $raw raw array, e.g. one parsed using {@see json_decode()}
      * @return object an instance of `$class`
      * @throws moodle_exception
      */
     public static function from_array(string $class, array $raw): object {
-        $config = self::get_config_for($class);
+        try {
+            $reflect = new ReflectionClass($class);
+        } catch (ReflectionException $e) {
+            throw new coding_exception($e->getMessage());
+        }
+
+        $config = self::get_config_for($reflect);
 
         if ($config->discriminator !== null) {
             $discriminator = $raw[$config->discriminator] ?? null;
             unset($raw[$config->discriminator]);
 
-            /* When a class uses polymorphism with a discriminator, deserialization to specific variants of that class.
+            /* When a class uses polymorphism with a discriminator, the target may be a specific variant of that class.
                For example, form_element uses discrimination, but checkbox_group_element->checkboxes knows that it wants
                checkbox_elements only. In that case, we only want to check that the wrong variant isn't given. */
             $expected = array_flip($config->variants)[$class] ?? null;
@@ -94,16 +105,16 @@ class array_converter {
                         throw new moodle_exception("cannotgetdata", "error", "", null, $message);
                     }
                 }
+
+                try {
+                    $reflect = new ReflectionClass($class);
+                } catch (ReflectionException $e) {
+                    throw new coding_exception($e->getMessage());
+                }
+
+                // Continue with the variant's config.
+                $config = self::get_config_for($reflect);
             }
-
-            // Also apply configuration of the variant, if any.
-            $config = self::get_config_for($class, $config);
-        }
-
-        try {
-            $reflect = new ReflectionClass($class);
-        } catch (ReflectionException $e) {
-            throw new coding_exception($e->getMessage());
         }
 
         $instance = self::instantiate($reflect, $config, $raw);
@@ -129,18 +140,17 @@ class array_converter {
             return (array)$instance;
         }
 
-        $config = self::get_config_for(get_class($instance));
-
         try {
             $reflect = new ReflectionClass($instance);
         } catch (ReflectionException $e) {
             throw new coding_exception($e->getMessage());
         }
 
+        $config = self::get_config_for($reflect);
+
         $result = [];
         $properties = $reflect->getProperties();
         foreach ($properties as $property) {
-            $property->setAccessible(true);
             $value = $property->getValue($instance);
             $result[$config->renames[$property->name] ?? $property->name] = self::to_array($value);
         }
@@ -212,12 +222,12 @@ class array_converter {
      *
      * @param ReflectionClass $reflect class of the instance
      * @param converter_config $config {@see converter_config config} for the class
-     * @param object $instance         instance to inject values into
+     * @param object $instance instance to inject values into
      * @param array $raw
      * @throws moodle_exception if a value in the raw array cannot be converted to the type of the matching property
      */
     private static function set_properties(ReflectionClass $reflect, converter_config $config,
-                                           object $instance, array &$raw): void {
+        object $instance, array &$raw): void {
         $properties = $reflect->getProperties();
         foreach ($properties as $property) {
             if ($property->isStatic()) {
@@ -235,7 +245,6 @@ class array_converter {
 
             $value = $raw[$key];
 
-            $property->setAccessible(true);
             $property->setValue(
                 $instance,
                 self::convert_to_required_type($property->getType(), $config, $property->name, $value)
@@ -273,14 +282,14 @@ class array_converter {
      * @param ReflectionNamedType|null $type target type if known. Null otherwise, in which case the value will not be
      *                                       converted
      * @param converter_config $config
-     * @param string $propname               name of the property the value belongs to, for looking up in
+     * @param string $propname name of the property the value belongs to, for looking up in
      *                                       {@see converter_config::$elementclasses}
-     * @param mixed $value                   raw value to convert
+     * @param mixed $value raw value to convert
      * @return mixed
      * @throws moodle_exception if the value cannot be converted to the given type
      */
     private static function convert_to_required_type(?ReflectionNamedType $type, converter_config $config,
-                                                     string $propname, $value) {
+        string $propname, $value) {
         if (!is_array($value) || !$type) {
             // For scalars and untyped properties / parameters, no conversion is done.
             return $value;
@@ -316,31 +325,67 @@ class array_converter {
     /**
      * Calls all configuration hooks for the given class.
      *
-     * @param string $class
+     * @param ReflectionClass $class
      * @param converter_config|null $config an existing config to add to or null, in which case a new one will be
      *                                      created
      * @return converter_config
      * @see self::configure()
      */
-    private static function get_config_for(string $class, ?converter_config $config = null): converter_config {
+    private static function get_config_for(ReflectionClass $class, ?converter_config $config = null): converter_config {
         if (!$config) {
             $config = new converter_config();
         }
 
-        $parent = get_parent_class($class);
+        $parent = $class->getParentClass();
         if ($parent) {
             $config = self::get_config_for($parent, $config);
         }
 
-        foreach (class_uses($class) as $trait) {
+        foreach ($class->getTraits() as $trait) {
             $config = self::get_config_for($trait, $config);
         }
 
-        $hook = self::$hooks[$class] ?? null;
+        self::configure_from_attributes($class, $config);
+
+        $hook = self::$hooks[$class->getName()] ?? null;
         if ($hook) {
             $hook($config);
         }
 
         return $config;
+    }
+
+    /**
+     * Inspects the attributes on the given class and updates the given config.
+     *
+     * @param ReflectionClass $reflect
+     * @param converter_config $config
+     * @return void
+     */
+    private static function configure_from_attributes(ReflectionClass $reflect, converter_config $config): void {
+        $polyattrs = $reflect->getAttributes(array_polymorphic::class);
+        foreach ($polyattrs as $attr) {
+            /** @var array_polymorphic $instance */
+            $instance = $attr->newInstance();
+            $config->discriminator = $instance->discriminator;
+            $config->variants = $instance->variants;
+            $config->fallbackvariant = $instance->fallbackvariant;
+        }
+
+        foreach ($reflect->getProperties() as $property) {
+            if ($property->isStatic()) {
+                continue;
+            }
+
+            foreach ($property->getAttributes(array_key::class) as $attr) {
+                $config->rename($property->getName(), $attr->newInstance()->key);
+            }
+            foreach ($property->getAttributes(array_alias::class) as $attr) {
+                $config->alias($property->getName(), $attr->newInstance()->alias);
+            }
+            foreach ($property->getAttributes(array_element_class::class) as $attr) {
+                $config->array_elements($property->getName(), $attr->newInstance()->class);
+            }
+        }
     }
 }
