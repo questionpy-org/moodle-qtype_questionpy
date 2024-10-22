@@ -24,6 +24,7 @@
 
 use qtype_questionpy\api\api;
 use qtype_questionpy\api\attempt_ui;
+use qtype_questionpy\api\scoring_code;
 use qtype_questionpy\question_ui_metadata_extractor;
 
 /**
@@ -99,10 +100,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *      being started. Can be used to store state.
      * @param int $variant which variant of this question to start. Will be between
      *      1 and {@see get_num_variants()} inclusive.
-     * @throws moodle_exception
+     * @throws Throwable
      */
     public function start_attempt(question_attempt_step $step, $variant): void {
-        global $PAGE;
+        global $PAGE, $USER;
 
         try {
             $attempt = $this->api->package($this->packagehash, $this->packagefile)->start_attempt($this->questionstate, $variant);
@@ -110,17 +111,20 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $step->set_qt_var(self::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
             $this->scoringstate = null;
             $this->update_ui($attempt->ui);
-        } catch (\Throwable $t) {
+        } catch (Throwable $t) {
             // Trigger server request error event.
+            $message = "The user with id '{$USER->id}' encountered an error in the question with id '{$this->id}' when starting " .
+                "a new attempt in the {$PAGE->context->get_context_name()} with id '{$PAGE->context->id}':\n{$t->getMessage()}";
             $params = [
                 'context' => $PAGE->context,
                 'relateduserid' => $step->get_user_id(),
                 'other' => [
-                    'message' => 'Could not start the attempt.',
-                    'info' => $t->getMessage(),
+                    'description' => $message,
                 ],
             ];
-            \qtype_questionpy\event\request_failed::create($params)->trigger();
+            \qtype_questionpy\event\starting_attempt_failed::create($params)->trigger();
+            debugging($message);
+            throw $t;
         }
     }
 
@@ -140,7 +144,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function apply_attempt_state(question_attempt_step $step) {
-        global $PAGE;
+        global $PAGE, $USER;
 
         $attemptstate = $step->get_qt_var(self::QT_VAR_ATTEMPT_STATE);
         if (is_null($attemptstate)) {
@@ -159,17 +163,19 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
                 $this->scoringstate
             );
             $this->update_ui($attempt->ui);
-        } catch (\Throwable $t) {
+        } catch (Throwable $t) {
             // Trigger server request error event.
+            $message = "The user with id '{$USER->id}' encountered an error in the question with id '{$this->id}' when viewing " .
+                "an attempt in the {$PAGE->context->get_context_name()} with id '{$PAGE->context->id}':\n{$t->getMessage()}";
             $params = [
                 'context' => $PAGE->context,
                 'relateduserid' => $step->get_user_id(),
                 'other' => [
-                    'message' => 'Could not view the attempt.',
-                    'info' => $t->getMessage(),
+                    'description' => $message,
                 ],
             ];
-            \qtype_questionpy\event\request_failed::create($params)->trigger();
+            \qtype_questionpy\event\viewing_attempt_failed::create($params)->trigger();
+            debugging($message);
         }
     }
 
@@ -279,7 +285,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function grade_response(array $response): array {
-        global $PAGE;
+        global $PAGE, $USER;
 
         try {
             $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt(
@@ -289,17 +295,20 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
                 $response
             );
             $this->update_ui($attemptscored->ui);
-        } catch (\Throwable $t) {
+        } catch (Throwable $t) {
             // Trigger server request error event.
+            $message = "The user with id '{$USER->id}' encountered an error while grading a response of the question with id " .
+                "'{$this->id}' in the {$PAGE->context->get_context_name()} with id '{$PAGE->context->id}':" .
+                "\n{$t->getMessage()}";
             $params = [
                 'context' => $PAGE->context,
                 // TODO: It would be nice to set a 'relateduserid'.
                 'other' => [
-                    'message' => 'Could not grade the response.',
-                    'info' => $t->getMessage(),
+                    'description' => $message,
                 ],
             ];
-            \qtype_questionpy\event\request_failed::create($params)->trigger();
+            \qtype_questionpy\event\grading_response_failed::create($params)->trigger();
+            debugging($message);
 
             // As the server was not able to score the response, we mark this question with manual scoring.
             return [0, question_state::$needsgrading];
@@ -307,23 +316,12 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
         // TODO: Persist scoring state. We need to set a qtvar, but we don't have access to the pending step here.
         $this->scoringstate = $attemptscored->scoringstate;
-        switch ($attemptscored->scoringcode) {
-            case "AUTOMATICALLY_SCORED":
-                $newqstate = question_state::graded_state_for_fraction($attemptscored->score);
-                break;
-            case "NEEDS_MANUAL_SCORING":
-                // TODO: Shouldn't this be question_state::$needsgrading?
-                $newqstate = question_state::$finished;
-                break;
-            case "RESPONSE_NOT_SCORABLE":
-                $newqstate = question_state::$gaveup;
-                break;
-            case "INVALID_RESPONSE":
-                $newqstate = question_state::$invalid;
-                break;
-            default:
-                throw new coding_exception("Unrecognized scoring code: $attemptscored->scoringcode");
-        }
+        $newqstate = match ($attemptscored->scoringcode) {
+            scoring_code::automatically_scored => question_state::graded_state_for_fraction($attemptscored->score),
+            scoring_code::needs_manual_scoring => question_state::$needsgrading,
+            scoring_code::response_not_scorable => question_state::$gaveup,
+            scoring_code::invalid_response => question_state::$invalid,
+        };
         return [$attemptscored->score, $newqstate];
     }
 

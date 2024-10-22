@@ -20,20 +20,20 @@ use moodle_exception;
 use moodle_url;
 
 /**
- * QuestionPy application server request failed event.
+ * Grading attempt failed event.
  *
  * @package    qtype_questionpy
  * @author     Jan Britz
  * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class request_failed extends \core\event\base {
+class grading_response_failed extends \core\event\base {
     /**
      * Initialise event parameters.
      */
     protected function init() {
         $this->data['crud'] = 'c';
-        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
+        $this->data['edulevel'] = self::LEVEL_TEACHING;
     }
 
     /**
@@ -43,7 +43,7 @@ class request_failed extends \core\event\base {
      * @throws moodle_exception
      */
     public static function get_name() {
-        return get_string('event_request_failed', 'qtype_questionpy');
+        return get_string('event_grading_response_failed', 'qtype_questionpy');
     }
 
     /**
@@ -52,31 +52,15 @@ class request_failed extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "{$this->other['message']}\nThere was an error requesting the application server:\n{$this->other['info']}";
-    }
-
-    /**
-     * Returns the url to the QuestionPy plugin settings.
-     *
-     * @throws moodle_exception
-     */
-    public function get_url() {
-        return new moodle_url('/admin/settings.php', ['section' => 'qtypesettingquestionpy']);
+        return $this->other['description'];
     }
 
     /**
      * Validate our custom data.
-     *
-     * Require the following fields:
-     * - url
-     * - payload
-     * - message
-     *
-     * Throw \coding_exception or debugging() notice in case of any problems.
      */
     public function validate_data() {
-        if (!isset($this->other['message'], $this->other['info'])) {
-            throw new \coding_exception('"message" and "info" are required in "other".');
+        if (!isset($this->other['description'])) {
+            throw new \coding_exception('"description" is required in "other".');
         }
     }
 }

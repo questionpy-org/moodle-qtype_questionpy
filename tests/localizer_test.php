@@ -16,6 +16,10 @@
 
 namespace qtype_questionpy;
 
+use qtype_questionpy\api\attempt_scored;
+use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\array_converter\converter_config;
+
 /**
  * Unit tests for the questionpy question type class.
  *
