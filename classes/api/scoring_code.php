@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\api;
 
+// phpcs:ignore moodle.Commenting.InlineComment.DocBlock
 /**
  * Possible scoring states.
  *

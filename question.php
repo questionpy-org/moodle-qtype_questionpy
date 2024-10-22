@@ -113,6 +113,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $this->update_ui($attempt->ui);
         } catch (Throwable $t) {
             // Trigger server request error event.
+            // TODO: get question_attempt-id via DB-query (question_attempt_step-id -> question_attempt-id)?
             $message = "The user with id '{$USER->id}' encountered an error in the question with id '{$this->id}' when starting " .
                 "a new attempt in the {$PAGE->context->get_context_name()} with id '{$PAGE->context->id}':\n{$t->getMessage()}";
             $params = [
@@ -165,6 +166,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $this->update_ui($attempt->ui);
         } catch (Throwable $t) {
             // Trigger server request error event.
+            // TODO: get question_attempt-id via DB-query (question_attempt_step-id -> question_attempt-id)?
             $message = "The user with id '{$USER->id}' encountered an error in the question with id '{$this->id}' when viewing " .
                 "an attempt in the {$PAGE->context->get_context_name()} with id '{$PAGE->context->id}':\n{$t->getMessage()}";
             $params = [

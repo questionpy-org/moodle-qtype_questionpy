@@ -19,11 +19,14 @@ namespace qtype_questionpy;
 use moodle_exception;
 use qtype_questionpy\api\api;
 use qtype_questionpy\api\package_api;
-use qtype_questionpy\event\request_failed;
+use qtype_questionpy\event\grading_response_failed;
+use qtype_questionpy\event\starting_attempt_failed;
+use qtype_questionpy\event\viewing_attempt_failed;
 use qtype_questionpy_question;
 use question_attempt;
 use question_bank;
 use question_state;
+use Throwable;
 
 /**
  * Unit tests for the questionpy question class.
@@ -79,25 +82,35 @@ final class question_test extends \advanced_testcase {
      * Tests that a failed start_attempt-call gets logged and neither the ui nor metadata gets set.
      *
      * @covers \qtype_questionpy_question::start_attempt
-     * @throws moodle_exception
+     * @throws Throwable
      */
     public function test_start_attempt_request_failed(): void {
         $exception = new \Exception('example error message');
         $this->packageapi->method('start_attempt')
             ->willThrowException($exception);
 
-
         $question = $this->create_question();
 
         $sink = $this->redirectEvents();
-        $question->start_attempt(new \question_attempt_step(), 1);
 
-        // Check if the error was logged.
+        // Calling expectExpectation and assertDebuggingCalled seems buggy.
+        try {
+            $question->start_attempt(new \question_attempt_step(), 1);
+        } catch (\Exception $e) {
+            $this->assertEquals($exception, $e);
+        }
+
+        // Check if the event was created.
         $events = $sink->get_events();
-        $this->assertCount(1, $events);
-        $this->assertInstanceOf(request_failed::class, $events[0]);
-        $this->assertEquals($events[0]->other['info'], $exception->getMessage());
+        $event = reset($events);
         $sink->close();
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(starting_attempt_failed::class, $event);
+        $this->assertStringContainsString($exception->getMessage(), $event->other['description']);
+
+        // Check if debugging() was called.
+        $this->assertDebuggingCalled();
 
         // Check if ui and metadata is not set.
         $this->assertFalse(isset($question->ui));
@@ -123,12 +136,17 @@ final class question_test extends \advanced_testcase {
         $sink = $this->redirectEvents();
         $question->apply_attempt_state($step);
 
-        // Check if the error was logged.
+        // Check if the event was created.
         $events = $sink->get_events();
-        $this->assertCount(1, $events);
-        $this->assertInstanceOf(request_failed::class, $events[0]);
-        $this->assertEquals($events[0]->other['info'], $exception->getMessage());
+        $event = reset($events);
         $sink->close();
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(viewing_attempt_failed::class, $event);
+        $this->assertStringContainsString($exception->getMessage(), $event->other['description']);
+
+        // Check if debugging() was called.
+        $this->assertDebuggingCalled();
 
         // Check if ui and metadata is not set.
         $this->assertFalse(isset($question->ui));
@@ -152,12 +170,17 @@ final class question_test extends \advanced_testcase {
         $sink = $this->redirectEvents();
         [$fraction, $state] = $question->grade_response([]);
 
-        // Check if the error was logged.
+        // Check if the event was created.
         $events = $sink->get_events();
-        $this->assertCount(1, $events);
-        $this->assertInstanceOf(request_failed::class, $events[0]);
-        $this->assertEquals($events[0]->other['info'], $exception->getMessage());
+        $event = reset($events);
         $sink->close();
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(grading_response_failed::class, $event);
+        $this->assertStringContainsString($exception->getMessage(), $event->other['description']);
+
+        // Check if debugging() was called.
+        $this->assertDebuggingCalled();
 
         // Check the fraction and state.
         $this->assertEquals(0, $fraction);
