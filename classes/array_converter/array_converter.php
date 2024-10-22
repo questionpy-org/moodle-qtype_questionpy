@@ -36,25 +36,6 @@ use ReflectionNamedType;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class array_converter {
-    /** @var callable[] associative array of class names to configuration hook functions for those classes */
-    private static array $hooks = [];
-
-    /**
-     * Customizes the way in which classes and their subclasses are converted from and to arrays.
-     *
-     * In the case of traits, the configuration will be applied to any classes using them.
-     * Configuration is done in hook functions. When converting to or from a class instance, all hook function of it and
-     * its superclasses and used traits are applied to a single {@see converter_config} instance.
-     *
-     * @param string $class class or trait for whom array conversion should be customized
-     * @param callable $hook configuration function which takes a {@see converter_config} instance as its argument,
-     *                       adds its own configuration to it, and returning nothing
-     * @see converter_config for the available options
-     */
-    public static function configure(string $class, callable $hook): void {
-        self::$hooks[$class] = $hook;
-    }
-
     /**
      * Recursively converts an array to an instance of the given class.
      *
@@ -323,46 +304,27 @@ class array_converter {
     }
 
     /**
-     * Calls all configuration hooks for the given class.
+     * Inspects the attributes on the given class, superclasses and traits and updates the given config.
      *
-     * @param ReflectionClass $class
+     * @param ReflectionClass $reflect
      * @param converter_config|null $config an existing config to add to or null, in which case a new one will be
      *                                      created
      * @return converter_config
-     * @see self::configure()
      */
-    private static function get_config_for(ReflectionClass $class, ?converter_config $config = null): converter_config {
+    private static function get_config_for(ReflectionClass $reflect, ?converter_config $config = null): converter_config {
         if (!$config) {
             $config = new converter_config();
         }
 
-        $parent = $class->getParentClass();
+        $parent = $reflect->getParentClass();
         if ($parent) {
             $config = self::get_config_for($parent, $config);
         }
 
-        foreach ($class->getTraits() as $trait) {
+        foreach ($reflect->getTraits() as $trait) {
             $config = self::get_config_for($trait, $config);
         }
 
-        self::configure_from_attributes($class, $config);
-
-        $hook = self::$hooks[$class->getName()] ?? null;
-        if ($hook) {
-            $hook($config);
-        }
-
-        return $config;
-    }
-
-    /**
-     * Inspects the attributes on the given class and updates the given config.
-     *
-     * @param ReflectionClass $reflect
-     * @param converter_config $config
-     * @return void
-     */
-    private static function configure_from_attributes(ReflectionClass $reflect, converter_config $config): void {
         $polyattrs = $reflect->getAttributes(array_polymorphic::class);
         foreach ($polyattrs as $attr) {
             /** @var array_polymorphic $instance */
@@ -378,14 +340,20 @@ class array_converter {
             }
 
             foreach ($property->getAttributes(array_key::class) as $attr) {
-                $config->rename($property->getName(), $attr->newInstance()->key);
+                $config->renames[$property->getName()] = $attr->newInstance()->key;
             }
             foreach ($property->getAttributes(array_alias::class) as $attr) {
-                $config->alias($property->getName(), $attr->newInstance()->alias);
+                if (isset($config->aliases[$property->getName()])) {
+                    $config->aliases[$property->getName()][] = $attr->newInstance()->alias;
+                } else {
+                    $config->aliases[$property->getName()] = [$attr->newInstance()->alias];
+                }
             }
             foreach ($property->getAttributes(array_element_class::class) as $attr) {
-                $config->array_elements($property->getName(), $attr->newInstance()->class);
+                $config->elementclasses[$property->getName()] = $attr->newInstance()->class;
             }
         }
+
+        return $config;
     }
 }
