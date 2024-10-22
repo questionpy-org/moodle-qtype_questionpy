@@ -96,6 +96,7 @@ final class question_test extends \advanced_testcase {
         // Calling expectExpectation and assertDebuggingCalled seems buggy.
         try {
             $question->start_attempt(new \question_attempt_step(), 1);
+            $this->fail('An exception should have been thrown.');
         } catch (\Exception $e) {
             $this->assertEquals($exception, $e);
         }
