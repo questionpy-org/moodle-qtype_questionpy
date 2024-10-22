@@ -76,9 +76,7 @@ class array_converter {
                     throw new moodle_exception(
                         "cannotgetdata",
                         "error",
-                        "",
-                        null,
-                        "Expected '$config->discriminator' value '$expected', but got '$discriminator'"
+                        debuginfo: "Expected '$config->discriminator' value '$expected', but got '$discriminator'"
                     );
                 }
                 // If either no discriminator or the correct one for the variant is given, we continue as normal.
@@ -91,7 +89,7 @@ class array_converter {
                         debugging($message . " Using fallback variant '$config->fallbackvariant'.");
                         $class = $config->fallbackvariant;
                     } else {
-                        throw new moodle_exception("cannotgetdata", "error", "", null, $message);
+                        throw new moodle_exception("cannotgetdata", "error", debuginfo: $message);
                     }
                 }
             }
@@ -119,6 +117,9 @@ class array_converter {
      * @throws coding_exception
      */
     public static function to_array($instance) {
+        if ($instance instanceof \BackedEnum) {
+            return $instance->value;
+        }
         if (is_scalar($instance) || $instance === null) {
             return $instance;
         }
@@ -140,7 +141,6 @@ class array_converter {
         $result = [];
         $properties = $reflect->getProperties();
         foreach ($properties as $property) {
-            $property->setAccessible(true);
             $value = $property->getValue($instance);
             $result[$config->renames[$property->name] ?? $property->name] = self::to_array($value);
         }
@@ -192,9 +192,7 @@ class array_converter {
                     throw new moodle_exception(
                         "cannotgetdata",
                         "error",
-                        "",
-                        null,
-                        "No value provided for required field '$parameter->name' of '{$reflect->getName()}'"
+                        debuginfo: "No value provided for required field '$parameter->name' of '{$reflect->getName()}'"
                     );
                 }
             }
@@ -202,7 +200,7 @@ class array_converter {
 
         try {
             return $reflect->newInstanceArgs($args);
-        } catch (ReflectionException $e) {
+        } catch (ReflectionException) {
             throw new coding_exception("Could not instantiate '$reflect->name'");
         }
     }
@@ -235,7 +233,6 @@ class array_converter {
 
             $value = $raw[$key];
 
-            $property->setAccessible(true);
             $property->setValue(
                 $instance,
                 self::convert_to_required_type($property->getType(), $config, $property->name, $value)
@@ -273,20 +270,43 @@ class array_converter {
      * @param ReflectionNamedType|null $type target type if known. Null otherwise, in which case the value will not be
      *                                       converted
      * @param converter_config $config
-     * @param string $propname               name of the property the value belongs to, for looking up in
+     * @param string $propname name of the property the value belongs to, for looking up in
      *                                       {@see converter_config::$elementclasses}
-     * @param mixed $value                   raw value to convert
+     * @param mixed $value raw value to convert
      * @return mixed
      * @throws moodle_exception if the value cannot be converted to the given type
      */
     private static function convert_to_required_type(?ReflectionNamedType $type, converter_config $config,
                                                      string $propname, $value) {
-        if (!is_array($value) || !$type) {
-            // For scalars and untyped properties / parameters, no conversion is done.
+        if (!$type) {
+            // For untyped properties / parameters, no conversion is done.
             return $value;
         }
 
-        if ($type->getName() === "array") {
+        $typehint = $type->getName();
+
+        if (enum_exists($typehint)) {
+            $enum = new \ReflectionEnum($typehint);
+            if (!$enum->isBacked()) {
+                throw new coding_exception("Only backed enums are supported.");
+            }
+            try {
+                return call_user_func([$typehint, "from"], $value);
+            } catch (\TypeError | \ValueError) {
+                throw new moodle_exception(
+                    "cannotgetdata",
+                    "error",
+                    debuginfo: "The value is not a valid member of enum '$typehint'"
+                );
+            }
+        }
+
+        if (!is_array($value)) {
+            // For other scalar properties / parameters, no conversion is done.
+            return $value;
+        }
+
+        if ($typehint === "array") {
             $elementclass = $config->elementclasses[$propname] ?? null;
             if ($elementclass) {
                 // Convert each element to the required class.
@@ -299,17 +319,15 @@ class array_converter {
             }
         }
 
-        if (class_exists($type->getName())) {
-            return self::from_array($type->getName(), $value);
+        if (class_exists($typehint)) {
+            return self::from_array($typehint, $value);
         }
 
         $actualtype = gettype($value);
         throw new moodle_exception(
             "cannotgetdata",
             "error",
-            "",
-            null,
-            "Cannot convert value of type '$actualtype' to type '{$type->getName()}'"
+            debuginfo: "Cannot convert value of type '$actualtype' to type '$typehint'"
         );
     }
 
