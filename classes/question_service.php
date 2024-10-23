@@ -77,21 +77,12 @@ class question_service {
                 'qtype_questionpy',
                 'package',
                 $record->id,
-                'itemid, filepath, filename',
-                false
+                includedirs: false,
+                limitnum: 1,
             );
-            if (count($files) === 0) {
+            if (!$files) {
                 throw new \coding_exception(
                     "No local package version file with hash '{$record->pkgversionhash}' was found despite being referenced" .
-                    " by question {$questionid}"
-                );
-            }
-        } else {
-            // Package was selected.
-            $package = package_version::get_by_id($record->pkgversionid);
-            if (is_null($package)) {
-                throw new \coding_exception(
-                    "No package version record with ID '{$record->pkgversionid}' was found despite being referenced" .
                     " by question {$questionid}"
                 );
             }
@@ -123,25 +114,30 @@ class question_service {
         $question->qpy_package_hash ??= $question->qpy_package_file_hash;
 
         $file = null;
-        $pkgversionid = null;
         if ($question->qpy_package_source === 'upload') {
             if (isset($question->qpy_package_path_name_hash)) {
                 $file = $filestorage->get_file_by_hash($question->qpy_package_path_name_hash);
             } else {
                 $file = $this->packagefileservice->get_draft_file($question->qpy_package_file);
             }
+            $rawpackage = api::extract_package_info($file);
+            $pkgversionhash = $rawpackage->hash;
+            $pkgversionnamespace = $rawpackage->namespace;
+            $pkgversionshortname = $rawpackage->shortname;
         } else {
-            $pkgversionid = package_version::get_by_hash($question->qpy_package_hash)->id ?? null;
-            if (!$pkgversionid) {
-                throw new moodle_exception(
-                    'package_not_found',
-                    'qtype_questionpy',
-                    '',
-                    (object)['packagehash' => $question->qpy_package_hash]
-                );
+            $pkgversion = package_version::get_by_hash($question->qpy_package_hash) ?? null;
+            if ($pkgversion) {
+                $package = package::get_by_version($pkgversion->id);
+                $pkgversionhash = $pkgversion->hash;
+                $pkgversionnamespace = $package->namespace;
+                $pkgversionshortname = $package->shortname;
+                last_used_service::add($question->context->id, $package->id);
+            } else {
+                $packageinfo = $this->api->get_package_info($question->qpy_package_hash);
+                $pkgversionhash = $packageinfo->hash;
+                $pkgversionnamespace = $packageinfo->namespace;
+                $pkgversionshortname = $packageinfo->shortname;
             }
-            $packageid = package::get_by_version($pkgversionid)->id;
-            last_used_service::add($question->context->id, $packageid);
         }
 
         $existingrecord = $DB->get_record(self::QUESTION_TABLE, [
@@ -161,11 +157,12 @@ class question_service {
             // Question record already exists, update it if necessary.
             $update = ['id' => $existingrecord->id];
 
+            if ($existingrecord->pkgversionhash !== $pkgversionhash) {
+                $update['pkgversionhash'] = $pkgversionhash;
+            }
+
             if ($existingrecord->state !== $response->state) {
                 $update['state'] = $response->state;
-            }
-            if ($pkgversionid !== $existingrecord->pkgversionid) {
-                $update['pkgversionid'] = $pkgversionid;
             }
 
             if (count($update) > 1) {
@@ -176,9 +173,9 @@ class question_service {
             // Insert a new record with the question state only containing the options.
             $questionid = $DB->insert_record(self::QUESTION_TABLE, [
                 'questionid' => $question->id,
-                'feedback' => '',
+                // TODO: retrieve the identifier directly from the package?
+                'packageidentifier' => "@{$pkgversionnamespace}/{$pkgversionshortname}",
                 'pkgversionhash' => $question->qpy_package_hash,
-                'pkgversionid' => $pkgversionid,
                 'islocal' => $islocal,
                 'state' => $response->state,
             ]);

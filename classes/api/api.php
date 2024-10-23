@@ -79,6 +79,20 @@ class api {
     }
 
     /**
+     * Get a {@see package_raw} from a package hash.
+     *
+     * @param string $hash
+     * @return package_raw
+     * @throws moodle_exception
+     */
+    public function get_package_info(string $hash): package_raw {
+        $connector = connector::default();
+        $response = $connector->get("/packages/$hash");
+        $response->assert_2xx();
+        return array_converter::from_array(package_raw::class, $response->get_data());
+    }
+
+    /**
      * Get a {@see package_raw} from a file.
      *
      * @param stored_file $file
@@ -99,6 +113,7 @@ class api {
         $response->assert_2xx();
         return array_converter::from_array(package_raw::class, $response->get_data());
     }
+
     /**
      * Get the status and information from the server.
      *
