@@ -16,12 +16,10 @@
 
 namespace qtype_questionpy\form;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_element_class;
+use qtype_questionpy\array_converter\attributes\array_key;
 use qtype_questionpy\form\conditions\condition;
 use qtype_questionpy\form\context\render_context;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Trait for elements which can have conditions on other elements.
@@ -33,15 +31,19 @@ defined('MOODLE_INTERNAL') || die;
  */
 trait form_conditions {
     /** @var condition[] */
+    #[array_key("disable_if")]
+    #[array_element_class(condition::class)]
     public array $disableif = [];
     /** @var condition[] */
+    #[array_key("hide_if")]
+    #[array_element_class(condition::class)]
     public array $hideif = [];
 
     /**
      * Renders the conditions. To be called by the {@see qpy_renderable::render_to() render_to} of elements.
      *
      * @param render_context $context target context
-     * @param string $name            name of this element
+     * @param string $name name of this element
      */
     private function render_conditions(render_context $context, string $name) {
         foreach ($this->disableif as $disableif) {
@@ -77,11 +79,3 @@ trait form_conditions {
         return $this;
     }
 }
-
-array_converter::configure(form_conditions::class, function (converter_config $config) {
-    $config
-        ->rename("disableif", "disable_if")
-        ->array_elements("disableif", condition::class)
-        ->rename("hideif", "hide_if")
-        ->array_elements("hideif", condition::class);
-});

@@ -16,10 +16,7 @@
 
 namespace qtype_questionpy\api;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
-
-defined('MOODLE_INTERNAL') || die;
+use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
  * Response from the server for a created or updated question.
@@ -31,33 +28,40 @@ defined('MOODLE_INTERNAL') || die;
  */
 class question_response {
     /** @var string */
+    #[array_key("question_state")]
     public string $state;
 
     /** @var string */
+    #[array_key("scoring_method")]
     public string $scoringmethod;
 
     /** @var float|int */
+    #[array_key("score_min")]
     public float $scoremin = 0;
 
     /** @var float|int */
+    #[array_key("score_max")]
     public float $scoremax = 1;
 
     /** @var float|null */
     public ?float $penalty = null;
 
     /** @var float|null */
+    #[array_key("random_guess_score")]
     public ?float $randomguessscore = null;
 
     /** @var bool */
+    #[array_key("render_every_view")]
     public bool $rendereveryview = false;
 
     /** @var string|null */
+    #[array_key("general_feedback")]
     public ?string $generalfeedback = null;
 
     /**
      * Initialize a new question response.
      *
-     * @param string $state     new question state
+     * @param string $state new question state
      * @param string $scoringmethod
      */
     public function __construct(string $state, string $scoringmethod) {
@@ -65,14 +69,3 @@ class question_response {
         $this->scoringmethod = $scoringmethod;
     }
 }
-
-array_converter::configure(question_response::class, function (converter_config $config) {
-    $config
-        ->rename("state", "question_state")
-        ->rename("scoringmethod", "scoring_method")
-        ->rename("scoremin", "score_min")
-        ->rename("scoremax", "score_max")
-        ->rename("randomguessscore", "random_guess_score")
-        ->rename("rendereveryview", "render_every_view")
-        ->rename("generalfeedback", "general_feedback");
-});

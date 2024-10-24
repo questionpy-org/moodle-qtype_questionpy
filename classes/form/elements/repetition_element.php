@@ -17,12 +17,10 @@
 namespace qtype_questionpy\form\elements;
 
 use coding_exception;
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_element_class;
+use qtype_questionpy\array_converter\attributes\array_key;
 use qtype_questionpy\form\context\render_context;
 use qtype_questionpy\form\context\repetition_render_context;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Element repeating one or more nested elements a dynamic number of times.
@@ -36,24 +34,32 @@ defined('MOODLE_INTERNAL') || die;
 class repetition_element extends form_element {
     /** @var string */
     public string $name;
+
     /** @var int number of repetitions to show initially */
+    #[array_key("initial_repetitions")]
     public int $initialrepetitions;
+
     /** @var int minimum number of repetitions, which cannot be removed */
+    #[array_key("minimum_repetitions")]
     public int $minimumrepetitions = 1;
+
     /** @var int number of elements to add with each click of the button */
     public int $increment;
+
     /** @var string|null label for the button which adds additional blanks, null to use default */
+    #[array_key("button_label")]
     public ?string $buttonlabel;
 
     /** @var form_element[] */
+    #[array_element_class(form_element::class)]
     public array $elements;
 
     /**
      * Initializes the element.
      *
      * @param string $name
-     * @param int $initialrepetitions  number of repetitions to show initially
-     * @param int $increment           number of repetitions to add with each click of the button
+     * @param int $initialrepetitions number of repetitions to show initially
+     * @param int $increment number of repetitions to add with each click of the button
      * @param string|null $buttonlabel label for the button which adds additional blanks, null to use default
      * @param form_element[] $elements
      */
@@ -153,11 +159,3 @@ class repetition_element extends form_element {
         $context->mform->registerNoSubmitButton($addmorename);
     }
 }
-
-array_converter::configure(repetition_element::class, function (converter_config $config) {
-    $config
-        ->rename("initialrepetitions", "initial_repetitions")
-        ->rename("minimumrepetitions", "minimum_repetitions")
-        ->rename("buttonlabel", "button_label")
-        ->array_elements("elements", form_element::class);
-});

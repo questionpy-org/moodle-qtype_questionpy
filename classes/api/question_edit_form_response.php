@@ -16,11 +16,8 @@
 
 namespace qtype_questionpy\api;
 
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\array_converter\converter_config;
+use qtype_questionpy\array_converter\attributes\array_key;
 use qtype_questionpy\form\qpy_form;
-
-defined('MOODLE_INTERNAL') || die;
 
 /**
  * Response from the server to a request for the question edit form.
@@ -35,21 +32,17 @@ class question_edit_form_response {
     public qpy_form $definition;
 
     /** @var array */
+    #[array_key("form_data")]
     public array $formdata;
 
     /**
      * Initialize a new question response.
      *
      * @param qpy_form $definition form definition
-     * @param array $formdata      current values of the form elements
+     * @param array $formdata current values of the form elements
      */
     public function __construct(qpy_form $definition, array $formdata) {
         $this->definition = $definition;
         $this->formdata = $formdata;
     }
 }
-
-array_converter::configure(question_edit_form_response::class, function (converter_config $config) {
-    $config
-        ->rename("formdata", "form_data");
-});
