@@ -4,4 +4,10 @@
         <exclude name="moodle.Commenting.TodoComment"/>
         <exclude name="Squiz.Functions.MultiLineFunctionDeclaration"/>
     </rule>
+    <!-- Moodle prefers single-quoted strings.
+         https://moodledev.io/general/development/policies/codingstyle#strings -->
+    <rule ref="Squiz.Strings.DoubleQuoteUsage">
+        <!-- But string interpolation is fine. -->
+        <exclude name="Squiz.Strings.DoubleQuoteUsage.ContainsVar"/>
+    </rule>
 </ruleset>
