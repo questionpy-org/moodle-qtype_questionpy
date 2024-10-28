@@ -101,19 +101,19 @@ class package extends package_base {
 
         $transaction = $DB->start_delegated_transaction();
 
-        [$insql, $inparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, "packageids");
+        [$insql, $inparams] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'packageids');
         $DB->delete_records_select('qtype_questionpy_pkgversion', "packageid $insql", $inparams);
         $DB->delete_records_select('qtype_questionpy_language', "packageid $insql", $inparams);
         $DB->delete_records_select('qtype_questionpy_package', "id $insql", $inparams);
         $DB->delete_records_select('qtype_questionpy_pkgtag', "packageid $insql", $inparams);
-        $DB->execute("
+        $DB->execute('
             DELETE
             FROM {qtype_questionpy_tag}
             WHERE id NOT IN (
                 SELECT tagid
                 FROM {qtype_questionpy_pkgtag}
             )
-        ");
+        ');
         last_used_service::remove_by_package(...$ids);
 
         $fservice = \core_favourites\service_factory::get_service_for_component('qtype_questionpy');
@@ -196,12 +196,12 @@ class package extends package_base {
      */
     private static function get_tag_data(int $packageid): array {
         global $DB;
-        return $DB->get_fieldset_sql("
+        return $DB->get_fieldset_sql('
             SELECT DISTINCT t.tag
             FROM {qtype_questionpy_tag} t
             JOIN {qtype_questionpy_pkgtag} pt
             ON pt.id = :packageid AND pt.tagid = t.id
-        ", ['packageid' => $packageid]);
+        ', ['packageid' => $packageid]);
     }
 
     /**

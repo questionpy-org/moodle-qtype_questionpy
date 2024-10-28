@@ -62,7 +62,7 @@ class dynamic_help_icon implements named_templatable, renderable {
      * @return string
      */
     public function get_template_name(\renderer_base $renderer): string {
-        return "core/help_icon";
+        return 'core/help_icon';
     }
 
     /**

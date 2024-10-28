@@ -18,7 +18,7 @@ namespace qtype_questionpy\array_converter\test_classes;
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once(__DIR__ . "/polymorphic.php");
+require_once(__DIR__ . '/polymorphic.php');
 
 /**
  * A variant of {@see polymorphic}.

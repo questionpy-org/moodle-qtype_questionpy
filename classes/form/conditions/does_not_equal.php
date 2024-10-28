@@ -32,6 +32,6 @@ class does_not_equal extends condition_with_value {
      * @return string
      */
     public static function mform_type(): string {
-        return "neq";
+        return 'neq';
     }
 }

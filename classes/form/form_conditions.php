@@ -31,11 +31,11 @@ use qtype_questionpy\form\context\render_context;
  */
 trait form_conditions {
     /** @var condition[] */
-    #[array_key("disable_if")]
+    #[array_key('disable_if')]
     #[array_element_class(condition::class)]
     public array $disableif = [];
     /** @var condition[] */
-    #[array_key("hide_if")]
+    #[array_key('hide_if')]
     #[array_element_class(condition::class)]
     public array $hideif = [];
 

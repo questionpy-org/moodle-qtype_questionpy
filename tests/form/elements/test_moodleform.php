@@ -19,7 +19,7 @@ namespace qtype_questionpy\form\elements;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->libdir . "/formslib.php");
+require_once($CFG->libdir . '/formslib.php');
 
 use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\form\qpy_renderable;
@@ -45,7 +45,7 @@ class test_moodleform extends \moodleform {
      */
     public function __construct(qpy_renderable $element) {
         $this->element = $element;
-        parent::__construct(null, null, "post", "", ["id" => "my_form"]);
+        parent::__construct(null, null, 'post', '', ['id' => 'my_form']);
     }
 
     /**
@@ -54,7 +54,7 @@ class test_moodleform extends \moodleform {
      * Output can be retrieved using {@see render}, which calls this method.
      */
     protected function definition() {
-        $context = new root_render_context($this, $this->_form, "qpy_form", []);
+        $context = new root_render_context($this, $this->_form, 'qpy_form', []);
         $this->element->render_to($context);
     }
 }

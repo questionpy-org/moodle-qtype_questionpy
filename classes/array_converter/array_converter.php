@@ -65,8 +65,8 @@ class array_converter {
                 if ($discriminator !== null && $discriminator !== $expected) {
                     // If the wrong discriminator is given, it is an error.
                     throw new moodle_exception(
-                        "cannotgetdata",
-                        "error",
+                        'cannotgetdata',
+                        'error',
                         debuginfo: "Expected '$config->discriminator' value '$expected', but got '$discriminator'"
                     );
                 }
@@ -80,7 +80,7 @@ class array_converter {
                         debugging($message . " Using fallback variant '$config->fallbackvariant'.");
                         $class = $config->fallbackvariant;
                     } else {
-                        throw new moodle_exception("cannotgetdata", "error", debuginfo: $message);
+                        throw new moodle_exception('cannotgetdata', 'error', debuginfo: $message);
                     }
                 }
 
@@ -112,13 +112,13 @@ class array_converter {
             return $instance->value;
         }
         if ($instance instanceof \UnitEnum) {
-            throw new coding_exception("Only backed enums are supported.");
+            throw new coding_exception('Only backed enums are supported.');
         }
         if (is_scalar($instance) || $instance === null) {
             return $instance;
         }
         if (is_array($instance)) {
-            return array_map([self::class, "to_array"], $instance);
+            return array_map([self::class, 'to_array'], $instance);
         }
         if (!is_object($instance)) {
             return (array)$instance;
@@ -184,8 +184,8 @@ class array_converter {
                     $args[] = $parameter->getDefaultValue();
                 } else if (!$parameter->isVariadic()) {
                     throw new moodle_exception(
-                        "cannotgetdata",
-                        "error",
+                        'cannotgetdata',
+                        'error',
                         debuginfo: "No value provided for required field '$parameter->name' of '{$reflect->getName()}'"
                     );
                 }
@@ -282,14 +282,14 @@ class array_converter {
         if (enum_exists($typehint)) {
             $enum = new \ReflectionEnum($typehint);
             if (!$enum->isBacked()) {
-                throw new coding_exception("Only backed enums are supported.");
+                throw new coding_exception('Only backed enums are supported.');
             }
             try {
-                return call_user_func([$typehint, "from"], $value);
+                return call_user_func([$typehint, 'from'], $value);
             } catch (\TypeError | \ValueError) {
                 throw new moodle_exception(
-                    "cannotgetdata",
-                    "error",
+                    'cannotgetdata',
+                    'error',
                     debuginfo: "The value is not a valid member of enum '$typehint'"
                 );
             }
@@ -300,7 +300,7 @@ class array_converter {
             return $value;
         }
 
-        if ($typehint === "array") {
+        if ($typehint === 'array') {
             $elementclass = $config->elementclasses[$propname] ?? null;
             if ($elementclass) {
                 // Convert each element to the required class.
@@ -319,8 +319,8 @@ class array_converter {
 
         $actualtype = gettype($value);
         throw new moodle_exception(
-            "cannotgetdata",
-            "error",
+            'cannotgetdata',
+            'error',
             debuginfo: "Cannot convert value of type '$actualtype' to type '$typehint'"
         );
     }

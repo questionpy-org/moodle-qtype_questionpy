@@ -20,7 +20,7 @@ use qtype_questionpy\array_converter\attributes\array_element_class;
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once(__DIR__ . "/simple.php");
+require_once(__DIR__ . '/simple.php');
 
 /**
  * Test class using {@see array_element_class}.

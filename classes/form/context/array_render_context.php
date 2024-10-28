@@ -133,7 +133,7 @@ class array_render_context extends render_context {
      * @see \MoodleQuickForm::addRule()
      */
     public function add_rule(string $name, ?string $message, string $type, ?string $format = null,
-                             ?string $validation = "server", bool $reset = false, bool $force = false): void {
+                             ?string $validation = 'server', bool $reset = false, bool $force = false): void {
         utils::ensure_exists(
             $this->rules,
             $this->mangle_name($name)

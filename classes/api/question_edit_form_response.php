@@ -32,7 +32,7 @@ class question_edit_form_response {
     public qpy_form $definition;
 
     /** @var array */
-    #[array_key("form_data")]
+    #[array_key('form_data')]
     public array $formdata;
 
     /**

@@ -65,14 +65,14 @@ class static_file_service {
      * @throws invalid_dataroot_permissions
      */
     public function download_public_static_file(string $packagehash, string $namespace, string $shortname, string $path): ?array {
-        $path = ltrim($path, "/");
+        $path = ltrim($path, '/');
         $packagefileiflocal = $this->packagefileservice->get_file_by_package_hash($packagehash, context_system::instance()->id);
 
         $temppath = make_request_directory() . "/$packagehash/$namespace/$shortname/$path";
         make_writable_directory(dirname($temppath));
 
         $mimetype = $this->api->package($packagehash, $packagefileiflocal)
-            ->download_static_file($namespace, $shortname, "static", $path, $temppath);
+            ->download_static_file($namespace, $shortname, 'static', $path, $temppath);
 
         if (is_null($mimetype)) {
             return null;

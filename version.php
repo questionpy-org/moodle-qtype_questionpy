@@ -31,5 +31,5 @@ $plugin->maturity = MATURITY_ALPHA;
 $plugin->release = '0.1';
 
 $plugin->dependencies = [
-    "qbehaviour_questionpy" => 2024101700,
+    'qbehaviour_questionpy' => 2024101700,
 ];

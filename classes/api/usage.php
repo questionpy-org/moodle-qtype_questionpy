@@ -28,11 +28,11 @@ use qtype_questionpy\array_converter\attributes\array_key;
  */
 class usage {
     /** @var int */
-    #[array_key("requests_in_process")]
+    #[array_key('requests_in_process')]
     public int $requestsinprocess;
 
     /** @var int */
-    #[array_key("requests_in_queue")]
+    #[array_key('requests_in_queue')]
     public int $requestsinqueue;
 
     /**

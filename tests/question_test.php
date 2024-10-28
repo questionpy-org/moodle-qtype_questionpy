@@ -74,7 +74,7 @@ final class question_test extends \advanced_testcase {
      * @throws coding_exception
      */
     private function create_question(): qtype_questionpy_question {
-        question_engine::load_behaviour_class("questionpy");
+        question_engine::load_behaviour_class('questionpy');
         $question = new qtype_questionpy_question(
             hash('sha256', 'hash'),
             'state',

@@ -109,7 +109,7 @@ class api {
             'package' => curl_file_create($filepath),
         ];
 
-        $response = $connector->post("/package-extract-info", $data);
+        $response = $connector->post('/package-extract-info', $data);
         $response->assert_2xx();
         return array_converter::from_array(package_raw::class, $response->get_data());
     }
@@ -122,7 +122,7 @@ class api {
      */
     public static function get_server_status(): status {
         $connector = connector::default();
-        $response = $connector->get("/status");
+        $response = $connector->get('/status');
         $response->assert_2xx();
         return array_converter::from_array(status::class, $response->get_data());
     }

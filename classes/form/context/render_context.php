@@ -115,7 +115,7 @@ abstract class render_context {
      * @see MoodleQuickForm::addRule
      */
     abstract public function add_rule(string $name, ?string $message, string $type, ?string $format = null,
-                                      ?string $validation = "server", bool $reset = false, bool $force = false): void;
+                                      ?string $validation = 'server', bool $reset = false, bool $force = false): void;
 
     /**
      * Adds a condition which will disable the named element if met.
@@ -151,7 +151,7 @@ abstract class render_context {
             return $name;
         }
 
-        $firstbrace = strpos($name, "[");
+        $firstbrace = strpos($name, '[');
         if ($firstbrace) {
             // We want to turn abc[def] into prefix[abc][def], not prefix[abc[def]].
             $beforebrace = substr($name, 0, $firstbrace);
@@ -180,11 +180,11 @@ abstract class render_context {
     public function reference_to_absolute(string $reference): string {
         $referee = $this->prefix;
         // Explode a $reference like qpy_form[abc][def] into an array ["qpy_form", "abc", "def"].
-        $referenceparts = explode("[", str_replace("]", "", $reference));
-        $refereeparts = explode("[", str_replace("]", "", $referee));
+        $referenceparts = explode('[', str_replace(']', '', $reference));
+        $refereeparts = explode('[', str_replace(']', '', $referee));
 
         foreach ($referenceparts as $referencepart) {
-            if ($referencepart === "..") {
+            if ($referencepart === '..') {
                 $removed = array_pop($refereeparts);
                 if (is_numeric($removed)) {
                     // The reference probably points from a repetition outward.
@@ -197,7 +197,7 @@ abstract class render_context {
         }
 
         // Stitch $refereeparts back together.
-        return $refereeparts[0] . "[" . implode("][", array_slice($refereeparts, 1)) . "]";
+        return $refereeparts[0] . '[' . implode('][', array_slice($refereeparts, 1)) . ']';
     }
 
     /**

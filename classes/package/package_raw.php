@@ -32,8 +32,8 @@ class package_raw extends package_base {
     /**
      * @var string package hash
      */
-    #[array_key("package_hash")]
-    #[array_alias("hash")]
+    #[array_key('package_hash')]
+    #[array_alias('hash')]
     public string $hash;
 
     /**

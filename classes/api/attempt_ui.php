@@ -32,22 +32,22 @@ class attempt_ui {
     public string $formulation;
 
     /** @var string|null */
-    #[array_key("general_feedback")]
+    #[array_key('general_feedback')]
     public ?string $generalfeedback = null;
 
     /** @var string|null */
-    #[array_key("specific_feedback")]
+    #[array_key('specific_feedback')]
     public ?string $specificfeedback = null;
 
     /** @var string|null */
-    #[array_key("right_answer")]
+    #[array_key('right_answer')]
     public ?string $rightanswer = null;
 
     /** @var array<string, string> string to string mapping of placeholder names to the values (to be replaced in the content) */
     public array $placeholders = [];
 
     /** @var string[]|null */
-    #[array_key("css_files")]
+    #[array_key('css_files')]
     public ?array $cssfiles = null;
 
     /** @var array<string, attempt_file> specifics TBD */
@@ -55,8 +55,8 @@ class attempt_ui {
     public array $files = [];
 
     /** @var string specifics TBD */
-    #[array_key("cache_control")]
-    public string $cachecontrol = "PRIVATE_CACHE";
+    #[array_key('cache_control')]
+    public string $cachecontrol = 'PRIVATE_CACHE';
 
     /**
      * Initializes a new instance.

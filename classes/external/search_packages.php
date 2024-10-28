@@ -19,7 +19,7 @@ namespace qtype_questionpy\external;
 defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
-require_once($CFG->libdir . "/externallib.php");
+require_once($CFG->libdir . '/externallib.php');
 
 use context;
 use context_system;
@@ -92,10 +92,10 @@ class search_packages extends external_api {
             throw new invalid_parameter_exception("Unknown order. Valid parameters are: $validparameters");
         }
         if ($params['limit'] <= 0 || $params['limit'] > 100) {
-            throw new invalid_parameter_exception("The limit can only be a value from 1 to 100.");
+            throw new invalid_parameter_exception('The limit can only be a value from 1 to 100.');
         }
         if ($params['page'] < 0) {
-            throw new invalid_parameter_exception("The page can not be negative.");
+            throw new invalid_parameter_exception('The page can not be negative.');
         }
     }
 
@@ -285,10 +285,10 @@ class search_packages extends external_api {
      */
     private static function create_recently_used_sql(int $contextid): array {
         // Create relevant sql fragment.
-        $joinlastusedsql = "
+        $joinlastusedsql = '
             JOIN {qtype_questionpy_lastused} lu
             ON lu.packageid = p.id AND lu.contextid = :contextid
-        ";
+        ';
 
         return [$joinlastusedsql, ['contextid' => $contextid]];
     }

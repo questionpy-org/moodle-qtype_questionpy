@@ -28,11 +28,11 @@ use qtype_questionpy\array_converter\attributes\array_key;
  */
 class attempt_scored extends attempt {
     /** @var string|null */
-    #[array_key("scoring_state")]
+    #[array_key('scoring_state')]
     public ?string $scoringstate;
 
     /** @var scoring_code */
-    #[array_key("scoring_code")]
+    #[array_key('scoring_code')]
     public scoring_code $scoringcode;
 
     /** @var float|null */

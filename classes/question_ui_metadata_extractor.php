@@ -49,8 +49,8 @@ class question_ui_metadata_extractor {
         $this->xml->loadXML($xml);
 
         $this->xpath = new DOMXPath($this->xml);
-        $this->xpath->registerNamespace("xhtml", constants::NAMESPACE_XHTML);
-        $this->xpath->registerNamespace("qpy", constants::NAMESPACE_QPY);
+        $this->xpath->registerNamespace('xhtml', constants::NAMESPACE_XHTML);
+        $this->xpath->registerNamespace('qpy', constants::NAMESPACE_QPY);
     }
 
     /**
@@ -65,10 +65,10 @@ class question_ui_metadata_extractor {
 
         $this->metadata = new question_metadata();
         /** @var DOMAttr $attr */
-        foreach ($this->xpath->query("//@qpy:correct-response") as $attr) {
+        foreach ($this->xpath->query('//@qpy:correct-response') as $attr) {
             /** @var DOMElement $element */
             $element = $attr->ownerElement;
-            $name = $element->getAttribute("name");
+            $name = $element->getAttribute('name');
             if (!$name) {
                 continue;
             }
@@ -77,9 +77,9 @@ class question_ui_metadata_extractor {
                 $this->metadata->correctresponse = [];
             }
 
-            if ($element->tagName == "input" && $element->getAttribute("type") == "radio") {
+            if ($element->tagName == 'input' && $element->getAttribute('type') == 'radio') {
                 // On radio buttons, we expect the correct option to be marked with correct-response.
-                $radiovalue = $element->getAttribute("value");
+                $radiovalue = $element->getAttribute('value');
                 $this->metadata->correctresponse[$name] = $radiovalue;
             } else {
                 $this->metadata->correctresponse[$name] = $attr->value;
@@ -89,14 +89,14 @@ class question_ui_metadata_extractor {
         /** @var DOMElement $element */
         foreach (
             $this->xpath->query(
-                "//*[self::xhtml:input or self::xhtml:select or self::xhtml:textarea or self::xhtml:button]"
+                '//*[self::xhtml:input or self::xhtml:select or self::xhtml:textarea or self::xhtml:button]'
             ) as $element
         ) {
-            $name = $element->getAttribute("name");
+            $name = $element->getAttribute('name');
             if ($name) {
                 $this->metadata->expecteddata[$name] = PARAM_RAW;
 
-                if ($element->hasAttribute("required")) {
+                if ($element->hasAttribute('required')) {
                     $this->metadata->requiredfields[] = $name;
                 }
             }

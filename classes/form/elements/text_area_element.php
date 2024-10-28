@@ -30,5 +30,5 @@ use qtype_questionpy\form\form_help;
  */
 class text_area_element extends text_input_element {
     /** @var string */
-    protected const MFORM_ELEMENT = "textarea";
+    protected const MFORM_ELEMENT = 'textarea';
 }

@@ -31,7 +31,7 @@ class attempt_file {
     public string $name;
 
     /** @var string|null */
-    #[array_key("mime_type")]
+    #[array_key('mime_type')]
     public ?string $mimetype = null;
 
     /** @var string $data */

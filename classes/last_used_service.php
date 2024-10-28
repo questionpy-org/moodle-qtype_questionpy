@@ -58,7 +58,7 @@ class last_used_service {
      */
     public static function remove_by_package(int ...$packageids): void {
         global $DB;
-        [$insql, $inparams] = $DB->get_in_or_equal($packageids, SQL_PARAMS_NAMED, "packageids");
+        [$insql, $inparams] = $DB->get_in_or_equal($packageids, SQL_PARAMS_NAMED, 'packageids');
         $DB->delete_records_select('qtype_questionpy_lastused', "packageid $insql", $inparams);
     }
 }

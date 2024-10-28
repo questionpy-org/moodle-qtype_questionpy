@@ -93,9 +93,9 @@ class package_file_service {
      */
     public function get_file_by_package_hash(string $packagehash, int $contextid): ?stored_file {
         global $DB;
-        $qpyid = $DB->get_field("qtype_questionpy", "id", [
-            "islocal" => true,
-            "pkgversionhash" => $packagehash,
+        $qpyid = $DB->get_field('qtype_questionpy', 'id', [
+            'islocal' => true,
+            'pkgversionhash' => $packagehash,
         ], IGNORE_MULTIPLE);
 
         if ($qpyid === false) {

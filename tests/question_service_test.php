@@ -18,7 +18,7 @@ namespace qtype_questionpy;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . "/data_provider.php");
+require_once(__DIR__ . '/data_provider.php');
 
 use coding_exception;
 use dml_exception;
@@ -53,7 +53,7 @@ final class question_service_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->api = $this->createMock(api::class);
         $this->packageapi = $this->createMock(package_api::class);
-        $this->api->method("package")
+        $this->api->method('package')
             ->willReturn($this->packageapi);
 
         $packagefileservice = new package_file_service();
@@ -75,10 +75,10 @@ final class question_service_test extends \advanced_testcase {
 
         $this->assertEquals(
             (object)[
-                "qpy_id" => $qpyid,
-                "qpy_package_hash" => $pvi->versions[0]->hash,
-                "qpy_state" => $statestr,
-                "qpy_is_local" => "0",
+                'qpy_id' => $qpyid,
+                'qpy_package_hash' => $pvi->versions[0]->hash,
+                'qpy_state' => $statestr,
+                'qpy_is_local' => '0',
             ],
             $result
         );
@@ -106,28 +106,28 @@ final class question_service_test extends \advanced_testcase {
     public function test_upsert_question_should_update_existing_record_if_changed(): void {
         global $PAGE;
 
-        $pvi = package_versions_info_provider(null, [["version" => "0.2.0"], ["version" => "0.1.0"]]);
+        $pvi = package_versions_info_provider(null, [['version' => '0.2.0'], ['version' => '0.1.0']]);
         $pvi->upsert();
 
         $oldstate = $this->setup_question($pvi->versions[1]->hash)[0];
 
-        $newstate = json_encode(["this is" => "new state"]);
-        $formdata = ["this is" => "form data"];
+        $newstate = json_encode(['this is' => 'new state']);
+        $formdata = ['this is' => 'form data'];
 
         $this->packageapi
             ->expects($this->once())
-            ->method("create_question")
+            ->method('create_question')
             ->with($oldstate, (object) $formdata)
-            ->willReturn(new question_response($newstate, ""));
+            ->willReturn(new question_response($newstate, ''));
 
         $this->questionservice->upsert_question(
             (object)[
-                "id" => 1,
-                "qpy_package_hash" => $pvi->versions[0]->hash,
-                "qpy_form" => $formdata,
-                "qpy_package_source" => "search",
-                "oldparent" => 1,
-                "context" => $PAGE->context,
+                'id' => 1,
+                'qpy_package_hash' => $pvi->versions[0]->hash,
+                'qpy_form' => $formdata,
+                'qpy_package_source' => 'search',
+                'oldparent' => 1,
+                'context' => $PAGE->context,
             ]
         );
 
@@ -150,22 +150,22 @@ final class question_service_test extends \advanced_testcase {
 
         $oldstate = $this->setup_question($pvi->versions[0]->hash)[0];
 
-        $formdata = ["this is" => "form data"];
+        $formdata = ['this is' => 'form data'];
 
         $this->packageapi
             ->expects($this->once())
-            ->method("create_question")
+            ->method('create_question')
             ->with($oldstate, (object) $formdata)
-            ->willReturn(new question_response($oldstate, ""));
+            ->willReturn(new question_response($oldstate, ''));
 
         $this->questionservice->upsert_question(
             (object)[
-                "id" => 1,
-                "qpy_package_hash" => $pvi->versions[0]->hash,
-                "qpy_form" => $formdata,
-                "qpy_package_source" => "search",
-                "oldparent" => 1,
-                "context" => $PAGE->context,
+                'id' => 1,
+                'qpy_package_hash' => $pvi->versions[0]->hash,
+                'qpy_form' => $formdata,
+                'qpy_package_source' => 'search',
+                'oldparent' => 1,
+                'context' => $PAGE->context,
             ]
         );
 
@@ -190,25 +190,25 @@ final class question_service_test extends \advanced_testcase {
         // Since the package data is available in the database we should not contact the server.
         $this->api
             ->expects($this->never())
-            ->method("get_package_info");
+            ->method('get_package_info');
 
-        $newstate = json_encode(["this is" => "new state"]);
-        $formdata = ["this is" => "form data"];
+        $newstate = json_encode(['this is' => 'new state']);
+        $formdata = ['this is' => 'form data'];
 
         $this->packageapi
             ->expects($this->once())
-            ->method("create_question")
+            ->method('create_question')
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, ""));
+            ->willReturn(new question_response($newstate, ''));
 
         $this->questionservice->upsert_question(
             (object)[
-                "id" => 42, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $pvi->versions[0]->hash,
-                "qpy_form" => $formdata,
-                "qpy_package_source" => "search",
-                "oldparent" => 1,
-                "context" => $PAGE->context,
+                'id' => 42, // Does not exist in the qtype_questionpy table yet.
+                'qpy_package_hash' => $pvi->versions[0]->hash,
+                'qpy_form' => $formdata,
+                'qpy_package_source' => 'search',
+                'oldparent' => 1,
+                'context' => $PAGE->context,
             ]
         );
 
@@ -224,36 +224,36 @@ final class question_service_test extends \advanced_testcase {
     public function test_upsert_question_should_retrieve_package_from_server_if_not_in_db(): void {
         global $PAGE;
 
-        $hash = hash("sha256", rand());
+        $hash = hash('sha256', rand());
         $rawpackage = array_converter::from_array(
             package_raw::class,
-            ["package_hash" => $hash, "short_name" => "sn", "namespace" => "ns", "name" => ["en" => "name"], "type" => "X"]
+            ['package_hash' => $hash, 'short_name' => 'sn', 'namespace' => 'ns', 'name' => ['en' => 'name'], 'type' => 'X']
         );
 
         // Retrieve the package data from the application serve.
         $this->api
             ->expects($this->once())
-            ->method("get_package_info")
+            ->method('get_package_info')
             ->with($hash)
             ->willReturn($rawpackage);
 
-        $newstate = json_encode(["this is" => "new state"]);
-        $formdata = ["this is" => "form data"];
+        $newstate = json_encode(['this is' => 'new state']);
+        $formdata = ['this is' => 'form data'];
 
         $this->packageapi
             ->expects($this->once())
-            ->method("create_question")
+            ->method('create_question')
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, ""));
+            ->willReturn(new question_response($newstate, ''));
 
         $this->questionservice->upsert_question(
             (object)[
-                "id" => 42, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $hash,
-                "qpy_form" => $formdata,
-                "qpy_package_source" => "search",
-                "oldparent" => 1,
-                "context" => $PAGE->context,
+                'id' => 42, // Does not exist in the qtype_questionpy table yet.
+                'qpy_package_hash' => $hash,
+                'qpy_form' => $formdata,
+                'qpy_package_source' => 'search',
+                'oldparent' => 1,
+                'context' => $PAGE->context,
             ]
         );
 
@@ -277,23 +277,23 @@ final class question_service_test extends \advanced_testcase {
 
         $package = package::get_by_version($pkgversionid);
 
-        $newstate = json_encode(["this is" => "new state"]);
-        $formdata = ["this is" => "form data"];
+        $newstate = json_encode(['this is' => 'new state']);
+        $formdata = ['this is' => 'form data'];
 
         $this->packageapi
             ->expects($this->once())
-            ->method("create_question")
+            ->method('create_question')
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, ""));
+            ->willReturn(new question_response($newstate, ''));
 
         $this->questionservice->upsert_question(
             (object)[
-                "id" => 42, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $pvi->versions[0]->hash,
-                "qpy_form" => $formdata,
-                "qpy_package_source" => "search",
-                "oldparent" => 1,
-                "context" => $PAGE->context,
+                'id' => 42, // Does not exist in the qtype_questionpy table yet.
+                'qpy_package_hash' => $pvi->versions[0]->hash,
+                'qpy_form' => $formdata,
+                'qpy_package_source' => 'search',
+                'oldparent' => 1,
+                'context' => $PAGE->context,
             ]
         );
 
@@ -319,23 +319,23 @@ final class question_service_test extends \advanced_testcase {
 
         $package = package::get_by_version($pkgversionid);
 
-        $newstate = json_encode(["this is" => "new state"]);
-        $formdata = ["this is" => "form data"];
+        $newstate = json_encode(['this is' => 'new state']);
+        $formdata = ['this is' => 'form data'];
 
         $this->packageapi
             ->expects($this->exactly(2))
-            ->method("create_question")
+            ->method('create_question')
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, ""));
+            ->willReturn(new question_response($newstate, ''));
 
         $this->questionservice->upsert_question(
             (object)[
-                "id" => 42, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $pvi->versions[0]->hash,
-                "qpy_form" => $formdata,
-                "qpy_package_source" => "search",
-                "oldparent" => 1,
-                "context" => $PAGE->context,
+                'id' => 42, // Does not exist in the qtype_questionpy table yet.
+                'qpy_package_hash' => $pvi->versions[0]->hash,
+                'qpy_form' => $formdata,
+                'qpy_package_source' => 'search',
+                'oldparent' => 1,
+                'context' => $PAGE->context,
             ]
         );
 
@@ -347,12 +347,12 @@ final class question_service_test extends \advanced_testcase {
 
         $this->questionservice->upsert_question(
             (object)[
-                "id" => 43, // Does not exist in the qtype_questionpy table yet.
-                "qpy_package_hash" => $pvi->versions[0]->hash,
-                "qpy_form" => $formdata,
-                "qpy_package_source" => "search",
-                "oldparent" => 1,
-                "context" => $PAGE->context,
+                'id' => 43, // Does not exist in the qtype_questionpy table yet.
+                'qpy_package_hash' => $pvi->versions[0]->hash,
+                'qpy_form' => $formdata,
+                'qpy_package_source' => 'search',
+                'oldparent' => 1,
+                'context' => $PAGE->context,
             ]
         );
 
@@ -379,11 +379,11 @@ final class question_service_test extends \advanced_testcase {
         $this->setup_question($pvi->versions[0]->hash);
 
         global $DB;
-        $this->assertEquals(1, $DB->count_records("qtype_questionpy"));
+        $this->assertEquals(1, $DB->count_records('qtype_questionpy'));
 
         question_service::delete_question(1);
 
-        $this->assertEquals(0, $DB->count_records("qtype_questionpy"));
+        $this->assertEquals(0, $DB->count_records('qtype_questionpy'));
     }
 
     /**
@@ -401,12 +401,12 @@ final class question_service_test extends \advanced_testcase {
         ';
 
         global $DB;
-        $qpyid = $DB->insert_record("qtype_questionpy", [
-            "id" => 1,
-            "questionid" => 1,
-            "pkgversionhash" => $pkgversionhash,
-            "islocal" => false,
-            "state" => $statestr,
+        $qpyid = $DB->insert_record('qtype_questionpy', [
+            'id' => 1,
+            'questionid' => 1,
+            'pkgversionhash' => $pkgversionhash,
+            'islocal' => false,
+            'state' => $statestr,
         ]);
 
         return [$statestr, $qpyid];
@@ -423,7 +423,7 @@ final class question_service_test extends \advanced_testcase {
      */
     private function assert_single_question(int $id, string $pkgversionhash, string $state) {
         global $DB;
-        $records = $DB->get_records("qtype_questionpy");
+        $records = $DB->get_records('qtype_questionpy');
         $this->assertCount(1, $records);
         $record = current($records);
 

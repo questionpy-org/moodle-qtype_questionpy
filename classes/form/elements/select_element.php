@@ -82,7 +82,7 @@ class select_element extends form_element {
         // phpcs:disable moodle.Commenting.InlineComment.DocBlock
         /** @var $element HTML_QuickForm_select */
         $element = $context->add_element(
-            "select",
+            'select',
             $this->name,
             $context->contextualize($this->label),
             $optionsassociative
@@ -94,7 +94,7 @@ class select_element extends form_element {
         }
 
         if ($this->required) {
-            $context->add_rule($this->name, null, "required");
+            $context->add_rule($this->name, null, 'required');
         }
 
         $this->render_conditions($context, $this->name);

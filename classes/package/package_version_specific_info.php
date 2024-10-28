@@ -30,8 +30,8 @@ class package_version_specific_info {
     /**
      * @var string $hash
      */
-    #[array_key("package_hash")]
-    #[array_alias("hash")]
+    #[array_key('package_hash')]
+    #[array_alias('hash')]
     public readonly string $hash;
 
     /**

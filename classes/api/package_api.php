@@ -194,9 +194,9 @@ class package_api {
 
             $fd = $this->file->get_content_file_handle();
             try {
-                $options["multipart"][] = [
-                    "name" => "package",
-                    "contents" => $fd,
+                $options['multipart'][] = [
+                    'name' => 'package',
+                    'contents' => $fd,
                 ];
 
                 return $this->guzzle_post_and_maybe_retry($uri, $options, allowretry: false);
@@ -204,7 +204,7 @@ class package_api {
                 @fclose($fd);
             }
         } catch (GuzzleException $e) {
-            throw new coding_exception("Request to QPy server failed: " . $e->getMessage());
+            throw new coding_exception('Request to QPy server failed: ' . $e->getMessage());
         }
     }
 
@@ -226,7 +226,7 @@ class package_api {
         try {
             $res = $this->guzzle_post_and_maybe_retry(
                 "/packages/$this->hash/file/$namespace/$shortname/$kind/$path",
-                ["sink" => $targetpath]
+                ['sink' => $targetpath]
             );
         } catch (BadResponseException $e) {
             if ($e->getResponse()->getStatusCode() == 404) {
@@ -239,11 +239,11 @@ class package_api {
             );
         }
 
-        if ($res->hasHeader("Content-Type")) {
-            return $res->getHeader("Content-Type")[0];
+        if ($res->hasHeader('Content-Type')) {
+            return $res->getHeader('Content-Type')[0];
         } else {
-            debugging("Server did not send Content-Type header, falling back to application/octet-stream");
-            return "application/octet-stream";
+            debugging('Server did not send Content-Type header, falling back to application/octet-stream');
+            return 'application/octet-stream';
         }
     }
 

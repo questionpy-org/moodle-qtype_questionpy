@@ -73,7 +73,7 @@ class radio_group_element extends form_element {
             }
 
             $radioarray[] = $context->mform->createElement(
-                "radio",
+                'radio',
                 $mangledname,
                 null,
                 $context->contextualize($option->label),
@@ -82,8 +82,8 @@ class radio_group_element extends form_element {
         }
 
         $group = $context->add_element(
-            "group",
-            "radio_group_" . $this->name,
+            'group',
+            'radio_group_' . $this->name,
             $context->contextualize($this->label),
             $radioarray,
             null,
@@ -94,7 +94,7 @@ class radio_group_element extends form_element {
             $context->set_default($this->name, $default);
         }
         if ($this->required) {
-            $context->add_rule("radio_group_" . $this->name, null, "required");
+            $context->add_rule('radio_group_' . $this->name, null, 'required');
         }
 
         $this->render_conditions($context, $this->name);

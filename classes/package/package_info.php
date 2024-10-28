@@ -152,14 +152,14 @@ class package_info extends package_base {
             ];
         }
         $DB->insert_records('qtype_questionpy_pkgtag', $tagsdata);
-        $DB->execute("
+        $DB->execute('
             DELETE
             FROM {qtype_questionpy_tag}
             WHERE id NOT IN (
                 SELECT tagid
                 FROM {qtype_questionpy_pkgtag}
             )
-        ");
+        ');
 
         $transaction->allow_commit();
     }

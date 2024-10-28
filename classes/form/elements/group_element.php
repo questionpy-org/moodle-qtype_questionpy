@@ -71,7 +71,7 @@ class group_element extends form_element {
         }
 
         $element = $context->add_element(
-            "group",
+            'group',
             $groupname,
             $context->contextualize($this->label),
             $innercontext->elements,
