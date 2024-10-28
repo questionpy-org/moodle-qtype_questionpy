@@ -19,7 +19,7 @@ namespace qtype_questionpy\external;
 defined('MOODLE_INTERNAL') || die;
 
 global $CFG;
-require_once($CFG->libdir . "/externallib.php");
+require_once($CFG->libdir . '/externallib.php');
 
 use core\di;
 use external_api;

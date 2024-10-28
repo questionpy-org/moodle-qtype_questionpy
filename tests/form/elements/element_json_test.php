@@ -18,7 +18,7 @@ namespace qtype_questionpy\form\elements;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . "/../../data_provider.php");
+require_once(__DIR__ . '/../../data_provider.php');
 
 use qtype_questionpy\array_converter\array_converter;
 use function qtype_questionpy\element_provider;
@@ -41,7 +41,7 @@ final class element_json_test extends \advanced_testcase {
      * @covers       \qtype_questionpy\form\elements
      */
     public function test_deserialize(string $elementkind, $expected): void {
-        $json = file_get_contents(__DIR__ . "/json/" . $elementkind . ".json");
+        $json = file_get_contents(__DIR__ . '/json/' . $elementkind . '.json');
 
         $array = json_decode($json, true);
         $actual = array_converter::from_array(form_element::class, $array);
@@ -60,7 +60,7 @@ final class element_json_test extends \advanced_testcase {
     public function test_serialize(string $elementkind, $value): void {
         $array = array_converter::to_array($value);
         $actualjson = json_encode($array);
-        $expectedjsonfilename = __DIR__ . "/json/" . $elementkind . ".json";
+        $expectedjsonfilename = __DIR__ . '/json/' . $elementkind . '.json';
 
         $this->assertJsonStringEqualsJsonFile($expectedjsonfilename, $actualjson);
     }

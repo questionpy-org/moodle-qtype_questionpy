@@ -29,8 +29,8 @@ use qtype_questionpy\array_converter\attributes\array_key;
  */
 class uses_rename_and_alias {
     /** @var string $myprop1 */
-    #[array_key("my_prop_1")]
-    #[array_alias("my_alias_1")]
+    #[array_key('my_prop_1')]
+    #[array_alias('my_alias_1')]
     public string $myprop1;
 
     /**
@@ -40,8 +40,8 @@ class uses_rename_and_alias {
      */
     public function __construct(
         /** @var string $myprop2 */
-        #[array_key("my_prop_2")]
-        #[array_alias("my_alias_2")]
+        #[array_key('my_prop_2')]
+        #[array_alias('my_alias_2')]
         public string $myprop2
     ) {
     }

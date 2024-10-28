@@ -29,8 +29,8 @@ $string['curl_set_opt_error'] = 'Failed to set cURL option. Error number: {$a}';
 $string['event_grading_response_failed'] = 'Grading response failed';
 $string['event_starting_attempt_failed'] = 'Starting attempt failed';
 $string['event_viewing_attempt_failed'] = 'Viewing attempt failed';
-$string['form_fallback_element_text'] = "The QuestionPy package is using a form element not supported by the Moodle"
-    . " plugin. Please ensure you are using a compatible package or contact your administrators.";
+$string['form_fallback_element_text'] = 'The QuestionPy package is using a form element not supported by the Moodle'
+    . ' plugin. Please ensure you are using a compatible package or contact your administrators.';
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
 $string['json_parsing_error'] = 'Could not parse data to JSON.';
 $string['load_packages_button'] = 'Load Packages';

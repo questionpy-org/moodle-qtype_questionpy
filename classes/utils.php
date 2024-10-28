@@ -53,7 +53,7 @@ class utils {
      */
     public static function array_get_nested(array $array, string $key) {
         // Explode a $name like qpy_form[abc][def] into an array ["qpy_form", "abc", "def"].
-        $parts = explode("[", str_replace("]", "", $key));
+        $parts = explode('[', str_replace(']', '', $key));
 
         $current = $array;
         foreach ($parts as $key) {
@@ -75,7 +75,7 @@ class utils {
      */
     public static function array_create_nested(string $key, $value): array {
         // Explode a $name like qpy_form[abc][def] into an array ["qpy_form", "abc", "def"].
-        $parts = explode("[", str_replace("]", "", $key));
+        $parts = explode('[', str_replace(']', '', $key));
 
         $array = [];
         $current = &$array;

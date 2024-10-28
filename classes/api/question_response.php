@@ -28,34 +28,34 @@ use qtype_questionpy\array_converter\attributes\array_key;
  */
 class question_response {
     /** @var string */
-    #[array_key("question_state")]
+    #[array_key('question_state')]
     public string $state;
 
     /** @var string */
-    #[array_key("scoring_method")]
+    #[array_key('scoring_method')]
     public string $scoringmethod;
 
     /** @var float|int */
-    #[array_key("score_min")]
+    #[array_key('score_min')]
     public float $scoremin = 0;
 
     /** @var float|int */
-    #[array_key("score_max")]
+    #[array_key('score_max')]
     public float $scoremax = 1;
 
     /** @var float|null */
     public ?float $penalty = null;
 
     /** @var float|null */
-    #[array_key("random_guess_score")]
+    #[array_key('random_guess_score')]
     public ?float $randomguessscore = null;
 
     /** @var bool */
-    #[array_key("render_every_view")]
+    #[array_key('render_every_view')]
     public bool $rendereveryview = false;
 
     /** @var string|null */
-    #[array_key("general_feedback")]
+    #[array_key('general_feedback')]
     public ?string $generalfeedback = null;
 
     /**

@@ -83,7 +83,7 @@ abstract class mform_render_context extends render_context {
      * @see \MoodleQuickForm::addRule()
      */
     public function add_rule(string $name, ?string $message, string $type, ?string $format = null,
-                             ?string $validation = "server", bool $reset = false, bool $force = false): void {
+                             ?string $validation = 'server', bool $reset = false, bool $force = false): void {
         $this->mform->addRule($this->mangle_name($name), $message, $type, $format, $validation, $reset, $force);
     }
 

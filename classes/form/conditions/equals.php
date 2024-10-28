@@ -32,6 +32,6 @@ class equals extends condition_with_value {
      * @return string
      */
     public static function mform_type(): string {
-        return "eq";
+        return 'eq';
     }
 }

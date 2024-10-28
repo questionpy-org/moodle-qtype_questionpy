@@ -59,8 +59,8 @@ class form_section implements qpy_renderable {
      * @param render_context $context target context
      */
     public function render_to(render_context $context): void {
-        $mangled = $context->mangle_name("qpy_section_header_" . $this->name);
-        $context->add_element("header", $mangled, $this->header);
+        $mangled = $context->mangle_name('qpy_section_header_' . $this->name);
+        $context->add_element('header', $mangled, $this->header);
         $innercontext = new section_render_context($context, $this->name);
         foreach ($this->elements as $element) {
             $element->render_to($innercontext);

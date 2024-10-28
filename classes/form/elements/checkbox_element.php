@@ -37,10 +37,10 @@ class checkbox_element extends form_element {
     /** @var string */
     public string $name;
     /** @var string|null */
-    #[array_key("left_label")]
+    #[array_key('left_label')]
     public ?string $leftlabel = null;
     /** @var string|null */
-    #[array_key("right_label")]
+    #[array_key('right_label')]
     public ?string $rightlabel = null;
     /** @var bool */
     public bool $required = false;
@@ -74,18 +74,18 @@ class checkbox_element extends form_element {
      */
     public function render_to(render_context $context, ?int $group = null): void {
         $element = $context->add_element(
-            "advcheckbox",
+            'advcheckbox',
             $this->name,
             $context->contextualize($this->leftlabel),
             $context->contextualize($this->rightlabel),
-            $group ? ["group" => $group] : null
+            $group ? ['group' => $group] : null
         );
 
         if ($this->selected) {
-            $context->set_default($this->name, "1");
+            $context->set_default($this->name, '1');
         }
         if ($this->required) {
-            $context->add_rule($this->name, get_string("required"), "required");
+            $context->add_rule($this->name, get_string('required'), 'required');
         }
 
         $this->render_conditions($context, $this->name);

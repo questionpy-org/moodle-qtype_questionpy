@@ -34,11 +34,11 @@ class status {
     public string $version;
 
     /** @var bool */
-    #[array_key("allow_lms_packages")]
+    #[array_key('allow_lms_packages')]
     public bool $allowlmspackages = false;
 
     /** @var string */
-    #[array_key("max_package_size")]
+    #[array_key('max_package_size')]
     public string $maxpackagesize;
 
     /** @var usage|null */

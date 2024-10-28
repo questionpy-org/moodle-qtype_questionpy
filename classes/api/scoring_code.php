@@ -26,8 +26,8 @@ namespace qtype_questionpy\api;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 enum scoring_code: string {
-    case automatically_scored = "AUTOMATICALLY_SCORED";
-    case needs_manual_scoring = "NEEDS_MANUAL_SCORING";
-    case response_not_scorable = "RESPONSE_NOT_SCORABLE";
-    case invalid_response = "INVALID_RESPONSE";
+    case automatically_scored = 'AUTOMATICALLY_SCORED';
+    case needs_manual_scoring = 'NEEDS_MANUAL_SCORING';
+    case response_not_scorable = 'RESPONSE_NOT_SCORABLE';
+    case invalid_response = 'INVALID_RESPONSE';
 }

@@ -175,7 +175,7 @@ final class search_packages_test extends \externallib_advanced_testcase {
      */
     public function test_with_invalid_page_value(int $page): void {
         $this->expectException(\invalid_parameter_exception::class);
-        $this->expectExceptionMessageMatches("/.*can not be negative.*/");
+        $this->expectExceptionMessageMatches('/.*can not be negative.*/');
         search_packages::execute('Test query', [], 'all', 'alpha', 'asc', 1, $page, null);
     }
 
@@ -656,9 +656,9 @@ final class search_packages_test extends \externallib_advanced_testcase {
         $this->getDataGenerator()->enrol_user($user->id, $course2->id);
 
         // Create package in one course and use it.
-        [, [$id1]] = package_versions_info_provider(['namespace' => "ns1"])->upsert();
+        [, [$id1]] = package_versions_info_provider(['namespace' => 'ns1'])->upsert();
         self::add_last_used_entry($id1, $course1context->id);
-        [, [$id2]] = package_versions_info_provider(['namespace' => "ns2"])->upsert();
+        [, [$id2]] = package_versions_info_provider(['namespace' => 'ns2'])->upsert();
         self::add_last_used_entry($id2, $course2context->id);
 
         // Execute service with both context ids.
@@ -705,8 +705,8 @@ final class search_packages_test extends \externallib_advanced_testcase {
         $this->setUser($user);
 
         // Create two packages.
-        [, [$pkgversionid]] = package_versions_info_provider(['namespace' => "ns1"])->upsert();
-        package_versions_info_provider(['namespace' => "ns2"])->upsert();
+        [, [$pkgversionid]] = package_versions_info_provider(['namespace' => 'ns1'])->upsert();
+        package_versions_info_provider(['namespace' => 'ns2'])->upsert();
 
         // Favourite one package.
         $usercontext = context_user::instance($user->id);
@@ -752,8 +752,8 @@ final class search_packages_test extends \externallib_advanced_testcase {
         $user2service = \core_favourites\service_factory::get_service_for_user_context($user2context);
 
         // Create two server packages.
-        [, [$pkgversion1]] = package_versions_info_provider(['namespace' => "ns1"])->upsert();
-        [, [$pkgversion2]] = package_versions_info_provider(['namespace' => "ns2"])->upsert();
+        [, [$pkgversion1]] = package_versions_info_provider(['namespace' => 'ns1'])->upsert();
+        [, [$pkgversion2]] = package_versions_info_provider(['namespace' => 'ns2'])->upsert();
 
         // Both users favourite different packages.
         self::favourite($user1service, $user1context, $pkgversion1);

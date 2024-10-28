@@ -37,8 +37,8 @@ class qpy_http_client extends http_client {
      * @throws dml_exception
      */
     public function __construct(array $config = []) {
-        $config["base_uri"] = rtrim(get_config('qtype_questionpy', 'server_url'), "/") . "/";
-        $config["timeout"] = get_config('qtype_questionpy', 'server_timeout');
+        $config['base_uri'] = rtrim(get_config('qtype_questionpy', 'server_url'), '/') . '/';
+        $config['timeout'] = get_config('qtype_questionpy', 'server_timeout');
         parent::__construct($config);
     }
 
@@ -53,7 +53,7 @@ class qpy_http_client extends http_client {
         /* This checks requests against Moodle's curlsecurityblockedhosts, which we don't want, since admins would need
            to ensure their QPy server isn't in this list otherwise. There may be ways to granularly allow the
            server_url, but this will do for now. */
-        $handlerstack->remove("moodle_check_initial_request");
+        $handlerstack->remove('moodle_check_initial_request');
         return $handlerstack;
     }
 }

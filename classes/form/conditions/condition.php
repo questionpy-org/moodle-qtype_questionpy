@@ -26,12 +26,12 @@ use qtype_questionpy\array_converter\attributes\array_polymorphic;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-#[array_polymorphic("kind", variants: [
-    "is_checked" => is_checked::class,
-    "is_not_checked" => is_not_checked::class,
-    "equals" => equals::class,
-    "does_not_equal" => does_not_equal::class,
-    "in" => in::class,
+#[array_polymorphic('kind', variants: [
+    'is_checked' => is_checked::class,
+    'is_not_checked' => is_not_checked::class,
+    'equals' => equals::class,
+    'does_not_equal' => does_not_equal::class,
+    'in' => in::class,
 ])]
 abstract class condition {
     /** @var string $name name of the target element */

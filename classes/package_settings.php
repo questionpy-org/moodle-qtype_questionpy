@@ -83,6 +83,6 @@ class package_settings extends admin_setting {
      * @return string empty string if ok, string error message otherwise
      */
     public function write_setting($data): string {
-        return "";
+        return '';
     }
 }

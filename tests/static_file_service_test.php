@@ -19,8 +19,8 @@ namespace qtype_questionpy;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
-require_once($CFG->dirroot . "/question/engine/tests/helpers.php");
-require_once(__DIR__ . "/data_provider.php");
+require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
+require_once(__DIR__ . '/data_provider.php');
 
 use coding_exception;
 use core\di;
@@ -72,13 +72,13 @@ final class static_file_service_test extends \advanced_testcase {
         $handlerstack = HandlerStack::create($this->mockhandler);
         $handlerstack->push(Middleware::history($this->requesthistory));
         $api = new api(new qpy_http_client([
-            "handler" => $handlerstack,
+            'handler' => $handlerstack,
         ]));
         di::set(api::class, $api);
 
         $packagefileservice = $this->createStub(package_file_service::class);
         $packagefileservice
-            ->method("get_file_by_package_hash")
+            ->method('get_file_by_package_hash')
             ->willReturn(null);
 
         $this->staticfileservice = new static_file_service($api, $packagefileservice);
@@ -95,23 +95,23 @@ final class static_file_service_test extends \advanced_testcase {
     public function test_should_download_public_static_file(): void {
         $hash = random_string(64);
         $this->mockhandler->append(new Response(200, [
-            "Content-Type" => "text/markdown",
-        ], "Static file content"));
+            'Content-Type' => 'text/markdown',
+        ], 'Static file content'));
 
         [$path, $mimetype] = $this->staticfileservice->download_public_static_file(
             $hash,
-            "local",
-            "example",
-            "/path/to/file.txt"
+            'local',
+            'example',
+            '/path/to/file.txt'
         );
 
-        $this->assertStringEqualsFile($path, "Static file content");
-        $this->assertEquals("text/markdown", $mimetype);
+        $this->assertStringEqualsFile($path, 'Static file content');
+        $this->assertEquals('text/markdown', $mimetype);
 
         $this->assertCount(1, $this->requesthistory);
         /** @var Request $req */
-        $req = $this->requesthistory[0]["request"];
-        $this->assertEquals("POST", $req->getMethod());
+        $req = $this->requesthistory[0]['request'];
+        $this->assertEquals('POST', $req->getMethod());
         $this->assertStringEndsWith("/packages/$hash/file/local/example/static/path/to/file.txt", $req->getUri());
         $this->assertEquals(0, $req->getBody()->getSize());
     }
@@ -125,17 +125,17 @@ final class static_file_service_test extends \advanced_testcase {
      * @throws invalid_dataroot_permissions
      */
     public function test_should_fall_back_and_warn_when_no_content_type(): void {
-        $this->mockhandler->append(new Response(200, [], "Static file content"));
+        $this->mockhandler->append(new Response(200, [], 'Static file content'));
 
         [, $mimetype] = $this->staticfileservice->download_public_static_file(
             random_string(64),
-            "local",
-            "example",
-            "/path/to/file.txt"
+            'local',
+            'example',
+            '/path/to/file.txt'
         );
 
-        $this->assertEquals("application/octet-stream", $mimetype);
-        $this->assertDebuggingCalled("Server did not send Content-Type header, falling back to application/octet-stream");
+        $this->assertEquals('application/octet-stream', $mimetype);
+        $this->assertDebuggingCalled('Server did not send Content-Type header, falling back to application/octet-stream');
     }
 
     /**
@@ -150,9 +150,9 @@ final class static_file_service_test extends \advanced_testcase {
 
         $result = $this->staticfileservice->download_public_static_file(
             random_string(64),
-            "local",
-            "example",
-            "/path/to/file.txt"
+            'local',
+            'example',
+            '/path/to/file.txt'
         );
 
         $this->assertNull($result);

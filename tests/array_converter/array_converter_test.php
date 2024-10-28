@@ -34,73 +34,73 @@ use qtype_questionpy\array_converter\test_classes\variant2;
  */
 final class array_converter_test extends \advanced_testcase {
     public function test_should_deserialize_from_rename(): void {
-        require_once(__DIR__ . "/test_classes/uses_rename_and_alias.php");
+        require_once(__DIR__ . '/test_classes/uses_rename_and_alias.php');
 
-        $result = array_converter::from_array(uses_rename_and_alias::class, ["my_prop_1" => "value1", "my_prop_2" => "value2"]);
+        $result = array_converter::from_array(uses_rename_and_alias::class, ['my_prop_1' => 'value1', 'my_prop_2' => 'value2']);
 
         $this->assertEquals(uses_rename_and_alias::class, get_class($result));
-        $this->assertEquals("value1", $result->myprop1);
-        $this->assertEquals("value2", $result->myprop2);
+        $this->assertEquals('value1', $result->myprop1);
+        $this->assertEquals('value2', $result->myprop2);
     }
 
     public function test_should_serialize_to_rename(): void {
-        require_once(__DIR__ . "/test_classes/uses_rename_and_alias.php");
+        require_once(__DIR__ . '/test_classes/uses_rename_and_alias.php');
 
-        $instance = new uses_rename_and_alias("value2");
-        $instance->myprop1 = "value1";
+        $instance = new uses_rename_and_alias('value2');
+        $instance->myprop1 = 'value1';
         $result = array_converter::to_array($instance);
 
         $this->assertEquals($result, [
-            "my_prop_1" => "value1",
-            "my_prop_2" => "value2",
+            'my_prop_1' => 'value1',
+            'my_prop_2' => 'value2',
         ]);
     }
 
     public function test_should_deserialize_from_alias(): void {
-        require_once(__DIR__ . "/test_classes/uses_rename_and_alias.php");
+        require_once(__DIR__ . '/test_classes/uses_rename_and_alias.php');
 
-        $result = array_converter::from_array(uses_rename_and_alias::class, ["my_alias_1" => "value1", "my_alias_2" => "value2"]);
+        $result = array_converter::from_array(uses_rename_and_alias::class, ['my_alias_1' => 'value1', 'my_alias_2' => 'value2']);
 
         $this->assertEquals(uses_rename_and_alias::class, get_class($result));
-        $this->assertEquals("value1", $result->myprop1);
-        $this->assertEquals("value2", $result->myprop2);
+        $this->assertEquals('value1', $result->myprop1);
+        $this->assertEquals('value2', $result->myprop2);
     }
 
     public function test_should_deserialize_array_elements(): void {
-        require_once(__DIR__ . "/test_classes/uses_element_class.php");
+        require_once(__DIR__ . '/test_classes/uses_element_class.php');
 
-        $result = array_converter::from_array(uses_element_class::class, ["myarray" => [
-            ["prop" => "value1"],
-            ["prop" => "value2"],
+        $result = array_converter::from_array(uses_element_class::class, ['myarray' => [
+            ['prop' => 'value1'],
+            ['prop' => 'value2'],
         ]]);
 
         $this->assertEquals(uses_element_class::class, get_class($result));
-        $this->assertEquals([new simple("value1"), new simple("value2")], $result->myarray);
+        $this->assertEquals([new simple('value1'), new simple('value2')], $result->myarray);
     }
 
     public function test_should_deserialize_polymorphic(): void {
-        require_once(__DIR__ . "/test_classes/polymorphic.php");
-        require_once(__DIR__ . "/test_classes/variant2.php");
+        require_once(__DIR__ . '/test_classes/polymorphic.php');
+        require_once(__DIR__ . '/test_classes/variant2.php');
 
         $result = array_converter::from_array(polymorphic::class, [
-            "discriminator" => "var2",
-            "prop" => "value1",
+            'discriminator' => 'var2',
+            'prop' => 'value1',
         ]);
 
         $this->assertEquals(variant2::class, get_class($result));
-        $this->assertEquals("value1", $result->prop);
+        $this->assertEquals('value1', $result->prop);
     }
 
     public function test_should_deserialize_polymorphic_fallback(): void {
-        require_once(__DIR__ . "/test_classes/polymorphic.php");
+        require_once(__DIR__ . '/test_classes/polymorphic.php');
 
         $result = array_converter::from_array(polymorphic::class, [
-            "discriminator" => "abcdefg",
-            "prop" => "value2",
+            'discriminator' => 'abcdefg',
+            'prop' => 'value2',
         ]);
 
         $this->assertEquals(simple::class, get_class($result));
-        $this->assertEquals("value2", $result->prop);
+        $this->assertEquals('value2', $result->prop);
 
         $this->assertDebuggingCalled("Unknown value for discriminator 'discriminator': 'abcdefg'. Using fallback "
             . "variant 'qtype_questionpy\\array_converter\\test_classes\\simple'.");

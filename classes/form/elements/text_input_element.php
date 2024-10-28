@@ -33,7 +33,7 @@ class text_input_element extends form_element {
     use form_help;
 
     /** @var string moodle form element name, overridden by {@see text_area_element} */
-    protected const MFORM_ELEMENT = "text";
+    protected const MFORM_ELEMENT = 'text';
 
     /** @var string */
     public string $name;
@@ -75,7 +75,7 @@ class text_input_element extends form_element {
      * @param render_context $context target context
      */
     public function render_to(render_context $context): void {
-        $attributes = $this->placeholder ? ["placeholder" => $context->contextualize($this->placeholder)] : [];
+        $attributes = $this->placeholder ? ['placeholder' => $context->contextualize($this->placeholder)] : [];
 
         $element = $context->add_element(
             get_class($this)::MFORM_ELEMENT,
@@ -89,7 +89,7 @@ class text_input_element extends form_element {
             $context->set_default($this->name, $context->contextualize($this->default));
         }
         if ($this->required) {
-            $context->add_rule($this->name, null, "required");
+            $context->add_rule($this->name, null, 'required');
         }
 
         $this->render_conditions($context, $this->name);

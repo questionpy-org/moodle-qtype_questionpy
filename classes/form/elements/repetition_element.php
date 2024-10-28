@@ -36,18 +36,18 @@ class repetition_element extends form_element {
     public string $name;
 
     /** @var int number of repetitions to show initially */
-    #[array_key("initial_repetitions")]
+    #[array_key('initial_repetitions')]
     public int $initialrepetitions;
 
     /** @var int minimum number of repetitions, which cannot be removed */
-    #[array_key("minimum_repetitions")]
+    #[array_key('minimum_repetitions')]
     public int $minimumrepetitions = 1;
 
     /** @var int number of elements to add with each click of the button */
     public int $increment;
 
     /** @var string|null label for the button which adds additional blanks, null to use default */
-    #[array_key("button_label")]
+    #[array_key('button_label')]
     public ?string $buttonlabel;
 
     /** @var form_element[] */
@@ -84,7 +84,7 @@ class repetition_element extends form_element {
          * Moodle implements this in moodleform::repeat_elements(), but that method is inconsistent in how it names
          * elements, so we implement our own.
          */
-        $mangledname = str_replace(["[", "]"], "_", $context->mangle_name($this->name));
+        $mangledname = str_replace(['[', ']'], '_', $context->mangle_name($this->name));
         $internalname = "qpy_repetition[$mangledname]";
         $repeatsname = "{$internalname}[repeats]";
         $addmorename = "{$internalname}[add_more]";
@@ -99,12 +99,12 @@ class repetition_element extends form_element {
             PARAM_INT
         );
 
-        $addmore = $context->moodleform->optional_param($addmorename, "", PARAM_TEXT);
+        $addmore = $context->moodleform->optional_param($addmorename, '', PARAM_TEXT);
         if ($addmore) {
             $repeats += $this->increment;
         }
 
-        $context->mform->addElement("hidden", $repeatsname, $repeats);
+        $context->mform->addElement('hidden', $repeatsname, $repeats);
         $context->mform->setType($repeatsname, PARAM_INT);
         // Prevent repeats from being overridden with the submitted value.
         $context->mform->setConstant($repeatsname, $repeats);
@@ -120,14 +120,14 @@ class repetition_element extends form_element {
                 || $context->moodleform->optional_param("{$removednameprefix}[$i]", false, PARAM_RAW);
             if ($isremoved !== false) {
                 $removed[] = $i;
-                $context->mform->addElement("hidden", "{$removednameprefix}[$i]", "removed");
+                $context->mform->addElement('hidden', "{$removednameprefix}[$i]", 'removed');
                 $context->mform->setType("{$removednameprefix}[$i]", PARAM_RAW);
             }
         }
 
         $allowremoval = $repeats - count($removed) > $this->minimumrepetitions;
 
-        $removestring = get_string("remove");
+        $removestring = get_string('remove');
         global $OUTPUT;
         $removeicon = $OUTPUT->pix_icon('i/delete', $removestring, 'core');
 
@@ -139,23 +139,23 @@ class repetition_element extends form_element {
             }
             $humanrepno++;
 
-            $context->mform->addElement("html", '<div class="qpy-repetition"><div class="qpy-repetition-content">');
+            $context->mform->addElement('html', '<div class="qpy-repetition"><div class="qpy-repetition-content">');
 
             $innercontext = new repetition_render_context($context, $this->name, $i, $humanrepno);
             foreach ($this->elements as $element) {
                 $element->render_to($innercontext);
             }
 
-            $context->mform->addElement("html", '</div><div class="qpy-repetition-controls">');
+            $context->mform->addElement('html', '</div><div class="qpy-repetition-controls">');
             if ($allowremoval) {
-                $context->mform->addElement("html", "<button name='{$removenameprefix}[$i]' type='submit'
+                $context->mform->addElement('html', "<button name='{$removenameprefix}[$i]' type='submit'
                 class='btn btn-secondary qpy-repetition-remove' value='remove'>$removeicon $removestring</button>");
             }
-            $context->mform->addElement("html", '</div></div>');
+            $context->mform->addElement('html', '</div></div>');
         }
 
         $buttonlabel = $this->buttonlabel ?: get_string('addfields', 'form', $this->increment);
-        $context->mform->addElement("submit", $addmorename, $buttonlabel, [], false);
+        $context->mform->addElement('submit', $addmorename, $buttonlabel, [], false);
         $context->mform->registerNoSubmitButton($addmorename);
     }
 }

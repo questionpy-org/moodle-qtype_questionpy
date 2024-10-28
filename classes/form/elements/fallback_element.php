@@ -41,14 +41,14 @@ class fallback_element extends form_element {
     public function render_to(render_context $context): void {
         $name = $this->name;
         if (!$name) {
-            $name = "qpy_fallback_" . $context->next_unique_int();
+            $name = 'qpy_fallback_' . $context->next_unique_int();
         }
 
         $context->add_element(
-            "warning",
+            'warning',
             $name,
             null,
-            get_string("form_fallback_element_text", "qtype_questionpy")
+            get_string('form_fallback_element_text', 'qtype_questionpy')
         );
     }
 }

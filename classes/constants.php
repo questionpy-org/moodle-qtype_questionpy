@@ -31,7 +31,7 @@ class constants {
     public const NAMESPACE_QPY = 'http://questionpy.org/ns/question';
 
     /** @var string */
-    public const QT_VAR_ATTEMPT_STATE = "_attemptstate";
+    public const QT_VAR_ATTEMPT_STATE = '_attemptstate';
     /** @var string */
-    public const QT_VAR_SCORING_STATE = "_scoringstate";
+    public const QT_VAR_SCORING_STATE = '_scoringstate';
 }

@@ -32,8 +32,8 @@ class package_base {
     /**
      * @var string package shortname
      */
-    #[array_key("short_name")]
-    #[array_alias("shortname")]
+    #[array_key('short_name')]
+    #[array_alias('shortname')]
     public readonly string $shortname;
 
     /**

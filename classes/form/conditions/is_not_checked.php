@@ -32,6 +32,6 @@ class is_not_checked extends condition {
      * @return string
      */
     public static function mform_type(): string {
-        return "notchecked";
+        return 'notchecked';
     }
 }

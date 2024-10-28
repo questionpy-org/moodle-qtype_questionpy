@@ -198,7 +198,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     private function get_behaviour(): qbehaviour_questionpy {
         if ($this->behaviour === null) {
             throw new coding_exception(
-                "qtype_questionpy_question->behaviour is not set, does the question use the wrong behaviour?"
+                'qtype_questionpy_question->behaviour is not set, does the question use the wrong behaviour?'
             );
         }
         return $this->behaviour;
@@ -255,7 +255,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         }
 
         foreach ($this->metadata->extract()->requiredfields as $requiredfield) {
-            if (!isset($response[$requiredfield]) || $response[$requiredfield] === "") {
+            if (!isset($response[$requiredfield]) || $response[$requiredfield] === '') {
                 return false;
             }
         }
@@ -371,7 +371,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      */
     public function compute_final_grade($responses, $totaltries) {
         // TODO: This is necessary to support interactive countback.
-        throw new coding_exception("not implemented");
+        throw new coding_exception('not implemented');
     }
 
     /**
@@ -383,7 +383,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws coding_exception
      */
     public function make_behaviour(question_attempt $qa, $preferredbehaviour): question_behaviour {
-        question_engine::load_behaviour_class("questionpy");
+        question_engine::load_behaviour_class('questionpy');
         $delegate = parent::make_behaviour($qa, $preferredbehaviour);
         return new qbehaviour_questionpy($qa, $preferredbehaviour, $delegate);
     }

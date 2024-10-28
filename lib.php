@@ -42,7 +42,7 @@ function qtype_questionpy_pluginfile($course, $cm, $context, $filearea, $args, $
     global $CFG;
     require_once($CFG->libdir . '/questionlib.php');
 
-    if ($filearea !== "static") {
+    if ($filearea !== 'static') {
         // TODO: Support static-private files.
         send_file_not_found();
     }
@@ -50,7 +50,7 @@ function qtype_questionpy_pluginfile($course, $cm, $context, $filearea, $args, $
     $staticfileservice = di::get(static_file_service::class);
 
     [$packagehash, $namespace, $shortname] = $args;
-    $path = implode("/", array_slice($args, 3));
+    $path = implode('/', array_slice($args, 3));
 
     [$filepath, $mimetype] = $staticfileservice->download_public_static_file($packagehash, $namespace, $shortname, $path);
     if (is_null($filepath)) {
@@ -64,6 +64,6 @@ function qtype_questionpy_pluginfile($course, $cm, $context, $filearea, $args, $
         basename($path),
         lifetime: 31536000,
         mimetype: $mimetype,
-        options: ["immutable" => true, "cacheability" => "public"]
+        options: ['immutable' => true, 'cacheability' => 'public']
     );
 }

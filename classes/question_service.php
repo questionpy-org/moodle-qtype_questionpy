@@ -50,7 +50,7 @@ class question_service {
     }
 
     /** @var string table containing our question data, 0-1 record per question */
-    private const QUESTION_TABLE = "qtype_questionpy";
+    private const QUESTION_TABLE = 'qtype_questionpy';
 
     /**
      * Retrieves the QuestionPy-specific question fields from the database and returns them in an associative array.

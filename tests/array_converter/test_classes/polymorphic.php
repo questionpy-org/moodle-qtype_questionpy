@@ -20,7 +20,7 @@ use qtype_questionpy\array_converter\attributes\array_polymorphic;
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once(__DIR__ . "/simple.php");
+require_once(__DIR__ . '/simple.php');
 
 /**
  * Test class using {@see array_polymorphic}.
@@ -30,6 +30,6 @@ require_once(__DIR__ . "/simple.php");
  * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-#[array_polymorphic("discriminator", ["var1" => variant1::class, "var2" => variant2::class], simple::class)]
+#[array_polymorphic('discriminator', ['var1' => variant1::class, 'var2' => variant2::class], simple::class)]
 class polymorphic extends simple {
 }

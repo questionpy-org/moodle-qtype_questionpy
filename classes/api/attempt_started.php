@@ -28,7 +28,7 @@ use qtype_questionpy\array_converter\attributes\array_key;
  */
 class attempt_started extends attempt {
     /** @var string */
-    #[array_key("attempt_state")]
+    #[array_key('attempt_state')]
     public string $attemptstate;
 
     /**

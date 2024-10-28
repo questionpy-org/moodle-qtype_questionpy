@@ -38,7 +38,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     public function head_code(question_attempt $qa) {
-        $this->page->requires->js_call_amd("qtype_questionpy/view_question", "init");
+        $this->page->requires->js_call_amd('qtype_questionpy/view_question', 'init');
         return parent::head_code($qa);
     }
 

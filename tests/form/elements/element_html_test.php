@@ -18,8 +18,8 @@ namespace qtype_questionpy\form\elements;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . "/test_moodleform.php");
-require_once(__DIR__ . "/../../data_provider.php");
+require_once(__DIR__ . '/test_moodleform.php');
+require_once(__DIR__ . '/../../data_provider.php');
 
 use qtype_questionpy\form\qpy_renderable;
 use function qtype_questionpy\element_provider;
@@ -51,10 +51,10 @@ final class element_html_test extends \advanced_testcase {
      * @covers       \qtype_questionpy\form\qpy_renderable
      */
     public function test_rendered_html_should_match_snapshot(string $elementkind, qpy_renderable $element): void {
-        $snapshotfilepath = __DIR__ . "/html/" . $elementkind . ".html";
+        $snapshotfilepath = __DIR__ . '/html/' . $elementkind . '.html';
 
         // The sesskey is part of the form and therefore needs to be deterministic.
-        $_SESSION['USER']->sesskey = "sesskey";
+        $_SESSION['USER']->sesskey = 'sesskey';
         $form = new test_moodleform($element);
 
         $actualhtml = $form->render();
@@ -63,7 +63,7 @@ final class element_html_test extends \advanced_testcase {
         $actualdom->loadHTML($actualhtml);
         $actualdom->preserveWhiteSpace = false;
 
-        if (getenv("UPDATE_SNAPSHOTS")) {
+        if (getenv('UPDATE_SNAPSHOTS')) {
             $actualdom->saveHTMLFile($snapshotfilepath);
             echo "Updated snapshot $snapshotfilepath.";
         }
