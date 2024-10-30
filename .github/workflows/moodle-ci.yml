@@ -1,5 +1,8 @@
 name: Moodle Plugin CI
 
+env:
+  QBEHAVIOUR_QUESTIONPY_COMMIT: df0da45416baa69a44bb700329a60b7a9df628bf
+
 on:
   push:
   pull_request:
@@ -63,6 +66,14 @@ jobs:
           sudo locale-gen en_AU.UTF-8
           # Define NVM_DIR pointing to nvm installation.
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
+
+      - name: Add qbehaviour_questionpy
+        run: |
+          moodle-plugin-ci add-plugin questionpy-org/moodle-qbehaviour_questionpy --storage extra-plugins
+          cd extra-plugins/moodle-qbehaviour_questionpy
+          # To move to a specific commit, we need to unshallow the repo (i.e. fetch all commits).
+          git fetch --unshallow
+          git switch --detach "$QBEHAVIOUR_QUESTIONPY_COMMIT"
 
       - name: Install moodle-plugin-ci
         run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
