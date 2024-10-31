@@ -159,8 +159,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $this->attemptstate = $attemptstate;
         $this->scoringstate = $this->get_behaviour()->get_qa()->get_last_qt_var(constants::QT_VAR_SCORING_STATE);
 
-        $lastresponse = array_filter(
-            $this->get_behaviour()->get_qa()->get_last_qt_data(null),
+        $lastqtdata = $this->get_behaviour()->get_qa()->get_last_qt_data(null);
+        $lastresponse = $lastqtdata === null ? null : array_filter(
+            $lastqtdata,
             fn($key) => !utils::str_starts_with($key, "_"),
             ARRAY_FILTER_USE_KEY
         );
