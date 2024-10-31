@@ -16,7 +16,9 @@
 
 namespace qtype_questionpy;
 
+use coding_exception;
 use moodle_exception;
+use qbehaviour_questionpy;
 use qtype_questionpy\api\api;
 use qtype_questionpy\api\package_api;
 use qtype_questionpy\event\grading_response_failed;
@@ -25,6 +27,7 @@ use qtype_questionpy\event\viewing_attempt_failed;
 use qtype_questionpy_question;
 use question_attempt;
 use question_bank;
+use question_engine;
 use question_state;
 use Throwable;
 
@@ -68,14 +71,18 @@ final class question_test extends \advanced_testcase {
      * Create a QuestionPy question.
      *
      * @return qtype_questionpy_question
+     * @throws coding_exception
      */
     private function create_question(): qtype_questionpy_question {
-        return new qtype_questionpy_question(
+        question_engine::load_behaviour_class("questionpy");
+        $question = new qtype_questionpy_question(
             hash('sha256', 'hash'),
             'state',
             packagefile: null,
             api: $this->api
         );
+        $question->behaviour = $this->createStub(qbehaviour_questionpy::class);
+        return $question;
     }
 
     /**
