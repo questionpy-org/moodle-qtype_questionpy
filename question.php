@@ -24,8 +24,8 @@
 
 use qtype_questionpy\api\api;
 use qtype_questionpy\api\attempt_ui;
-use qtype_questionpy\constants;
 use qtype_questionpy\api\scoring_code;
+use qtype_questionpy\constants;
 use qtype_questionpy\question_ui_metadata_extractor;
 use qtype_questionpy\utils;
 
@@ -267,7 +267,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     }
 
     /**
-     * Use by many of the behaviours to determine whether the student's
+     * Used by many of the behaviours to determine whether the student's
      * response has changed. This is normally used to determine that a new set
      * of responses can safely be discarded.
      *
@@ -277,8 +277,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return bool whether the two sets of responses are the same - that is
      *                            whether the new set of responses can safely be discarded.
      */
-    public function is_same_response(array $prevresponse, array $newresponse) {
-        return false;
+    public function is_same_response(array $prevresponse, array $newresponse): bool {
+        // The response has already been filtered against get_expected_data, we just need to filter out attempt state
+        // and scoring state before comparing.
+        return utils::filter_for_response($prevresponse) == utils::filter_for_response($newresponse);
     }
 
     /**

@@ -127,4 +127,15 @@ class utils {
             $array = array_values($array);
         }
     }
+
+    /**
+     * Given an array as returned by {@see \question_attempt_step::get_qt_data()}, filters out vars starting with `_`.
+     *
+     * @param array $qtvars
+     * @return array
+     * @see question_attempt_step for the meaning of different step var prefixes
+     */
+    public static function filter_for_response(array $qtvars): array {
+        return array_filter($qtvars, fn($key) => !str_starts_with($key, '_'), ARRAY_FILTER_USE_KEY);
+    }
 }
