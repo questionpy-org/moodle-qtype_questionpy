@@ -304,8 +304,8 @@ class question_ui_renderer {
                             break;
                         }
                     }
-                } else if ($type != 'button' && $type != 'submit' && $type != 'hidden') {
-                    $element->setAttribute('value', $lastvalue);
+                } else if ($type != "button" && $type != "submit") {
+                    $element->setAttribute("value", $lastvalue);
                 }
             }
         }
