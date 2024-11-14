@@ -299,6 +299,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return string the message.
      */
     public function get_validation_error(array $response) {
+        // This method is only called by the renderer of each question type.
+        // We do not call it in our renderer, so we can just return an empty string.
+        // The question package is responsible for displaying validation errors using JavaScript.
         return '';
     }
 
