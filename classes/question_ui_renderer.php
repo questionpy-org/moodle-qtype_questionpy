@@ -293,19 +293,24 @@ class question_ui_renderer {
                 if ($type === 'checkbox' || $type === 'radio') {
                     if ($element->getAttribute('value') === $lastvalue) {
                         $element->setAttribute('checked', 'checked');
+                    } else {
+                        $element->removeAttribute('checked');
                     }
                 } else if ($type == 'select') {
                     // Find the appropriate option and mark it as selected.
+                    // TODO: Support multiselects. Seems to be non-trivial, since QT vars only deal in strings, not
+                    // arrays.
                     /** @var DOMElement $option */
                     foreach ($element->getElementsByTagName('option') as $option) {
                         $optvalue = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
-                        if ($optvalue == $lastvalue) {
+                        if ($optvalue === $lastvalue) {
                             $option->setAttribute('selected', 'selected');
-                            break;
+                        } else {
+                            $option->removeAttribute('selected');
                         }
                     }
-                } else if ($type != "button" && $type != "submit") {
-                    $element->setAttribute("value", $lastvalue);
+                } else if ($type != 'button' && $type != 'submit') {
+                    $element->setAttribute('value', $lastvalue);
                 }
             }
         }
