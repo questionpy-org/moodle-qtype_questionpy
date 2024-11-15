@@ -160,11 +160,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $this->scoringstate = $this->get_behaviour()->get_qa()->get_last_qt_var(constants::QT_VAR_SCORING_STATE);
 
         $lastqtdata = $this->get_behaviour()->get_qa()->get_last_qt_data(null);
-        $lastresponse = $lastqtdata === null ? null : array_filter(
-            $lastqtdata,
-            fn($key) => !utils::str_starts_with($key, "_"),
-            ARRAY_FILTER_USE_KEY
-        );
+        $lastresponse = $lastqtdata === null ? null : utils::filter_for_response($lastqtdata);
 
         /* TODO: This method is also called from question_attempt->regrade and
                  question_attempt->start_question_based_on, where we shouldn't need to get the UI. */

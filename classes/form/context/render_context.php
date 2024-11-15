@@ -146,7 +146,7 @@ abstract class render_context {
      * @return string name of the element qualified by this context's prefix
      */
     public function mangle_name(string $name): string {
-        if (utils::str_starts_with($name, $this->prefix)) {
+        if (str_starts_with($name, $this->prefix)) {
             // Already mangled, perhaps by an array_render_context.
             return $name;
         }

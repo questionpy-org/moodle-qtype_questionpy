@@ -249,7 +249,7 @@ class question_ui_renderer {
                 ") as $attr
         ) {
             $original = $attr->value;
-            if ($attr->name === "usemap" && utils::str_starts_with($original, "#")) {
+            if ($attr->name === "usemap" && str_starts_with($original, "#")) {
                 // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/useMap.
                 $attr->value = "#" . $this->attempt->get_qt_field_name(substr($original, 1));
             } else {
