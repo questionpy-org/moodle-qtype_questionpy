@@ -64,8 +64,65 @@ class qtype_questionpy_renderer extends qtype_renderer {
             ]);
         }
 
-        $renderer = new question_ui_renderer($question->ui->formulation, $question->ui->placeholders, $options, $qa);
-        return $renderer->render();
+        global $PAGE, $OUTPUT;
+        $oldpage = $PAGE;
+        $oldoutput = $OUTPUT; // Class moodle_page also modifies global $OUTPUT variable.
+
+        try {
+            $PAGE = new moodle_page();
+            $PAGE->set_context($options->context);
+            $PAGE->set_pagelayout('embedded');
+            $PAGE->set_pagetype($oldpage->pagetype);
+            $PAGE->set_url($oldpage->url);
+
+            $qformulation = new question_ui_renderer($question->ui->formulation, $question->ui->placeholders, $options,
+                $qa);
+            $feedback = html_writer::nonempty_tag('div', $this->feedback_in_iframe($qa, $options),
+                ['class' => 'outcome clearfix']);
+
+            $editor = editors_get_preferred_editor(FORMAT_HTML); // Only for testing purposes!
+            $editor->use_editor('mytextareaid', [
+                'context' => $options->context,
+                'enable_filemanagement' => true,
+                'maxfiles' => EDITOR_UNLIMITED_FILES,
+            ], question_utils::get_filepicker_options($options->context, 0));
+
+            $questionsrc = $this->output->render_from_template('qtype_questionpy/iframe_content', [
+                'question' => $qformulation->render(),
+                'feedback' => $feedback,
+                'filepicker' => $this->get_file_picker_test($options->context),
+            ]);
+
+            $outputrenderer = $PAGE->get_renderer('core', null);
+            $iframesrc = $outputrenderer->header();
+            $iframesrc .= $questionsrc;
+            $iframesrc .= $outputrenderer->footer();
+            return '<iframe srcdoc="' . htmlspecialchars($iframesrc) . '"></iframe>';
+
+        } finally {
+            $PAGE = $oldpage;
+            $OUTPUT = $oldoutput;
+        }
+
+        return '';
+    }
+
+    protected function get_file_picker_test($context) {
+        global $CFG, $PAGE;
+        require_once($CFG->dirroot . '/lib/form/filemanager.php');
+
+        $pickeroptions = new stdClass();
+        $pickeroptions->mainfile = null;
+        $pickeroptions->maxfiles = 10;
+        $pickeroptions->itemid = 1;
+        $pickeroptions->context = $context;
+        $pickeroptions->return_types = FILE_INTERNAL | FILE_CONTROLLED_LINK;
+        $pickeroptions->accepted_types = '*';
+
+        $fm = new form_filemanager($pickeroptions);
+        $fm->options->maxbytes = 10*1024*1024;
+        $filesrenderer = $PAGE->get_renderer('core', 'files');
+        return $filesrenderer->render($fm);
     }
 
     /**
@@ -80,7 +137,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      * @throws coding_exception
      */
-    public function feedback(question_attempt $qa, question_display_options $options): string {
+    protected function feedback_in_iframe(question_attempt $qa, question_display_options $options): string {
         $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
 
@@ -128,6 +185,30 @@ class qtype_questionpy_renderer extends qtype_renderer {
             );
         }
 
+        if ($output) {
+            // Copied from \core_question_renderer::question.
+            $output = html_writer::tag('h4', get_string('feedback', 'question'),
+                    ['class' => 'accesshide']) . $output;
+        }
+
         return $output;
+    }
+
+    /**
+     * Generate the display of the outcome part of the question. This is the
+     * area that contains the various forms of feedback. This function generates
+     * the content of this area belonging to the question type.
+     *
+     * Subclasses will normally want to override the more specific methods
+     * {specific_feedback()}, {general_feedback()} and {correct_response()}
+     * that this method calls.
+     *
+     * @param question_attempt $qa the question attempt to display.
+     * @param question_display_options $options controls what should and should not be displayed.
+     * @return string HTML fragment.
+     */
+    public function feedback(question_attempt $qa, question_display_options $options) {
+        // We display all feedbacks in the iframe.
+        return '';
     }
 }

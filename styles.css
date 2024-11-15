@@ -25,6 +25,26 @@
     display: none;
 }
 
+/* Make question iframe seamless. */
+.que.questionpy .formulation {
+    padding: 0;
+    border: 0;
+    border-radius: unset;
+    margin: 0;
+    background: unset;
+}
+
+.que.questionpy iframe {
+    border: 0;
+    padding: 0;
+    width: 100%;
+    height: 500px;
+}
+
+.que .questionpy-iframe-content.content {
+    margin: 0;
+}
+
 /* Style package selection container */
 
 .qpy-tab-content {
