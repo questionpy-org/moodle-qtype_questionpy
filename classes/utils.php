@@ -43,18 +43,6 @@ class utils {
     }
 
     /**
-     * Determines whether a string starts with another.
-     *
-     * @param string $haystack
-     * @param string $needle
-     * @return bool
-     */
-    public static function str_starts_with(string $haystack, string $needle): bool {
-        // From https://stackoverflow.com/a/10473026.
-        return substr_compare($haystack, $needle, 0, strlen($needle)) === 0;
-    }
-
-    /**
      * Given an array and a key such as `abc[def]`, returns `$array["abc"]["def"]`.
      *
      * If any of the key's parts don't exist or resolve to null, this function returns null.
