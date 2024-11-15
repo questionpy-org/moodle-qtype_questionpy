@@ -379,6 +379,53 @@ final class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
+     * Tests {@see question_ui_renderer::set_input_values_and_readonly}.
+     *
+     * @return void
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer::set_input_values_and_readonly
+     */
+    public function test_should_correctly_fill_data(): void {
+        $input = file_get_contents(__DIR__ . '/question_uis/input-values.xhtml');
+        $qa = $this->create_question_attempt_stub('deadbeef');
+        $newvalues = [
+            'my_text' => 'new',
+            'my_checkbox' => 'value',
+            'my_radio' => 'value1',
+            'my_select' => 'value3',
+            'my_hidden' => 'new',
+            'my_button' => 'should be ignored',
+        ];
+        $qa->method('get_last_qt_var')
+            ->willReturnCallback(fn($name) => $newvalues[$name]);
+
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
+
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml" id="mangled:my_div">
+            <input class="form-control qpy-input" type="text" name="mangled:my_text" value="new"/>
+
+            <input class="qpy-input" type="checkbox" name="mangled:my_checkbox" value="value" checked="checked"/>
+
+            <input class="qpy-input" type="radio" name="mangled:my_radio" value="value1" checked="checked"/>
+            <input class="qpy-input" type="radio" name="mangled:my_radio" value="value2"/>
+
+            <select class="form-control qpy-input" name="mangled:my_select">
+                <option value="value1"/>
+                <option value="value2"/>
+                <option value="value3" selected="selected"/>
+            </select>
+
+            <input class="form-control qpy-input" type="hidden" name="mangled:my_hidden" value="new"/>
+
+            <input class="btn btn-primary qpy-input" name="mangled:my_button" type="button" value="value1"/>
+            <input class="btn btn-primary qpy-input" name="mangled:my_button" type="button" value="value2"/>
+        </div>
+        EXPECTED, $result);
+    }
+
+    /**
      * Creates a stub question attempt which should fulfill the needs of most tests.
      *
      * @param string|null $packagehash explicit package hash. Random if unset.
