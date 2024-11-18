@@ -390,7 +390,8 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $qa = $this->create_question_attempt_stub('deadbeef');
         $newvalues = [
             'my_text' => 'new',
-            'my_checkbox' => 'value',
+            'my_checkbox_value' => 'value',
+            'my_checkbox_on' => 'on',
             'my_radio' => 'value1',
             'my_select' => 'value3',
             'my_hidden' => 'new',
@@ -406,7 +407,8 @@ final class question_ui_renderer_test extends \advanced_testcase {
         <div xmlns="http://www.w3.org/1999/xhtml" id="mangled:my_div">
             <input class="form-control qpy-input" type="text" name="mangled:my_text" value="new"/>
 
-            <input class="qpy-input" type="checkbox" name="mangled:my_checkbox" value="value" checked="checked"/>
+            <input class="qpy-input" type="checkbox" name="mangled:my_checkbox_value" value="value" checked="checked"/>
+            <input class="qpy-input" type="checkbox" name="mangled:my_checkbox_on" checked="checked"/>
 
             <input class="qpy-input" type="radio" name="mangled:my_radio" value="value1" checked="checked"/>
             <input class="qpy-input" type="radio" name="mangled:my_radio" value="value2"/>
