@@ -261,7 +261,7 @@ class question_ui_renderer {
     /**
      * Transforms input(-like) elements.
      *
-     * - If {@see question_display_options} is set, the input is disabled.
+     * - If {@see question_display_options::$readonly} is set, the input is disabled.
      * - If a value was saved for the input in a previous step, the latest value is added to the HTML.
      *
      * Requires the unmangled name of the element, so must be called _before_ {@see mangle_ids_and_names}.
@@ -291,7 +291,14 @@ class question_ui_renderer {
             $lastvalue = $this->attempt->get_last_qt_var($name);
             if (!is_null($lastvalue)) {
                 if ($type === 'checkbox' || $type === 'radio') {
-                    if ($element->getAttribute('value') === $lastvalue) {
+                    // FIXME: Unchecked checkboxes send nothing, so we have no way of distinguishing an explicitly
+                    // unchecked checkbox from a checkbox which was not submitted (e.g. because it wasn't shown).
+                    // As it stands, a default-checked but explicitly unchecked checkbox will be checked again on next
+                    // view.
+                    $shouldbechecked = $element->hasAttribute('value')
+                        ? $element->getAttribute('value') === $lastvalue
+                        : $lastvalue === 'on';
+                    if ($shouldbechecked) {
                         $element->setAttribute('checked', 'checked');
                     } else {
                         $element->removeAttribute('checked');
