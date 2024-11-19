@@ -67,6 +67,11 @@ jobs:
           # Define NVM_DIR pointing to nvm installation.
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
 
+      - name: "Workaround: Apply <https://github.com/moodlehq/moodle-local_moodlecheck/pull/148>"
+        run: |
+          curl -L https://github.com/moodlehq/moodle-local_moodlecheck/pull/148.diff | \
+            git -C ci/vendor/moodlehq/moodle-local_moodlecheck apply -
+
       - name: Add qbehaviour_questionpy
         run: |
           moodle-plugin-ci add-plugin questionpy-org/moodle-qbehaviour_questionpy --storage extra-plugins
