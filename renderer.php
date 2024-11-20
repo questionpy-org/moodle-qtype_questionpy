@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\api\attempt_ui;
 use qtype_questionpy\question_ui_renderer;
 
 /**
@@ -66,48 +67,100 @@ class qtype_questionpy_renderer extends qtype_renderer {
 
         global $PAGE, $OUTPUT;
         $oldpage = $PAGE;
-        $oldoutput = $OUTPUT; // Class moodle_page also modifies global $OUTPUT variable.
+        $oldoutput = $OUTPUT;
 
+        // Initialize output buffer.
+        // We do this to ensure that any echo, var_dump, etc. statements are included in the iframe contents.
+        ob_start();
         try {
-            $PAGE = new moodle_page();
+            $classname = get_class($oldpage); // $PAGE class may be customized using $CFG->moodlepageclass.
+            /** @var moodle_page $PAGE */
+            $PAGE = new $classname();
+            /** @var \core\output\core_renderer $OUTPUT */
+            $OUTPUT = new bootstrap_renderer(); // bootstrap_renderer will initialize $OUTPUT on first use.
+
             $PAGE->set_context($options->context);
             $PAGE->set_pagelayout('embedded');
             $PAGE->set_pagetype($oldpage->pagetype);
             $PAGE->set_url($oldpage->url);
+            $PAGE->add_body_class('questionpy-iframe-body');
 
-            $qformulation = new question_ui_renderer($question->ui->formulation, $question->ui->placeholders, $options,
-                $qa);
-            $feedback = html_writer::nonempty_tag('div', $this->feedback_in_iframe($qa, $options),
-                ['class' => 'outcome clearfix']);
+            // Get a new instance of this renderer for the new $PAGE object to render the iframe contents.
+            // This is necessary so that any JS/CSS requirements get added to the new page's page_requirements_manager.
+            /** @var self $qpyrenderer */
+            $qpyrenderer = $PAGE->get_renderer('qtype_questionpy');
 
-            $editor = editors_get_preferred_editor(FORMAT_HTML); // Only for testing purposes!
-            $editor->use_editor('mytextareaid', [
-                'context' => $options->context,
-                'enable_filemanagement' => true,
-                'maxfiles' => EDITOR_UNLIMITED_FILES,
-            ], question_utils::get_filepicker_options($options->context, 0));
+            // Render iframe contents before the header is printed to allow CSS to be added to the page header.
+            $iframecontents = $qpyrenderer->formulation_and_controls_in_iframe($qa, $question->ui, $options);
 
-            $questionsrc = $this->output->render_from_template('qtype_questionpy/iframe_content', [
-                'question' => $qformulation->render(),
-                'feedback' => $feedback,
-                'filepicker' => $this->get_file_picker_test($options->context),
-            ]);
+            // Write iframe source into the output buffer.
+            echo $OUTPUT->header();
+            echo "<script>
+    // Add <base target='_blank'> tag to head so links are opened in a new tab.
+    const base = document.createElement('base');
+    base.target = '_blank';
+    document.getElementsByTagName('head')[0].appendChild(base);
 
-            $outputrenderer = $PAGE->get_renderer('core', null);
-            $iframesrc = $outputrenderer->header();
-            $iframesrc .= $questionsrc;
-            $iframesrc .= $outputrenderer->footer();
-            return '<iframe srcdoc="' . htmlspecialchars($iframesrc) . '"></iframe>';
+    // Resize iframe when content height changes.
+    const resize = function() {
+    	if (window.self !== window.top) {
+            parent.document.querySelectorAll('iframe').forEach(function(el) {
+	            if (el.contentWindow.document === document) {
+                    el.style.height = document.body.scrollHeight + 'px';
+                    el.style.width = '100%';
+            	}
+            });
+    	}
+    };
+    resize();
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(document.body);
+</script>";
+            echo $iframecontents;
+            echo $OUTPUT->footer();
 
         } finally {
             $PAGE = $oldpage;
             $OUTPUT = $oldoutput;
+            $iframesrc = ob_get_clean();
         }
 
-        return '';
+        if ($iframesrc) {
+            // TODO srcdoc or src?
+            return '<iframe srcdoc="' . htmlspecialchars($iframesrc) . '"></iframe>';
+        } else {
+            return '';
+        }
     }
 
-    protected function get_file_picker_test($context) {
+    /**
+     * @throws \core\exception\moodle_exception
+     * @throws coding_exception
+     */
+    protected function formulation_and_controls_in_iframe(question_attempt $qa, attempt_ui $ui, question_display_options $options): string {
+        $qformulation = new question_ui_renderer($ui->formulation, $ui->placeholders, $options,
+            $qa);
+        $feedback = html_writer::nonempty_tag('div', $this->feedback_in_iframe($qa, $options),
+            ['class' => 'outcome clearfix']);
+
+        $editor = editors_get_preferred_editor(FORMAT_HTML); // Only for testing purposes!
+        $editor->use_editor('mytextareaid', [
+            'context' => $options->context,
+            'enable_filemanagement' => true,
+            'maxfiles' => EDITOR_UNLIMITED_FILES,
+        ], question_utils::get_filepicker_options($options->context, 0));
+
+        return $this->render_from_template('qtype_questionpy/iframe_content', [
+            'question' => $qformulation->render(),
+            'feedback' => $feedback,
+            'filepicker' => $this->get_file_picker_test($options->context),
+        ]);
+    }
+
+    /**
+     * @throws \core\exception\coding_exception
+     */
+    protected function get_file_picker_test($context): string {
         global $CFG, $PAGE;
         require_once($CFG->dirroot . '/lib/form/filemanager.php');
 

@@ -41,7 +41,20 @@
     height: 500px;
 }
 
-.que .questionpy-iframe-content.content {
+/* Make iframe body grow and shrink with page content. */
+body.questionpy-iframe-body {
+    height: auto;
+}
+
+.questionpy-iframe-body .que {
+    margin: 0;
+}
+
+.questionpy-iframe-body .que .content {
+    margin: 0;
+}
+
+.questionpy-iframe-body .que .formulation {
     margin: 0;
 }
 
