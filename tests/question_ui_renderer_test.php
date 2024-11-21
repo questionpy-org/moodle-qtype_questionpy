@@ -192,6 +192,39 @@ final class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
+     * Tests that broken HTML in placeholder values is handled correctly depending on clean mode.
+     *
+     * @return void
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer::resolve_placeholders
+     */
+    public function test_should_correctly_handle_broken_html_in_placeholder_expansion(): void {
+        $input = file_get_contents(__DIR__ . '/question_uis/placeholder.xhtml');
+        $qa = $this->create_question_attempt_stub();
+
+        $ui = new question_ui_renderer($input, [
+            'param' => '<qpy:format-float>123</qpy:format-float><unknown-tag></unknown-tag><div>unclosed',
+            'description' => 'My simple description.',
+        ], new \question_display_options(), $qa);
+        $result = $ui->render();
+
+        // For noclean, the qpy namespace prefix is unknown when appending the XML. Since we want to support as much
+        // broken HTML/XML in user input as possible, the DOM just removes the prefix.
+
+        // phpcs:disable moodle.Files.LineLength.TooLong
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <div>My simple description.</div>
+            <span>By default cleaned parameter: 123<div>unclosed</div></span>
+            <span>Explicitly cleaned parameter: 123<div>unclosed</div></span>
+            <span>Noclean parameter: <format-float>123</format-float><unknown-tag></unknown-tag><div>unclosed</div></span>
+            <span>Plain parameter: &lt;qpy:format-float>123&lt;/qpy:format-float>&lt;unknown-tag>&lt;/unknown-tag>&lt;div>unclosed</span>
+        </div>
+        EXPECTED, $result);
+        // phpcs:enable moodle.Files.LineLength.TooLong
+    }
+
+    /**
      * Tests that placeholders are just removed when the corresponding value is missing.
      *
      * @return void
