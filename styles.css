@@ -39,27 +39,19 @@
     padding: 0;
     width: 100%;
     height: 500px;
+    display: block; /* Remove space that is reserved below inline elements for descender characters (y, q, g). */
 }
 
-/* Make iframe body grow and shrink with page content. */
 body.questionpy-iframe-body {
-    height: auto;
+    height: auto; /* Make iframe body grow and shrink with page content. */
+    overflow-y: hidden; /* Prevent margin-collapse across bottom boundary. */
 }
 
-.questionpy-iframe-body .que {
-    margin: 0;
-}
-
-.questionpy-iframe-body .que .content {
-    margin: 0;
-}
-
-.questionpy-iframe-body .que .formulation {
+body.questionpy-iframe-body .que .content {
     margin: 0;
 }
 
 /* Style package selection container */
-
 .qpy-tab-content {
     display: flex;
     flex-flow: column;
