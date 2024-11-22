@@ -106,13 +106,9 @@ class qtype_questionpy_renderer extends qtype_renderer {
 
     // Resize iframe when content height changes.
     const resize = function() {
-    	if (window.self !== window.top) {
-            parent.document.querySelectorAll('iframe').forEach(function(el) {
-	            if (el.contentWindow.document === document) {
-                    el.style.height = document.body.scrollHeight + 'px';
-                    el.style.width = '100%';
-            	}
-            });
+    	if (window.frameElement) {
+            window.frameElement.style.height = document.body.scrollHeight + 'px';
+            window.frameElement.style.width = '100%';
     	}
     };
     resize();
