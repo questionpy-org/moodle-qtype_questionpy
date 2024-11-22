@@ -161,7 +161,7 @@ export async function init(autoSaveHintInputId) {
         // Modify a field in the main form in order to tell the Quiz's autosaver that the user changed an answer.
         const autoSaveHintElement = parent.document.getElementById(autoSaveHintInputId);
         if (autoSaveHintElement) {
-            form.addEventListener("change", function () {
+            form.addEventListener("change", function() {
                 autoSaveHintElement.value = parseInt(autoSaveHintElement.value) + 1;
             });
         }
@@ -177,7 +177,7 @@ export async function init(autoSaveHintInputId) {
  * @param {string} fieldPrefix - The prefix used to identify which field values to add from the iframe's form data.
  * @return {void} This function does not return a value.
  */
-export function add_iframe_form_data_on_submit(iframeId, fieldPrefix) {
+export function addIframeFormDataOnSubmit(iframeId, fieldPrefix) {
     const iframe = window.document.getElementById(iframeId);
     if (iframe === null) {
         window.console.error(`Could not find question iframe ${iframeId}. Cannot save answers.`);

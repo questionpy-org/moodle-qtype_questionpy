@@ -131,7 +131,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
             $iframeid = $questiondivid .'-iframe';
             $autosavehintname = 'qpy-autosave-' . $questiondivid;
             $this->page->requires->js_call_amd("qtype_questionpy/view_question",
-                "add_iframe_form_data_on_submit", [$iframeid, $qa->get_field_prefix()]);
+                "addIframeFormDataOnSubmit", [$iframeid, $qa->get_field_prefix()]);
             // TODO srcdoc or src?
             return '<input type="hidden" name="' . $autosavehintname .'" id="' . $autosavehintid . '" value="0">
                     <iframe id="' . $iframeid .  '" srcdoc="' . htmlspecialchars($iframesrc) . '"></iframe>';
