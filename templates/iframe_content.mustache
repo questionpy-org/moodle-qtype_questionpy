@@ -16,6 +16,19 @@
 }}
 {{!
     @template qtype_questionpy/iframe_content
+
+    Content within the question's iframe. In particular, the HTML returned by the question package is put in
+    this iframe.
+
+    Context variables required for this template:
+    * question - question html
+    * feedback - feedback html
+
+    Example context (json):
+    {
+        "question": "Question HTML",
+        "feedback": "Feedback HTML"
+    }
 }}
 <div class="que">
     <div class="content">
