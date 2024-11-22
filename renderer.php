@@ -39,8 +39,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      */
     public function head_code(question_attempt $qa) {
-        $this->page->requires->js_call_amd("qtype_questionpy/view_question", "init");
-        return parent::head_code($qa);
+        return '';
     }
 
     /**
@@ -64,6 +63,9 @@ class qtype_questionpy_renderer extends qtype_renderer {
                 'info' => 'Please contact an administrator.',
             ]);
         }
+
+        $questiondivid = $qa->get_outer_question_div_unique_id();
+        $autosavehintid = $questiondivid . '-autosave';
 
         global $PAGE, $OUTPUT;
         $oldpage = $PAGE;
@@ -91,7 +93,8 @@ class qtype_questionpy_renderer extends qtype_renderer {
             $qpyrenderer = $PAGE->get_renderer('qtype_questionpy');
 
             // Render iframe contents before the header is printed to allow CSS to be added to the page header.
-            $iframecontents = $qpyrenderer->formulation_and_controls_in_iframe($qa, $question->ui, $options);
+            $iframecontents = $qpyrenderer->formulation_and_controls_in_iframe($qa, $question->ui, $options,
+                $autosavehintid);
 
             // Write iframe source into the output buffer.
             echo $OUTPUT->header();
@@ -126,8 +129,16 @@ class qtype_questionpy_renderer extends qtype_renderer {
         }
 
         if ($iframesrc) {
+            // A hidden input field is used to tell the quiz autosaver that the user changed their question answer
+            // in the iframe. The value is increased by one every time. The autosaver detects this modification and will
+            // save all answers.
+            $iframeid = $questiondivid .'-iframe';
+            $autosavehintname = 'qpy-autosave-' . $questiondivid;
+            $this->page->requires->js_call_amd("qtype_questionpy/view_question",
+                "add_iframe_form_data_on_submit", [$iframeid, $qa->get_field_prefix()]);
             // TODO srcdoc or src?
-            return '<iframe srcdoc="' . htmlspecialchars($iframesrc) . '"></iframe>';
+            return '<input type="hidden" name="' . $autosavehintname .'" id="' . $autosavehintid . '" value="0">
+                    <iframe id="' . $iframeid .  '" srcdoc="' . htmlspecialchars($iframesrc) . '"></iframe>';
         } else {
             return '';
         }
@@ -137,7 +148,8 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @throws \core\exception\moodle_exception
      * @throws coding_exception
      */
-    protected function formulation_and_controls_in_iframe(question_attempt $qa, attempt_ui $ui, question_display_options $options): string {
+    protected function formulation_and_controls_in_iframe(question_attempt $qa, attempt_ui $ui,
+              question_display_options $options, string $autosavehintinputid): string {
         $qformulation = new question_ui_renderer($ui->formulation, $ui->placeholders, $options,
             $qa);
         $feedback = html_writer::nonempty_tag('div', $this->feedback_in_iframe($qa, $options),
@@ -150,6 +162,8 @@ class qtype_questionpy_renderer extends qtype_renderer {
             'maxfiles' => EDITOR_UNLIMITED_FILES,
         ], question_utils::get_filepicker_options($options->context, 0));
 
+        $this->page->requires->js_call_amd("qtype_questionpy/view_question", "init",
+            [$autosavehintinputid]);
         return $this->render_from_template('qtype_questionpy/iframe_content', [
             'question' => $qformulation->render(),
             'feedback' => $feedback,

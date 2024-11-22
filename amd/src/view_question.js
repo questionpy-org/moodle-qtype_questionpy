@@ -132,9 +132,14 @@ async function checkConstraints(element) {
 }
 
 /**
- * Adds change event handlers for soft validation.
+ * Initializes the question.
+ *
+ * This function must be called within the iframe.
+ *
+ * @param {string} autoSaveHintInputId
  */
-export async function init() {
+export async function init(autoSaveHintInputId) {
+    // Add change event handlers for soft validation.
     for (const element of document.querySelectorAll(`
         [data-qpy_required], [data-qpy_pattern], 
         [data-qpy_minlength], [data-qpy_maxlength], 
@@ -143,4 +148,53 @@ export async function init() {
         await checkConstraints(element);
         element.addEventListener("change", event => checkConstraints(event.target));
     }
+
+    const form = window.document.getElementById("question-form");
+    if (form) {
+        // On form submit, submit the quiz's main form instead.
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+            window.frameElement.closest("form").submit();
+        });
+
+        // Modify a field in the main form in order to tell the Quiz's autosaver that the user changed an answer.
+        const autoSaveHintElement = parent.document.getElementById(autoSaveHintInputId);
+        if (autoSaveHintElement) {
+            form.addEventListener("change", function () {
+                autoSaveHintElement.value = parseInt(autoSaveHintElement.value) + 1;
+            });
+        }
+    }
+}
+
+/**
+ * Add the question's form data located in the iframe to the main form when it is submitted.
+ *
+ * This function must be called outside the iframe, on the parent window.
+ *
+ * @param {string} iframeId - The ID of the question's iframe.
+ * @param {string} fieldPrefix - The prefix used to identify which field values to add from the iframe's form data.
+ * @return {void} This function does not return a value.
+ */
+export function add_iframe_form_data_on_submit(iframeId, fieldPrefix) {
+    const iframe = window.document.getElementById(iframeId);
+    if (iframe === null) {
+        window.console.error(`Could not find question iframe ${iframeId}. Cannot save answers.`);
+        return;
+    }
+
+    const form = iframe.closest("form");
+    form.addEventListener("formdata", event => {
+        const iframeForm = iframe.contentDocument.getElementById("question-form");
+        if (iframeForm === null) {
+            window.console.error("Could not find form in question iframe " + iframeId);
+            return;
+        }
+        const iframeFormData = new FormData(iframeForm);
+        for (const [key, value] of iframeFormData) {
+            if (key.startsWith(fieldPrefix)) {
+                event.formData.append(key, value);
+            }
+        }
+    });
 }
