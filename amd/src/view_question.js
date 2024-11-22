@@ -78,7 +78,8 @@ function markInvalid(element, message, ariaInvalid = true) {
     $(popoverTarget).popover({
         toggle: "popover",
         trigger: "hover",
-        content: message
+        placement: "bottom",
+        content: message,
     });
 }
 
