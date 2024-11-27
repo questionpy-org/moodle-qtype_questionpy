@@ -376,13 +376,14 @@ class question_ui_renderer {
             $rawvalue = $this->placeholders[$key];
             if (strtolower($cleanoption) === 'clean') {
                 // Allow HTML, but clean using Moodle's clean_text to prevent XSS.
-                $element = $this->xml->createDocumentFragment();
-                if (!$this->append_html_fragment($element, clean_text($rawvalue))) {
+                $element = $this->html_to_fragment($this->xml, clean_text($rawvalue));
+                if (!$element) {
                     debugging('clean_text produced invalid HTML');
+                    // Replace with empty fragment so we just remove the PI.
+                    $element = $this->xml->createDocumentFragment();
                 }
             } else if (strtolower($cleanoption) === 'noclean') {
-                $element = $this->xml->createDocumentFragment();
-                $this->append_html_fragment($element, $rawvalue, LIBXML_NOERROR);
+                $element = $this->html_to_fragment($this->xml, $rawvalue, LIBXML_NOERROR);
             } else {
                 if (strtolower($cleanoption) !== 'plain') {
                     debugging("Unrecognized placeholder cleaning option: '$cleanoption', using 'plain'");
@@ -396,15 +397,15 @@ class question_ui_renderer {
     }
 
     /**
-     * Parses and appends some HTML source to the given fragment.
+     * Parses some HTML source and returns a fragment.
      *
-     * @param DOMDocumentFragment $fragment
+     * @param DOMDocument $doc target document which the fragment should belong to
      * @param string $html
      * @param int $options
-     * @return bool
+     * @return DOMDocumentFragment|false fragment on success (or ignored errors), false on failure
      * @see DOMDocumentFragment::appendXML() the XML equivalent is provided by PHP, but not HTML :(
      */
-    private function append_html_fragment(DOMDocumentFragment $fragment, string $html, int $options = 0): bool {
+    private function html_to_fragment(DOMDocument $doc, string $html, int $options = 0): DOMDocumentFragment|false {
         $newdoc = new DOMDocument();
         // Libxml will add html and/or body elements and a DTD declaration without these options.
         $options |= LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD;
@@ -413,9 +414,10 @@ class question_ui_renderer {
             return false;
         }
 
+        $fragment = $doc->createDocumentFragment();
         /** @var DOMNode $childnode */
         foreach ($newdoc->documentElement->childNodes as $childnode) {
-            $imported = $fragment->ownerDocument->importNode($childnode, deep: true);
+            $imported = $doc->importNode($childnode, deep: true);
             if ($imported === false) {
                 debugging('Could not import HTML node from placeholder value');
                 return false;
@@ -423,7 +425,7 @@ class question_ui_renderer {
             $fragment->appendChild($imported);
         }
 
-        return true;
+        return $fragment;
     }
 
     /**
