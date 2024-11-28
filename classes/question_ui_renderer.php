@@ -21,6 +21,7 @@ use DOMAttr;
 use DOMDocument;
 use DOMDocumentFragment;
 use DOMElement;
+use DOMException;
 use DOMNameSpaceNode;
 use DOMNode;
 use DOMProcessingInstruction;
@@ -267,7 +268,7 @@ class question_ui_renderer {
      * - If a value was saved for the input in a previous step, the latest value is added to the HTML.
      *
      * @return void
-     * @throws \core\exception\coding_exception
+     * @throws DOMException|coding_exception
      */
     private function set_input_values_and_readonly(): void {
         $lastresponse = utils::get_qpy_response($this->attempt);
@@ -316,8 +317,10 @@ class question_ui_renderer {
      * @param string $type
      * @param array $lastvalue
      * @return void
+     * @throws DOMException
+     * @throws coding_exception
      */
-    private function set_input_values_for_duplicate_name_fields(DOMElement $element, string $type, array $lastvalue) {
+    private function set_input_values_for_duplicate_name_fields(DOMElement $element, string $type, array $lastvalue): void {
         if ($type === 'checkbox') {
             $value = $element->hasAttribute('value') ? $element->getAttribute('value') : 'on';
             if (in_array($value, $lastvalue)) {
@@ -330,14 +333,8 @@ class question_ui_renderer {
                 // This should never happen.
                 return;
             }
-            foreach ($element->getElementsByTagName('option') as $option) {
-                $optvalue = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
-                if (in_array($optvalue, $lastvalue)) {
-                    $option->setAttribute('selected', 'selected');
-                } else {
-                    $option->removeAttribute('selected');
-                }
-            }
+
+            $this->set_select_values($element, $lastvalue);
         }
     }
 
@@ -348,8 +345,10 @@ class question_ui_renderer {
      * @param string $type
      * @param string $lastvalue
      * @return void
+     * @throws DOMException
+     * @throws coding_exception
      */
-    private function set_input_values_for_single_name_fields(DOMElement $element, string $type, string $lastvalue) {
+    private function set_input_values_for_single_name_fields(DOMElement $element, string $type, string $lastvalue): void {
         if ($type === 'checkbox' || $type === 'radio') {
             // FIXME: Unchecked checkboxes send nothing, so we have no way of distinguishing an explicitly
             // unchecked checkbox from a checkbox which was not submitted (e.g. because it wasn't shown).
@@ -365,19 +364,41 @@ class question_ui_renderer {
             }
         } else if ($type === 'select') {
             // Find the appropriate option and mark it as selected.
-            /** @var DOMElement $option */
-            foreach ($element->getElementsByTagName('option') as $option) {
-                $optvalue = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
-                if ($optvalue === $lastvalue) {
-                    $option->setAttribute('selected', 'selected');
-                } else {
-                    $option->removeAttribute('selected');
-                }
-            }
+            $this->set_select_values($element, [$lastvalue]);
         } else if ($type === 'textarea') {
             $element->textContent = $lastvalue;
         } else if ($type !== 'button' && $type !== 'submit') {
             $element->setAttribute('value', $lastvalue);
+        }
+    }
+
+    /**
+     * @throws DOMException
+     * @throws coding_exception
+     */
+    private function set_select_values(DOMElement $select, array $values): void {
+        $invalidvalues = array_flip($values);
+        // Find the appropriate option and mark it as selected.
+        foreach ($select->getElementsByTagName('option') as $option) {
+            $optvalue = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
+            if (in_array($optvalue, $values)) {
+                $option->setAttribute('selected', 'selected');
+                unset($invalidvalues[$optvalue]);
+            } else {
+                $option->removeAttribute('selected');
+            }
+        }
+
+        foreach (array_keys($invalidvalues) as $invalidvalue) {
+            // At least one of the set values belongs to none of the available options.
+            $fallbackoption = $select->ownerDocument->createElementNS(
+                constants::NAMESPACE_XHTML,
+                'option',
+                get_string('missing_select_option', 'qtype_questionpy')
+            );
+            $fallbackoption->setAttribute('value', $invalidvalue);
+            $fallbackoption->setAttribute('selected', 'selected');
+            $select->appendChild($fallbackoption);
         }
     }
 
