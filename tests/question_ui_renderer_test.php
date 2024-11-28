@@ -463,6 +463,34 @@ final class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
+     * Tests that a fallback option is added when the current value isn't that of any option.
+     *
+     * @return void
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer::set_select_value
+     */
+    public function test_should_add_fallback_option_to_select_when_value_isnt_present(): void {
+        $input = file_get_contents(__DIR__ . '/question_uis/select.xhtml');
+        $qa = $this->create_question_attempt_stub('deadbeef');
+        $qa->method('get_last_qt_var')
+            ->willReturn('something');
+
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
+
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml" >
+            <select class="form-control qpy-input" name="mangled:my_select">
+                <option value="value1"/>
+                <option value="value2"/>
+                <option value="value3"/>
+                <option value="something" selected="selected">(the selected option is no longer available)</option>
+            </select>
+        </div>
+        EXPECTED, $result);
+    }
+
+    /**
      * Creates a stub question attempt which should fulfill the needs of most tests.
      *
      * @param string|null $packagehash explicit package hash. Random if unset.
