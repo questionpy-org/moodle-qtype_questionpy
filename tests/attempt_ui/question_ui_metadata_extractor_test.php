@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
+namespace qtype_questionpy\attempt_ui;
+
+use qtype_questionpy\question_metadata;
 
 /**
  * Unit tests for {@see question_ui_metadata_extractor}.
@@ -28,7 +30,7 @@ final class question_ui_metadata_extractor_test extends \advanced_testcase {
     /**
      * Tests that metadata is correctly extracted from the UI's input elements.
      *
-     * @covers \qtype_questionpy\question_ui_metadata_extractor
+     * @covers \qtype_questionpy\attempt_ui\question_ui_metadata_extractor
      * @covers \qtype_questionpy\question_metadata
      */
     public function test_should_extract_correct_metadata(): void {

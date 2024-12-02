@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
+namespace qtype_questionpy\attempt_ui;
 
 use coding_exception;
 use DOMAttr;
 use DOMDocument;
-use DOMDocumentFragment;
 use DOMElement;
 use DOMException;
 use DOMNameSpaceNode;
@@ -27,6 +26,7 @@ use DOMNode;
 use DOMProcessingInstruction;
 use DOMText;
 use DOMXPath;
+use qtype_questionpy\constants;
 use qtype_questionpy_question;
 use question_attempt;
 use question_display_options;
@@ -106,6 +106,7 @@ class question_ui_renderer {
      *
      * @return string rendered html
      * @throws coding_exception
+     * @throws DOMException
      */
     public function render(): string {
         if (!is_null($this->html)) {
@@ -317,7 +318,6 @@ class question_ui_renderer {
      * @param string $type
      * @param array $lastvalue
      * @return void
-     * @throws DOMException
      * @throws coding_exception
      */
     private function set_input_values_for_duplicate_name_fields(DOMElement $element, string $type, array $lastvalue): void {
@@ -334,7 +334,7 @@ class question_ui_renderer {
                 return;
             }
 
-            $this->set_select_values($element, $lastvalue);
+            dom_utils::set_select_values($element, $lastvalue);
         }
     }
 
@@ -364,41 +364,11 @@ class question_ui_renderer {
             }
         } else if ($type === 'select') {
             // Find the appropriate option and mark it as selected.
-            $this->set_select_values($element, [$lastvalue]);
+            dom_utils::set_select_values($element, [$lastvalue]);
         } else if ($type === 'textarea') {
             $element->textContent = $lastvalue;
         } else if ($type !== 'button' && $type !== 'submit') {
             $element->setAttribute('value', $lastvalue);
-        }
-    }
-
-    /**
-     * @throws DOMException
-     * @throws coding_exception
-     */
-    private function set_select_values(DOMElement $select, array $values): void {
-        $invalidvalues = array_flip($values);
-        // Find the appropriate option and mark it as selected.
-        foreach ($select->getElementsByTagName('option') as $option) {
-            $optvalue = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
-            if (in_array($optvalue, $values)) {
-                $option->setAttribute('selected', 'selected');
-                unset($invalidvalues[$optvalue]);
-            } else {
-                $option->removeAttribute('selected');
-            }
-        }
-
-        foreach (array_keys($invalidvalues) as $invalidvalue) {
-            // At least one of the set values belongs to none of the available options.
-            $fallbackoption = $select->ownerDocument->createElementNS(
-                constants::NAMESPACE_XHTML,
-                'option',
-                get_string('missing_select_option', 'qtype_questionpy')
-            );
-            $fallbackoption->setAttribute('value', $invalidvalue);
-            $fallbackoption->setAttribute('selected', 'selected');
-            $select->appendChild($fallbackoption);
         }
     }
 
@@ -442,14 +412,14 @@ class question_ui_renderer {
             $rawvalue = $this->placeholders[$key];
             if (strtolower($cleanoption) === 'clean') {
                 // Allow HTML, but clean using Moodle's clean_text to prevent XSS.
-                $element = $this->html_to_fragment($this->xml, clean_text($rawvalue));
+                $element = dom_utils::html_to_fragment($this->xml, clean_text($rawvalue));
                 if (!$element) {
                     debugging('clean_text produced invalid HTML');
                     // Replace with empty fragment so we just remove the PI.
                     $element = $this->xml->createDocumentFragment();
                 }
             } else if (strtolower($cleanoption) === 'noclean') {
-                $element = $this->html_to_fragment($this->xml, $rawvalue, LIBXML_NOERROR);
+                $element = dom_utils::html_to_fragment($this->xml, $rawvalue, LIBXML_NOERROR);
             } else {
                 if (strtolower($cleanoption) !== 'plain') {
                     debugging("Unrecognized placeholder cleaning option: '$cleanoption', using 'plain'");
@@ -460,38 +430,6 @@ class question_ui_renderer {
             }
             $pi->parentNode->replaceChild($element, $pi);
         }
-    }
-
-    /**
-     * Parses some HTML source and returns a fragment.
-     *
-     * @param DOMDocument $doc target document which the fragment should belong to
-     * @param string $html
-     * @param int $options
-     * @return DOMDocumentFragment|false fragment on success (or ignored errors), false on failure
-     * @see DOMDocumentFragment::appendXML() the XML equivalent is provided by PHP, but not HTML :(
-     */
-    private function html_to_fragment(DOMDocument $doc, string $html, int $options = 0): DOMDocumentFragment|false {
-        $newdoc = new DOMDocument();
-        // Libxml will add html and/or body elements and a DTD declaration without these options.
-        $options |= LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD;
-        // Despite LIBXML_HTML_NOIMPLIED, libxml will wrap a <p>-tag around the html if it doesn't have a root element.
-        if (!$newdoc->loadHTML('<body>' . $html . '</body>', $options)) {
-            return false;
-        }
-
-        $fragment = $doc->createDocumentFragment();
-        /** @var DOMNode $childnode */
-        foreach ($newdoc->documentElement->childNodes as $childnode) {
-            $imported = $doc->importNode($childnode, deep: true);
-            if ($imported === false) {
-                debugging('Could not import HTML node from placeholder value');
-                return false;
-            }
-            $fragment->appendChild($imported);
-        }
-
-        return $fragment;
     }
 
     /**
@@ -557,18 +495,18 @@ class question_ui_renderer {
                 | //xhtml:select | //xhtml:textarea
                 ") as $element
         ) {
-            $this->add_class_names($element, 'form-control', 'qpy-input');
+            dom_utils::add_class_names($element, 'form-control', 'qpy-input');
         }
 
         foreach (
             $this->xpath->query("//xhtml:input[@type = 'button' or @type = 'submit' or @type = 'reset']
                                 | //xhtml:button") as $element
         ) {
-            $this->add_class_names($element, 'btn', 'btn-primary', 'qpy-input');
+            dom_utils::add_class_names($element, 'btn', 'btn-primary', 'qpy-input');
         }
 
         foreach ($this->xpath->query("//xhtml:input[@type = 'checkbox' or @type = 'radio']") as $element) {
-            $this->add_class_names($element, 'qpy-input');
+            dom_utils::add_class_names($element, 'qpy-input');
         }
     }
 
@@ -678,28 +616,6 @@ class question_ui_renderer {
 
             $element->parentNode->replaceChild(new DOMText($str), $element);
         }
-    }
-
-    /**
-     * Adds the given class names to the elements `class` attribute if not already present.
-     *
-     * @param DOMElement $element
-     * @param string ...$newclasses
-     * @return void
-     */
-    private function add_class_names(DOMElement $element, string ...$newclasses): void {
-        $classarray = [];
-        for ($class = strtok($element->getAttribute('class'), " \t\n"); $class; $class = strtok(" \t\n")) {
-            $classarray[] = $class;
-        }
-
-        foreach ($newclasses as $newclass) {
-            if (!in_array($newclass, $classarray)) {
-                $classarray[] = $newclass;
-            }
-        }
-
-        $element->setAttribute('class', implode(' ', $classarray));
     }
 
     /**

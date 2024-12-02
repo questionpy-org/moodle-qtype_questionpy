@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
+namespace qtype_questionpy\attempt_ui;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -43,7 +43,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * @param string $actualhtml
      * @return void
      */
-    private function assert_html_string_equals_html_string(string $expectedhtml, string $actualhtml) {
+    private function assert_html_string_equals_html_string(string $expectedhtml, string $actualhtml): void {
         // Remove whitespace as `preserveWhiteSpace = false` does not seem to work as expected.
         $expectedhtml = preg_replace('/>\s+</', '><', $expectedhtml);
         $actualhtml = preg_replace('/>\s+</', '><', $actualhtml);
@@ -64,7 +64,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * Tests that inline feedback is hidden when the {@see \question_display_options} say so.
      *
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_hide_inline_feedback(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/feedbacks.xhtml');
@@ -87,7 +87,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * Tests that inline feedback is shown when the {@see \question_display_options} say so.
      *
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_show_inline_feedback(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/feedbacks.xhtml');
@@ -148,7 +148,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * Tests that `qpy:shuffle-elements` sticks to the same shuffled order as long as the seed (attempt id) is the same.
      *
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer::shuffle_contents
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::shuffle_contents
      */
     public function test_should_shuffle_the_same_way_in_same_attempt(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/shuffle.xhtml');
@@ -166,7 +166,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      *
      * @return void
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_resolve_placeholders(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/placeholder.xhtml');
@@ -195,7 +195,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      *
      * @return void
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer::resolve_placeholders
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::resolve_placeholders
      */
     public function test_should_correctly_handle_broken_html_in_placeholder_expansion(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/placeholder.xhtml');
@@ -228,7 +228,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      *
      * @return void
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_remove_placeholders_when_no_corresponding_value(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/placeholder.xhtml');
@@ -253,7 +253,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      *
      * @return void
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_soften_validations(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/validations.xhtml');
@@ -281,7 +281,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * Tests that submit and reset buttons (which would also affect other questions) are turned into simple ones.
      *
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_defuse_buttons(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/buttons.xhtml');
@@ -307,7 +307,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * Tests that elements with `qpy:if-role` attributes are removed when the user has none of the given roles.
      *
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_remove_element_with_if_role_attribute(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/if-role.xhtml');
@@ -332,7 +332,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * Tests that elements with `qpy:if-role` attributes are left be when the user has at least one of the given roles.
      *
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_not_remove_element_with_if_role_attribute(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/if-role.xhtml');
@@ -364,7 +364,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * Tests `qpy:format-float` elements when the current language is en.
      *
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer
      */
     public function test_should_format_floats_in_en(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/format-floats.xhtml');
@@ -391,7 +391,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      *
      * @return void
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer::replace_qpy_urls
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::replace_qpy_urls
      */
     public function test_should_replace_qpy_urls(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/qpy-urls.xhtml');
@@ -415,7 +415,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      *
      * @return void
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer::set_input_values_and_readonly
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::set_input_values_and_readonly
      */
     public function test_should_correctly_fill_data(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/input-values.xhtml');
@@ -467,7 +467,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      *
      * @return void
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer::set_select_value
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::set_select_value
      */
     public function test_should_add_fallback_option_to_select_when_value_isnt_present(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/select.xhtml');

@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy;
 
+use qtype_questionpy\attempt_ui\question_ui_renderer;
+
 /**
  * Metadata about a question attempt, extracted by {@see question_ui_renderer} from the XML.
  *

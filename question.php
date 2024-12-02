@@ -27,8 +27,8 @@ use qtype_questionpy\api\attempt;
 use qtype_questionpy\api\attempt_ui;
 use qtype_questionpy\api\scoring_code;
 use qtype_questionpy\api\package_dependency;
+use qtype_questionpy\attempt_ui\question_ui_metadata_extractor;
 use qtype_questionpy\constants;
-use qtype_questionpy\question_ui_metadata_extractor;
 use qtype_questionpy\utils;
 
 /**
