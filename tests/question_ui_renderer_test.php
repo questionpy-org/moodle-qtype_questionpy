@@ -146,10 +146,43 @@ final class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
+     * Tests that `qpy:shuffle-elements` works and especially correctly handles (nested) `qpy:shuffled-index` elements.
+     *
+     * @throws coding_exception
+     * @covers \qtype_questionpy\question_ui_renderer::shuffle_contents
+     * @covers \qtype_questionpy\question_ui_renderer::replace_shuffled_indices
+     */
+    public function test_should_shuffle_correctly_and_replace_indices(): void {
+        $input = file_get_contents(__DIR__ . '/question_uis/shuffle.xhtml');
+
+        // Fixed ID, because it's used as the shuffle seed.
+        $qa = $this->create_question_attempt_stub(id: 42);
+
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
+
+        $this->assert_html_string_equals_html_string(<<<EXPECTED
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <span>Element 3, shuffled to a</span>
+            <span>Element 4, shuffled to II</span>
+            <span>Element 2, shuffled to 3</span>
+            <span>Element 1, shuffled to 4</span>
+            <div>
+                Element 5, shuffled to 5
+                <div>
+                    <span>Nested element 1, shuffled to 1</span>
+                    <span>Nested element 2, shuffled to 2</span>
+                </div>
+            </div>
+        </div>
+        EXPECTED, $result);
+    }
+
+    /**
      * Tests that `qpy:shuffle-elements` sticks to the same shuffled order as long as the seed (attempt id) is the same.
      *
      * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
+     * @covers \qtype_questionpy\question_ui_renderer::shuffle_contents
      */
     public function test_should_shuffle_the_same_way_in_same_attempt(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/shuffle.xhtml');
@@ -431,15 +464,17 @@ final class question_ui_renderer_test extends \advanced_testcase {
      * Creates a stub question attempt which should fulfill the needs of most tests.
      *
      * @param string|null $packagehash explicit package hash. Random if unset.
+     * @param int|null $id explicit attempt database id. Random if unset.
      * @return question_attempt&Stub
      */
-    private function create_question_attempt_stub(?string $packagehash = null): question_attempt {
+    private function create_question_attempt_stub(?string $packagehash = null, ?int $id = null): question_attempt {
         $packagehash ??= hash('sha256', random_string(64));
+        $id ??= mt_rand();
         $question = new qtype_questionpy_question($packagehash, '{}', null, $this->createStub(api::class));
 
         $qa = $this->createStub(question_attempt::class);
         $qa->method('get_database_id')
-            ->willReturn(mt_rand());
+            ->willReturn($id);
         $qa->method('get_question')
             ->willReturn($question);
         $qa->method('get_qt_field_name')
