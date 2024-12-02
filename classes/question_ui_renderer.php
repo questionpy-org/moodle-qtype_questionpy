@@ -154,7 +154,6 @@ class question_ui_renderer {
     private function shuffle_contents(): void {
         /** @var DOMElement $element */
         foreach (iterator_to_array($this->xpath->query('//*[@qpy:shuffle-contents]')) as $element) {
-            $element->removeAttributeNS(constants::NAMESPACE_QPY, 'shuffle-contents');
             $newelement = $element->cloneNode();
 
             // We want to shuffle elements while leaving other nodes (such as text, spacing) where they are.
@@ -181,6 +180,7 @@ class question_ui_renderer {
                 }
             }
 
+            $newelement->removeAttributeNS(constants::NAMESPACE_QPY, 'shuffle-contents');
             $element->parentNode->replaceChild($newelement, $element);
         }
     }
@@ -197,7 +197,7 @@ class question_ui_renderer {
         foreach (iterator_to_array($this->xpath->query('.//qpy:shuffled-index', $element)) as $indexelement) {
             // phpcs:ignore Squiz.ControlStructures.ForLoopDeclaration.SpacingAfterSecond
             for (
-                $ancestor = $indexelement->parentNode; $ancestor !== null && $ancestor !== $indexelement;
+                $ancestor = $indexelement->parentNode; $ancestor !== null && $ancestor !== $element;
                 $ancestor = $ancestor->parentNode
             ) {
                 assert($ancestor instanceof DOMElement);
