@@ -16,8 +16,15 @@
   -->
 
 <div xmlns="http://www.w3.org/1999/xhtml" xmlns:qpy="http://questionpy.org/ns/question" qpy:shuffle-contents="">
-    <span>Element 1</span>
-    <span>Element 2</span>
-    <span>Element 3</span>
-    <span>Element 4</span>
+    <span>Element 1, shuffled to <qpy:shuffled-index/></span>
+    <span>Element 2, shuffled to <qpy:shuffled-index format="123"/></span>
+    <span>Element 3, shuffled to <qpy:shuffled-index format="abc"/></span>
+    <span>Element 4, shuffled to <qpy:shuffled-index format="III"/></span>
+    <div>
+        Element 5, shuffled to <qpy:shuffled-index/>
+        <div qpy:shuffle-contents="">
+            <span>Nested element 1, shuffled to <qpy:shuffled-index/></span>
+            <span>Nested element 2, shuffled to <qpy:shuffled-index/></span>
+        </div>
+    </div>
 </div>
