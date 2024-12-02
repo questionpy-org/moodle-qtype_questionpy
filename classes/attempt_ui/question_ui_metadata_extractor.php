@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
+namespace qtype_questionpy\attempt_ui;
 
 use DOMAttr;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+use qtype_questionpy\constants;
+use qtype_questionpy\question_metadata;
 
 /**
  * Parses the question UI XML and extracts the metadata.

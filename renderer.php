@@ -25,8 +25,7 @@
 use qtype_questionpy\api\attempt_ui;
 use qtype_questionpy\api\feedback_type;
 use qtype_questionpy\api\js_module_call;
-use qtype_questionpy\constants;
-use qtype_questionpy\question_ui_renderer;
+use qtype_questionpy\attempt_ui\question_ui_renderer;
 
 /**
  * Generates the output for QuestionPy questions.
