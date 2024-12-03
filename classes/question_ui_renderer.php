@@ -174,7 +174,7 @@ class question_ui_renderer {
                 if ($child instanceof DOMElement) {
                     $child = array_pop($childelements);
                     $newelement->appendChild($child);
-                    $this->replace_shuffled_indices($child, $i++);
+                    $this->replace_shuffled_indices($newelement, $child, $i++);
                 } else {
                     $newelement->appendChild($child);
                 }
@@ -188,16 +188,17 @@ class question_ui_renderer {
     /**
      * Among the descendants of `$element`, finds `qpy:shuffled-index` elements and replaces them with `$index`.
      *
-     * @param DOMNode $element
+     * @param DOMElement $container the element which has the currently handled `qpy:shuffle-contents` attribute
+     * @param DOMElement $element the shuffled element whose `qpy:shuffled-index` descendants should be replaced
      * @param int $index
      * @throws coding_exception
      */
-    private function replace_shuffled_indices(DOMNode $element, int $index): void {
+    private function replace_shuffled_indices(DOMElement $container, DOMElement $element, int $index): void {
         /** @var DOMElement $indexelement */
         foreach (iterator_to_array($this->xpath->query('.//qpy:shuffled-index', $element)) as $indexelement) {
             // phpcs:ignore Squiz.ControlStructures.ForLoopDeclaration.SpacingAfterSecond
             for (
-                $ancestor = $indexelement->parentNode; $ancestor !== null && $ancestor !== $element;
+                $ancestor = $indexelement->parentNode; $ancestor !== null && $ancestor !== $container;
                 $ancestor = $ancestor->parentNode
             ) {
                 assert($ancestor instanceof DOMElement);

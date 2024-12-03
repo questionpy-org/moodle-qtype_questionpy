@@ -163,15 +163,19 @@ final class question_ui_renderer_test extends \advanced_testcase {
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
-            <span>Element 3, shuffled to a</span>
-            <span>Element 4, shuffled to II</span>
-            <span>Element 2, shuffled to 3</span>
-            <span>Element 1, shuffled to 4</span>
+            <span>Element 1, shuffled to 1</span>
+            <span>Element 3, shuffled to b</span>
             <div>
-                Element 5, shuffled to 5
+                <span>Nested element 1, shuffled to 1</span>
+                <span>Nested element 2, shuffled to 2</span>
+            </div>
+            <span>Element 2, shuffled to 4</span>
+            <span>Element 4, shuffled to V</span>
+            <div>
+                Element 5, shuffled to 6
                 <div>
-                    <span>Nested element 1, shuffled to 1</span>
-                    <span>Nested element 2, shuffled to 2</span>
+                    <span>Nested element 2, shuffled to 1</span>
+                    <span>Nested element 1, shuffled to 2</span>
                 </div>
             </div>
         </div>

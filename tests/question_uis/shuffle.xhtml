@@ -27,4 +27,9 @@
             <span>Nested element 2, shuffled to <qpy:shuffled-index/></span>
         </div>
     </div>
+    <div qpy:shuffle-contents="">
+        <!-- Nested shuffle being a direct child is an edge case we need to support. -->
+        <span>Nested element 1, shuffled to <qpy:shuffled-index/></span>
+        <span>Nested element 2, shuffled to <qpy:shuffled-index/></span>
+    </div>
 </div>
