@@ -25,7 +25,6 @@
 use core\di;
 use core_question\local\bank\question_edit_contexts;
 use qtype_questionpy\api\api;
-use qtype_questionpy\api\qpy_http_client;
 use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\localizer;
 use qtype_questionpy\package\package;
@@ -42,6 +41,10 @@ use qtype_questionpy\package_file_service;
 class qtype_questionpy_edit_form extends question_edit_form {
     /** @var array current form data set in {@see definition_inner} and added to the question in {@see set_data}. */
     private array $currentdata = [];
+    /** @var package_file_service */
+    private package_file_service $packagefileservice;
+    /** @var api */
+    private api $api;
 
     /**
      * Initialize the form.
