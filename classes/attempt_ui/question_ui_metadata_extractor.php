@@ -21,7 +21,6 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use qtype_questionpy\constants;
-use qtype_questionpy\question_metadata;
 
 /**
  * Parses the question UI XML and extracts the metadata.

@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
-
-use qtype_questionpy\attempt_ui\question_ui_renderer;
+namespace qtype_questionpy\attempt_ui;
 
 /**
  * Metadata about a question attempt, extracted by {@see question_ui_renderer} from the XML.

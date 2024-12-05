@@ -26,6 +26,7 @@ use qtype_questionpy\api\attempt_ui;
 use qtype_questionpy\api\feedback_type;
 use qtype_questionpy\api\js_module_call;
 use qtype_questionpy\attempt_ui\question_ui_renderer;
+use qtype_questionpy\constants;
 
 /**
  * Generates the output for QuestionPy questions.
@@ -195,6 +196,21 @@ EOA;
     protected function formulation_controls_feedback_in_iframe(question_attempt $qa, attempt_ui $ui,
               question_display_options $options, string $autosavehintinputid): string {
         $qformulation = new question_ui_renderer($ui->formulation, $ui->placeholders, $options, $qa);
+        $renderresult = $qformulation->render();
+
+        $warningshtml = '';
+        if ($renderresult->warnings) {
+            global $USER;
+            $isstudent = $qa->get_step(0)->get_user_id() === $USER->id;
+            $warningshtml .= $this->output->render_from_template('qtype_questionpy/render_warnings', [
+                'warnings' => $renderresult->warnings,
+                'get_qt_field_name' => fn($text, $render) => $qa->get_qt_field_name($render(trim($text))),
+                'should_use_list' => count($renderresult->warnings) > 1,
+                'should_show_hint_contact_trainers' => $isstudent,
+                'should_show_hint_editable' => $isstudent && !$options->readonly,
+            ]);
+        }
+
         $feedback = html_writer::nonempty_tag(
             'div',
             $this->feedback_in_iframe($qa, $options),
@@ -210,8 +226,9 @@ EOA;
         $this->add_package_js_calls($ui->javascriptcalls, $roles, $options);
 
         return $this->render_from_template('qtype_questionpy/iframe_question_content', [
-            'question' => $qformulation->render(),
-            'feedback' => $feedback,
+            'question_html' => $renderresult->html,
+            'feedback_html' => $feedback,
+            'warnings_html' => $warningshtml,
         ]);
     }
 
