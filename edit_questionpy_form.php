@@ -25,6 +25,7 @@
 use core\di;
 use core_question\local\bank\question_edit_contexts;
 use qtype_questionpy\api\api;
+use qtype_questionpy\api\qpy_http_client;
 use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\localizer;
 use qtype_questionpy\package\package;
@@ -203,8 +204,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
             $isfavourite = $ufservice->favourite_exists('qtype_questionpy', 'package', $package->id, $usercontext);
             $version = $pkgversion->version;
         } else {
-            $api = new api();
-            $package = $api->get_package_info($packagehash);
+            $package = $this->api->get_package_info($packagehash);
             $isfavourite = null;
             $version = $package->version;
         }
