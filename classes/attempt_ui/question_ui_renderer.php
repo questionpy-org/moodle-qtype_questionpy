@@ -27,6 +27,7 @@ use DOMProcessingInstruction;
 use DOMText;
 use DOMXPath;
 use qtype_questionpy\constants;
+use qtype_questionpy\utils;
 use qtype_questionpy_question;
 use question_attempt;
 use question_display_options;
@@ -46,9 +47,6 @@ class question_ui_renderer {
     /** @var DOMXPath $xpath */
     private DOMXPath $xpath;
 
-    /** @var string|null $html */
-    private ?string $html = null;
-
     /** @var array $placeholders */
     private array $placeholders;
 
@@ -60,6 +58,9 @@ class question_ui_renderer {
 
     /** @var string[]|null $roles names of roles that the current user has (use {@see get_user_roles()} to get the roles) */
     private ?array $roles = null;
+
+    /** @var render_result|null $result */
+    private ?render_result $result = null;
 
     /**
      * @var string[] $unmappableduplicatefieldnames contains duplicate input field names that cannot be mapped with certainty to
@@ -76,7 +77,7 @@ class question_ui_renderer {
     /**
      * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
      *
-     * @param string $xml         XML as returned by the QPy Server
+     * @param string $xml XML as returned by the QPy Server
      * @param array $placeholders string to string mapping of placeholder names to the values
      * @param question_display_options $options
      * @param question_attempt $attempt
@@ -104,13 +105,12 @@ class question_ui_renderer {
     /**
      * Renders the given XML to HTML.
      *
-     * @return string rendered html
+     * @return render_result
      * @throws coding_exception
-     * @throws DOMException
      */
-    public function render(): string {
-        if (!is_null($this->html)) {
-            return $this->html;
+    public function render(): render_result {
+        if ($this->result) {
+            return $this->result;
         }
 
         $nextseed = mt_rand();
@@ -126,6 +126,8 @@ class question_ui_renderer {
             $this->hide_if_role();
             $this->shuffle_contents();
             $this->format_floats();
+
+            $availableoptions = $this->extract_available_options();
 
             // Remove all unhandled custom elements, attributes, comments, and non-default xmlns declarations.
             $this->clean_up();
@@ -146,8 +148,9 @@ class question_ui_renderer {
             mt_srand($nextseed);
         }
 
-        $this->html = $this->xml->saveHTML();
-        return $this->html;
+        $warnings = $this->check_for_unknown_options($availableoptions);
+        $this->result = new render_result($this->xml->saveHTML(), $warnings);
+        return $this->result;
     }
 
     /**
@@ -269,7 +272,7 @@ class question_ui_renderer {
      * - If a value was saved for the input in a previous step, the latest value is added to the HTML.
      *
      * @return void
-     * @throws DOMException|coding_exception
+     * @throws coding_exception
      */
     private function set_input_values_and_readonly(): void {
         $lastresponse = utils::get_qpy_response($this->attempt);
@@ -345,7 +348,6 @@ class question_ui_renderer {
      * @param string $type
      * @param string $lastvalue
      * @return void
-     * @throws DOMException
      * @throws coding_exception
      */
     private function set_input_values_for_single_name_fields(DOMElement $element, string $type, string $lastvalue): void {
@@ -629,7 +631,7 @@ class question_ui_renderer {
         assert($question instanceof qtype_questionpy_question);
 
         return preg_replace_callback(
-            // The first two path segments are namespace and short name, and so more restrictive.
+        // The first two path segments are namespace and short name, and so more restrictive.
             ';qpy://static((?:/[a-z_][a-z0-9_]{0,126}){2}(?:/[\w\-@:%+.~=]+)+);',
             function (array $match) use ($question) {
                 $path = $match[1];
@@ -702,5 +704,81 @@ class question_ui_renderer {
                 $this->mappableduplicatefieldnames[] = $name;
             }
         }
+    }
+
+    private function extract_available_options(): array {
+        $optionsbyname = [];
+
+        /** @var DOMElement $select */
+        foreach ($this->xpath->query('//xhtml:select') as $select) {
+            $name = $select->getAttribute('name');
+            if (!$name) {
+                continue;
+            }
+
+            $values = [];
+            /** @var DOMElement $option */
+            foreach ($this->xpath->query('./xhtml:option | ./xhtml:optgroup/xhtml:option', $select) as $option) {
+                $values[] = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
+            }
+
+            $optionsbyname[$name] = array_unique($values);
+        }
+
+        /** @var DOMElement $input */
+        foreach ($this->xpath->query('//xhtml:input[(@type="checkbox" or @type="radio") and not(@qpy:warn-on-unknown-option = "no")]') as $input) {
+            $name = $input->getAttribute('name');
+            if (!$name) {
+                continue;
+            }
+
+            if (!array_key_exists($name, $optionsbyname)) {
+                $optionsbyname[$name] = [];
+            }
+
+            $value = $input->hasAttribute('value') ? $input->getAttribute('value') : 'on';
+            if (!in_array($value, $optionsbyname[$name])) {
+                $optionsbyname[$name][] = $value;
+            }
+        }
+
+        foreach ($optionsbyname as &$values) {
+            sort($values);
+        }
+
+        return $optionsbyname;
+    }
+
+    /**
+     * @throws \core\exception\coding_exception
+     */
+    private function check_for_unknown_options(array $availableoptionsbyname): array {
+        $response = utils::get_qpy_response($this->attempt);
+
+        $warnings = [];
+        foreach ($availableoptionsbyname as $name => $availableoptions) {
+            if (!isset($response->{$name})) {
+                continue;
+            }
+
+            if (in_array($name, $this->mappableduplicatefieldnames) || in_array($name, $this->unmappableduplicatefieldnames)) {
+                $lastvalues = $response->{$name};
+                if (!is_array($lastvalues)) {
+                    $lastvalues = [$lastvalues];
+                }
+
+                foreach ($lastvalues as $lastvalue) {
+                    if (!in_array($lastvalue, $availableoptions)) {
+                        $warnings[] = new invalid_option_warning($name, $lastvalue, $availableoptions);
+                    }
+                }
+            } else {
+                $lastvalue = $response->{$name};
+                if (!in_array($lastvalue, $availableoptions)) {
+                    $warnings[] = new invalid_option_warning($name, $lastvalue, $availableoptions);
+                }
+            }
+        }
+        return $warnings;
     }
 }

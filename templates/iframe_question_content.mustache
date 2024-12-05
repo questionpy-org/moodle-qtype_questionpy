@@ -23,22 +23,25 @@
     The HTML structure is similar to how Moodle embeds the question formulation to make it look the same.
 
     Context variables required for this template:
-    * question - question html
-    * feedback - feedback html
+    * question_html - question html
+    * feedback_html - feedback html
+    * warnings_html - rendered html showing warnings generated during question rendering
 
     Example context (json):
     {
-        "question": "Question HTML",
-        "feedback": "Feedback HTML"
+        "question_html": "Question HTML",
+        "feedback_html": "Feedback HTML",
+        "warnings_html": "Warnings HTML",
     }
 }}
 <div class="que">
+    {{{ warnings_html }}}
     <div class="content">
         <div class="formulation clearfix">
             <form id="qpy-formulation">
-                {{{ question }}}
+                {{{ question_html }}}
             </form>
         </div>
-        {{{ feedback }}}
+        {{{ feedback_html }}}
     </div>
 </div>
