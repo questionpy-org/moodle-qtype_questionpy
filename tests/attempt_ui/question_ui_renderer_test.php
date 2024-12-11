@@ -19,13 +19,17 @@ namespace qtype_questionpy\attempt_ui;
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
+require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 require_once($CFG->dirroot . '/question/type/questionpy/question.php');
 
 use coding_exception;
 use PHPUnit\Framework\MockObject\Stub;
 use qtype_questionpy\api\api;
+use qtype_questionpy\constants;
 use qtype_questionpy_question;
 use question_attempt;
+use question_attempt_step;
+use testable_question_attempt;
 
 /**
  * Unit tests for {@see question_ui_renderer}.
@@ -80,7 +84,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         <div xmlns="http://www.w3.org/1999/xhtml">
             <span>No feedback</span>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -104,7 +108,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             <span>General feedback</span>
             <span>Specific feedback</span>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -141,7 +145,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
                 </div>
             </div>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -157,7 +161,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $firstresult = (new question_ui_renderer($input, [], new \question_display_options(), $qa))->render();
         for ($i = 0; $i < 10; $i++) {
             $result = (new question_ui_renderer($input, [], new \question_display_options(), $qa))->render();
-            $this->assertEquals($firstresult, $result);
+            $this->assertEquals($firstresult->html, $result->html);
         }
     }
 
@@ -187,7 +191,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             <span>Plain parameter: Value of param &lt;b>one&lt;/b>.&lt;script>'Oh no, danger!'&lt;/script>
             </span>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -219,7 +223,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             <span>Noclean parameter: <format-float>123</format-float><unknown-tag></unknown-tag><div>unclosed</div></span>
             <span>Plain parameter: &lt;qpy:format-float>123&lt;/qpy:format-float>&lt;unknown-tag>&lt;/unknown-tag>&lt;div>unclosed</span>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
         // phpcs:enable moodle.Files.LineLength.TooLong
     }
 
@@ -245,7 +249,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             <span>Noclean parameter: </span>
             <span>Plain parameter: </span>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -274,7 +278,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
                    data-qpy_minlength="5" data-qpy_maxlength="10"
                    aria-valuemin="17" data-qpy_min="17" aria-valuemax="42" data-qpy_max="42"/>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -300,7 +304,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             <input class="btn btn-primary qpy-input" type="button" value="Reset"/>
             <input class="btn btn-primary qpy-input" type="button" value="Button"/>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -325,7 +329,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml"></div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -357,7 +361,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             <div>You're a proctor!</div>
             <div>You're any of the above!</div>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -383,7 +387,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             Pad with zeros: 1.10000
             Strip zeros: 1.1
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -406,7 +410,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             static link: <a href="https://www.example.com/moodle/pluginfile.php//qtype_questionpy/static/deadbeef/local/minimal_example/path1/path2/filename.txt">https://www.example.com/moodle/pluginfile.php//qtype_questionpy/static/deadbeef/local/minimal_example/path1/path2/filename.txt</a>
             minimal path: <a href="https://www.example.com/moodle/pluginfile.php//qtype_questionpy/static/deadbeef/local/minimal_example/f">https://www.example.com/moodle/pluginfile.php//qtype_questionpy/static/deadbeef/local/minimal_example/f</a>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
         // phpcs:enable moodle.Files.LineLength.MaxExceeded
     }
 
@@ -419,8 +423,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_correctly_fill_data(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/input-values.xhtml');
-        $qa = $this->create_question_attempt_stub('deadbeef');
-        $newvalues = [
+        $qa = $this->create_question_attempt_stub('deadbeef', lastresponse: [
             'my_text' => 'new',
             'my_checkbox_value' => 'value',
             'my_checkbox_on' => 'on',
@@ -429,9 +432,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             'my_hidden' => 'new',
             'my_button' => 'should be ignored',
             'my_textarea' => 'new',
-        ];
-        $qa->method('get_last_qt_var')
-            ->willReturn(json_encode($newvalues));
+        ]);
 
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
@@ -459,7 +460,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
 
             <textarea class="form-control qpy-input" name="my_textarea">new</textarea>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -471,23 +472,23 @@ final class question_ui_renderer_test extends \advanced_testcase {
      */
     public function test_should_add_fallback_option_to_select_when_value_isnt_present(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/select.xhtml');
-        $qa = $this->create_question_attempt_stub('deadbeef');
-        $qa->method('get_last_qt_var')
-            ->willReturn('something');
+        $qa = $this->create_question_attempt_stub('deadbeef', lastresponse: [
+            'my_select' => 'something',
+        ]);
 
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml" >
-            <select class="form-control qpy-input" name="mangled:my_select">
+            <select class="form-control qpy-input" name="my_select">
                 <option value="value1"/>
                 <option value="value2"/>
                 <option value="value3"/>
                 <option value="something" selected="selected">(the selected option is no longer available)</option>
             </select>
         </div>
-        EXPECTED, $result);
+        EXPECTED, $result->html);
     }
 
     /**
@@ -495,22 +496,23 @@ final class question_ui_renderer_test extends \advanced_testcase {
      *
      * @param string|null $packagehash explicit package hash. Random if unset.
      * @param int|null $id explicit attempt database id. Random if unset.
+     * @param array $lastresponse last response submitted in the attempt
      * @return question_attempt&Stub
+     * @throws coding_exception
      */
-    private function create_question_attempt_stub(?string $packagehash = null, ?int $id = null): question_attempt {
+    private function create_question_attempt_stub(?string $packagehash = null, ?int $id = null,
+                                                  array $lastresponse = []): question_attempt {
         $packagehash ??= hash('sha256', random_string(64));
         $id ??= mt_rand();
         $question = new qtype_questionpy_question($packagehash, '{}', null, $this->createStub(api::class));
 
-        $qa = $this->createStub(question_attempt::class);
-        $qa->method('get_database_id')
-            ->willReturn($id);
-        $qa->method('get_question')
-            ->willReturn($question);
-        $qa->method('get_qt_field_name')
-            ->willReturnCallback(function ($name) {
-                return "mangled:$name";
-            });
+        $step = new question_attempt_step([constants::QT_VAR_RESPONSE => json_encode((object) $lastresponse)]);
+
+        $qa = new testable_question_attempt($question, 1);
+        $qa->set_database_id($id);
+        $qa->set_slot(1);
+        $qa->add_step($step);
+
         return $qa;
     }
 }
