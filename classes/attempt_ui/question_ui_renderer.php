@@ -710,7 +710,7 @@ class question_ui_renderer {
         $optionsbyname = [];
 
         /** @var DOMElement $select */
-        foreach ($this->xpath->query('//xhtml:select') as $select) {
+        foreach ($this->xpath->query('//xhtml:select[not(@qpy:warn-on-unknown-option = "no")]') as $select) {
             $name = $select->getAttribute('name');
             if (!$name) {
                 continue;
@@ -725,10 +725,18 @@ class question_ui_renderer {
             $optionsbyname[$name] = array_unique($values);
         }
 
+        $ignorednames = [];
         /** @var DOMElement $input */
-        foreach ($this->xpath->query('//xhtml:input[(@type="checkbox" or @type="radio") and not(@qpy:warn-on-unknown-option = "no")]') as $input) {
+        foreach ($this->xpath->query('//xhtml:input[(@type="checkbox" or @type="radio")]') as $input) {
             $name = $input->getAttribute('name');
             if (!$name) {
+                continue;
+            }
+            if (in_array($name, $ignorednames)) {
+                continue;
+            }
+            if ($input->getAttributeNS(constants::NAMESPACE_QPY, 'warn-on-unknown-option') === 'no') {
+                $ignorednames[] = $name;
                 continue;
             }
 
@@ -742,6 +750,9 @@ class question_ui_renderer {
             }
         }
 
+        foreach ($ignorednames as $ignoredname) {
+            unset($optionsbyname[$ignoredname]);
+        }
         foreach ($optionsbyname as &$values) {
             sort($values);
         }
