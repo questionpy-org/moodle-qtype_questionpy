@@ -492,6 +492,55 @@ final class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
+     * Tests that render warnings are generated when the last response contains invalid values.
+     *
+     * @return void
+     * @throws coding_exception
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::extract_available_options
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::check_for_unknown_options
+     */
+    public function test_should_warn_about_invalid_values(): void {
+        $input = file_get_contents(__DIR__ . '/question_uis/input-values.xhtml');
+        $qa = $this->create_question_attempt_stub('deadbeef', lastresponse: [
+            'my_checkbox_value' => 'other_value',
+            'my_checkbox_on' => 'schmon',
+            'my_radio' => 'value13',
+            'my_select' => 'value42',
+        ]);
+
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
+        $this->assertEqualsCanonicalizing([
+            new invalid_option_warning('my_checkbox_value', 'other_value', ['value']),
+            new invalid_option_warning('my_checkbox_on', 'schmon', ['on']),
+            new invalid_option_warning('my_radio', 'value13', ['value1', 'value2']),
+            new invalid_option_warning('my_select', 'value42', ['value1', 'value2', 'value3']),
+        ], $result->warnings);
+    }
+
+    /**
+     * Tests that render warnings are NOT generated when the input element has `qpy:warn-on-unknown-option="no"`.
+     *
+     * @return void
+     * @throws coding_exception
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::extract_available_options
+     * @covers \qtype_questionpy\attempt_ui\question_ui_renderer::check_for_unknown_options
+     */
+    public function test_should_not_warn_about_invalid_values_when_input_opts_out(): void {
+        $input = file_get_contents(__DIR__ . '/question_uis/input-values-nowarn.xhtml');
+        $qa = $this->create_question_attempt_stub('deadbeef', lastresponse: [
+            'my_checkbox_value' => 'other_value',
+            'my_checkbox_on' => 'schmon',
+            'my_radio' => 'value13',
+            'my_select' => 'value42',
+        ]);
+
+        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
+        $result = $ui->render();
+        $this->assertEmpty($result->warnings);
+    }
+
+    /**
      * Creates a stub question attempt which should fulfill the needs of most tests.
      *
      * @param string|null $packagehash explicit package hash. Random if unset.
