@@ -19,15 +19,36 @@ namespace qtype_questionpy\attempt_ui;
 use coding_exception;
 use html_writer;
 
+/**
+ * The last response has fields set to values which don't seem to be available anymore.
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class invalid_option_warning {
+    /**
+     * Trivial constructor.
+     *
+     * @param string $name name of the input field in question
+     * @param string $value value from the last response, for which no option was found in the UI
+     * @param array $availablevalues the available options present in the UI
+     */
     public function __construct(
+        /** @var string $name name of the input field in question */
         public string $name,
+        /** @var string $value value from the last response, for which no option was found in the UI */
         public string $value,
+        /** @var array $availablevalues the available options present in the UI */
         public array $availablevalues
     ) {
     }
 
     /**
+     * Return a localized string describing this warning to humans. Name and values are escaped.
+     *
+     * @return string
      * @throws coding_exception
      */
     public function localize(): string {

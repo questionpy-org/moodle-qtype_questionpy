@@ -20,7 +20,6 @@ use coding_exception;
 use DOMAttr;
 use DOMDocument;
 use DOMElement;
-use DOMException;
 use DOMNameSpaceNode;
 use DOMNode;
 use DOMProcessingInstruction;
@@ -706,6 +705,22 @@ class question_ui_renderer {
         }
     }
 
+    /**
+     * For all selects, checkboxes and radios in the UI, collects the available option values.
+     *
+     * This can be opted-out of by setting `qpy:warn-on-unknown-option` on the input element. In the case of checkboxes
+     * and radios, any element having the attribute will exclude all inputs with the same name.
+     *
+     * At first glance, this function seems to be more suited to be placed in
+     * {@see question_ui_metadata_extractor}. It is here for two reasons:
+     * - The {@see \qtype_questionpy_renderer} uses the render warnings when it also renders the UI. The metadata
+     *   extractor is used in other methods.
+     * - While we should discourage it, it is possible for inputs to be inside `qpy:if-role` or `qpy:feedback`
+     *   elements. {@see question_ui_metadata_extractor} doesn't resolve those.
+     *
+     * @return array
+     * @see check_for_unknown_options
+     */
     private function extract_available_options(): array {
         $optionsbyname = [];
 
@@ -761,6 +776,11 @@ class question_ui_renderer {
     }
 
     /**
+     * Checks if the last response contains values which are invalid.
+     *
+     * @param array $availableoptionsbyname
+     * @return array
+     * @see extract_available_options
      * @throws \core\exception\coding_exception
      */
     private function check_for_unknown_options(array $availableoptionsbyname): array {

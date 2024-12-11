@@ -16,7 +16,21 @@
 
 namespace qtype_questionpy\attempt_ui;
 
+/**
+ * Result from {@see question_ui_renderer::render()}: The HTML and possibly warnings.
+ *
+ * @package    qtype_questionpy
+ * @author     Maximilian Haye
+ * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class render_result {
+    /**
+     * Initialize a new render result.
+     *
+     * @param string $html
+     * @param invalid_option_warning[] $warnings
+     */
     public function __construct(
         /** @var string $html */
         public string $html,
