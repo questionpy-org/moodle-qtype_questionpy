@@ -147,7 +147,7 @@ class question_ui_renderer {
             mt_srand($nextseed);
         }
 
-        $warnings = $this->check_for_unknown_options($availableoptions);
+        $warnings = $this->check_for_and_preserve_unknown_options($availableoptions);
         $this->result = new render_result($this->xml->saveHTML(), $warnings);
         return $this->result;
     }
@@ -718,11 +718,11 @@ class question_ui_renderer {
      * - While we should discourage it, it is possible for inputs to be inside `qpy:if-role` or `qpy:feedback`
      *   elements. {@see question_ui_metadata_extractor} doesn't resolve those.
      *
-     * @return array
-     * @see check_for_unknown_options
+     * @return array<string, available_opts_info>
+     * @see check_for_and_preserve_unknown_options
      */
     private function extract_available_options(): array {
-        $optionsbyname = [];
+        $infobyname = [];
 
         /** @var DOMElement $select */
         foreach ($this->xpath->query('//xhtml:select[not(@qpy:warn-on-unknown-option = "no")]') as $select) {
@@ -731,82 +731,81 @@ class question_ui_renderer {
                 continue;
             }
 
-            $values = [];
+            $optvalues = [];
             /** @var DOMElement $option */
             foreach ($this->xpath->query('./xhtml:option | ./xhtml:optgroup/xhtml:option', $select) as $option) {
-                $values[] = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
+                $optvalues[] = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
             }
 
-            $optionsbyname[$name] = array_unique($values);
+            $warn = $select->getAttributeNS(constants::NAMESPACE_QPY, 'warn-on-unknown-option') !== 'no';
+
+            $infobyname[$name] = new available_opts_info('select', array_unique($optvalues), $warn);
         }
 
-        $ignorednames = [];
         /** @var DOMElement $input */
         foreach ($this->xpath->query('//xhtml:input[(@type="checkbox" or @type="radio")]') as $input) {
             $name = $input->getAttribute('name');
             if (!$name) {
                 continue;
             }
-            if (in_array($name, $ignorednames)) {
-                continue;
-            }
-            if ($input->getAttributeNS(constants::NAMESPACE_QPY, 'warn-on-unknown-option') === 'no') {
-                $ignorednames[] = $name;
-                continue;
-            }
 
-            if (!array_key_exists($name, $optionsbyname)) {
-                $optionsbyname[$name] = [];
+            $info = $infobyname[$name] ??= new available_opts_info($input->getAttribute('type'), [], true);
+
+            if ($input->getAttributeNS(constants::NAMESPACE_QPY, 'warn-on-unknown-option') === 'no') {
+                $info->warnonunknownoption = false;
             }
 
             $value = $input->hasAttribute('value') ? $input->getAttribute('value') : 'on';
-            if (!in_array($value, $optionsbyname[$name])) {
-                $optionsbyname[$name][] = $value;
+            if (!in_array($value, $info->availableoptions)) {
+                $info->availableoptions[] = $value;
             }
         }
 
-        foreach ($ignorednames as $ignoredname) {
-            unset($optionsbyname[$ignoredname]);
-        }
-        foreach ($optionsbyname as &$values) {
-            sort($values);
+        foreach ($infobyname as $info) {
+            sort($info->availableoptions);
         }
 
-        return $optionsbyname;
+        return $infobyname;
     }
 
     /**
-     * Checks if the last response contains values which are invalid.
+     * Checks the last response for invalid values and adds hidden inputs to preserve those invalid values.
      *
-     * @param array $availableoptionsbyname
-     * @return array
+     * This method must be called after {@see populate_duplicate_field_names} so that the added hidden inputs are not detected as
+     * duplicates.
+     *
+     * @param available_opts_info[] $availableoptsinfobyname
+     * @return invalid_option_warning[]
+     * @throws coding_exception
      * @see extract_available_options
      * @throws \core\exception\coding_exception
      */
-    private function check_for_unknown_options(array $availableoptionsbyname): array {
+    private function check_for_and_preserve_unknown_options(array $availableoptsinfobyname): array {
         $response = utils::get_qpy_response($this->attempt);
 
         $warnings = [];
-        foreach ($availableoptionsbyname as $name => $availableoptions) {
-            if (!isset($response->{$name})) {
+        foreach ($availableoptsinfobyname as $name => $info) {
+            if (!$info->warnonunknownoption || !isset($response->{$name})) {
                 continue;
             }
 
-            if (in_array($name, $this->mappableduplicatefieldnames) || in_array($name, $this->unmappableduplicatefieldnames)) {
-                $lastvalues = $response->{$name};
-                if (!is_array($lastvalues)) {
-                    $lastvalues = [$lastvalues];
-                }
+            $lastvalues = $response->{$name};
+            if (!is_array($lastvalues)) {
+                // Happens when a multi-valued field is given only one value (which is fine).
+                $lastvalues = [$lastvalues];
+            }
 
-                foreach ($lastvalues as $lastvalue) {
-                    if (!in_array($lastvalue, $availableoptions)) {
-                        $warnings[] = new invalid_option_warning($name, $lastvalue, $availableoptions);
+            foreach ($lastvalues as $lastvalue) {
+                if (!in_array($lastvalue, $info->availableoptions)) {
+                    $warnings[] = new invalid_option_warning($name, $lastvalue, $info->availableoptions);
+                    if ($info->type !== 'select') {
+                        // Selects are handled in dom_utils::set_select_value.
+                        // This should work for single-valued and multi-valued fields alike: The invalid checkbox(es) and radio(s)
+                        // will have been unchecked by set_input_values_and_readonly, so this hidden input will be the only one,
+                        // ensuring that single-valued fields only receive a single value. For multi-valued fields, the hidden input
+                        // value will simply be added to the others in JS (addIframeFormDataOnSubmit).
+                        dom_utils::add_hidden_input($this->xml->documentElement, $name, $lastvalue);
                     }
-                }
-            } else {
-                $lastvalue = $response->{$name};
-                if (!in_array($lastvalue, $availableoptions)) {
-                    $warnings[] = new invalid_option_warning($name, $lastvalue, $availableoptions);
                 }
             }
         }

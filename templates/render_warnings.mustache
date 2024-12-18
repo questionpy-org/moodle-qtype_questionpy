@@ -39,18 +39,13 @@
     {{#should_use_list}}
         <ul>
             {{#warnings}}
-                <li>
-                    {{{localize}}}
-                    <input type="hidden" name="{{#get_qt_field_name}} {{name}} {{/get_qt_field_name}}"
-                           value="{{value}}">
-                </li>
+                <li>{{{localize}}}</li>
             {{/warnings}}
         </ul>
     {{/should_use_list}}
     {{^should_use_list}}
         {{#warnings}}
             <p>{{{localize}}}</p>
-            <input type="hidden" name="{{#get_qt_field_name}} {{name}} {{/get_qt_field_name}}" value="{{value}}">
         {{/warnings}}
     {{/should_use_list}}
 

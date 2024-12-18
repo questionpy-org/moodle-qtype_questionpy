@@ -204,7 +204,6 @@ EOA;
             $isstudent = $qa->get_step(0)->get_user_id() === $USER->id;
             $warningshtml .= $this->output->render_from_template('qtype_questionpy/render_warnings', [
                 'warnings' => $renderresult->warnings,
-                'get_qt_field_name' => fn($text, $render) => $qa->get_qt_field_name($render(trim($text))),
                 'should_use_list' => count($renderresult->warnings) > 1,
                 'should_show_hint_contact_trainers' => $isstudent,
                 'should_show_hint_editable' => $isstudent && !$options->readonly,
