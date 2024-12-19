@@ -73,7 +73,7 @@ class select_element extends form_element {
         $selected = [];
         $optionsassociative = [];
         foreach ($this->options as $option) {
-            $optionsassociative[$option->value] = $context->contextualize($option->label);
+            $optionsassociative[$option->value] = s($context->contextualize($option->label));
             if ($option->selected) {
                 $selected[] = $option->value;
             }
