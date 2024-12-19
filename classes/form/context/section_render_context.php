@@ -36,7 +36,7 @@ class section_render_context extends mform_render_context {
      * Initializes a new {@see section_render_context}.
      *
      * @param render_context $parent context containing this section
-     * @param string $name           the name part which will be appended to `$parent`'s prefix
+     * @param string $name the name part which will be appended to `$parent`'s prefix
      */
     public function __construct(render_context $parent, string $name) {
         $this->parent = $parent;
@@ -68,5 +68,14 @@ class section_render_context extends mform_render_context {
      */
     public function contextualize(?string $text): ?string {
         return $this->parent->contextualize($text);
+    }
+
+    /**
+     * Generate a new UUID. Probably uses {@see uuid}, but may be overridden for tests.
+     *
+     * @return string
+     */
+    public function generate_uuid(): string {
+        return $this->parent->generate_uuid();
     }
 }

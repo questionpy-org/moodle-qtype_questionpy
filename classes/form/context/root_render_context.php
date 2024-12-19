@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy\form\context;
 
+use core\uuid;
+
 /**
  * Uppermost render context.
  *
@@ -27,6 +29,9 @@ namespace qtype_questionpy\form\context;
 class root_render_context extends mform_render_context {
     /** @var int the next int which will be returned by {@see next_unique_int} */
     private int $nextuniqueint = 1;
+
+    /** @var callable can be set from tests to supply mock UUIDs */
+    public $uuidgen = [uuid::class, 'generate'];
 
     /**
      * Get a unique and deterministic integer for use in generated element names and IDs.
@@ -47,5 +52,14 @@ class root_render_context extends mform_render_context {
      */
     public function contextualize(?string $text): ?string {
         return $text;
+    }
+
+    /**
+     * Generate a new UUID. Probably uses {@see uuid}, but may be overridden for tests.
+     *
+     * @return string
+     */
+    public function generate_uuid(): string {
+        return ($this->uuidgen)();
     }
 }

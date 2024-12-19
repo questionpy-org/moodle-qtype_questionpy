@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form\context;
 
+use core\uuid;
 use moodleform;
 use MoodleQuickForm;
 use qtype_questionpy\utils;
@@ -212,4 +213,11 @@ abstract class render_context {
      * @return string|null input string with format specifiers replaced
      */
     abstract public function contextualize(?string $text): ?string;
+
+    /**
+     * Generate a new UUID. Probably uses {@see uuid}, but may be overridden for tests.
+     *
+     * @return string
+     */
+    abstract public function generate_uuid(): string;
 }
