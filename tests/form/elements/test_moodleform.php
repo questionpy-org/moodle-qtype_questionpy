@@ -55,6 +55,7 @@ class test_moodleform extends \moodleform {
      */
     protected function definition() {
         $context = new root_render_context($this, $this->_form, 'qpy_form', []);
+        $context->uuidgen = fn() => '24daab97-7eeb-422d-a2f3-f4e770fb11f6';
         $this->element->render_to($context);
     }
 }

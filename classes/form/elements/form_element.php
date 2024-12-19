@@ -27,7 +27,7 @@ use qtype_questionpy\form\qpy_renderable;
  * @copyright  2022 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-#[array_polymorphic('kind', variants: [
+#[array_polymorphic(discriminator: 'kind', variants: [
     'checkbox' => checkbox_element::class,
     'checkbox_group' => checkbox_group_element::class,
     'group' => group_element::class,
@@ -38,6 +38,7 @@ use qtype_questionpy\form\qpy_renderable;
     'static_text' => static_text_element::class,
     'input' => text_input_element::class,
     'textarea' => text_area_element::class,
+    'id' => generated_id_element::class,
 ], fallbackvariant: fallback_element::class)]
 abstract class form_element implements qpy_renderable {
 }

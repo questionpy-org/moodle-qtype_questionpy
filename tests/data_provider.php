@@ -33,6 +33,7 @@ use qtype_questionpy\form\conditions\is_checked;
 use qtype_questionpy\form\conditions\is_not_checked;
 use qtype_questionpy\form\elements\checkbox_element;
 use qtype_questionpy\form\elements\checkbox_group_element;
+use qtype_questionpy\form\elements\generated_id_element;
 use qtype_questionpy\form\elements\group_element;
 use qtype_questionpy\form\elements\hidden_element;
 use qtype_questionpy\form\elements\option;
@@ -143,5 +144,6 @@ function element_provider(): array {
         ['static_text', new static_text_element('my_text', 'Label', 'Lorem ipsum dolor sit amet.')],
         ['input', new text_input_element('my_field', 'Label', true, 'default', 'placeholder')],
         ['textarea', new text_area_element('my_field', 'Label', true, 'default', 'placeholder')],
+        ['id', new generated_id_element('my_id')],
     ];
 }

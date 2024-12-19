@@ -67,7 +67,7 @@ class array_render_context extends render_context {
      * Initializes a new array-based context.
      *
      * @param render_context $parent context containing this group
-     * @param string $prefix         prefix for the names of elements in this context
+     * @param string $prefix prefix for the names of elements in this context
      */
     public function __construct(render_context $parent, string $prefix) {
         $this->parent = $parent;
@@ -82,8 +82,8 @@ class array_render_context extends render_context {
     /**
      * Create, add and return an element.
      *
-     * @param string $type   the type name of the element, as per the Moodle docs.
-     * @param string $name   the name of the generated form element.
+     * @param string $type the type name of the element, as per the Moodle docs.
+     * @param string $name the name of the generated form element.
      * @param mixed ...$args remaining arguments specific to the element type.
      * @return object the created element. Really an instance of {@see \HTML_QuickForm_element}, but the return type of
      *                       {@see \MoodleQuickForm::addElement()} is also an object.
@@ -109,7 +109,7 @@ class array_render_context extends render_context {
     /**
      * Sets the default of an element which has been (or will be) added independently.
      *
-     * @param string $name   the name of the target element.
+     * @param string $name the name of the target element.
      * @param mixed $default default value for the element.
      * @see \MoodleQuickForm::setDefault()
      */
@@ -122,14 +122,14 @@ class array_render_context extends render_context {
      *
      * Must be called *after* the element was added using {@see add_element}.
      *
-     * @param string $name            the name of the target element.
-     * @param string|null $message    message to display for invalid data.
-     * @param string $type            rule type, use getRegisteredRules() to get types.
-     * @param string|null $format     required for extra rule data.
+     * @param string $name the name of the target element.
+     * @param string|null $message message to display for invalid data.
+     * @param string $type rule type, use getRegisteredRules() to get types.
+     * @param string|null $format required for extra rule data.
      * @param string|null $validation where to perform validation: "server", "client".
-     * @param bool $reset             client-side validation: reset the form element to its original value if there is
+     * @param bool $reset client-side validation: reset the form element to its original value if there is
      *                                an error?
-     * @param bool $force             force the rule to be applied, even if the target form element does not exist.
+     * @param bool $force force the rule to be applied, even if the target form element does not exist.
      * @see \MoodleQuickForm::addRule()
      */
     public function add_rule(string $name, ?string $message, string $type, ?string $format = null,
@@ -144,9 +144,9 @@ class array_render_context extends render_context {
      * Adds a condition which will disable the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param string $dependency  absolute name of the element which is depended on
-     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
-     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
+     * @param string $dependency absolute name of the element which is depended on
+     * @param string $operator one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
+     * @param mixed $value for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::disabledIf()
      */
     public function disable_if(string $dependant, string $dependency, string $operator, $value = null): void {
@@ -157,9 +157,9 @@ class array_render_context extends render_context {
      * Adds a condition which will hide the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param string $dependency  absolute name of the element which is depended on
-     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
-     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
+     * @param string $dependency absolute name of the element which is depended on
+     * @param string $operator one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
+     * @param mixed $value for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see \MoodleQuickForm::hideIf()
      */
     public function hide_if(string $dependant, string $dependency, string $operator, $value = null): void {
@@ -186,5 +186,14 @@ class array_render_context extends render_context {
      */
     public function contextualize(?string $text): ?string {
         return $this->parent->contextualize($text);
+    }
+
+    /**
+     * Generate a new UUID. Probably uses {@see uuid}, but may be overridden for tests.
+     *
+     * @return string
+     */
+    public function generate_uuid(): string {
+        return $this->parent->generate_uuid();
     }
 }

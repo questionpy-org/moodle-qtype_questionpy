@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\form\context;
 
+use Closure;
 use qtype_questionpy\utils;
 
 /**
