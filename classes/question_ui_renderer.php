@@ -316,7 +316,7 @@ class question_ui_renderer {
                     } else {
                         $element->removeAttribute('checked');
                     }
-                } else if ($type == 'select') {
+                } else if ($type === 'select') {
                     // Find the appropriate option and mark it as selected.
                     // TODO: Support multiselects. Seems to be non-trivial, since QT vars only deal in strings, not
                     // arrays.
@@ -331,7 +331,7 @@ class question_ui_renderer {
                     }
                 } else if ($type === 'textarea') {
                     $element->textContent = $lastvalue;
-                } else if ($type != 'button' && $type != 'submit') {
+                } else if ($type !== 'button' && $type !== 'submit') {
                     $element->setAttribute('value', $lastvalue);
                 }
             }
