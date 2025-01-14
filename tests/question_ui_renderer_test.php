@@ -466,6 +466,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             'my_select' => 'value3',
             'my_hidden' => 'new',
             'my_button' => 'should be ignored',
+            'my_textarea' => 'new',
         ];
         $qa->method('get_last_qt_var')
             ->willReturnCallback(fn($name) => $newvalues[$name]);
@@ -493,6 +494,8 @@ final class question_ui_renderer_test extends \advanced_testcase {
 
             <input class="btn btn-primary qpy-input" name="mangled:my_button" type="button" value="value1"/>
             <input class="btn btn-primary qpy-input" name="mangled:my_button" type="button" value="value2"/>
+
+            <textarea class="form-control qpy-input" name="mangled:my_textarea">new</textarea>
         </div>
         EXPECTED, $result);
     }
