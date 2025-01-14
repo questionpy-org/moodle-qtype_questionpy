@@ -329,6 +329,8 @@ class question_ui_renderer {
                             $option->removeAttribute('selected');
                         }
                     }
+                } else if ($type === 'textarea') {
+                    $element->textContent = $lastvalue;
                 } else if ($type != 'button' && $type != 'submit') {
                     $element->setAttribute('value', $lastvalue);
                 }
