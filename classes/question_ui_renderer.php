@@ -57,6 +57,9 @@ class question_ui_renderer {
     /** @var question_attempt $attempt */
     private question_attempt $attempt;
 
+    /** @var string[]|null names of roles that the current user has (use {@see get_user_roles()} to get the roles) */
+    private ?array $roles = null;
+
     /**
      * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
      *
@@ -121,9 +124,6 @@ class question_ui_renderer {
             // We don't want to support QPy elements (and attributes, etc.) in placeholder expansions, so we resolve
             // them after replacing QPy elements.
             $this->resolve_placeholders();
-            // I'm not sure whether we should support names and IDs in placeholder expansion, but if we do, we should
-            // probably mangle them as well.
-            $this->mangle_ids_and_names();
         } finally {
             // I'm not sure whether it is strictly necessary to reset the PRNG seed here, but it feels safer.
             // Resetting it to its original state would be ideal, but that doesn't seem to be possible.
@@ -247,37 +247,10 @@ class question_ui_renderer {
     }
 
     /**
-     * Mangles element IDs and names so that they are unique when multiple questions are shown at once.
-     *
-     * @return void
-     */
-    private function mangle_ids_and_names(): void {
-        /** @var DOMAttr $attr */
-        foreach (
-            $this->xpath->query('
-                //xhtml:*/@id | //xhtml:label/@for | //xhtml:output/@for | //xhtml:input/@list |
-                (//xhtml:button | //xhtml:form | //xhtml:fieldset | //xhtml:iframe | //xhtml:input | //xhtml:object |
-                 //xhtml:output | //xhtml:select | //xhtml:textarea | //xhtml:map)/@name |
-                //xhtml:img/@usemap
-                ') as $attr
-        ) {
-            $original = $attr->value;
-            if ($attr->name === 'usemap' && str_starts_with($original, '#')) {
-                // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/useMap.
-                $attr->value = '#' . $this->attempt->get_qt_field_name(substr($original, 1));
-            } else {
-                $attr->value = $this->attempt->get_qt_field_name($original);
-            }
-        }
-    }
-
-    /**
      * Transforms input(-like) elements.
      *
      * - If {@see question_display_options::$readonly} is set, the input is disabled.
      * - If a value was saved for the input in a previous step, the latest value is added to the HTML.
-     *
-     * Requires the unmangled name of the element, so must be called _before_ {@see mangle_ids_and_names}.
      *
      * @return void
      */
@@ -288,7 +261,6 @@ class question_ui_renderer {
                 $element->setAttribute('disabled', 'disabled');
             }
 
-            // We want the unmangled name here, so this method must be called before mangle_ids_and_names.
             $name = $element->getAttribute('name');
             if (!$name) {
                 continue;
@@ -526,33 +498,53 @@ class question_ui_renderer {
     /**
      * Removes elements with `qpy:if-role` attributes if the user matches none of the given roles in this context.
      *
-     * The attribute values `teacher`, `proctor`, `scorer` and `developer` are mapped onto Moodle's system as follows:
-     * - The user is a teacher if they have the `mod/quiz:viewreports` capability, which includes the archetypes
-     *   `manager`, `teacher` and `editingteacher`.
-     * - Since Moodle has no concept of proctoring, `proctor` is considered synonymous with `teacher`.
-     * - The user is a scorer if they have the `mod/quiz:grade` capability.
-     * - The user is a developer if they are a teacher AND debugging is turned on. (As per {@see debugging}.)
-     *
      * @throws coding_exception
      */
     private function hide_if_role(): void {
         /** @var DOMAttr $attr */
         foreach (iterator_to_array($this->xpath->query('//@qpy:if-role')) as $attr) {
             $allowedroles = preg_split('/[\s|]+/', $attr->value, -1, PREG_SPLIT_NO_EMPTY);
+            $hasroles = $this->get_user_roles();
 
-            $isteacher = has_capability('mod/quiz:viewreports', $this->options->context);
-            $isscorer = has_capability('mod/quiz:grade', $this->options->context);
-            $isdeveloper = $isteacher && debugging();
-
-            if (
-                !(in_array('teacher', $allowedroles) && $isteacher
-                || in_array('proctor', $allowedroles) && $isteacher
-                || in_array('scorer', $allowedroles) && $isscorer
-                || in_array('developer', $allowedroles) && $isdeveloper)
-            ) {
+            if (!array_intersect($allowedroles, $hasroles)) {
                 $attr->ownerElement->parentNode->removeChild($attr->ownerElement);
             }
         }
+    }
+
+    /**
+     * Get the questionpy role names that the user has.
+     *
+     *  - The user is a teacher if they have the `mod/quiz:viewreports` capability, which includes the archetypes
+     *    `manager`, `teacher` and `editingteacher`.
+     *  - Since Moodle has no concept of proctoring, `proctor` is considered synonymous with `teacher`.
+     *  - The user is a scorer if they have the `mod/quiz:grade` capability.
+     *  - The user is a developer if they are a teacher AND debugging is turned on. (As per {@see debugging}.)
+     *
+     * @return string[] roles (`teacher`, `proctor`, `scorer` and `developer`)
+     * @throws coding_exception
+     */
+    public function get_user_roles(): array {
+        if ($this->roles !== null) {
+            return $this->roles;
+        }
+
+        $roles = [];
+        if (has_capability('mod/quiz:viewreports', $this->options->context)) {
+            $roles[] = 'teacher';
+            $roles[] = 'proctor';
+
+            if (debugging()) {
+                $roles[] = 'developer';
+            }
+        }
+
+        if (has_capability('mod/quiz:grade', $this->options->context)) {
+            $roles[] = 'scorer';
+        }
+
+        $this->roles = $roles;
+        return $roles;
     }
 
     /**

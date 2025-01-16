@@ -16,39 +16,24 @@
 
 namespace qtype_questionpy\api;
 
-use qtype_questionpy\array_converter\attributes\array_element_class;
 use qtype_questionpy\array_converter\attributes\array_key;
 
 /**
- * An attempt at a QuestionPy question.
+ * Model defining what JavaScript functions need to be called.
  *
  * @package    qtype_questionpy
- * @author     Maximilian Haye
- * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @author     Martin Gauk
+ * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class attempt {
-    /** @var int */
-    public int $variant;
+class package_dependency {
+    /** @var string */
+    public string $namespace;
 
-    /** @var attempt_ui */
-    public attempt_ui $ui;
+    /** @var string */
+    #[array_key('short_name')]
+    public string $shortname;
 
-    /** @var package_dependency[] */
-    #[array_key('package_dependencies')]
-    #[array_element_class(package_dependency::class)]
-    public array $packagedependencies;
-
-    /**
-     * Initializes a new instance.
-     *
-     * @param int $variant
-     * @param attempt_ui $ui
-     * @param package_dependency[] $packagedependencies
-     */
-    public function __construct(int $variant, attempt_ui $ui, array $packagedependencies) {
-        $this->variant = $variant;
-        $this->ui = $ui;
-        $this->packagedependencies = $packagedependencies;
-    }
+    /** @var string */
+    public string $hash;
 }

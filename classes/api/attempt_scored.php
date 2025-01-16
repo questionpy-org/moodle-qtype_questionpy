@@ -45,9 +45,11 @@ class attempt_scored extends attempt {
      * @param attempt_ui $ui
      * @param scoring_code $scoringcode
      * @param string|null $scoringstate
+     * @param package_dependency[] $packagedependencies
      */
-    public function __construct(int $variant, attempt_ui $ui, scoring_code $scoringcode, ?string $scoringstate = null) {
-        parent::__construct($variant, $ui);
+    public function __construct(int $variant, attempt_ui $ui, scoring_code $scoringcode, ?string $scoringstate,
+                                array $packagedependencies) {
+        parent::__construct($variant, $ui, $packagedependencies);
 
         $this->scoringstate = $scoringstate;
         $this->scoringcode = $scoringcode;

@@ -23,8 +23,10 @@
  */
 
 use qtype_questionpy\api\api;
+use qtype_questionpy\api\attempt;
 use qtype_questionpy\api\attempt_ui;
 use qtype_questionpy\api\scoring_code;
+use qtype_questionpy\api\package_dependency;
 use qtype_questionpy\constants;
 use qtype_questionpy\question_ui_metadata_extractor;
 use qtype_questionpy\utils;
@@ -55,6 +57,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public attempt_ui $ui;
     /** @var question_ui_metadata_extractor $metadata */
     public question_ui_metadata_extractor $metadata;
+    /** @var package_dependency[] */
+    public array $packagedependencies;
 
     /** @var qbehaviour_questionpy|null $behaviour */
     public ?qbehaviour_questionpy $behaviour = null;
@@ -76,13 +80,14 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     }
 
     /**
-     * Updates the ui property and metadata extractor.
+     * Updates the ui property, metadata extractor and package dependencies.
      *
-     * @param attempt_ui $ui
+     * @param attempt $attempt
      */
-    private function update_ui(attempt_ui $ui): void {
-        $this->ui = $ui;
+    private function update_attempt(attempt $attempt): void {
+        $this->ui = $attempt->ui;
         $this->metadata = new question_ui_metadata_extractor($this->ui->formulation);
+        $this->packagedependencies = $attempt->packagedependencies;
     }
 
     /**
@@ -111,7 +116,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $this->attemptstate = $attempt->attemptstate;
             $step->set_qt_var(constants::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
             $this->scoringstate = null;
-            $this->update_ui($attempt->ui);
+            $this->update_attempt($attempt);
         } catch (Throwable $t) {
             // Trigger error event.
             $qa = $this->get_behaviour()->get_qa();
@@ -172,7 +177,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
                     $this->scoringstate,
                     $lastresponse
                 );
-            $this->update_ui($attempt->ui);
+            $this->update_attempt($attempt);
         } catch (Throwable $t) {
             // Trigger error event.
             $params = [
@@ -324,7 +329,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
                 $this->scoringstate,
                 $response
             );
-            $this->update_ui($attemptscored->ui);
+            $this->update_attempt($attemptscored);
         } catch (Throwable $t) {
             // Trigger error event.
             $params = [

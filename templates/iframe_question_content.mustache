@@ -1,0 +1,44 @@
+{{!
+    This file is part of the QuestionPy Moodle plugin - https://questionpy.org
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template qtype_questionpy/iframe_question_content
+
+    Content within the question's iframe. In particular, the HTML returned by the question package is put in
+    this iframe.
+
+    The HTML structure is similar to how Moodle embeds the question formulation to make it look the same.
+
+    Context variables required for this template:
+    * question - question html
+    * feedback - feedback html
+
+    Example context (json):
+    {
+        "question": "Question HTML",
+        "feedback": "Feedback HTML"
+    }
+}}
+<div class="que">
+    <div class="content">
+        <div class="formulation clearfix">
+            <form id="qpy-formulation">
+                {{{ question }}}
+            </form>
+        </div>
+        {{{ feedback }}}
+    </div>
+</div>

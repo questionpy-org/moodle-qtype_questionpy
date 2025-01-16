@@ -19,6 +19,11 @@ import $ from "jquery";
 import "theme_boost/bootstrap/popover";
 
 /**
+ * @type {?Attempt} Attempt object that is passed to the question package.
+ */
+let attempt = null;
+
+/**
  * If the given input(-like) element is labelled, returns the label element. Returns null otherwise.
  *
  * @param {HTMLElement} input
@@ -78,7 +83,8 @@ function markInvalid(element, message, ariaInvalid = true) {
     $(popoverTarget).popover({
         toggle: "popover",
         trigger: "hover",
-        content: message
+        placement: "bottom",
+        content: message,
     });
 }
 
@@ -132,9 +138,15 @@ async function checkConstraints(element) {
 }
 
 /**
- * Adds change event handlers for soft validation.
+ * Initializes the question.
+ *
+ * This function must be called within the iframe.
+ *
+ * @param {string} autoSaveHintInputId
+ * @param {string[]} roles QPy role names that the user has.
  */
-export async function init() {
+export async function init(autoSaveHintInputId, roles) {
+    // Add change event handlers for soft validation.
     for (const element of document.querySelectorAll(`
         [data-qpy_required], [data-qpy_pattern], 
         [data-qpy_minlength], [data-qpy_maxlength], 
@@ -143,4 +155,141 @@ export async function init() {
         await checkConstraints(element);
         element.addEventListener("change", event => checkConstraints(event.target));
     }
+
+    const form = window.document.getElementById("qpy-formulation");
+    if (form) {
+        // On form submit, submit the quiz's main form in the parent window instead.
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+            window.frameElement.closest("form").submit();
+        });
+
+        // Modify a field in the main form in order to tell the Quiz's autosaver that the user changed an answer.
+        const autoSaveHintElement = parent.document.getElementById(autoSaveHintInputId);
+        if (autoSaveHintElement) {
+            form.addEventListener("change", function() {
+                autoSaveHintElement.value = parseInt(autoSaveHintElement.value) + 1;
+            });
+        }
+    }
+
+    // Attempt object that is passed to the question package.
+    attempt = new Attempt(
+        window.document.getElementById("qpy-formulation"),
+        window.document.getElementById("qpy-general-feedback"),
+        window.document.getElementById("qpy-specific-feedback"),
+        window.document.getElementById("qpy-right-answer"),
+        roles
+    );
+}
+
+/**
+ * Get a QuestionPy attempt.
+ *
+ * @returns {Attempt}
+ */
+export function getAttempt() {
+    if (attempt === null) {
+        throw new Error("Attempt not initialized");
+    }
+    return attempt;
+}
+
+class Attempt {
+    #formulation;
+    #generalFeedback;
+    #specificFeedback;
+    #rightAnswer;
+    #roles;
+
+    /**
+     * @param {Element} formulationElement
+     * @param {?Element} generalFeedbackElement
+     * @param {?Element} specificFeedbackElement
+     * @param {?Element} rightAnswer
+     * @param {string[]} roles
+     */
+    constructor(formulationElement, generalFeedbackElement, specificFeedbackElement, rightAnswer, roles) {
+        this.#formulation = formulationElement;
+        this.#generalFeedback = generalFeedbackElement;
+        this.#specificFeedback = specificFeedbackElement;
+        this.#rightAnswer = rightAnswer;
+        this.#roles = roles;
+    }
+
+    /**
+     * Get the top html element where the question's formulation xhtml was inserted.
+     *
+     * @returns {Element}
+     */
+    get formulationElement() {
+        return this.#formulation;
+    }
+
+    /**
+     * Get the top html element where the question's general feedback xhtml was inserted (if available).
+     *
+     * @returns {?Element}
+     */
+    get generalFeedbackElement() {
+        return this.#generalFeedback;
+    }
+
+    /**
+     * Get the top html element where the question's specific feedback xhtml was inserted (if available).
+     *
+     * @returns {?Element}
+     */
+    get specificFeedbackElement() {
+        return this.#specificFeedback;
+    }
+
+    /**
+     * Get the top html element where the question's right answer xhtml was inserted (if available).
+     *
+     * @returns {?Element}
+     */
+    get rightAnswerElement() {
+        return this.#rightAnswer;
+    }
+
+    /**
+     * Get the names of the roles that the current user has.
+     *
+     * @typedef {'teacher' | 'developer' | 'scorer' | 'proctor'} roleName
+     * @returns {roleName[]}
+     */
+    get userRoles() {
+        return this.#roles;
+    }
+}
+
+/**
+ * Add the question's form data located in the iframe to the main form when it is submitted.
+ *
+ * This function must be called outside the iframe, on the parent window.
+ *
+ * @param {string} iframeId - The ID of the question's iframe.
+ * @param {string} fieldPrefix - The prefix to add to the field names, for Moodle to recognize the fields belonging to a question.
+ * @return {void} This function does not return a value.
+ */
+export function addIframeFormDataOnSubmit(iframeId, fieldPrefix) {
+    const iframe = window.document.getElementById(iframeId);
+    if (iframe === null) {
+        window.console.error(`Could not find question iframe ${iframeId}. Cannot save answers.`);
+        return;
+    }
+
+    const form = iframe.closest("form");
+    form.addEventListener("formdata", event => {
+        const iframeForm = iframe.contentDocument.getElementById("qpy-formulation");
+        if (iframeForm === null) {
+            window.console.error("Could not find form in question iframe " + iframeId);
+            return;
+        }
+        const iframeFormData = new FormData(iframeForm);
+        for (const [key, value] of iframeFormData) {
+            event.formData.append(fieldPrefix + key, value);
+        }
+    });
 }
