@@ -16,31 +16,18 @@
 
 namespace qtype_questionpy\api;
 
-use qtype_questionpy\array_converter\attributes\array_key;
-
+// phpcs:ignore moodle.Commenting.InlineComment.DocBlock
 /**
- * Response from the server for a newly started attempt.
+ * Possible display roles.
  *
  * @package    qtype_questionpy
- * @author     Maximilian Haye
- * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
+ * @author     Martin Gauk
+ * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class attempt_started extends attempt {
-    /** @var string */
-    #[array_key('attempt_state')]
-    public string $attemptstate;
-
-    /**
-     * Initializes a new instance.
-     *
-     * @param int $variant
-     * @param attempt_ui $ui
-     * @param string $attemptstate
-     * @param array $packagedependencies
-     */
-    public function __construct(int $variant, attempt_ui $ui, string $attemptstate, array $packagedependencies) {
-        parent::__construct($variant, $ui, $packagedependencies);
-        $this->attemptstate = $attemptstate;
-    }
+enum display_role: string {
+    case developer = 'DEVELOPER';
+    case proctor = 'PROCTOR';
+    case scorer = 'SCORER';
+    case teacher = 'TEACHER';
 }

@@ -108,44 +108,6 @@ final class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
-     * Tests that `name` attributes in most elements are mangled correctly.
-     *
-     * @throws coding_exception
-     * @covers \qtype_questionpy\question_ui_renderer
-     */
-    public function test_should_mangle_names(): void {
-        $input = file_get_contents(__DIR__ . '/question_uis/ids_and_names.xhtml');
-
-        $qa = $this->create_question_attempt_stub();
-
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
-
-        $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml" id="mangled:my_div">
-            <datalist id="mangled:my_list">
-                <option>42</option>
-            </datalist>
-            <label>Wrapping label <input class="form-control qpy-input" name="mangled:my_number"
-                                         type="number" list="mangled:my_list"/></label>
-            <label for="mangled:my_select">Separate label</label>
-            <select class="form-control qpy-input" id="mangled:my_select" name="mangled:my_select">
-                <option value="1">One</option>
-                <option value="2">Two</option>
-            </select>
-            <input class="qpy-input" type="radio" name="mangled:my_radio" value="1"/>
-            <input class="qpy-input" type="radio" name="mangled:my_radio" value="2"/>
-            <textarea class="form-control qpy-input" name="mangled:my_text"/>
-            <button class="btn btn-primary qpy-input" name="mangled:my_button">Click me!</button>
-            <map name="mangled:my_map">
-                <area shape="circle" coords="1, 2, 3"/>
-            </map>
-            <img src="https://picsum.photos/200/300" usemap="#mangled:my_map"/>
-        </div>
-        EXPECTED, $result);
-    }
-
-    /**
      * Tests that `qpy:shuffle-elements` works and especially correctly handles (nested) `qpy:shuffled-index` elements.
      *
      * @throws coding_exception
@@ -475,27 +437,27 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml" id="mangled:my_div">
-            <input class="form-control qpy-input" type="text" name="mangled:my_text" value="new"/>
+        <div xmlns="http://www.w3.org/1999/xhtml" id="my_div">
+            <input class="form-control qpy-input" type="text" name="my_text" value="new"/>
 
-            <input class="qpy-input" type="checkbox" name="mangled:my_checkbox_value" value="value" checked="checked"/>
-            <input class="qpy-input" type="checkbox" name="mangled:my_checkbox_on" checked="checked"/>
+            <input class="qpy-input" type="checkbox" name="my_checkbox_value" value="value" checked="checked"/>
+            <input class="qpy-input" type="checkbox" name="my_checkbox_on" checked="checked"/>
 
-            <input class="qpy-input" type="radio" name="mangled:my_radio" value="value1" checked="checked"/>
-            <input class="qpy-input" type="radio" name="mangled:my_radio" value="value2"/>
+            <input class="qpy-input" type="radio" name="my_radio" value="value1" checked="checked"/>
+            <input class="qpy-input" type="radio" name="my_radio" value="value2"/>
 
-            <select class="form-control qpy-input" name="mangled:my_select">
+            <select class="form-control qpy-input" name="my_select">
                 <option value="value1"/>
                 <option value="value2"/>
                 <option value="value3" selected="selected"/>
             </select>
 
-            <input class="form-control qpy-input" type="hidden" name="mangled:my_hidden" value="new"/>
+            <input class="form-control qpy-input" type="hidden" name="my_hidden" value="new"/>
 
-            <input class="btn btn-primary qpy-input" name="mangled:my_button" type="button" value="value1"/>
-            <input class="btn btn-primary qpy-input" name="mangled:my_button" type="button" value="value2"/>
+            <input class="btn btn-primary qpy-input" name="my_button" type="button" value="value1"/>
+            <input class="btn btn-primary qpy-input" name="my_button" type="button" value="value2"/>
 
-            <textarea class="form-control qpy-input" name="mangled:my_textarea">new</textarea>
+            <textarea class="form-control qpy-input" name="my_textarea">new</textarea>
         </div>
         EXPECTED, $result);
     }

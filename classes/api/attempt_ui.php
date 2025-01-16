@@ -50,6 +50,11 @@ class attempt_ui {
     #[array_key('css_files')]
     public ?array $cssfiles = null;
 
+    /** @var js_module_call[]|null */
+    #[array_key('javascript_calls')]
+    #[array_element_class(js_module_call::class)]
+    public array $javascriptcalls;
+
     /** @var array<string, attempt_file> specifics TBD */
     #[array_element_class(attempt_file::class)]
     public array $files = [];
