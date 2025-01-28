@@ -21,7 +21,8 @@ use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\GuzzleException;
 use moodle_exception;
 use Psr\Http\Message\ResponseInterface;
-use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\exception\error_code;
+use qtype_questionpy\exception\request_error;
 use stored_file;
 
 /**
@@ -58,15 +59,14 @@ class package_api {
      *
      * @param string|null $questionstate current question state
      * @return question_edit_form_response
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
     public function get_question_edit_form(?string $questionstate): question_edit_form_response {
-        $parts = $this->create_request_parts([
-            'main' => '{}',
-        ], $questionstate);
-
-        $response = $this->post_and_maybe_retry('/options', $parts);
-        return array_converter::from_array(question_edit_form_response::class, $response->get_data());
+        $options['multipart'] = $this->transform_to_multipart([], $questionstate);
+        $response = $this->post_and_maybe_retry('/options', $options);
+        return api_utils::convert_response_to_class($response, question_edit_form_response::class);
     }
 
     /**
@@ -75,17 +75,21 @@ class package_api {
      * @param string|null $currentstate current state string if the question already exists, null otherwise
      * @param object $formdata data from the question edit form
      * @return question_response
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
     public function create_question(?string $currentstate, object $formdata): question_response {
-        $parts = $this->create_request_parts([
-            'form_data' => $formdata,
-            // TODO: Send an actual context.
-            'context' => 1,
-        ], $currentstate);
-
-        $response = $this->post_and_maybe_retry('/question', $parts);
-        return array_converter::from_array(question_response::class, $response->get_data());
+        $options['multipart'] = $this->transform_to_multipart(
+            [
+                'form_data' => $formdata,
+                // TODO: Send an actual context.
+                'context' => 1,
+            ],
+            $currentstate,
+        );
+        $response = $this->post_and_maybe_retry('/question', $options);
+        return api_utils::convert_response_to_class($response, question_response::class);
     }
 
     /**
@@ -95,15 +99,14 @@ class package_api {
      * @param int $variant variant which should be started (`1` for questions with only one variant)
      * @return attempt_started the attempt's state and metadata. Note that the attempt state never changes after the
      *                         attempt has been started.
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
     public function start_attempt(string $questionstate, int $variant): attempt_started {
-        $parts = $this->create_request_parts([
-            'variant' => $variant,
-        ], $questionstate);
-
-        $response = $this->post_and_maybe_retry('/attempt/start', $parts);
-        return array_converter::from_array(attempt_started::class, $response->get_data());
+        $options['multipart'] = $this->transform_to_multipart(['variant' => $variant], $questionstate);
+        $response = $this->post_and_maybe_retry('/attempt/start', $options);
+        return api_utils::convert_response_to_class($response, attempt_started::class);
     }
 
     /**
@@ -114,22 +117,22 @@ class package_api {
      * @param string|null $scoringstate the last scoring state if this attempt has already been scored
      * @param array|null $response data currently entered by the student
      * @return attempt the attempt's metadata. The state is not returned since it never changes.
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
     public function view_attempt(string $questionstate, string $attemptstate, ?string $scoringstate = null,
                                  ?array $response = null): attempt {
-        $main = ['attempt_state' => $attemptstate];
-        // Cast to object so empty responses are serialized as JSON objects, not arrays.
-        if ($response !== null) {
-            $main['response'] = (object)$response;
-        }
-
-        if ($scoringstate) {
-            $main['scoring_state'] = $scoringstate;
-        }
-        $parts = $this->create_request_parts($main, $questionstate);
-        $httpresponse = $this->post_and_maybe_retry('/attempt/view', $parts);
-        return array_converter::from_array(attempt::class, $httpresponse->get_data());
+        $options['multipart'] = $this->transform_to_multipart(
+            [
+                'attempt_state' => $attemptstate,
+                'scoring_state' => $scoringstate,
+                'response' => $response,
+            ],
+            $questionstate,
+        );
+        $httpresponse = $this->post_and_maybe_retry('/attempt/view', $options);
+        return api_utils::convert_response_to_class($httpresponse, attempt::class);
     }
 
     /**
@@ -140,72 +143,23 @@ class package_api {
      * @param string|null $scoringstate the last scoring state if this attempt had been scored before
      * @param array $response data submitted by the student
      * @return attempt_scored the attempt's metadata. The state is not returned since it never changes.
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
     public function score_attempt(string $questionstate, string $attemptstate, ?string $scoringstate,
                                   array $response): attempt_scored {
-        $main = [
-            'attempt_state' => $attemptstate,
-            // Cast to object so empty responses are serialized as JSON objects, not arrays.
-            'response' => (object)$response,
-            'generate_hint' => false,
-        ];
-
-        if ($scoringstate) {
-            $main['scoring_state'] = $scoringstate;
-        }
-
-        $parts = $this->create_request_parts($main, $questionstate);
-        $httpresponse = $this->post_and_maybe_retry('/attempt/score', $parts);
-        return array_converter::from_array(attempt_scored::class, $httpresponse->get_data());
-    }
-
-    /**
-     * Send a POST request and retry if the server doesn't have the package file cached, but we have it available.
-     *
-     * @param string $uri can be absolute or relative to the base url
-     * @param array $options request options as per
-     *                       {@link https://docs.guzzlephp.org/en/stable/request-options.html Guzzle docs}
-     * @param bool $allowretry if set to false, retry won't be attempted if the package file isn't cached, instead
-     *                         throwing a {@see coding_exception}
-     * @return ResponseInterface
-     * @throws coding_exception if the request is unsuccessful for any other reason
-     * @see post_and_maybe_retry
-     */
-    private function guzzle_post_and_maybe_retry(string $uri, array $options = [], bool $allowretry = true): ResponseInterface {
-        try {
-            return $this->client->post($uri, $options);
-        } catch (BadResponseException $e) {
-            if (!$allowretry || !$this->file || $e->getResponse()->getStatusCode() != 404) {
-                throw $e;
-            }
-
-            $json = json_decode($e->getResponse()->getBody(), associative: true);
-            if (JSON_ERROR_NONE !== json_last_error()) {
-                // Not valid JSON, so the problem probably isn't a missing package file.
-                throw $e;
-            }
-
-            if ($json['what'] ?? null !== 'PACKAGE') {
-                throw $e;
-            }
-
-            // Add file to parts and resend.
-
-            $fd = $this->file->get_content_file_handle();
-            try {
-                $options['multipart'][] = [
-                    'name' => 'package',
-                    'contents' => $fd,
-                ];
-
-                return $this->guzzle_post_and_maybe_retry($uri, $options, allowretry: false);
-            } finally {
-                @fclose($fd);
-            }
-        } catch (GuzzleException $e) {
-            throw new coding_exception('Request to QPy server failed: ' . $e->getMessage());
-        }
+        $options['multipart'] = $this->transform_to_multipart(
+            [
+                'attempt_state' => $attemptstate,
+                'scoring_state' => $scoringstate,
+                'response' => $response,
+                'generate_hint' => false,
+            ],
+            $questionstate
+        );
+        $httpresponse = $this->post_and_maybe_retry('/attempt/score', $options);
+        return api_utils::convert_response_to_class($httpresponse, attempt_scored::class);
     }
 
     /**
@@ -219,17 +173,20 @@ class package_api {
      * @param string $path path of the static file in the package
      * @param string $targetpath path where the file should be downloaded to. Anything here will be overwritten.
      * @return string|null the mime type as reported by the server or null if the file wasn't found
+     * @throws GuzzleException
+     * @throws request_error
      * @throws coding_exception
      */
     public function download_static_file(string $namespace, string $shortname, string $kind, string $path,
                                          string $targetpath): ?string {
         try {
-            $res = $this->guzzle_post_and_maybe_retry(
-                "/packages/$this->hash/file/$namespace/$shortname/$kind/$path",
+            $res = $this->post_and_maybe_retry(
+                "/file/$namespace/$shortname/$kind/$path",
                 ['sink' => $targetpath]
             );
         } catch (BadResponseException $e) {
             if ($e->getResponse()->getStatusCode() == 404) {
+                // The static file was not found.
                 return null;
             }
 
@@ -248,51 +205,74 @@ class package_api {
     }
 
     /**
+     * Send a POST request and retry if the server doesn't have the package file cached, but we have it available.
+     *
+     * @param string $uri relative to the base url
+     * @param array $options request options as per
+     *                       {@link https://docs.guzzlephp.org/en/stable/request-options.html Guzzle docs}
+     * @param bool $allowretry if set to false, retry won't be attempted if the package file isn't cached, instead
+     *                         throwing a {@see coding_exception}
+     * @return ResponseInterface
+     * @throws GuzzleException
+     * @throws request_error
+     */
+    private function post_and_maybe_retry(string $uri, array $options = [], bool $allowretry = true): ResponseInterface {
+        $fulluri = "/packages/$this->hash/" . ltrim($uri, '/');
+
+        try {
+            return $this->client->post($fulluri, $options);
+        } catch (request_error $e) {
+            if (!$allowretry || !$this->file || $e->requesterrorcode !== error_code::package_not_found) {
+                throw $e;
+            }
+
+            $fd = $this->file->get_content_file_handle();
+            try {
+                $options['multipart'][] = [
+                    'name' => 'package',
+                    'contents' => $fd,
+                ];
+                return $this->post_and_maybe_retry($uri, $options, allowretry: false);
+            } finally {
+                @fclose($fd);
+            }
+        }
+    }
+
+    /**
      * Creates the multipart parts array.
+     *
+     * NOTE:
+     *  - Empty arrays at the two top levels of `$main` are serialized as JSON objects instead of arrays.
+     *  - Null values are ignored in the final multipart array.
      *
      * @param array $main main JSON part
      * @param string|null $questionstate optional question state
      * @return array
      */
-    private function create_request_parts(array $main, ?string $questionstate): array {
-        $parts = [];
-
-        if ($questionstate !== null) {
-            $parts['question_state'] = $questionstate;
+    private function transform_to_multipart(array $main, ?string $questionstate): array {
+        if (!is_null($questionstate)) {
+            $multipart[] = [
+                'name' => 'question_state',
+                'contents' => $questionstate,
+            ];
         }
 
-        $parts['main'] = json_encode($main);
-        return $parts;
-    }
-
-    /**
-     * Send a POST request and retry if the server doesn't have the package file cached, but we have it available.
-     *
-     * @param string $subpath path relative to `/packages/hash...`
-     * @param array $parts    array of multipart parts
-     * @return http_response_container
-     * @throws moodle_exception
-     * @see guzzle_post_and_maybe_retry
-     */
-    private function post_and_maybe_retry(string $subpath, array $parts): http_response_container {
-        $connector = connector::default();
-        $path = "/packages/$this->hash/" . ltrim($subpath, '/');
-
-        $response = $connector->post($path, $parts);
-        if ($this->file && $response->code == 404) {
-            $json = $response->get_data();
-            if ($json['what'] === 'PACKAGE') {
-                // Add file to parts and resend.
-                $fs = get_file_storage();
-                $filepath = $fs->get_file_system()->get_local_path_from_storedfile($this->file, true);
-
-                $parts['package'] = curl_file_create($filepath, 'application/zip');
-
-                $response = $connector->post($path, $parts);
+        $transformed = [];
+        foreach ($main as $key => $value) {
+            if (is_null($value)) {
+                continue;
             }
+
+            // Cast arrays to objects so that empty arrays get serialized to JSON objects, not arrays.
+            $transformed[$key] = is_array($value) ? (object) $value : $value;
         }
 
-        $response->assert_2xx();
-        return $response;
+        $multipart[] = [
+            'name' => 'main',
+            'contents' => json_encode((object) $transformed),
+        ];
+
+        return $multipart;
     }
 }

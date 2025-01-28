@@ -23,16 +23,12 @@
  */
 
 $string['change_package'] = 'Change';
-$string['curl_exec_error'] = 'Error while fetching from server. Error number: {$a}';
-$string['curl_init_error'] = 'Could not initialize cURL. Error number: {$a}';
-$string['curl_set_opt_error'] = 'Failed to set cURL option. Error number: {$a}';
 $string['event_grading_response_failed'] = 'Grading response failed';
 $string['event_starting_attempt_failed'] = 'Starting attempt failed';
 $string['event_viewing_attempt_failed'] = 'Viewing attempt failed';
 $string['form_fallback_element_text'] = 'The QuestionPy package is using a form element not supported by the Moodle'
     . ' plugin. Please ensure you are using a compatible package or contact your administrators.';
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
-$string['json_parsing_error'] = 'Could not parse data to JSON.';
 $string['load_packages_button'] = 'Load Packages';
 $string['mark_as_favourite'] = 'Favourite';
 $string['max_package_size_kb'] = 'Maximum file size of a QuestionPy package';
@@ -49,6 +45,8 @@ $string['question_package_search'] = 'Select an existing package';
 $string['question_package_upload'] = 'Upload your own';
 $string['remove_packages_button'] = 'Remove Packages';
 $string['render_error_section'] = 'An error occurred';
+$string['request_error'] = 'The {$a->requestmethod} request to "{$a->uri}" failed with the error code "{$a->errorcode}" and'
+    . ' status code {$a->statuscode} ({$a->reasonphrase}).';
 $string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
 $string['search_all_header'] = 'All ({$a})';
 $string['search_bar'] = 'Search...';
@@ -64,15 +62,14 @@ $string['search_sort_label_aria'] = 'Sorting';
 $string['select_package'] = 'Select';
 $string['select_package_element_aria'] = 'Choose version.';
 $string['selection_custom_package_header'] = 'Custom Package';
-$string['selection_custom_package_text'] = 'This package version was uploaded by a user and might not appear in the package"
-    . " search.';
+$string['selection_custom_package_text'] = 'This package version was uploaded by a user and might not appear in the package'
+    . ' search.';
 $string['selection_no_icon'] = 'Could not load the icon.';
 $string['selection_package_no_longer_in_database_header'] = 'Discontinued';
 $string['selection_package_no_longer_in_database_text'] = 'This package version is no longer available through the package search.';
 $string['selection_required'] = 'Please select a package.';
 $string['selection_title'] = 'Select QuestionPy Package';
 $string['selection_title_selected'] = 'Selected Package';
-$string['server_bad_status'] = 'The QuestionPy server could not successfully complete our request. Status code: {$a}';
 $string['server_info_allow_lms_packages'] = 'Allows packages from the LMS';
 $string['server_info_description'] = '<a href="{$a->link}">Information</a> about the application server you are connected to.';
 $string['server_info_heading'] = 'QuestionPy Application Server Information';
