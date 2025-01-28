@@ -16,8 +16,10 @@
 
 namespace qtype_questionpy\api;
 
+use GuzzleHttp\Exception\GuzzleException;
 use moodle_exception;
 use qtype_questionpy\array_converter\array_converter;
+use qtype_questionpy\exception\request_error;
 use qtype_questionpy\package\package_raw;
 use qtype_questionpy\package\package_versions_info;
 use stored_file;
@@ -46,13 +48,15 @@ class api {
      * Retrieves QuestionPy packages from the application server.
      *
      * @return package_versions_info[]
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
-    public function get_packages(): array {
-        $connector = connector::default();
-        $response = $connector->get('/packages');
-        $response->assert_2xx();
-        $packages = $response->get_data();
+    public static function get_packages(): array {
+        $client = new qpy_http_client();
+        $response = $client->get('/packages');
+
+        $packages = json_decode($response->getBody()->getContents(), associative: true);
 
         $result = [];
         foreach ($packages as $package) {
@@ -83,13 +87,14 @@ class api {
      *
      * @param string $hash
      * @return package_raw
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
     public function get_package_info(string $hash): package_raw {
-        $connector = connector::default();
-        $response = $connector->get("/packages/$hash");
-        $response->assert_2xx();
-        return array_converter::from_array(package_raw::class, $response->get_data());
+        $client = new qpy_http_client();
+        $response = $client->get("/packages/$hash");
+        return api_utils::convert_response_to_class($response, package_raw::class);
     }
 
     /**
@@ -97,33 +102,34 @@ class api {
      *
      * @param stored_file $file
      * @return package_raw
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
     public static function extract_package_info(stored_file $file): package_raw {
-        $connector = connector::default();
+        $client = new qpy_http_client();
+        $fd = $file->get_content_file_handle();
 
-        $filestorage = get_file_storage();
-        $filepath = $filestorage->get_file_system()->get_local_path_from_storedfile($file, true);
-
-        $data = [
-            'package' => curl_file_create($filepath),
+        $options['multipart'][] = [
+            'name' => 'package',
+            'contents' => $fd,
         ];
 
-        $response = $connector->post('/package-extract-info', $data);
-        $response->assert_2xx();
-        return array_converter::from_array(package_raw::class, $response->get_data());
+        $response = $client->post('/package-extract-info', $options);
+        return api_utils::convert_response_to_class($response, package_raw::class);
     }
 
     /**
      * Get the status and information from the server.
      *
      * @return status
+     * @throws GuzzleException
+     * @throws request_error
      * @throws moodle_exception
      */
     public static function get_server_status(): status {
-        $connector = connector::default();
-        $response = $connector->get('/status');
-        $response->assert_2xx();
-        return array_converter::from_array(status::class, $response->get_data());
+        $client = new qpy_http_client();
+        $response = $client->get('/status');
+        return api_utils::convert_response_to_class($response, status::class);
     }
 }
