@@ -24,13 +24,17 @@
 
 use core\di;
 use core_question\local\bank\question_edit_contexts;
+use GuzzleHttp\Exception\GuzzleException;
 use qtype_questionpy\api\api;
+use qtype_questionpy\exception\options_form_validation_error;
+use qtype_questionpy\exception\request_error;
 use qtype_questionpy\form\context\root_render_context;
 use qtype_questionpy\localizer;
 use qtype_questionpy\package\package;
 use qtype_questionpy\package\package_base;
 use qtype_questionpy\package\package_version;
 use qtype_questionpy\package_file_service;
+use qtype_questionpy\utils;
 
 /**
  * QuestionPy question editing form definition.
@@ -298,34 +302,88 @@ class qtype_questionpy_edit_form extends question_edit_form {
     }
 
     /**
-     * Validates selected or uploaded package.
+     * Validates the options form of the package.
+     *
+     * @param array $data
+     * @param stored_file|null $package
+     * @param array $errors
+     * @return void
+     * @throws GuzzleException
+     * @throws request_error
+     * @throws moodle_exception
+     */
+    private function validate_options_form(array $data, ?stored_file $package, array &$errors): void {
+        try {
+            $packagehash = $data['qpy_package_hash'] ?? $data['qpy_package_file_hash'];
+
+            // Repetition elements may produce numeric arrays with gaps. We want them to become JSON arrays, so we reindex.
+            // Form element names may not begin with a digit, so this won't accidentally change them.
+            utils::reindex_integer_arrays($data['qpy_form']);
+
+            // TODO: create a dedicated endpoint?
+            $this->api->package($packagehash, $package)->create_question(null, (object) $data['qpy_form']);
+        } catch (options_form_validation_error $error) {
+            foreach ($error->errors as $field => $error) {
+                $element = 'qpy_form[' . str_replace('.', '][', $field) . ']';
+                if ($this->_form->elementExists($element)) {
+                    $errors[$element] = $error;
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates the selected, freshly uploaded or previously uploaded package.
+     *
+     * If the package is a local one, it gets returned.
+     *
+     * @param array $data
+     * @param array $errors
+     * @return stored_file|null
+     * @throws coding_exception
+     */
+    private function validate_selected_package(array $data, array &$errors): stored_file|null {
+        global $USER;
+
+        $source = $data['qpy_package_source'] ?? null;
+        if ($source == 'search' && empty($data['qpy_package_hash'])) {
+            $errors['qpy_package_container'] = get_string('required');
+        } else if ($source == 'upload') {
+            $filestorage = get_file_storage();
+
+            if (!empty($data['qpy_package_path_name_hash'])) {
+                // The package was already uploaded.
+                $package = $filestorage->get_file_by_hash($data['qpy_package_path_name_hash']);
+            } else {
+                // A new package is uploaded.
+                $usercontext = context_user::instance($USER->id);
+                $package = $filestorage->get_area_files($usercontext->id, 'user', 'draft', $data['qpy_package_file']);
+                $package = reset($package);
+            }
+
+            if (!$package) {
+                $errors['qpy_package_file'] = get_string('required');
+            } else {
+                return $package;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Validates the form.
      *
      * @param array $data
      * @param array $files
      * @return array $errors
-     * @throws moodle_exception
+     * @throws moodle_exception|GuzzleException
      */
     public function validation($data, $files) {
-        global $USER;
         $errors = parent::validation($data, $files);
-
-        $source = $data['qpy_package_source'] ?? null;
-        if ($source == 'search') {
-            if (empty($data['qpy_package_hash'])) {
-                $errors['qpy_package_container'] = get_string('required');
-            }
-        } else if ($source == 'upload') {
-            $filestorage = get_file_storage();
-            if (isset($data['qpy_package_path_name_hash'])) {
-                if (!$filestorage->file_exists_by_hash($data['qpy_package_path_name_hash'])) {
-                    $errors['qpy_package_file'] = get_string('required');
-                }
-            } else {
-                $usercontext = context_user::instance($USER->id);
-                if (!$filestorage->get_area_files($usercontext->id, 'user', 'draft', $data['qpy_package_file'])) {
-                    $errors['qpy_package_file'] = get_string('required');
-                }
-            }
+        $package = $this->validate_selected_package($data, $errors);
+        if ($data['qpy_package_selected']) {
+            // The options form of a package is being submitted.
+            $this->validate_options_form($data, $package, $errors);
         }
 
         return $errors;
