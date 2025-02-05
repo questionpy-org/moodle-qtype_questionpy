@@ -34,6 +34,9 @@ $string['mark_as_favourite'] = 'Favourite';
 $string['max_package_size_kb'] = 'Maximum file size of a QuestionPy package';
 $string['max_package_size_kb_description'] = 'Maximum file size in kB';
 $string['open_website'] = 'Open website';
+$string['options_form_validation_error_element'] = '{$a->name}: {$a->error}';
+$string['options_form_validation_error_title'] = 'The following errors occurred while validating the form and could not'
+    . ' be mapped to an input element: {$a}';
 $string['package_not_found'] = 'The requested package {$a->packagehash} does not exist.';
 $string['packages_subheading'] = 'Packages';
 $string['pluginname'] = 'QuestionPy';

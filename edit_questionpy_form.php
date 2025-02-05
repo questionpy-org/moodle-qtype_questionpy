@@ -313,22 +313,45 @@ class qtype_questionpy_edit_form extends question_edit_form {
      * @throws moodle_exception
      */
     private function validate_options_form(array $data, ?stored_file $package, array &$errors): void {
+        $errorswithnoelement = [];
+
         try {
             $packagehash = $data['qpy_package_hash'] ?? $data['qpy_package_file_hash'];
 
             // Repetition elements may produce numeric arrays with gaps. We want them to become JSON arrays, so we reindex.
             // Form element names may not begin with a digit, so this won't accidentally change them.
-            utils::reindex_integer_arrays($data['qpy_form']);
+            if (!empty($data['qpy_form'])) {
+                utils::reindex_integer_arrays($data['qpy_form']);
+            }
 
             // TODO: create a dedicated endpoint?
-            $this->api->package($packagehash, $package)->create_question(null, (object) $data['qpy_form']);
+            $this->api->package($packagehash, $package)->create_question(
+                $this->question->qpy_state ?? null,
+                (object) $data['qpy_form']
+            );
         } catch (options_form_validation_error $error) {
             foreach ($error->errors as $field => $error) {
                 $element = 'qpy_form[' . str_replace('.', '][', $field) . ']';
                 if ($this->_form->elementExists($element)) {
                     $errors[$element] = $error;
+                } else {
+                    $errorswithnoelement[$element] = $error;
                 }
             }
+        }
+
+        if (!empty($errorswithnoelement)) {
+            $listitems = [];
+            foreach ($errorswithnoelement as $element => $error) {
+                $listitems[] = get_string('options_form_validation_error_element', 'qtype_questionpy', [
+                    'name' => $element,
+                    'error' => $error,
+                ]);
+            }
+            $list = html_writer::alist($listitems);
+            $composederrorstring = get_string('options_form_validation_error_container', 'qtype_questionpy', $list);
+            // Use the 'Question name' input field to view the errors.
+            $errors['name'] = $composederrorstring;
         }
     }
 
