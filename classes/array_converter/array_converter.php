@@ -276,6 +276,9 @@ class array_converter {
             // For untyped properties / parameters, no conversion is done.
             return $value;
         }
+        if ($type->allowsNull() && $value === null) {
+            return null;
+        }
 
         $typehint = $type->getName();
 
