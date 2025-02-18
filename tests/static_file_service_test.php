@@ -93,6 +93,8 @@ final class static_file_service_test extends \advanced_testcase {
      * @throws invalid_dataroot_permissions
      */
     public function test_should_download_public_static_file(): void {
+        global $PAGE;
+
         $hash = random_string(64);
         $this->mockhandler->append(new Response(200, [
             'Content-Type' => 'text/markdown',
@@ -102,7 +104,8 @@ final class static_file_service_test extends \advanced_testcase {
             $hash,
             'local',
             'example',
-            '/path/to/file.txt'
+            '/path/to/file.txt',
+            $PAGE->context->id,
         );
 
         $this->assertStringEqualsFile($path, 'Static file content');
@@ -125,13 +128,15 @@ final class static_file_service_test extends \advanced_testcase {
      * @throws invalid_dataroot_permissions
      */
     public function test_should_fall_back_and_warn_when_no_content_type(): void {
+        global $PAGE;
         $this->mockhandler->append(new Response(200, [], 'Static file content'));
 
         [, $mimetype] = $this->staticfileservice->download_public_static_file(
             random_string(64),
             'local',
             'example',
-            '/path/to/file.txt'
+            '/path/to/file.txt',
+            $PAGE->context->id,
         );
 
         $this->assertEquals('application/octet-stream', $mimetype);
@@ -146,13 +151,15 @@ final class static_file_service_test extends \advanced_testcase {
      * @throws moodle_exception
      */
     public function test_should_return_null_when_file_doesnt_exist(): void {
+        global $PAGE;
         $this->mockhandler->append(new Response(404, []));
 
         $result = $this->staticfileservice->download_public_static_file(
             random_string(64),
             'local',
             'example',
-            '/path/to/file.txt'
+            '/path/to/file.txt',
+            $PAGE->context->id,
         );
 
         $this->assertNull($result);

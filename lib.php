@@ -52,7 +52,13 @@ function qtype_questionpy_pluginfile($course, $cm, $context, $filearea, $args, $
     [$packagehash, $namespace, $shortname] = $args;
     $path = implode('/', array_slice($args, 3));
 
-    [$filepath, $mimetype] = $staticfileservice->download_public_static_file($packagehash, $namespace, $shortname, $path);
+    [$filepath, $mimetype] = $staticfileservice->download_public_static_file(
+        $packagehash,
+        $namespace,
+        $shortname,
+        $path,
+        $context->id,
+    );
     if (is_null($filepath)) {
         send_file_not_found();
     }
