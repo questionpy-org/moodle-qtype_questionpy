@@ -58,15 +58,17 @@ class static_file_service {
      * @param string $namespace
      * @param string $shortname
      * @param string $path
+     * @param int $contextid
      * @return array{ 0: string, 1: string }|null array of temporary file path and mime type or null of the file wasn't
      *                                            found
      * @throws coding_exception
      * @throws dml_exception
      * @throws invalid_dataroot_permissions
      */
-    public function download_public_static_file(string $packagehash, string $namespace, string $shortname, string $path): ?array {
+    public function download_public_static_file(string $packagehash, string $namespace, string $shortname, string $path,
+                                                int $contextid): ?array {
         $path = ltrim($path, '/');
-        $packagefileiflocal = $this->packagefileservice->get_file_by_package_hash($packagehash, context_system::instance()->id);
+        $packagefileiflocal = $this->packagefileservice->get_file_by_package_hash($packagehash, $contextid);
 
         $temppath = make_request_directory() . "/$packagehash/$namespace/$shortname/$path";
         make_writable_directory(dirname($temppath));
