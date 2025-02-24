@@ -56,6 +56,7 @@ final class question_test extends \advanced_testcase {
      * @throws moodle_exception
      */
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
 
         // Load questionpy.

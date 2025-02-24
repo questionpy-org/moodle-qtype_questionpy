@@ -33,7 +33,6 @@ use GuzzleHttp\Psr7\Response;
 use invalid_dataroot_permissions;
 use moodle_exception;
 use qtype_questionpy\api\api;
-use qtype_questionpy\api\package_api;
 use qtype_questionpy\api\qpy_http_client;
 
 /**
@@ -67,6 +66,7 @@ final class static_file_service_test extends \advanced_testcase {
      * @throws dml_exception
      */
     protected function setUp(): void {
+        parent::setUp();
         $this->mockhandler = new MockHandler();
         $this->requesthistory = [];
         $handlerstack = HandlerStack::create($this->mockhandler);

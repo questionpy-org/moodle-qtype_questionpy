@@ -50,6 +50,7 @@ final class question_service_test extends \advanced_testcase {
     private question_service $questionservice;
 
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
         $this->api = $this->createMock(api::class);
         $this->packageapi = $this->createMock(package_api::class);
