@@ -52,6 +52,7 @@ final class search_packages_test extends \externallib_advanced_testcase {
      * This method is called before each test.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
         $this->setGuestUser();
     }

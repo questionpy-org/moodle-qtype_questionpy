@@ -50,6 +50,7 @@ final class favourite_package_test extends \externallib_advanced_testcase {
      * This method is called before each test.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
         $this->setGuestUser();
     }
