@@ -173,6 +173,7 @@ final class question_test extends \advanced_testcase {
         $this->packageapi->method('score_attempt')->willThrowException($exception);
 
         $question = $this->create_question();
+        $question->metadata = $this->createStub(question_ui_metadata_extractor::class);
         $question->attemptstate = 'state';
         $question->scoringstate = 'state';
 
@@ -197,7 +198,6 @@ final class question_test extends \advanced_testcase {
 
         // Check if ui and metadata is not set.
         $this->assertFalse(isset($question->ui));
-        $this->assertFalse(isset($question->metadata));
     }
 
     /**

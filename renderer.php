@@ -310,7 +310,7 @@ EOD;
         const base = document.createElement('base');
         base.target = '_blank';
         document.getElementsByTagName('head')[0].appendChild(base);
-    
+
         // Resize iframe when content height changes.
         const resize = function() {
             if (window.frameElement) {
