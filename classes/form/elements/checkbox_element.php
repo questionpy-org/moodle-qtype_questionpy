@@ -69,16 +69,14 @@ class checkbox_element extends form_element {
      * Render this item to the given context.
      *
      * @param render_context $context target context
-     * @param int|null $group passed by {@see checkbox_group_element::render_to} to the checkboxes belonging to it
      * @throws coding_exception
      */
-    public function render_to(render_context $context, ?int $group = null): void {
+    public function render_to(render_context $context): void {
         $element = $context->add_element(
             'advcheckbox',
             $this->name,
             $context->contextualize($this->leftlabel),
             $context->contextualize($this->rightlabel),
-            $group ? ['group' => $group] : null
         );
 
         if ($this->selected) {

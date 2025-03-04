@@ -32,7 +32,6 @@ use qtype_questionpy\form\conditions\in;
 use qtype_questionpy\form\conditions\is_checked;
 use qtype_questionpy\form\conditions\is_not_checked;
 use qtype_questionpy\form\elements\checkbox_element;
-use qtype_questionpy\form\elements\checkbox_group_element;
 use qtype_questionpy\form\elements\generated_id_element;
 use qtype_questionpy\form\elements\group_element;
 use qtype_questionpy\form\elements\hidden_element;
@@ -108,16 +107,6 @@ function element_provider(): array {
         ['checkbox', (new checkbox_element('my_checkbox', 'Left', 'Right', true, true))
             ->disable_if(new is_checked('chk1'))
             ->help('Help text'),
-        ],
-        ['checkbox_group', new checkbox_group_element(
-            (new checkbox_element(
-                'my_checkbox',
-                'Left',
-                'Right',
-                true,
-                true
-            ))->help('Help text')
-        ),
         ],
         ['group', (new group_element('my_group', 'Name', [
             new text_input_element('first_name', '', true, null, 'Vorname'),

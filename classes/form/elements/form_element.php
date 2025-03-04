@@ -29,7 +29,6 @@ use qtype_questionpy\form\qpy_renderable;
  */
 #[array_polymorphic(discriminator: 'kind', variants: [
     'checkbox' => checkbox_element::class,
-    'checkbox_group' => checkbox_group_element::class,
     'group' => group_element::class,
     'hidden' => hidden_element::class,
     'radio_group' => radio_group_element::class,
