@@ -77,28 +77,47 @@ class qtype_questionpy_renderer extends qtype_renderer {
             return $this->render_error();
         }
 
-        $questiondivid = $qa->get_outer_question_div_unique_id();
-        $autosavehintid = $questiondivid . '-autosave';
-        $formulationcb = function (qtype_questionpy_renderer $renderer) use ($qa, $question, $options, $autosavehintid) {
-            return $renderer->formulation_controls_feedback_in_iframe($qa, $question->ui, $options, $autosavehintid);
-        };
-        $iframesrc = $this->get_iframe_document($options->context, $question, $formulationcb);
+        try {
+            $questiondivid = $qa->get_outer_question_div_unique_id();
+            $autosavehintid = $questiondivid . '-autosave';
+            $formulationcb = function (qtype_questionpy_renderer $renderer) use ($qa, $question, $options, $autosavehintid) {
+                return $renderer->formulation_controls_feedback_in_iframe($qa, $question->ui, $options, $autosavehintid);
+            };
+            $iframesrc = $this->get_iframe_document($options->context, $question, $formulationcb);
 
-        // A hidden input field is used to tell the quiz autosaver that the user changed their question answer
-        // in the iframe. The value is increased by one every time. The autosaver detects this modification and will
-        // save all answers.
-        $iframeid = $questiondivid . '-iframe';
-        $autosavehintname = 'qpy-autosave-' . $questiondivid;
-        $this->page->requires->js_call_amd(
-            'qtype_questionpy/view_question',
-            'addIframeFormDataOnSubmit',
-            [$iframeid, $qa->get_field_prefix()]
-        );
+            // A hidden input field is used to tell the quiz autosaver that the user changed their question answer
+            // in the iframe. The value is increased by one every time. The autosaver detects this modification and will
+            // save all answers.
+            $iframeid = $questiondivid . '-iframe';
+            $autosavehintname = 'qpy-autosave-' . $questiondivid;
+            $this->page->requires->js_call_amd(
+                'qtype_questionpy/view_question',
+                'addIframeFormDataOnSubmit',
+                [$iframeid, $qa->get_field_prefix()]
+            );
 
-        return <<<EOA
+            return <<<EOA
     <input type="hidden" name="{$autosavehintname}" id="{$autosavehintid}" value="0">
     <iframe id="{$iframeid}" srcdoc="{$iframesrc}"></iframe>
 EOA;
+        } catch (Throwable $t) {
+            global $USER;
+            // Trigger error event.
+            $params = [
+                'context' => $this->page->context,
+                'relateduserid' => $USER->id,
+                'other' => [
+                    'questionid' => $question->id,
+                    'questionattemptid' => $qa->get_database_id(),
+                    'errormessage' => $t->getMessage(),
+                ],
+            ];
+            $event = \qtype_questionpy\event\viewing_attempt_failed::create($params);
+            $event->trigger();
+            debugging($event->get_description());
+
+            return $this->render_error();
+        }
     }
 
     /**
