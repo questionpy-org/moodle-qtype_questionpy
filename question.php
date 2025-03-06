@@ -59,6 +59,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public question_ui_metadata_extractor $metadata;
     /** @var package_dependency[] */
     public array $packagedependencies;
+    /** @var bool set by {@see start_attempt} and {@see apply_attempt_state} when they can't load the attempt */
+    public bool $errorduringload;
 
     /** @var qbehaviour_questionpy|null $behaviour */
     public ?qbehaviour_questionpy $behaviour = null;
@@ -118,6 +120,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $this->scoringstate = null;
             $this->update_attempt($attempt);
         } catch (Throwable $t) {
+            $this->errorduringload = true;
             // Trigger error event.
             $qa = $this->get_behaviour()->get_qa();
             $params = [
@@ -135,6 +138,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             debugging($event->get_description());
             throw $t;
         }
+
+        $this->errorduringload = false;
     }
 
     /**
@@ -179,6 +184,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
                 );
             $this->update_attempt($attempt);
         } catch (Throwable $t) {
+            $this->errorduringload = true;
             // Trigger error event.
             $params = [
                 'context' => $PAGE->context,
@@ -193,6 +199,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $event->trigger();
             debugging($event->get_description());
         }
+
+        $this->errorduringload = false;
     }
 
     /**
@@ -221,7 +229,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *      meaning take all the raw submitted data belonging to this question.
      */
     public function get_expected_data(): array|string {
-        if (!isset($this->metadata)) {
+        if ($this->errorduringload) {
             // There was an error -> get all the submitted data.
             return question_attempt::USE_RAW_DATA;
         }
@@ -237,7 +245,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return array|null parameter name => value.
      */
     public function get_correct_response(): ?array {
-        if (!isset($this->metadata)) {
+        if ($this->errorduringload) {
             // There was an error -> we cannot compute the correct response.
             return null;
         }
@@ -254,7 +262,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return bool whether this response is a complete answer to this question.
      */
     public function is_complete_response(array $response): bool {
-        if (!isset($this->metadata)) {
+        if ($this->errorduringload) {
             // There was an error -> if no data was provided we want the question state to be set to INCOMPLETE.
             return !empty($response);
         }

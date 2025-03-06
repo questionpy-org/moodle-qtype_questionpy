@@ -45,6 +45,19 @@ class qtype_questionpy_renderer extends qtype_renderer {
     }
 
     /**
+     * Renders a message informing the user about an error.
+     *
+     * @return string
+     * @throws \core\exception\moodle_exception
+     */
+    private function render_error(): string {
+        return $this->output->render_from_template('qtype_questionpy/render_error', [
+            'message' => 'There was an error attempting to view the question.',
+            'info' => 'Please contact an administrator.',
+        ]);
+    }
+
+    /**
      * Generate the display of the formulation part of the question. This is the
      * area that contains the question text, and the controls for students to
      * input their answers. Some question types also embed bits of feedback, for
@@ -59,11 +72,9 @@ class qtype_questionpy_renderer extends qtype_renderer {
         $question = $qa->get_question();
         assert($question instanceof qtype_questionpy_question);
 
-        if (!isset($question->ui)) {
-            return $this->output->render_from_template('qtype_questionpy/render_error', [
-                'message' => 'There was an error attempting to view the question.',
-                'info' => 'Please contact an administrator.',
-            ]);
+        if ($question->errorduringload) {
+            // This should already have been logged in qtype_questionpy_question.
+            return $this->render_error();
         }
 
         $questiondivid = $qa->get_outer_question_div_unique_id();
