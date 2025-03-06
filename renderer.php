@@ -101,6 +101,7 @@ EOA;
      * @param qtype_questionpy_question $question
      * @param callable $contentcb Callback to get the main content that should be part of the iframe.
      * @return string HTML document already encoded with htmlspecialchars to put in iframe srcdoc
+     * @throws \core\exception\coding_exception
      */
     protected function get_iframe_document(context $context, qtype_questionpy_question $question, callable $contentcb): string {
         // We know what we are doing here. We are touching these globals on purpose.
@@ -142,10 +143,11 @@ EOA;
         } finally {
             $PAGE = $oldpage;
             $OUTPUT = $oldoutput;
-            $iframesrc = ob_get_clean();
-            return htmlspecialchars($iframesrc);
         }
         // phpcs:enable
+
+        $iframesrc = ob_get_clean();
+        return htmlspecialchars($iframesrc);
     }
 
     /**
