@@ -205,8 +205,9 @@ final class question_test extends \advanced_testcase {
      *
      * @covers \qtype_questionpy_question::get_expected_data
      */
-    public function test_get_expected_data_should_return_use_raw_data_if_no_metadata(): void {
+    public function test_get_expected_data_should_return_use_raw_data_if_error_during_load(): void {
         $question = $this->create_question();
+        $question->errorduringload = true;
         $this->assertEquals(question_attempt::USE_RAW_DATA, $question->get_expected_data());
     }
 
@@ -215,8 +216,9 @@ final class question_test extends \advanced_testcase {
      *
      * @covers \qtype_questionpy_question::is_complete_response
      */
-    public function test_is_complete_response_should_return_false_if_no_metadata_and_no_response(): void {
+    public function test_is_complete_response_should_return_false_if_error_during_load(): void {
         $question = $this->create_question();
+        $question->errorduringload = true;
         $this->assertFalse($question->is_complete_response([]));
     }
 
@@ -225,8 +227,9 @@ final class question_test extends \advanced_testcase {
      *
      * @covers \qtype_questionpy_question::is_complete_response
      */
-    public function test_is_complete_response_should_return_true_if_no_metadata_and_non_empty_response(): void {
+    public function test_is_complete_response_should_return_true_if_error_during_load_and_non_empty_response(): void {
         $question = $this->create_question();
+        $question->errorduringload = true;
         $this->assertTrue($question->is_complete_response(['test' => 'data']));
     }
 }
