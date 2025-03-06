@@ -23,7 +23,7 @@
     * warnings - List of invalid_option_warnings. The localize() method will be called.
     * should_use_list - To use an HTML list. Otherwise, just outputs paragraphs.
     * should_show_hint_editable - To show a hint about the possibility of fixing the invalid values.
-    * should_show_hint_contact_trainers - To show a hint about contacting trainers.
+    * should_show_hint_contact_teachers - To show a hint about contacting teachers.
 
     Example context (json):
     {
@@ -32,7 +32,7 @@
         }],
         "should_use_list": false,
         "should_show_hint_editable": true,
-        "should_show_hint_contact_trainers": true
+        "should_show_hint_contact_teachers": true
     }
 }}
 <div class="alert alert-warning">
@@ -52,7 +52,7 @@
     {{#should_show_hint_editable}}
         <p>{{#str}} render_warnings_hint_editable, qtype_questionpy {{/str}}</p>
     {{/should_show_hint_editable}}
-    {{#should_show_hint_contact_trainers}}
-        <p>{{#str}} render_warnings_hint_contact_trainers, qtype_questionpy {{/str}}</p>
-    {{/should_show_hint_contact_trainers}}
+    {{#should_show_hint_contact_teachers}}
+        <p>{{#str}} render_warnings_hint_contact_teachers, qtype_questionpy {{/str}}</p>
+    {{/should_show_hint_contact_teachers}}
 </div>

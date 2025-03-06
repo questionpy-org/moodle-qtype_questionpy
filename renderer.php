@@ -205,7 +205,7 @@ EOA;
             $warningshtml .= $this->output->render_from_template('qtype_questionpy/render_warnings', [
                 'warnings' => $renderresult->warnings,
                 'should_use_list' => count($renderresult->warnings) > 1,
-                'should_show_hint_contact_trainers' => $isstudent,
+                'should_show_hint_contact_teachers' => $isstudent,
                 'should_show_hint_editable' => $isstudent && !$options->readonly,
             ]);
         }
