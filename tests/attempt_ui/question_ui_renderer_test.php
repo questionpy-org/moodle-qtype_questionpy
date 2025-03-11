@@ -77,8 +77,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $opts = new \question_display_options();
         $opts->hide_all_feedback();
 
-        $ui = new question_ui_renderer($input, [], $opts, $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], $opts, $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -99,8 +98,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $qa = $this->create_question_attempt_stub();
         $opts = new \question_display_options();
 
-        $ui = new question_ui_renderer($input, [], $opts, $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], $opts, $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -124,8 +122,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         // Fixed ID, because it's used as the shuffle seed.
         $qa = $this->create_question_attempt_stub(id: 42);
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -158,9 +155,9 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $input = file_get_contents(__DIR__ . '/question_uis/shuffle.xhtml');
         $qa = $this->create_question_attempt_stub();
 
-        $firstresult = (new question_ui_renderer($input, [], new \question_display_options(), $qa))->render();
+        $firstresult = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
         for ($i = 0; $i < 10; $i++) {
-            $result = (new question_ui_renderer($input, [], new \question_display_options(), $qa))->render();
+            $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
             $this->assertEquals($firstresult->html, $result->html);
         }
     }
@@ -176,11 +173,10 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $input = file_get_contents(__DIR__ . '/question_uis/placeholder.xhtml');
         $qa = $this->create_question_attempt_stub();
 
-        $ui = new question_ui_renderer($input, [
+        $result = question_ui_renderer::render($input, [
             'param' => "Value of param <b>one</b>.<script>'Oh no, danger!'</script>",
             'description' => 'My simple description.',
         ], new \question_display_options(), $qa);
-        $result = $ui->render();
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -205,11 +201,10 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $input = file_get_contents(__DIR__ . '/question_uis/placeholder.xhtml');
         $qa = $this->create_question_attempt_stub();
 
-        $ui = new question_ui_renderer($input, [
+        $result = question_ui_renderer::render($input, [
             'param' => '<qpy:format-float>123</qpy:format-float><unknown-tag></unknown-tag><div>unclosed',
             'description' => 'My simple description.',
         ], new \question_display_options(), $qa);
-        $result = $ui->render();
 
         // For noclean, the qpy namespace prefix is unknown when appending the XML. Since we want to support as much
         // broken HTML/XML in user input as possible, the DOM just removes the prefix.
@@ -238,8 +233,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $input = file_get_contents(__DIR__ . '/question_uis/placeholder.xhtml');
         $qa = $this->create_question_attempt_stub();
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -263,8 +257,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $input = file_get_contents(__DIR__ . '/question_uis/validations.xhtml');
         $qa = $this->create_question_attempt_stub();
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -291,8 +284,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $input = file_get_contents(__DIR__ . '/question_uis/buttons.xhtml');
         $qa = $this->create_question_attempt_stub();
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -324,8 +316,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $options = new \question_display_options();
         $options->context = \context_course::instance($course->id);
 
-        $ui = new question_ui_renderer($input, [], $options, $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], $options, $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml"></div>
@@ -349,9 +340,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $options = new \question_display_options();
         $options->context = \context_course::instance($course->id);
 
-        $ui = new question_ui_renderer($input, [], $options, $qa);
-
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], $options, $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -374,8 +363,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $input = file_get_contents(__DIR__ . '/question_uis/format-floats.xhtml');
         $qa = $this->create_question_attempt_stub();
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml">
@@ -401,8 +389,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
         $input = file_get_contents(__DIR__ . '/question_uis/qpy-urls.xhtml');
         $qa = $this->create_question_attempt_stub('deadbeef');
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
 
         // phpcs:disable moodle.Files.LineLength.MaxExceeded
         $this->assert_html_string_equals_html_string(<<<EXPECTED
@@ -434,8 +421,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             'my_textarea' => 'new',
         ]);
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml" id="my_div">
@@ -476,8 +462,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             'my_select' => 'something',
         ]);
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
 
         $this->assert_html_string_equals_html_string(<<<EXPECTED
         <div xmlns="http://www.w3.org/1999/xhtml" >
@@ -508,8 +493,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             'my_select' => 'value42',
         ]);
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
         $this->assertEqualsCanonicalizing([
             new invalid_option_warning('my_checkbox_value', 'other_value', ['value']),
             new invalid_option_warning('my_checkbox_on', 'schmon', ['on']),
@@ -535,8 +519,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             'my_select' => 'value42',
         ]);
 
-        $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
-        $result = $ui->render();
+        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
         $this->assertEmpty($result->warnings);
     }
 

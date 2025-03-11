@@ -40,26 +40,14 @@ use question_display_options;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_ui_renderer {
-    /** @var DOMDocument $xml */
-    private DOMDocument $xml;
-
-    /** @var DOMXPath $xpath */
-    private DOMXPath $xpath;
-
-    /** @var array $placeholders */
-    private array $placeholders;
-
-    /** @var question_display_options $options */
-    private question_display_options $options;
-
-    /** @var question_attempt $attempt */
-    private question_attempt $attempt;
-
     /** @var string[]|null $roles names of roles that the current user has (use {@see get_user_roles()} to get the roles) */
     private ?array $roles = null;
 
-    /** @var render_result|null $result */
-    private ?render_result $result = null;
+    /** @var string $html resulting rendered html */
+    public string $html;
+
+    /** @var invalid_option_warning[] $warnings warnings emitted during rendering */
+    public array $warnings;
 
     /**
      * @var string[] $unmappableduplicatefieldnames contains duplicate input field names that cannot be mapped with certainty to
@@ -74,46 +62,51 @@ class question_ui_renderer {
     public array $mappableduplicatefieldnames = [];
 
     /**
-     * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
+     * Private constructor. Use {@see question_ui_renderer::render()}.
+     *
+     * @param DOMDocument $xml XML document to operate on
+     * @param DOMXPath $xpath
+     * @param question_display_options $options
+     */
+    private function __construct(
+        /** @var DOMDocument $xml */
+        private readonly DOMDocument $xml,
+        /** @var DOMXPath $xpath */
+        private readonly DOMXPath $xpath,
+        /** @var question_display_options $options */
+        private readonly question_display_options $options
+    ) {
+    }
+
+    /**
+     * Renders the given QuestionPy XHTML to HTML.
      *
      * @param string $xml XML as returned by the QPy Server
      * @param array $placeholders string to string mapping of placeholder names to the values
      * @param question_display_options $options
      * @param question_attempt $attempt
-     */
-    public function __construct(string $xml, array $placeholders, question_display_options $options,
-                                question_attempt $attempt) {
-        $this->placeholders = $placeholders;
-        $this->options = $options;
-        $this->attempt = $attempt;
-
-        $xml = $this->replace_qpy_urls($xml);
-
-        $this->xml = new DOMDocument();
-        $this->xml->preserveWhiteSpace = false;
-        $this->xml->loadXML($xml);
-        $this->xml->normalizeDocument();
-
-        $this->xpath = new DOMXPath($this->xml);
-        $this->xpath->registerNamespace('xhtml', constants::NAMESPACE_XHTML);
-        $this->xpath->registerNamespace('qpy', constants::NAMESPACE_QPY);
-
-        $this->populate_duplicate_field_names();
-    }
-
-    /**
-     * Renders the given XML to HTML.
-     *
-     * @return render_result
+     * @return question_ui_renderer object containing {@see question_ui_renderer::$html rendered html} and
+     *                              {@see question_ui_renderer::$warnings emitted warnings}.
      * @throws coding_exception
      */
-    public function render(): render_result {
-        if ($this->result) {
-            return $this->result;
-        }
+    public static function render(string $xml, array $placeholders, question_display_options $options,
+                                  question_attempt $attempt): static {
+        $xml = static::replace_qpy_urls($xml, $attempt);
+
+        $doc = new DOMDocument();
+        $doc->preserveWhiteSpace = false;
+        $doc->loadXML($xml);
+        $doc->normalizeDocument();
+
+        $xpath = new DOMXPath($doc);
+        $xpath->registerNamespace('xhtml', constants::NAMESPACE_XHTML);
+        $xpath->registerNamespace('qpy', constants::NAMESPACE_QPY);
+
+        $renderer = new static($doc, $xpath, $options);
+        $renderer->populate_duplicate_field_names();
 
         $nextseed = mt_rand();
-        $id = $this->attempt->get_database_id();
+        $id = $attempt->get_database_id();
         if ($id === null) {
             throw new coding_exception('question_attempt does not have an id');
         }
@@ -121,35 +114,36 @@ class question_ui_renderer {
         mt_srand($id);
         try {
             // Handle our custom elements and attributes.
-            $this->hide_unwanted_feedback();
-            $this->hide_if_role();
-            $this->shuffle_contents();
-            $this->format_floats();
+            $renderer->hide_unwanted_feedback();
+            $renderer->hide_if_role();
+            $renderer->shuffle_contents();
+            $renderer->format_floats();
 
-            $availableoptions = $this->extract_available_options();
+            $availableoptions = $renderer->extract_available_options();
 
             // Remove all unhandled custom elements, attributes, comments, and non-default xmlns declarations.
-            $this->clean_up();
+            $renderer->clean_up();
 
             // Modify standard HTML.
-            $this->set_input_values_and_readonly();
-            $this->soften_validation();
-            $this->defuse_buttons();
+            $renderer->set_input_values_and_readonly($attempt);
+            $renderer->soften_validation();
+            $renderer->defuse_buttons();
 
-            $this->add_styles();
+            $renderer->add_styles();
 
             // We don't want to support QPy elements (and attributes, etc.) in placeholder expansions, so we resolve
             // them after replacing QPy elements.
-            $this->resolve_placeholders();
+            $renderer->resolve_placeholders($placeholders);
         } finally {
             // I'm not sure whether it is strictly necessary to reset the PRNG seed here, but it feels safer.
             // Resetting it to its original state would be ideal, but that doesn't seem to be possible.
             mt_srand($nextseed);
         }
 
-        $warnings = $this->check_for_and_preserve_unknown_options($availableoptions);
-        $this->result = new render_result($this->xml->saveHTML(), $warnings);
-        return $this->result;
+        $warnings = $renderer->check_for_and_preserve_unknown_options($availableoptions, $attempt);
+        $renderer->html = $renderer->xml->saveHTML();
+        $renderer->warnings = $warnings;
+        return $renderer;
     }
 
     /**
@@ -270,11 +264,12 @@ class question_ui_renderer {
      * - If {@see question_display_options::$readonly} is set, the input is disabled.
      * - If a value was saved for the input in a previous step, the latest value is added to the HTML.
      *
+     * @param question_attempt $attempt
      * @return void
      * @throws coding_exception
      */
-    private function set_input_values_and_readonly(): void {
-        $lastresponse = utils::get_qpy_response($this->attempt);
+    private function set_input_values_and_readonly(question_attempt $attempt): void {
+        $lastresponse = utils::get_qpy_response($attempt);
 
         /** @var DOMElement $element */
         foreach ($this->xpath->query('//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea') as $element) {
@@ -395,22 +390,23 @@ class question_ui_renderer {
      * Since QPy transformations should not be applied to the content of the placeholders, this method should be called
      * near the end (after {@see clean_up()}).
      *
+     * @param array $placeholders
      * @return void
      */
-    private function resolve_placeholders(): void {
+    private function resolve_placeholders(array $placeholders): void {
         /** @var DOMProcessingInstruction $pi */
         foreach (iterator_to_array($this->xpath->query("//processing-instruction('p')")) as $pi) {
             $parts = preg_split('/\s+/', trim($pi->data));
             $key = $parts[0];
             $cleanoption = $parts[1] ?? 'clean';
 
-            if (!isset($this->placeholders[$key])) {
+            if (!isset($placeholders[$key])) {
                 // No value for this placeholder, so we just remove the PI.
                 $pi->parentNode->removeChild($pi);
                 continue;
             }
 
-            $rawvalue = $this->placeholders[$key];
+            $rawvalue = $placeholders[$key];
             if (strtolower($cleanoption) === 'clean') {
                 // Allow HTML, but clean using Moodle's clean_text to prevent XSS.
                 $element = dom_utils::html_to_fragment($this->xml, clean_text($rawvalue));
@@ -623,10 +619,11 @@ class question_ui_renderer {
      * Replaces QPy-URIs such as `qpy:acme/great_package/static/css/styles.css` with functioning pluginfile URLs.
      *
      * @param string $input
+     * @param question_attempt $attempt
      * @return string
      */
-    private function replace_qpy_urls(string $input): string {
-        $question = $this->attempt->get_question();
+    private static function replace_qpy_urls(string $input, question_attempt $attempt): string {
+        $question = $attempt->get_question();
         assert($question instanceof qtype_questionpy_question);
 
         return preg_replace_callback(
@@ -775,13 +772,14 @@ class question_ui_renderer {
      * duplicates.
      *
      * @param available_opts_info[] $availableoptsinfobyname
+     * @param question_attempt $attempt
      * @return invalid_option_warning[]
      * @throws coding_exception
      * @see extract_available_options
      * @throws \core\exception\coding_exception
      */
-    private function check_for_and_preserve_unknown_options(array $availableoptsinfobyname): array {
-        $response = utils::get_qpy_response($this->attempt);
+    private function check_for_and_preserve_unknown_options(array $availableoptsinfobyname, question_attempt $attempt): array {
+        $response = utils::get_qpy_response($attempt);
 
         $warnings = [];
         foreach ($availableoptsinfobyname as $name => $info) {
