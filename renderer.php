@@ -195,16 +195,15 @@ EOA;
      */
     protected function formulation_controls_feedback_in_iframe(question_attempt $qa, attempt_ui $ui,
               question_display_options $options, string $autosavehintinputid): string {
-        $qformulation = new question_ui_renderer($ui->formulation, $ui->placeholders, $options, $qa);
-        $renderresult = $qformulation->render();
+        $renderer = question_ui_renderer::render($ui->formulation, $ui->placeholders, $options, $qa);
 
         $warningshtml = '';
-        if ($renderresult->warnings) {
+        if ($renderer->warnings) {
             global $USER;
             $isstudent = $qa->get_step(0)->get_user_id() === $USER->id;
             $warningshtml .= $this->output->render_from_template('qtype_questionpy/render_warnings', [
-                'warnings' => $renderresult->warnings,
-                'should_use_list' => count($renderresult->warnings) > 1,
+                'warnings' => $renderer->warnings,
+                'should_use_list' => count($renderer->warnings) > 1,
                 'should_show_hint_contact_teachers' => $isstudent,
                 'should_show_hint_editable' => $isstudent && !$options->readonly,
             ]);
@@ -216,7 +215,7 @@ EOA;
             ['class' => 'outcome clearfix']
         );
 
-        $roles = $qformulation->get_user_roles();
+        $roles = $renderer->get_user_roles();
         $this->page->requires->js_call_amd(
             'qtype_questionpy/view_question',
             'init',
@@ -225,7 +224,7 @@ EOA;
         $this->add_package_js_calls($ui->javascriptcalls, $roles, $options);
 
         return $this->render_from_template('qtype_questionpy/iframe_question_content', [
-            'question_html' => $renderresult->html,
+            'question_html' => $renderer->html,
             'feedback_html' => $feedback,
             'warnings_html' => $warningshtml,
         ]);
@@ -238,7 +237,6 @@ EOA;
      * @param string[] $roles names of qpy user roles
      * @param question_display_options $options
      * @return void
-     * @throws coding_exception
      */
     protected function add_package_js_calls(array $jscalls, array $roles, question_display_options $options): void {
         $calls = [];
@@ -394,10 +392,10 @@ EOD;
         $hint = null;
 
         if ($options->feedback && !is_null($question->ui->specificfeedback)) {
-            $renderer = new question_ui_renderer($question->ui->specificfeedback, $question->ui->placeholders, $options, $qa);
+            $renderer = question_ui_renderer::render($question->ui->specificfeedback, $question->ui->placeholders, $options, $qa);
             $output .= html_writer::nonempty_tag(
                 'div',
-                $renderer->render(),
+                $renderer->html,
                 ['class' => 'specificfeedback', 'id' => 'qpy-specific-feedback']
             );
             $hint = $qa->get_applicable_hint();
@@ -412,19 +410,19 @@ EOD;
         }
 
         if ($options->generalfeedback && !is_null($question->ui->generalfeedback)) {
-            $renderer = new question_ui_renderer($question->ui->generalfeedback, $question->ui->placeholders, $options, $qa);
+            $renderer = question_ui_renderer::render($question->ui->generalfeedback, $question->ui->placeholders, $options, $qa);
             $output .= html_writer::nonempty_tag(
                 'div',
-                $renderer->render(),
+                $renderer->html,
                 ['class' => 'generalfeedback', 'id' => 'qpy-general-feedback']
             );
         }
 
         if ($options->rightanswer && !is_null($question->ui->rightanswer)) {
-            $renderer = new question_ui_renderer($question->ui->rightanswer, $question->ui->placeholders, $options, $qa);
+            $renderer = question_ui_renderer::render($question->ui->rightanswer, $question->ui->placeholders, $options, $qa);
             $output .= html_writer::nonempty_tag(
                 'div',
-                $renderer->render(),
+                $renderer->html,
                 ['class' => 'rightanswer', 'id' => 'qpy-right-answer']
             );
         }
