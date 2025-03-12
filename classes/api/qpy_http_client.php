@@ -16,8 +16,9 @@
 
 namespace qtype_questionpy\api;
 
+use core\encryption;
+use core\exception\moodle_exception;
 use core\http_client;
-use dml_exception;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
@@ -43,11 +44,15 @@ class qpy_http_client extends http_client {
      *
      * @param array $config Guzzle config options. Mock handlers and history middleware can be added here, see
      *                      {@link https://docs.guzzlephp.org/en/stable/testing.html#mock-handler}.
-     * @throws dml_exception
+     * @throws moodle_exception
      */
     public function __construct(array $config = []) {
         $config['base_uri'] ??= rtrim(get_config('qtype_questionpy', 'server_url'), '/') . '/';
         $config[RequestOptions::TIMEOUT] ??= get_config('qtype_questionpy', 'server_timeout');
+        $config[RequestOptions::AUTH] ??= [
+            get_config('qtype_questionpy', 'server_username'),
+            encryption::decrypt(get_config('qtype_questionpy', 'server_password')),
+        ];
         parent::__construct($config);
     }
 
