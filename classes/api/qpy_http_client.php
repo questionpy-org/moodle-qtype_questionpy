@@ -49,10 +49,15 @@ class qpy_http_client extends http_client {
     public function __construct(array $config = []) {
         $config['base_uri'] ??= rtrim(get_config('qtype_questionpy', 'server_url'), '/') . '/';
         $config[RequestOptions::TIMEOUT] ??= get_config('qtype_questionpy', 'server_timeout');
-        $config[RequestOptions::AUTH] ??= [
-            get_config('qtype_questionpy', 'server_username'),
-            encryption::decrypt(get_config('qtype_questionpy', 'server_password')),
-        ];
+
+        if ($username = get_config('qtype_questionpy', 'server_username')) {
+            // Only send the authentication header when a username was provided.
+            $config[RequestOptions::AUTH] ??= [
+                $username,
+                encryption::decrypt(get_config('qtype_questionpy', 'server_password')),
+            ];
+        }
+
         parent::__construct($config);
     }
 
