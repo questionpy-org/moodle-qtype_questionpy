@@ -265,15 +265,15 @@ class Attempt {
 }
 
 /**
- * Add the question's form data located in the iframe to the main form when it is submitted.
+ * JSON-encodes and adds the question's form data located in the iframe to the main form when it is submitted.
  *
  * This function must be called outside the iframe, on the parent window.
  *
  * @param {string} iframeId - The ID of the question's iframe.
- * @param {string} fieldPrefix - The prefix to add to the field names, for Moodle to recognize the fields belonging to a question.
- * @return {void} This function does not return a value.
+ * @param {string} responseFieldName - The complete field name for the JSON-encoded iframe form data.
+ * @return {void}
  */
-export function addIframeFormDataOnSubmit(iframeId, fieldPrefix) {
+export function addIframeFormDataOnSubmit(iframeId, responseFieldName) {
     const iframe = window.document.getElementById(iframeId);
     if (iframe === null) {
         window.console.error(`Could not find question iframe ${iframeId}. Cannot save answers.`);
@@ -288,8 +288,7 @@ export function addIframeFormDataOnSubmit(iframeId, fieldPrefix) {
             return;
         }
         const iframeFormData = new FormData(iframeForm);
-        for (const [key, value] of iframeFormData) {
-            event.formData.append(fieldPrefix + key, value);
-        }
+        const iframeObject = Object.fromEntries(iframeFormData);
+        event.formData.append(responseFieldName, JSON.stringify(iframeObject));
     });
 }

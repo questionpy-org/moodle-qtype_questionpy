@@ -25,6 +25,7 @@
 use qtype_questionpy\api\attempt_ui;
 use qtype_questionpy\api\feedback_type;
 use qtype_questionpy\api\js_module_call;
+use qtype_questionpy\constants;
 use qtype_questionpy\question_ui_renderer;
 
 /**
@@ -93,7 +94,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
             $this->page->requires->js_call_amd(
                 'qtype_questionpy/view_question',
                 'addIframeFormDataOnSubmit',
-                [$iframeid, $qa->get_field_prefix()]
+                [$iframeid, $qa->get_field_prefix() . constants::QT_VAR_RESPONSE]
             );
 
             return <<<EOA
