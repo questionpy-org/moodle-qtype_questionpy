@@ -37,6 +37,13 @@ if ($ADMIN->fulltree) {
         20
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'qtype_questionpy/server_username',
+        new lang_string('server_username', 'qtype_questionpy'),
+        new lang_string('server_username_description', 'qtype_questionpy'),
+        '',
+    ));
+
     $settings->add(new admin_setting_encryptedpassword(
         'qtype_questionpy/server_password',
         new lang_string('server_password', 'qtype_questionpy'),
