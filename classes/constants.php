@@ -34,4 +34,6 @@ class constants {
     public const QT_VAR_ATTEMPT_STATE = '_attemptstate';
     /** @var string */
     public const QT_VAR_SCORING_STATE = '_scoringstate';
+    /** @var string */
+    public const QT_VAR_RESPONSE = 'qpy_response';
 }

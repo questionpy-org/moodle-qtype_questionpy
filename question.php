@@ -166,11 +166,12 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             return;
         }
 
-        $this->attemptstate = $attemptstate;
-        $this->scoringstate = $this->get_behaviour()->get_qa()->get_last_qt_var(constants::QT_VAR_SCORING_STATE);
+        $qa = $this->get_behaviour()->get_qa();
 
-        $lastqtdata = $this->get_behaviour()->get_qa()->get_last_qt_data(null);
-        $lastresponse = $lastqtdata === null ? null : utils::filter_for_response($lastqtdata);
+        $this->attemptstate = $attemptstate;
+        $this->scoringstate = $qa->get_last_qt_var(constants::QT_VAR_SCORING_STATE);
+
+        $lastresponse = utils::get_qpy_response($qa);
 
         /* TODO: This method is also called from question_attempt->regrade and
                  question_attempt->start_question_based_on, where we shouldn't need to get the UI. */
@@ -229,11 +230,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *      meaning take all the raw submitted data belonging to this question.
      */
     public function get_expected_data(): array|string {
-        if ($this->errorduringload) {
-            // There was an error -> get all the submitted data.
-            return question_attempt::USE_RAW_DATA;
-        }
-        return $this->metadata->extract()->expecteddata;
+        return [
+            constants::QT_VAR_RESPONSE => PARAM_RAW_TRIMMED,
+        ];
     }
 
     /**
@@ -249,7 +248,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             // There was an error -> we cannot compute the correct response.
             return null;
         }
-        return $this->metadata->extract()->correctresponse;
+
+        return [
+            constants::QT_VAR_RESPONSE => json_encode($this->metadata->extract()->correctresponse),
+        ];
     }
 
     /**
@@ -260,15 +262,21 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @param array $response responses, as returned by
      *                        {@see question_attempt_step::get_qt_data()}.
      * @return bool whether this response is a complete answer to this question.
+     * @throws \core\exception\coding_exception
      */
     public function is_complete_response(array $response): bool {
+        $qpyresponse = utils::get_qpy_response($response);
+        if ($qpyresponse === null) {
+            return false;
+        }
+
         if ($this->errorduringload) {
             // There was an error -> if no data was provided we want the question state to be set to INCOMPLETE.
-            return !empty($response);
+            return !empty($qpyresponse);
         }
 
         foreach ($this->metadata->extract()->requiredfields as $requiredfield) {
-            if (!isset($response[$requiredfield]) || $response[$requiredfield] === '') {
+            if (!isset($qpyresponse->{$requiredfield}) || $qpyresponse->{$requiredfield} === '') {
                 return false;
             }
         }
@@ -285,11 +293,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @param array $newresponse the new responses, in the same format.
      * @return bool whether the two sets of responses are the same - that is
      *                            whether the new set of responses can safely be discarded.
+     * @throws \core\exception\coding_exception
      */
     public function is_same_response(array $prevresponse, array $newresponse): bool {
-        // The response has already been filtered against get_expected_data, we just need to filter out attempt state
-        // and scoring state before comparing.
-        return utils::filter_for_response($prevresponse) == utils::filter_for_response($newresponse);
+        return utils::get_qpy_response($prevresponse) == utils::get_qpy_response($newresponse);
     }
 
     /**
@@ -335,7 +342,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
                 $this->questionstate,
                 $this->attemptstate,
                 $this->scoringstate,
-                $response
+                utils::get_qpy_response($response) ?? (object)[]
             );
             $this->update_attempt($attemptscored);
         } catch (Throwable $t) {

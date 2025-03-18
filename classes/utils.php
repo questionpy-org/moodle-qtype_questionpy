@@ -16,7 +16,9 @@
 
 namespace qtype_questionpy;
 
+use core\exception\coding_exception;
 use qtype_questionpy\form\elements\repetition_element;
+use question_attempt;
 
 /**
  * Utility functions used in multiple places.
@@ -117,13 +119,31 @@ class utils {
     }
 
     /**
-     * Given an array as returned by {@see \question_attempt_step::get_qt_data()}, filters out vars starting with `_`.
+     * Parses the JSON-encoded QuestionPy response from either a specific submission or a question attempt.
      *
-     * @param array $qtvars
-     * @return array
-     * @see question_attempt_step for the meaning of different step var prefixes
+     * @param question_attempt|array $qa either the last submission (a.k.a. qt data) or the entire question attempt, in which case
+     *                                   the last submitted response is used.
+     * @return object|null
+     * @throws coding_exception
      */
-    public static function filter_for_response(array $qtvars): array {
-        return array_filter($qtvars, fn($key) => !str_starts_with($key, '_'), ARRAY_FILTER_USE_KEY);
+    public static function get_qpy_response(question_attempt|array $qa): ?object {
+        if (is_array($qa)) {
+            $responsestr = $qa[constants::QT_VAR_RESPONSE] ?? null;
+        } else {
+            $responsestr = $qa->get_last_qt_var(constants::QT_VAR_RESPONSE);
+        }
+
+        if (!$responsestr) {
+            return null;
+        }
+
+        $response = json_decode($responsestr, depth: 16);
+        if (json_last_error() != JSON_ERROR_NONE) {
+            throw new coding_exception('Could not decode response JSON: ' . json_last_error_msg());
+        }
+        if (!is_object($response)) {
+            throw new coding_exception('Expected response JSON to be an object, got: ' . gettype($response));
+        }
+        return $response;
     }
 }

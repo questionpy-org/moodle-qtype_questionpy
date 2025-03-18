@@ -431,7 +431,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             'my_textarea' => 'new',
         ];
         $qa->method('get_last_qt_var')
-            ->willReturnCallback(fn($name) => $newvalues[$name]);
+            ->willReturn(json_encode($newvalues));
 
         $ui = new question_ui_renderer($input, [], new \question_display_options(), $qa);
         $result = $ui->render();
