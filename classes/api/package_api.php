@@ -115,14 +115,14 @@ class package_api {
      * @param string $questionstate
      * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
      * @param string|null $scoringstate the last scoring state if this attempt has already been scored
-     * @param array|null $response data currently entered by the student
+     * @param object|null $response data currently entered by the student
      * @return attempt the attempt's metadata. The state is not returned since it never changes.
      * @throws GuzzleException
      * @throws request_error
      * @throws moodle_exception
      */
     public function view_attempt(string $questionstate, string $attemptstate, ?string $scoringstate = null,
-                                 ?array $response = null): attempt {
+                                 ?object $response = null): attempt {
         $options['multipart'] = $this->transform_to_multipart(
             [
                 'attempt_state' => $attemptstate,
@@ -141,14 +141,14 @@ class package_api {
      * @param string $questionstate
      * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
      * @param string|null $scoringstate the last scoring state if this attempt had been scored before
-     * @param array $response data submitted by the student
+     * @param object $response data submitted by the student
      * @return attempt_scored the attempt's metadata. The state is not returned since it never changes.
      * @throws GuzzleException
      * @throws request_error
      * @throws moodle_exception
      */
     public function score_attempt(string $questionstate, string $attemptstate, ?string $scoringstate,
-                                  array $response): attempt_scored {
+                                  object $response): attempt_scored {
         $options['multipart'] = $this->transform_to_multipart(
             [
                 'attempt_state' => $attemptstate,

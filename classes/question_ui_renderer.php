@@ -253,8 +253,11 @@ class question_ui_renderer {
      * - If a value was saved for the input in a previous step, the latest value is added to the HTML.
      *
      * @return void
+     * @throws \core\exception\coding_exception
      */
     private function set_input_values_and_readonly(): void {
+        $lastresponse = utils::get_qpy_response($this->attempt);
+
         /** @var DOMElement $element */
         foreach ($this->xpath->query('//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea') as $element) {
             if ($this->options->readonly) {
@@ -273,7 +276,7 @@ class question_ui_renderer {
             }
 
             // Set the last saved value.
-            $lastvalue = $this->attempt->get_last_qt_var($name);
+            $lastvalue = $lastresponse->{$name} ?? null;
             if (!is_null($lastvalue)) {
                 if ($type === 'checkbox' || $type === 'radio') {
                     // FIXME: Unchecked checkboxes send nothing, so we have no way of distinguishing an explicitly

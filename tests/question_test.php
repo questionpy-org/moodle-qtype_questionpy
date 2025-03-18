@@ -201,20 +201,22 @@ final class question_test extends \advanced_testcase {
     }
 
     /**
-     * Tests that the method returns USE_RAW_DATA when no metadata is set.
+     * Tests that the method returns the correct value.
      *
      * @covers \qtype_questionpy_question::get_expected_data
+     * @throws coding_exception
      */
-    public function test_get_expected_data_should_return_use_raw_data_if_error_during_load(): void {
+    public function test_get_expected_data_should_return_qpy_response(): void {
         $question = $this->create_question();
-        $question->errorduringload = true;
-        $this->assertEquals(question_attempt::USE_RAW_DATA, $question->get_expected_data());
+
+        $this->assertEquals([constants::QT_VAR_RESPONSE => PARAM_RAW_TRIMMED], $question->get_expected_data());
     }
 
     /**
      * Tests that the method returns false if there is no metadata and no response.
      *
      * @covers \qtype_questionpy_question::is_complete_response
+     * @throws coding_exception
      */
     public function test_is_complete_response_should_return_false_if_error_during_load(): void {
         $question = $this->create_question();
@@ -226,10 +228,11 @@ final class question_test extends \advanced_testcase {
      * Tests that the method returns true if there is no metadata but a response.
      *
      * @covers \qtype_questionpy_question::is_complete_response
+     * @throws \core\exception\coding_exception
      */
     public function test_is_complete_response_should_return_true_if_error_during_load_and_non_empty_response(): void {
         $question = $this->create_question();
         $question->errorduringload = true;
-        $this->assertTrue($question->is_complete_response(['test' => 'data']));
+        $this->assertTrue($question->is_complete_response([constants::QT_VAR_RESPONSE => json_encode(['test' => 'data'])]));
     }
 }
