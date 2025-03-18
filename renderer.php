@@ -114,7 +114,7 @@ EOA;
             ];
             $event = \qtype_questionpy\event\viewing_attempt_failed::create($params);
             $event->trigger();
-            debugging($event->get_description());
+            debugging($event->get_description(), backtrace: $t->getTrace());
 
             return $this->render_error();
         }
@@ -252,7 +252,11 @@ EOA;
                     );
                     $jsondata = json_encode($decodedjson);
                 } catch (JsonException | ValueError $e) {
-                    debugging('qtype_questionpy: Error decoding JSON data from package: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                    debugging(
+                        'qtype_questionpy: Error decoding JSON data from package: ' . $e->getMessage(),
+                        DEBUG_DEVELOPER,
+                        backtrace: $e->getTrace()
+                    );
                     $calls[] = "window.console.error('There was an error (on the server side) decoding the JSON data from " .
                         "the package ({$call->module} -> {$call->function} will not be called).');";
                     continue;

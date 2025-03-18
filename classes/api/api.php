@@ -64,7 +64,7 @@ class api {
                 $result[] = array_converter::from_array(package_versions_info::class, $package);
             } catch (TypeError $e) {
                 // TODO: decide what to do with faulty package.
-                debugging($e->getMessage());
+                debugging($e->getMessage(), backtrace: $e->getTrace());
             }
         }
 
