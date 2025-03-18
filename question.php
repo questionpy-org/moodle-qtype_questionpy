@@ -135,7 +135,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             ];
             $event = \qtype_questionpy\event\starting_attempt_failed::create($params);
             $event->trigger();
-            debugging($event->get_description());
+            debugging($event->get_description(), backtrace: $t->getTrace());
             throw $t;
         }
 
@@ -197,7 +197,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             ];
             $event = \qtype_questionpy\event\viewing_attempt_failed::create($params);
             $event->trigger();
-            debugging($event->get_description());
+            debugging($event->get_description(), backtrace: $t->getTrace());
         }
 
         $this->errorduringload = false;
@@ -350,7 +350,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             ];
             $event = \qtype_questionpy\event\grading_response_failed::create($params);
             $event->trigger();
-            debugging($event->get_description());
+            debugging($event->get_description(), backtrace: $t->getTrace());
 
             // As the server was not able to score the response, we mark this question with manual scoring.
             return [0, question_state::$needsgrading];
