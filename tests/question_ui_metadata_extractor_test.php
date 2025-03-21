@@ -41,14 +41,6 @@ final class question_ui_metadata_extractor_test extends \advanced_testcase {
             'my_select' => '1',
             'my_radio' => '2',
             'my_text' => 'Lorem ipsum dolor sit amet.',
-        ], [
-            'my_number' => PARAM_RAW,
-            'my_select' => PARAM_RAW,
-            'my_radio' => PARAM_RAW,
-            'my_text' => PARAM_RAW,
-            'my_button' => PARAM_RAW,
-            'only_lowercase_letters' => PARAM_RAW,
-            'between_5_and_10_chars' => PARAM_RAW,
         ], ['my_number']), $metadata->extract());
     }
 }

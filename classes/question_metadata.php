@@ -32,12 +32,6 @@ class question_metadata {
     public ?array $correctresponse = null;
 
     /**
-     * @var array an array of `name => PARAM_X` entries for the expected response fields
-     * @see \question_definition::get_expected_data()
-     */
-    public array $expecteddata = [];
-
-    /**
      * @var string[] an array of required field names
      * @see \question_manually_gradable::is_complete_response()
      * @see \question_manually_gradable::is_gradable_response()
@@ -49,13 +43,10 @@ class question_metadata {
      *
      * @param array|null $correctresponse if known, an array of `name => correct_value` entries for the expected
      *                                    response fields
-     * @param array $expecteddata an array of `name => PARAM_X` entries for the expected response fields
      * @param string[] $requiredfields an array of required field names
      */
-    public function __construct(?array $correctresponse = null, array $expecteddata = [],
-                                array $requiredfields = []) {
+    public function __construct(?array $correctresponse = null, array $requiredfields = []) {
         $this->correctresponse = $correctresponse;
-        $this->expecteddata = $expecteddata;
         $this->requiredfields = $requiredfields;
     }
 }
