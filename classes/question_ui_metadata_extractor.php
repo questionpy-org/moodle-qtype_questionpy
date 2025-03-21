@@ -93,12 +93,8 @@ class question_ui_metadata_extractor {
             ) as $element
         ) {
             $name = $element->getAttribute('name');
-            if ($name) {
-                $this->metadata->expecteddata[$name] = PARAM_RAW;
-
-                if ($element->hasAttribute('required')) {
-                    $this->metadata->requiredfields[] = $name;
-                }
+            if ($name && $element->hasAttribute('required')) {
+                $this->metadata->requiredfields[] = $name;
             }
         }
 
