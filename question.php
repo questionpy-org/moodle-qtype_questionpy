@@ -249,8 +249,13 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             return null;
         }
 
+        $correctresponse = $this->metadata->extract()->correctresponse;
+        if ($correctresponse === null) {
+            return null;
+        }
+
         return [
-            constants::QT_VAR_RESPONSE => json_encode($this->metadata->extract()->correctresponse),
+            constants::QT_VAR_RESPONSE => json_encode((object) $correctresponse),
         ];
     }
 
