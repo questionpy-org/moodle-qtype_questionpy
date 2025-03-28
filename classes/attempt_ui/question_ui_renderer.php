@@ -795,15 +795,19 @@ class question_ui_renderer {
 
             foreach ($lastvalues as $lastvalue) {
                 if (!in_array($lastvalue, $info->availableoptions)) {
-                    $warnings[] = new invalid_option_warning($name, $lastvalue, $info->availableoptions);
-                    if ($info->type !== 'select') {
-                        // Selects are handled in dom_utils::set_select_value.
-                        // This should work for single-valued and multi-valued fields alike: The invalid checkbox(es) and radio(s)
-                        // will have been unchecked by set_input_values_and_readonly, so this hidden input will be the only one,
-                        // ensuring that single-valued fields only receive a single value. For multi-valued fields, the hidden input
-                        // value will simply be added to the others in JS (addIframeFormDataOnSubmit).
-                        dom_utils::add_hidden_input($this->xml->documentElement, $name, $lastvalue);
-                    }
+                    // We don't preserve values for any type other than selects because it would be difficult to then remove the
+                    // invalid value:
+                    // For multi-valued fields, there would be no way for us to know whether the intention was to replace the
+                    // invalid value or add a new one.
+                    // For single-valued fields, while we can assume that any valid value should overwrite the invalid value, that
+                    // would add a fair bit of complexity for little benefit.
+
+                    $warnings[] = new invalid_option_warning(
+                        $name,
+                        $lastvalue,
+                        $info->availableoptions,
+                        preserved: $info->type === 'select'
+                    );
                 }
             }
         }

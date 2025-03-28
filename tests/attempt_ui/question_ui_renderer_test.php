@@ -495,10 +495,10 @@ final class question_ui_renderer_test extends \advanced_testcase {
 
         $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
         $this->assertEqualsCanonicalizing([
-            new invalid_option_warning('my_checkbox_value', 'other_value', ['value']),
-            new invalid_option_warning('my_checkbox_on', 'schmon', ['on']),
-            new invalid_option_warning('my_radio', 'value13', ['value1', 'value2']),
-            new invalid_option_warning('my_select', 'value42', ['value1', 'value2', 'value3']),
+            new invalid_option_warning('my_checkbox_value', 'other_value', ['value'], preserved: false),
+            new invalid_option_warning('my_checkbox_on', 'schmon', ['on'], preserved: false),
+            new invalid_option_warning('my_radio', 'value13', ['value1', 'value2'], preserved: false),
+            new invalid_option_warning('my_select', 'value42', ['value1', 'value2', 'value3'], preserved: true),
         ], $result->warnings);
     }
 

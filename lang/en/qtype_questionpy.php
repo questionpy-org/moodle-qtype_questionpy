@@ -50,8 +50,9 @@ $string['question_package_upload'] = 'Upload your own';
 $string['remove_packages_button'] = 'Remove Packages';
 $string['render_error_section'] = 'An error occurred';
 $string['render_warning_invalid_value'] = 'The last submission set the field {$a->name} to the value {$a->value}, but that option is no longer available. The available options are: {$a->availablevalues}.';
+$string['render_warning_invalid_value_not_preserved'] = 'The invalid value will be overwritten the next time you save your answer.';
+$string['render_warning_invalid_value_preserved'] = 'You may set the field to a valid value, or leave it untouched to preserve the invalid value.';
 $string['render_warnings_hint_contact_teachers'] = 'If you believe this to be in error, contact your teachers. They will also see this notice and may decide to override whichever score you receive.';
-$string['render_warnings_hint_editable'] = 'You may set the mentioned field(s) to a valid value, or leave them untouched to preserve the invalid value.';
 $string['request_error'] = 'The {$a->requestmethod} request to "{$a->uri}" failed with the error code "{$a->errorcode}" and'
     . ' status code {$a->statuscode} ({$a->reasonphrase}).';
 $string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
