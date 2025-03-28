@@ -22,7 +22,6 @@
     Context variables required for this template:
     * warnings - List of invalid_option_warnings. The localize() method will be called.
     * should_use_list - To use an HTML list. Otherwise, just outputs paragraphs.
-    * should_show_hint_editable - To show a hint about the possibility of fixing the invalid values.
     * should_show_hint_contact_teachers - To show a hint about contacting teachers.
 
     Example context (json):
@@ -31,7 +30,6 @@
                 "localize": "The last submission set the field <code>my_select</code> to ..."
         }],
         "should_use_list": false,
-        "should_show_hint_editable": true,
         "should_show_hint_contact_teachers": true
     }
 }}
@@ -49,9 +47,6 @@
         {{/warnings}}
     {{/should_use_list}}
 
-    {{#should_show_hint_editable}}
-        <p>{{#str}} render_warnings_hint_editable, qtype_questionpy {{/str}}</p>
-    {{/should_show_hint_editable}}
     {{#should_show_hint_contact_teachers}}
         <p>{{#str}} render_warnings_hint_contact_teachers, qtype_questionpy {{/str}}</p>
     {{/should_show_hint_contact_teachers}}

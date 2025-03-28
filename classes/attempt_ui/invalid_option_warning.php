@@ -34,6 +34,8 @@ class invalid_option_warning {
      * @param string $name name of the input field in question
      * @param string $value value from the last response, for which no option was found in the UI
      * @param array $availablevalues the available options present in the UI
+     * @param bool $preserved true indicates that the HTML was modified in such a way that the invalid value will still be present
+     *                        in future submissions unless explicitly changed
      */
     public function __construct(
         /** @var string $name name of the input field in question */
@@ -41,12 +43,17 @@ class invalid_option_warning {
         /** @var string $value value from the last response, for which no option was found in the UI */
         public string $value,
         /** @var array $availablevalues the available options present in the UI */
-        public array $availablevalues
+        public array $availablevalues,
+        /**
+         * @var bool $preserved true indicates that the HTML was modified in such a way that the invalid value will still be present
+         *                      in future submissions unless explicitly changed
+         */
+        public bool $preserved,
     ) {
     }
 
     /**
-     * Return a localized string describing this warning to humans. Name and values are escaped.
+     * Return a localized HTML string describing this warning to humans. Name and values are escaped.
      *
      * @return string
      * @throws coding_exception
@@ -57,10 +64,18 @@ class invalid_option_warning {
             $this->availablevalues
         ));
 
-        return get_string('render_warning_invalid_value', 'qtype_questionpy', [
+        $msg = get_string('render_warning_invalid_value', 'qtype_questionpy', [
             'name' => html_writer::tag('code', s($this->name)),
             'value' => html_writer::tag('code', s($this->value)),
             'availablevalues' => $availablevaluesstr,
         ]);
+
+        if ($this->preserved) {
+            $msg .= ' ' . get_string('render_warning_invalid_value_preserved', 'qtype_questionpy');
+        } else {
+            $msg .= ' ' . get_string('render_warning_invalid_value_not_preserved', 'qtype_questionpy');
+        }
+
+        return $msg;
     }
 }

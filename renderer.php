@@ -205,7 +205,6 @@ EOA;
                 'warnings' => $renderer->warnings,
                 'should_use_list' => count($renderer->warnings) > 1,
                 'should_show_hint_contact_teachers' => $isstudent,
-                'should_show_hint_editable' => $isstudent && !$options->readonly,
             ]);
         }
 
