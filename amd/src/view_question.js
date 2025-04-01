@@ -148,8 +148,8 @@ async function checkConstraints(element) {
 export async function init(autoSaveHintInputId, roles) {
     // Add change event handlers for soft validation.
     for (const element of document.querySelectorAll(`
-        [data-qpy_required], [data-qpy_pattern], 
-        [data-qpy_minlength], [data-qpy_maxlength], 
+        [data-qpy_required], [data-qpy_pattern],
+        [data-qpy_minlength], [data-qpy_maxlength],
         [data-qpy_min], [data-qpy_max]
     `)) {
         await checkConstraints(element);
@@ -271,7 +271,6 @@ class Attempt {
  *
  * @param {string} iframeId - The ID of the question's iframe.
  * @param {string} responseFieldName - The complete field name for the JSON-encoded iframe form data.
- * @return {void}
  */
 export function addIframeFormDataOnSubmit(iframeId, responseFieldName) {
     const iframe = window.document.getElementById(iframeId);
@@ -289,6 +288,12 @@ export function addIframeFormDataOnSubmit(iframeId, responseFieldName) {
         }
         const iframeFormData = new FormData(iframeForm);
         const iframeObject = Object.fromEntries(iframeFormData);
+        for (const name of iframeFormData.keys()) {
+            const values = iframeFormData.getAll(name);
+            if (values.length > 1) {
+                iframeObject[name] = values;
+            }
+        }
         event.formData.append(responseFieldName, JSON.stringify(iframeObject));
     });
 }

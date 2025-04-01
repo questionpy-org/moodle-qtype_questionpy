@@ -57,8 +57,20 @@ class question_ui_renderer {
     /** @var question_attempt $attempt */
     private question_attempt $attempt;
 
-    /** @var string[]|null names of roles that the current user has (use {@see get_user_roles()} to get the roles) */
+    /** @var string[]|null $roles names of roles that the current user has (use {@see get_user_roles()} to get the roles) */
     private ?array $roles = null;
+
+    /**
+     * @var string[] $unmappableduplicatefieldnames contains duplicate input field names that cannot be mapped with certainty to
+     * their corresponding fields
+     */
+    public array $unmappableduplicatefieldnames = [];
+
+    /**
+     * @var string[] $mappableduplicatefieldnames contains duplicate input field names that can be mapped with certainty to their
+     * their corresponding fields
+     */
+    public array $mappableduplicatefieldnames = [];
 
     /**
      * Parses the given XML and initializes a new {@see question_ui_renderer} instance.
@@ -84,6 +96,8 @@ class question_ui_renderer {
         $this->xpath = new DOMXPath($this->xml);
         $this->xpath->registerNamespace('xhtml', constants::NAMESPACE_XHTML);
         $this->xpath->registerNamespace('qpy', constants::NAMESPACE_QPY);
+
+        $this->populate_duplicate_field_names();
     }
 
     /**
@@ -269,47 +283,101 @@ class question_ui_renderer {
                 continue;
             }
 
+            // Get the last saved value.
+            $lastvalue = $lastresponse->{$name} ?? null;
+            if (is_null($lastvalue)) {
+                continue;
+            }
+
+            if (in_array($name, $this->unmappableduplicatefieldnames)) {
+                // We can not map value(s) of elements with this name with certainty to the input fields.
+                continue;
+            }
+
             if ($element->tagName == 'input') {
                 $type = $element->getAttribute('type') ?: 'text';
             } else {
                 $type = $element->tagName;
             }
 
-            // Set the last saved value.
-            $lastvalue = $lastresponse->{$name} ?? null;
-            if (!is_null($lastvalue)) {
-                if ($type === 'checkbox' || $type === 'radio') {
-                    // FIXME: Unchecked checkboxes send nothing, so we have no way of distinguishing an explicitly
-                    // unchecked checkbox from a checkbox which was not submitted (e.g. because it wasn't shown).
-                    // As it stands, a default-checked but explicitly unchecked checkbox will be checked again on next
-                    // view.
-                    $shouldbechecked = $element->hasAttribute('value')
-                        ? $element->getAttribute('value') === $lastvalue
-                        : $lastvalue === 'on';
-                    if ($shouldbechecked) {
-                        $element->setAttribute('checked', 'checked');
-                    } else {
-                        $element->removeAttribute('checked');
-                    }
-                } else if ($type === 'select') {
-                    // Find the appropriate option and mark it as selected.
-                    // TODO: Support multiselects. Seems to be non-trivial, since QT vars only deal in strings, not
-                    // arrays.
-                    /** @var DOMElement $option */
-                    foreach ($element->getElementsByTagName('option') as $option) {
-                        $optvalue = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
-                        if ($optvalue === $lastvalue) {
-                            $option->setAttribute('selected', 'selected');
-                        } else {
-                            $option->removeAttribute('selected');
-                        }
-                    }
-                } else if ($type === 'textarea') {
-                    $element->textContent = $lastvalue;
-                } else if ($type !== 'button' && $type !== 'submit') {
-                    $element->setAttribute('value', $lastvalue);
+            $hasmultiplevalues = in_array($name, $this->mappableduplicatefieldnames);
+            if ($hasmultiplevalues && is_array($lastvalue)) {
+                $this->set_input_values_for_duplicate_name_fields($element, $type, $lastvalue);
+            } else {
+                $this->set_input_values_for_single_name_fields($element, $type, $lastvalue);
+            }
+        }
+    }
+
+    /**
+     * Set input values for fields whose last value is a list of values.
+     *
+     * @param DOMElement $element
+     * @param string $type
+     * @param array $lastvalue
+     * @return void
+     */
+    private function set_input_values_for_duplicate_name_fields(DOMElement $element, string $type, array $lastvalue) {
+        if ($type === 'checkbox') {
+            $value = $element->hasAttribute('value') ? $element->getAttribute('value') : 'on';
+            if (in_array($value, $lastvalue)) {
+                $element->setAttribute('checked', 'checked');
+            } else {
+                $element->removeAttribute('checked');
+            }
+        } else if ($type === 'select') {
+            if (!$element->hasAttribute('multiple')) {
+                // This should never happen.
+                return;
+            }
+            foreach ($element->getElementsByTagName('option') as $option) {
+                $optvalue = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
+                if (in_array($optvalue, $lastvalue)) {
+                    $option->setAttribute('selected', 'selected');
+                } else {
+                    $option->removeAttribute('selected');
                 }
             }
+        }
+    }
+
+    /**
+     * Set input values for fields whose last value is a single string.
+     *
+     * @param DOMElement $element
+     * @param string $type
+     * @param string $lastvalue
+     * @return void
+     */
+    private function set_input_values_for_single_name_fields(DOMElement $element, string $type, string $lastvalue) {
+        if ($type === 'checkbox' || $type === 'radio') {
+            // FIXME: Unchecked checkboxes send nothing, so we have no way of distinguishing an explicitly
+            // unchecked checkbox from a checkbox which was not submitted (e.g. because it wasn't shown).
+            // As it stands, a default-checked but explicitly unchecked checkbox will be checked again on next
+            // view.
+            $shouldbechecked = $element->hasAttribute('value')
+                ? $element->getAttribute('value') === $lastvalue
+                : $lastvalue === 'on';
+            if ($shouldbechecked) {
+                $element->setAttribute('checked', 'checked');
+            } else {
+                $element->removeAttribute('checked');
+            }
+        } else if ($type === 'select') {
+            // Find the appropriate option and mark it as selected.
+            /** @var DOMElement $option */
+            foreach ($element->getElementsByTagName('option') as $option) {
+                $optvalue = $option->hasAttribute('value') ? $option->getAttribute('value') : $option->textContent;
+                if ($optvalue === $lastvalue) {
+                    $option->setAttribute('selected', 'selected');
+                } else {
+                    $option->removeAttribute('selected');
+                }
+            }
+        } else if ($type === 'textarea') {
+            $element->textContent = $lastvalue;
+        } else if ($type !== 'button' && $type !== 'submit') {
+            $element->setAttribute('value', $lastvalue);
         }
     }
 
@@ -641,5 +709,61 @@ class question_ui_renderer {
             },
             $input
         );
+    }
+
+    /**
+     * Collects form input names that can appear multiple times in the `FormData` of the current question form.
+     *
+     * The names are stored in {@see question_ui_renderer::$unmappableduplicatefieldnames} and
+     * {@see question_ui_renderer::$mappableduplicatefieldnames}.
+     * @return void
+     */
+    private function populate_duplicate_field_names(): void {
+        // Populate the list of names that have duplicates which we cannot assign with certainty to an input field.
+        $namemap = [];
+        foreach ($this->xpath->query('(//xhtml:button | //xhtml:input | //xhtml:select | //xhtml:textarea)[@name]') as $element) {
+            $name = $element->getAttribute('name');
+            $type = $element->getAttribute('type') ?: 'text';
+            $value = $element->hasAttribute('value') ? $element->getAttribute('value') : 'on';
+
+            if (!isset($namemap[$name])) {
+                // This name has not been used yet by other elements.
+                $namemap[$name] = [$element, [$value]];
+                continue;
+            }
+
+            if (in_array($name, $this->unmappableduplicatefieldnames)) {
+                // We already know that this name is wrongfully used multiple times.
+                continue;
+            }
+
+            // Get the type and values of the other element(s) with the same name.
+            [$other, &$values] = $namemap[$name];
+            $othertype = $other->getAttribute('type') ?: 'text';
+
+            if (!in_array($othertype, ['checkbox', 'radio'])) {
+                // Duplicate names are not allowed for other elements.
+                $this->unmappableduplicatefieldnames[] = $name;
+                continue;
+            }
+
+            // Check that the types match and the values is unique.
+            if ($othertype !== $type || in_array($value, $values)) {
+                $this->unmappableduplicatefieldnames[] = $name;
+            } else {
+                $values[] = $value;
+            }
+        }
+
+        // Populate the list of names where we are correctly expecting multiple values under the same name, i.e. multiple `checkbox`
+        // elements with the same name and `select` elements with the `multiple` attribute.
+        // In contrast to `checkbox` elements, `radio` elements with the same name only return a single value.
+        foreach ($namemap as $name => [$element, $values]) {
+            $aremultiplecheckboxes = $element->getAttribute('type') === 'checkbox' && count($values) > 1;
+            $ismultiselect = $element->tagName === 'select' && $element->hasAttribute('multiple');
+            if (!in_array($name, $this->unmappableduplicatefieldnames) && ($aremultiplecheckboxes || $ismultiselect)) {
+                $this->mappableduplicatefieldnames[] = $name;
+            }
+        }
     }
 }
