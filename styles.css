@@ -25,26 +25,28 @@
     display: none;
 }
 
-/* Make question iframe seamless. */
-.que.questionpy .formulation {
-    padding: 0;
-    border: 0;
-    border-radius: unset;
-    margin: 0 0 1rem 0;
-    background: unset;
-}
-
 .que.questionpy iframe {
     border: 0;
     padding: 0;
     width: 100%;
-    height: 500px;
+    height: 0;
     display: block; /* Remove space that is reserved below inline elements for descender characters (y, q, g). */
 }
 
 body.questionpy-iframe-body {
     height: auto; /* Make iframe body grow and shrink with page content. */
     overflow-y: hidden; /* Prevent margin-collapse across bottom boundary. */
+    background-color: transparent;
+}
+
+/* Make question iframe seamless. */
+body.questionpy-iframe-body .formulation {
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: unset;
+    box-shadow: none;
+    background-color: unset;
 }
 
 body.questionpy-iframe-body .que .content {
