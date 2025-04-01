@@ -766,10 +766,7 @@ class question_ui_renderer {
     }
 
     /**
-     * Checks the last response for invalid values and adds hidden inputs to preserve those invalid values.
-     *
-     * This method must be called after {@see populate_duplicate_field_names} so that the added hidden inputs are not detected as
-     * duplicates.
+     * Checks the last response for invalid values.
      *
      * @param available_opts_info[] $availableoptsinfobyname
      * @param question_attempt $attempt
