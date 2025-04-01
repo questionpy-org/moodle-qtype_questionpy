@@ -128,28 +128,4 @@ class dom_utils {
             $select->appendChild($fallbackoption);
         }
     }
-
-    /**
-     * Appends an XHTML hidden input to the given element.
-     *
-     * @param DOMElement $parent
-     * @param string $name
-     * @param string $value
-     * @return DOMElement
-     * @throws coding_exception
-     */
-    public static function add_hidden_input(DOMElement $parent, string $name, string $value): DOMElement {
-        try {
-            $element = $parent->ownerDocument->createElementNS(constants::NAMESPACE_XHTML, 'input');
-        } catch (DOMException $e) {
-            // Thrown by createElementNS "If invalid $namespace or $qualifiedName", which are both constants, so
-            // the coding_exception fits.
-            throw new coding_exception($e->getMessage());
-        }
-        $element->setAttribute('type', 'hidden');
-        $element->setAttribute('name', $name);
-        $element->setAttribute('value', $value);
-        $parent->appendChild($element);
-        return $element;
-    }
 }
