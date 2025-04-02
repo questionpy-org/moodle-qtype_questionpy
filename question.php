@@ -22,13 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\api\api;
-use qtype_questionpy\api\attempt;
-use qtype_questionpy\api\attempt_ui;
-use qtype_questionpy\api\scoring_code;
-use qtype_questionpy\api\package_dependency;
-use qtype_questionpy\attempt_ui\question_ui_metadata_extractor;
 use qtype_questionpy\constants;
+use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\api\attempt;
+use qtype_questionpy\local\api\attempt_ui;
+use qtype_questionpy\local\api\package_dependency;
+use qtype_questionpy\local\api\scoring_code;
+use qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor;
 use qtype_questionpy\utils;
 
 /**

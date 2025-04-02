@@ -18,9 +18,9 @@ namespace qtype_questionpy;
 
 use dml_exception;
 use moodle_exception;
-use qtype_questionpy\api\api;
-use qtype_questionpy\package\package;
-use qtype_questionpy\package\package_version;
+use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\package\package;
+use qtype_questionpy\local\package\package_version;
 use stdClass;
 
 /**

@@ -25,24 +25,24 @@
 namespace qtype_questionpy;
 
 use moodle_exception;
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\form\conditions\does_not_equal;
-use qtype_questionpy\form\conditions\equals;
-use qtype_questionpy\form\conditions\in;
-use qtype_questionpy\form\conditions\is_checked;
-use qtype_questionpy\form\conditions\is_not_checked;
-use qtype_questionpy\form\elements\checkbox_element;
-use qtype_questionpy\form\elements\generated_id_element;
-use qtype_questionpy\form\elements\group_element;
-use qtype_questionpy\form\elements\hidden_element;
-use qtype_questionpy\form\elements\option;
-use qtype_questionpy\form\elements\radio_group_element;
-use qtype_questionpy\form\elements\repetition_element;
-use qtype_questionpy\form\elements\select_element;
-use qtype_questionpy\form\elements\static_text_element;
-use qtype_questionpy\form\elements\text_area_element;
-use qtype_questionpy\form\elements\text_input_element;
-use qtype_questionpy\package\package_versions_info;
+use qtype_questionpy\local\array_converter\array_converter;
+use qtype_questionpy\local\form\conditions\does_not_equal;
+use qtype_questionpy\local\form\conditions\equals;
+use qtype_questionpy\local\form\conditions\in;
+use qtype_questionpy\local\form\conditions\is_checked;
+use qtype_questionpy\local\form\conditions\is_not_checked;
+use qtype_questionpy\local\form\elements\checkbox_element;
+use qtype_questionpy\local\form\elements\generated_id_element;
+use qtype_questionpy\local\form\elements\group_element;
+use qtype_questionpy\local\form\elements\hidden_element;
+use qtype_questionpy\local\form\elements\option;
+use qtype_questionpy\local\form\elements\radio_group_element;
+use qtype_questionpy\local\form\elements\repetition_element;
+use qtype_questionpy\local\form\elements\select_element;
+use qtype_questionpy\local\form\elements\static_text_element;
+use qtype_questionpy\local\form\elements\text_area_element;
+use qtype_questionpy\local\form\elements\text_input_element;
+use qtype_questionpy\local\package\package_versions_info;
 
 
 /**

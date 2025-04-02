@@ -28,6 +28,7 @@ use context_user;
 use core_favourites\local\service\user_favourite_service;
 use external_api;
 use moodle_exception;
+use qtype_questionpy\local\package\package;
 use function qtype_questionpy\package_versions_info_provider;
 
 defined('MOODLE_INTERNAL') || die();

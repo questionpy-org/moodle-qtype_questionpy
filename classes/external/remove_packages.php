@@ -26,7 +26,7 @@ use external_function_parameters;
 use external_single_structure;
 use external_value;
 use moodle_exception;
-use qtype_questionpy\package\package;
+use qtype_questionpy\local\package\package;
 
 /**
  * This service removes every package from the database.

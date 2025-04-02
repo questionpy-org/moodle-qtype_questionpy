@@ -23,7 +23,7 @@
  */
 
 use core\di;
-use qtype_questionpy\api\api;
+use qtype_questionpy\local\api\api;
 use qtype_questionpy\package_file_service;
 use qtype_questionpy\question_service;
 
