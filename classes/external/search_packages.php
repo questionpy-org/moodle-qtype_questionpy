@@ -31,8 +31,8 @@ use external_single_structure;
 use external_value;
 use invalid_parameter_exception;
 use moodle_exception;
+use qtype_questionpy\local\package\package_version;
 use qtype_questionpy\localizer;
-use qtype_questionpy\package\package_version;
 
 /**
  * This service can be used to search and filter for packages in the database.

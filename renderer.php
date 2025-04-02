@@ -22,11 +22,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\api\attempt_ui;
-use qtype_questionpy\api\feedback_type;
-use qtype_questionpy\api\js_module_call;
-use qtype_questionpy\attempt_ui\question_ui_renderer;
 use qtype_questionpy\constants;
+use qtype_questionpy\local\api\attempt_ui;
+use qtype_questionpy\local\api\feedback_type;
+use qtype_questionpy\local\api\js_module_call;
+use qtype_questionpy\local\attempt_ui\question_ui_renderer;
 
 /**
  * Generates the output for QuestionPy questions.

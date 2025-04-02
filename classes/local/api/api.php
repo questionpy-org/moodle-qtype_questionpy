@@ -1,0 +1,135 @@
+<?php
+// This file is part of the QuestionPy Moodle plugin - https://questionpy.org
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+namespace qtype_questionpy\local\api;
+
+use GuzzleHttp\Exception\GuzzleException;
+use moodle_exception;
+use qtype_questionpy\exception\request_error;
+use qtype_questionpy\local\array_converter\array_converter;
+use qtype_questionpy\local\package\package_raw;
+use qtype_questionpy\local\package\package_versions_info;
+use stored_file;
+use TypeError;
+
+/**
+ * Helper class for communicating to the application server.
+ *
+ * @package    qtype_questionpy
+ * @copyright  2022 Jan Britz, TU Berlin, innoCampus - www.questionpy.org
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class api {
+    /**
+     * Initialize instance.
+     *
+     * @param qpy_http_client $client
+     */
+    public function __construct(
+        /** @var qpy_http_client */
+        private readonly qpy_http_client $client
+    ) {
+    }
+
+    /**
+     * Retrieves QuestionPy packages from the application server.
+     *
+     * @return package_versions_info[]
+     * @throws GuzzleException
+     * @throws request_error
+     * @throws moodle_exception
+     */
+    public static function get_packages(): array {
+        $client = new qpy_http_client();
+        $response = $client->get('/packages');
+
+        $packages = json_decode($response->getBody()->getContents(), associative: true);
+
+        $result = [];
+        foreach ($packages as $package) {
+            try {
+                $result[] = array_converter::from_array(package_versions_info::class, $package);
+            } catch (TypeError $e) {
+                // TODO: decide what to do with faulty package.
+                debugging($e->getMessage(), backtrace: $e->getTrace());
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Returns the {@see package_api} of a specific package.
+     *
+     * @param string $hash the hash of the package
+     * @param stored_file|null $file the package file if any
+     * @return package_api
+     */
+    public function package(string $hash, ?stored_file $file = null): package_api {
+        return new package_api($this->client, $hash, $file);
+    }
+
+    /**
+     * Get a {@see package_raw} from a package hash.
+     *
+     * @param string $hash
+     * @return package_raw
+     * @throws GuzzleException
+     * @throws request_error
+     * @throws moodle_exception
+     */
+    public function get_package_info(string $hash): package_raw {
+        $client = new qpy_http_client();
+        $response = $client->get("/packages/$hash");
+        return api_utils::convert_response_to_class($response, package_raw::class);
+    }
+
+    /**
+     * Get a {@see package_raw} from a file.
+     *
+     * @param stored_file $file
+     * @return package_raw
+     * @throws GuzzleException
+     * @throws request_error
+     * @throws moodle_exception
+     */
+    public static function extract_package_info(stored_file $file): package_raw {
+        $client = new qpy_http_client();
+        $fd = $file->get_content_file_handle();
+
+        $options['multipart'][] = [
+            'name' => 'package',
+            'contents' => $fd,
+        ];
+
+        $response = $client->post('/package-extract-info', $options);
+        return api_utils::convert_response_to_class($response, package_raw::class);
+    }
+
+    /**
+     * Get the status and information from the server.
+     *
+     * @return status
+     * @throws GuzzleException
+     * @throws request_error
+     * @throws moodle_exception
+     */
+    public static function get_server_status(): status {
+        $client = new qpy_http_client();
+        $response = $client->get('/status');
+        return api_utils::convert_response_to_class($response, status::class);
+    }
+}

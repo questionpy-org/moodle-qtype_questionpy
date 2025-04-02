@@ -17,10 +17,9 @@
 namespace qtype_questionpy;
 
 use coding_exception;
-use context_system;
 use dml_exception;
 use invalid_dataroot_permissions;
-use qtype_questionpy\api\api;
+use qtype_questionpy\local\api\api;
 
 /**
  * Handles retrieval, access control and caching of static package files.

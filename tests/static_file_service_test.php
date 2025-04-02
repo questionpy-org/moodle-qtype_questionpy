@@ -32,8 +32,8 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use invalid_dataroot_permissions;
 use moodle_exception;
-use qtype_questionpy\api\api;
-use qtype_questionpy\api\qpy_http_client;
+use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\api\qpy_http_client;
 
 /**
  * Tests QuestionPy static file access.
@@ -48,7 +48,7 @@ use qtype_questionpy\api\qpy_http_client;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  * @covers \qtype_questionpy\static_file_service
- * @covers \qtype_questionpy\api\package_api::download_static_file
+ * @covers \qtype_questionpy\local\api\package_api::download_static_file
  */
 final class static_file_service_test extends \advanced_testcase {
     /** @var MockHandler */

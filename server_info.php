@@ -23,7 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use qtype_questionpy\api\api;
+use qtype_questionpy\local\api\api;
 
 require_once(dirname(__FILE__) . '/../../../config.php');
 global $PAGE;

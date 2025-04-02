@@ -23,12 +23,12 @@ require_once(__DIR__ . '/data_provider.php');
 use coding_exception;
 use dml_exception;
 use moodle_exception;
-use qtype_questionpy\api\api;
-use qtype_questionpy\api\package_api;
-use qtype_questionpy\api\question_response;
-use qtype_questionpy\array_converter\array_converter;
-use qtype_questionpy\package\package;
-use qtype_questionpy\package\package_raw;
+use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\api\package_api;
+use qtype_questionpy\local\api\question_response;
+use qtype_questionpy\local\array_converter\array_converter;
+use qtype_questionpy\local\package\package;
+use qtype_questionpy\local\package\package_raw;
 use stdClass;
 
 /**

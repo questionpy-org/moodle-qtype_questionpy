@@ -25,14 +25,14 @@
 use core\di;
 use core_question\local\bank\question_edit_contexts;
 use GuzzleHttp\Exception\GuzzleException;
-use qtype_questionpy\api\api;
 use qtype_questionpy\exception\options_form_validation_error;
 use qtype_questionpy\exception\request_error;
-use qtype_questionpy\form\context\root_render_context;
+use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\form\context\root_render_context;
+use qtype_questionpy\local\package\package;
+use qtype_questionpy\local\package\package_base;
+use qtype_questionpy\local\package\package_version;
 use qtype_questionpy\localizer;
-use qtype_questionpy\package\package;
-use qtype_questionpy\package\package_base;
-use qtype_questionpy\package\package_version;
 use qtype_questionpy\package_file_service;
 use qtype_questionpy\utils;
 

@@ -17,7 +17,7 @@
 namespace qtype_questionpy;
 
 use core\exception\coding_exception;
-use qtype_questionpy\form\elements\repetition_element;
+use qtype_questionpy\local\form\elements\repetition_element;
 use question_attempt;
 
 /**
