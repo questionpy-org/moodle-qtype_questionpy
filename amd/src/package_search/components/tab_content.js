@@ -73,7 +73,7 @@ export default class extends Component {
         let promises = [];
         for (const context of contexts) {
             // Context is a proxy, we need to get the target.
-            const contextObj = Object.assign({}, context);
+            const contextObj = Object.assign({"ismarkableasfavourite": true}, context);
             const promise = templates.renderForPromise("qtype_questionpy/package/package_selection", contextObj);
             promises.push(promise);
         }
