@@ -187,12 +187,15 @@ class qtype_questionpy_renderer extends qtype_renderer {
             // Render iframe contents before the header is printed to allow CSS to be added to the page header.
             $iframecontents = $contentcb($qpyrenderer);
 
+            // Apply Moodle filters.
+            $filterediframecontents = filter_manager::instance()->filter_text($iframecontents, $oldpage->context);
+
             // Write iframe source into the output buffer.
             echo $OUTPUT->header();
             echo $this->get_iframe_js_before();
             echo $this->get_iframe_js_importmap($question);
             echo $this->get_package_css_links($question->ui->cssfiles, $question);
-            echo $iframecontents;
+            echo $filterediframecontents;
             echo $OUTPUT->footer();
         } finally {
             $PAGE = $oldpage;
