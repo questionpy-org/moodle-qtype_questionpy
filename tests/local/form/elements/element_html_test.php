@@ -51,13 +51,6 @@ final class element_html_test extends \advanced_testcase {
      * @covers       \qtype_questionpy\local\form\qpy_renderable
      */
     public function test_rendered_html_should_match_snapshot(string $elementkind, qpy_renderable $element): void {
-        // TODO: remove when issue introduced in "MDL-61823 forms" is resolved.
-        // With the updates from "MDL-61823 forms", the fieldset-element inside the group-div-element has the same element
-        // id like the div-element itself. This causes DomDocument->loadHTML to throw an error.
-        if (in_array($elementkind, ['radio_group', 'group'])) {
-            $this->markTestSkipped();
-        }
-
         $snapshotfilepath = __DIR__ . '/html/' . $elementkind . '.html';
 
         // The sesskey is part of the form and therefore needs to be deterministic.
