@@ -327,7 +327,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
             // TODO: create a dedicated endpoint?
             $this->api->package($packagehash, $package)->create_question(
                 $this->question->qpy_state ?? null,
-                (object) $data['qpy_form']
+                (object) ($data['qpy_form'] ?? [])
             );
         } catch (options_form_validation_error $error) {
             foreach ($error->errors as $field => $error) {
