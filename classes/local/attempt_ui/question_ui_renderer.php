@@ -26,6 +26,7 @@ use DOMProcessingInstruction;
 use DOMText;
 use DOMXPath;
 use qtype_questionpy\constants;
+use qtype_questionpy\static_file_service;
 use qtype_questionpy\utils;
 use qtype_questionpy_question;
 use question_attempt;
@@ -621,26 +622,16 @@ class question_ui_renderer {
      * @param string $input
      * @param question_attempt $attempt
      * @return string
+     * @throws coding_exception
      */
     private static function replace_qpy_urls(string $input, question_attempt $attempt): string {
         $question = $attempt->get_question();
         assert($question instanceof qtype_questionpy_question);
 
         return preg_replace_callback(
-        // The first two path segments are namespace and short name, and so more restrictive.
-            ';qpy://static((?:/[a-z_][a-z0-9_]{0,126}){2}(?:/[\w\-@:%+.~=]+)+);',
+            constants::QPY_URL_PATTERN,
             function (array $match) use ($question) {
-                $path = $match[1];
-                $url = \moodle_url::make_pluginfile_url(
-                    $question->contextid,
-                    'qtype_questionpy',
-                    'static',
-                    null,
-                    '/' . $question->packagehash . dirname($path) . '/',
-                    basename($path)
-                );
-
-                return $url->out();
+                return static_file_service::reify_qpy_url($match[0], $question);
             },
             $input
         );

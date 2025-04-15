@@ -19,7 +19,9 @@ namespace qtype_questionpy;
 use coding_exception;
 use dml_exception;
 use invalid_dataroot_permissions;
+use moodle_url;
 use qtype_questionpy\local\api\api;
+use qtype_questionpy_question;
 
 /**
  * Handles retrieval, access control and caching of static package files.
@@ -80,5 +82,34 @@ class static_file_service {
         }
 
         return [$temppath, $mimetype];
+    }
+
+    /**
+     * Converts a QPy-URI such as `qpy://static/acme/great_package/css/styles.css` to a functioning pluginfile URL.
+     *
+     * @param string $qpyurl
+     * @param qtype_questionpy_question $question
+     * @return moodle_url|false
+     * @throws coding_exception
+     */
+    public static function reify_qpy_url(string $qpyurl, qtype_questionpy_question $question): string|false {
+        $result = preg_match(constants::QPY_URL_PATTERN, $qpyurl, $matches);
+
+        if ($result === 0) {
+            return false;
+        }
+        if ($result === false) {
+            throw new coding_exception('Regex error while parsing QPy URL');
+        }
+
+        $path = $matches[1];
+        return moodle_url::make_pluginfile_url(
+            $question->contextid,
+            'qtype_questionpy',
+            'static',
+            null,
+            '/' . $question->packagehash . dirname($path) . '/',
+            basename($path)
+        )->out();
     }
 }

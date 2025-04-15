@@ -46,14 +46,14 @@ class attempt_ui {
     /** @var array<string, string> string to string mapping of placeholder names to the values (to be replaced in the content) */
     public array $placeholders = [];
 
-    /** @var string[]|null */
+    /** @var string[] URLs (usually `qpy://` or `https://`) to CSS stylesheets required for the question */
     #[array_key('css_files')]
-    public ?array $cssfiles = null;
+    public array $cssfiles = [];
 
-    /** @var js_module_call[]|null */
+    /** @var js_module_call[] */
     #[array_key('javascript_calls')]
     #[array_element_class(js_module_call::class)]
-    public array $javascriptcalls;
+    public array $javascriptcalls = [];
 
     /** @var array<string, attempt_file> specifics TBD */
     #[array_element_class(attempt_file::class)]
