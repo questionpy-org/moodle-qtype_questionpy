@@ -27,6 +27,7 @@ use qtype_questionpy\local\api\attempt_ui;
 use qtype_questionpy\local\api\feedback_type;
 use qtype_questionpy\local\api\js_module_call;
 use qtype_questionpy\local\attempt_ui\question_ui_renderer;
+use qtype_questionpy\static_file_service;
 
 /**
  * Generates the output for QuestionPy questions.
@@ -169,6 +170,7 @@ EOA;
             echo $OUTPUT->header();
             echo $this->get_iframe_js_before();
             echo $this->get_iframe_js_importmap($question);
+            echo $this->get_package_css_links($question->ui->cssfiles, $question);
             echo $iframecontents;
             echo $OUTPUT->footer();
         } finally {
@@ -304,6 +306,38 @@ EOD;
             // amd/src (it is transpiled to use RequireJS) and (b) js_call_amd has a quite low character limit for the params.
             $this->page->requires->js_amd_inline($inlinejs);
         }
+    }
+
+    /**
+     * Put together an HTML string of `<link rel="stylesheet"/>` elements that load the given CSS files.
+     *
+     * Call within the iframe.
+     *
+     * @param string[] $cssfiles HTTPS or QPy URLs
+     * @param qtype_questionpy_question $question
+     * @return string
+     * @throws coding_exception
+     */
+    private function get_package_css_links(array $cssfiles, qtype_questionpy_question $question): string {
+        $elements = [];
+        foreach (array_unique($cssfiles) as $uri) {
+            $converted = static_file_service::reify_qpy_url($uri, $question);
+            if ($converted) {
+                $uri = $converted;
+            } else if (str_starts_with($uri, 'qpy://')) {
+                debugging("Stylesheet URI '$uri' looks like a QPy-URI, but could not be parsed.");
+                continue;
+            } else if (!str_starts_with($uri, 'https://')) {
+                // Also accept arbitrary HTTPS URIs to support loading stylesheets from CDNs.
+                debugging("Stylesheet URI '$uri' does not use a supported scheme.");
+                continue;
+            }
+
+            $uri = s($uri);
+            $elements[] = "<link rel='stylesheet' href='$uri'/>";
+        }
+
+        return implode("\n", $elements);
     }
 
     /**

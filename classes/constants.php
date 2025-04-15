@@ -36,4 +36,8 @@ class constants {
     public const QT_VAR_SCORING_STATE = '_scoringstate';
     /** @var string */
     public const QT_VAR_RESPONSE = 'qpy_response';
+
+    // The first two path segments are namespace and short name, and so more restrictive.
+    /** @var string */
+    public const QPY_URL_PATTERN = ';qpy://static((?:/[a-z_][a-z0-9_]{0,126}){2}(?:/[\w\-@:%+.~=]+)+);';
 }
