@@ -40,4 +40,7 @@ class constants {
     // The first two path segments are namespace and short name, and so more restrictive.
     /** @var string */
     public const QPY_URL_PATTERN = ';qpy://static((?:/[a-z_][a-z0-9_]{0,126}){2}(?:/[\w\-@:%+.~=]+)+);';
+
+    /** @var string */
+    public const ROLE_UPLOAD = 'qtype/questionpy:uploadpackages';
 }

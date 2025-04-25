@@ -25,6 +25,7 @@
 use core\di;
 use core_question\local\bank\question_edit_contexts;
 use GuzzleHttp\Exception\GuzzleException;
+use qtype_questionpy\constants;
 use qtype_questionpy\exception\options_form_validation_error;
 use qtype_questionpy\exception\request_error;
 use qtype_questionpy\local\api\api;
@@ -172,11 +173,19 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $mform->setType('qpy_package_source', PARAM_ALPHA);
 
         if ($fromdraft) {
+            if (!has_capability(constants::ROLE_UPLOAD, $this->context)) {
+                // The upload option should not have been shown in the first place.
+                throw new moodle_exception('upload_not_permitted', 'qtype_questionpy');
+            }
+
             $draftid = $this->optional_param('qpy_package_file', null, PARAM_INT);
             $mform->addElement('hidden', 'qpy_package_file', $draftid);
             $mform->setType('qpy_package_file', PARAM_INT);
             $file = $this->packagefileservice->get_draft_file($draftid);
         } else {
+            // This is editing an existing question with an already-uploaded package, which is allowed even without the upload
+            // capability.
+
             $qpyid = $this->question->qpy_id;
             $file = $this->packagefileservice->get_file_for_local_question($qpyid, $this->context->get_course_context()->id);
             $mform->addElement('hidden', 'qpy_package_path_name_hash', $file->get_pathnamehash());
@@ -242,23 +251,39 @@ class qtype_questionpy_edit_form extends question_edit_form {
             // We are either selecting a package or editing a question with a selected package.
             self::definition_package_settings_search($mform);
         } else {
-            // View package search container and file picker.
-            $searchorupload = [
-                $mform->createElement(
-                    'radio',
-                    'qpy_package_source',
-                    null,
-                    get_string('question_package_search', 'qtype_questionpy'),
-                    'search'
-                ),
-                $mform->createElement(
-                    'radio',
-                    'qpy_package_source',
-                    null,
-                    get_string('question_package_upload', 'qtype_questionpy'),
-                    'upload'
-                ),
-            ];
+            // View package search container and (possibly) file picker.
+            $searchorupload[] = $mform->createElement(
+                'radio',
+                'qpy_package_source',
+                null,
+                get_string('question_package_search', 'qtype_questionpy'),
+                'search'
+            );
+
+            $uploadpermitted = has_capability(constants::ROLE_UPLOAD, $this->context);
+
+            if (!$uploadpermitted) {
+                // Setting the tooltip on the radio element doesn't show it when hovering on the label, so we wrap a span around it.
+                $searchorupload[] = $mform->createElement('html', html_writer::start_span('text-muted', [
+                    // Bootstrap 4 tooltips: https://getbootstrap.com/docs/4.6/components/tooltips/.
+                    'data-toggle' => 'tooltip',
+                    'title' => get_string('upload_not_permitted', 'qtype_questionpy', constants::ROLE_UPLOAD),
+                ]));
+            }
+
+            $searchorupload[] = $mform->createElement(
+                'radio',
+                'qpy_package_source',
+                null,
+                get_string('question_package_upload', 'qtype_questionpy'),
+                'upload',
+                $uploadpermitted ?: ['disabled' => 'disabled']
+            );
+
+            if (!$uploadpermitted) {
+                $searchorupload[] = $mform->createElement('html', '</span>');
+            }
+
             $mform->addGroup(
                 $searchorupload,
                 'qpy_package_source_group',
