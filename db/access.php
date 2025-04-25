@@ -24,10 +24,12 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use qtype_questionpy\constants;
+
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
-    'qtype/questionpy:uploadpackages' => [
+    constants::ROLE_UPLOAD => [
         'riskbitmask' => RISK_SPAM | RISK_XSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
