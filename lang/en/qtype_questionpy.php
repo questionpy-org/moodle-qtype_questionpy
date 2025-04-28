@@ -22,6 +22,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['attempt_detail_heading'] = 'QuestionPy Details for Attempt {$a}';
+$string['attempt_detail_link'] = 'QuestionPy-specific details';
+$string['attempt_does_not_exist'] = 'The attempt does not exist anymore.';
+$string['attempt_not_questionpy'] = 'This is not an attempt at a QuestionPy question, but at a \'{$a}\' question.';
+$string['attempt_preview'] = 'Preview';
+$string['attempt_state_moodle'] = 'Moodle Attempt State';
+$string['attempt_state_qpy'] = 'QuestionPy Attempt State';
+$string['attempt_step_no'] = 'Step #';
+$string['attempt_steps'] = 'Attempt Steps';
 $string['change_package'] = 'Change';
 $string['event_grading_response_failed'] = 'Grading response failed';
 $string['event_starting_attempt_failed'] = 'Starting attempt failed';
@@ -30,6 +39,7 @@ $string['form_fallback_element_text'] = 'The QuestionPy package is using a form 
     . ' plugin. Please ensure you are using a compatible package or contact your administrators.';
 $string['formerror_noqpy_package'] = 'Selected file must be of type .qpy';
 $string['load_packages_button'] = 'Load Packages';
+$string['mark'] = 'Mark';
 $string['mark_as_favourite'] = 'Favourite';
 $string['max_package_size_kb'] = 'Maximum file size of a QuestionPy package';
 $string['max_package_size_kb_description'] = 'Maximum file size in kB';
@@ -48,6 +58,7 @@ $string['pluginnamesummary'] = 'A comprehensive question type that allows you to
 $string['question_package_search'] = 'Select an existing package';
 $string['question_package_upload'] = 'Upload your own';
 $string['questionpy:uploadpackages'] = 'Upload custom QuestionPy packages';
+$string['questionpy:viewdetails'] = 'View technical details of QuestionPy questions';
 $string['remove_packages_button'] = 'Remove Packages';
 $string['render_error_section'] = 'An error occurred';
 $string['render_warning_invalid_value'] = 'The last submission set the field {$a->name} to the value {$a->value}, but that option is no longer available. The available options are: {$a->availablevalues}.';
@@ -57,6 +68,7 @@ $string['render_warnings_hint_contact_teachers'] = 'If you believe this to be in
 $string['request_error'] = 'The {$a->requestmethod} request to "{$a->uri}" failed with the error code "{$a->errorcode}" and'
     . ' status code {$a->statuscode} ({$a->reasonphrase}).';
 $string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
+$string['scoring_state'] = 'QuestionPy Scoring State';
 $string['search_all_header'] = 'All ({$a})';
 $string['search_bar'] = 'Search...';
 $string['search_bar_label_aria'] = 'Search Bar';

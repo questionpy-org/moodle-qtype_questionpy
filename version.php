@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'qtype_questionpy';
-$plugin->version = 2025030600;
+$plugin->version = 2025042800;
 $plugin->requires = 2024100700;
 $plugin->maturity = MATURITY_ALPHA;
 $plugin->release = '0.1';
 
 $plugin->dependencies = [
-    'qbehaviour_questionpy' => 2024101700,
+    'qbehaviour_questionpy' => 2025042800,
 ];

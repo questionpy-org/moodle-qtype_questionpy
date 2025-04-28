@@ -38,4 +38,13 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+    constants::ROLE_VIEW_DETAILS => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
+    ],
 ];

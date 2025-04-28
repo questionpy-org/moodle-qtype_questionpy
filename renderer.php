@@ -98,10 +98,22 @@ class qtype_questionpy_renderer extends qtype_renderer {
                 [$iframeid, $qa->get_field_prefix() . constants::QT_VAR_RESPONSE]
             );
 
-            return <<<EOA
-    <input type="hidden" name="{$autosavehintname}" id="{$autosavehintid}" value="0">
-    <iframe id="{$iframeid}" srcdoc="{$iframesrc}"></iframe>
-EOA;
+            $result = '';
+            if (has_capability(constants::ROLE_VIEW_DETAILS, $options->context)) {
+                $detailsurl = new moodle_url(
+                    '/question/type/questionpy/attemptdetails.php',
+                    ['attemptid' => $qa->get_database_id()]
+                );
+                $result .= "<a class='qpy-details-link' href='{$detailsurl->out()}'>"
+                    . get_string('attempt_detail_link', 'qtype_questionpy') . '</a>';
+            }
+
+            $result .= <<<EOA
+                <input type="hidden" name="{$autosavehintname}" id="{$autosavehintid}" value="0">
+                <iframe id="{$iframeid}" srcdoc="{$iframesrc}"></iframe>
+            EOA;
+
+            return $result;
         } catch (Throwable $t) {
             global $USER;
             // Trigger error event.

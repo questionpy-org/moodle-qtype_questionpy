@@ -207,6 +207,7 @@ body.questionpy-iframe-body .que .content {
 .qpy-card-description {
     text-align: justify;
 }
+
 .qpy-show-more .collapse:not(.show) {
     display: block;
     overflow: hidden;
@@ -234,4 +235,26 @@ body.questionpy-iframe-body .que .content {
 .qpy-show-more .collapse > :last-child {
     padding-bottom: 0;
     margin-bottom: 0;
+}
+
+.qpy-details-link {
+    /* Lifted from STACK's question dashboard link. */
+    float: right;
+    font-size: .8em;
+    margin: -.3em -.3em;
+}
+
+.qpy-steps-table tr:last-child {
+    font-weight: bold;
+}
+
+.qpy-state-view {
+    border: 1px solid var(--secondary);
+    background-color: var(--light);
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+
+    pre {
+        margin: 0;
+    }
 }
