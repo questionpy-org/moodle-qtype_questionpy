@@ -43,4 +43,6 @@ class constants {
 
     /** @var string */
     public const ROLE_UPLOAD = 'qtype/questionpy:uploadpackages';
+    /** @var string */
+    public const ROLE_VIEW_DETAILS = 'qtype/questionpy:viewdetails';
 }
