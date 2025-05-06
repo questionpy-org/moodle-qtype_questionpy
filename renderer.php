@@ -104,7 +104,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
                     '/question/type/questionpy/attemptdetails.php',
                     ['attemptid' => $qa->get_database_id()]
                 );
-                $result .= "<a class='qpy-details-link' href='{$detailsurl->out()}'>"
+                $result .= "<a class='qpy-details-link' href='{$detailsurl->out()}' target='_blank'>"
                     . get_string('attempt_detail_link', 'qtype_questionpy') . '</a>';
             }
 
