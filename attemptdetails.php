@@ -25,6 +25,7 @@
 
 use core\di;
 use qtype_questionpy\constants;
+use qtype_questionpy\qpy_question_display_options;
 
 require_once(__DIR__ . '/../../../config.php');
 global $PAGE;
@@ -80,14 +81,15 @@ if (!($question instanceof qtype_questionpy_question)) {
 
 $title = new lang_string('attempt_detail_heading', 'qtype_questionpy', $attemptid);
 $PAGE->set_title($title);
-
 global $OUTPUT;
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($title);
 
 $stepsarray = iterator_to_array($attempt->get_step_iterator());
-$options = new question_display_options();
+
+$options = new qpy_question_display_options();
+$options->qpyattemptdetailslink = question_display_options::HIDDEN;
 $options->readonly = true;
 $options->context = $context;
 

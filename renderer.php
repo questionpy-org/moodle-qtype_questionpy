@@ -27,6 +27,7 @@ use qtype_questionpy\local\api\attempt_ui;
 use qtype_questionpy\local\api\feedback_type;
 use qtype_questionpy\local\api\js_module_call;
 use qtype_questionpy\local\attempt_ui\question_ui_renderer;
+use qtype_questionpy\qpy_question_display_options;
 use qtype_questionpy\static_file_service;
 
 /**
@@ -66,7 +67,8 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * example ticks and crosses, in this area.
      *
      * @param question_attempt $qa the question attempt to display.
-     * @param question_display_options $options controls what should and should not be displayed.
+     * @param question_display_options $options controls what should and should not be displayed. May be
+     *                                          {@see qpy_question_display_options}.
      * @return string HTML fragment.
      * @throws moodle_exception
      */
@@ -99,7 +101,11 @@ class qtype_questionpy_renderer extends qtype_renderer {
             );
 
             $result = '';
-            if (has_capability(constants::ROLE_VIEW_DETAILS, $options->context)) {
+
+            if (
+                ($options->qpyattemptdetailslink ?? question_display_options::VISIBLE) === question_display_options::VISIBLE
+                && has_capability(constants::ROLE_VIEW_DETAILS, $options->context)
+            ) {
                 $detailsurl = new moodle_url(
                     '/question/type/questionpy/attemptdetails.php',
                     ['attemptid' => $qa->get_database_id()]
@@ -208,7 +214,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @throws moodle_exception
      */
     protected function formulation_controls_feedback_in_iframe(question_attempt $qa, attempt_ui $ui,
-              question_display_options $options, string $autosavehintinputid): string {
+                                                               question_display_options $options, string $autosavehintinputid): string {
         $renderer = question_ui_renderer::render($ui->formulation, $ui->placeholders, $options, $qa);
 
         $warningshtml = '';
