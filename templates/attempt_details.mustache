@@ -52,6 +52,12 @@
     <section>
         <h3>{{#str}} attempt_state_qpy, qtype_questionpy {{/str}}</h3>
         <div class="qpy-state-view">
+            {{#disable_pretty_url}}
+                <a href="{{{.}}}">{{#str}} disable_json_formatting, qtype_questionpy {{/str}}</a>
+            {{/disable_pretty_url}}
+            {{#enable_pretty_url}}
+                <a href="{{{.}}}">{{#str}} enable_json_formatting, qtype_questionpy {{/str}}</a>
+            {{/enable_pretty_url}}
             <pre class="pre-scrollable"><code>{{ attempt_state }}</code></pre>
         </div>
     </section>
@@ -79,9 +85,15 @@
                     </td>
                     <td>
                         {{#scoring_state}}
-                        <div class="qpy-state-view">
-                            <pre class="pre-scrollable"><code>{{.}}</code></pre>
-                        </div>
+                            <div class="qpy-state-view">
+                                {{#disable_pretty_url}}
+                                    <a href="{{{.}}}">{{#str}} disable_json_formatting, qtype_questionpy {{/str}}</a>
+                                {{/disable_pretty_url}}
+                                {{#enable_pretty_url}}
+                                    <a href="{{{.}}}">{{#str}} enable_json_formatting, qtype_questionpy {{/str}}</a>
+                                {{/enable_pretty_url}}
+                                <pre class="pre-scrollable"><code>{{.}}</code></pre>
+                            </div>
                         {{/scoring_state}}
                         {{^scoring_state}}
                             <em>{{#str}} none {{/str}}</em>

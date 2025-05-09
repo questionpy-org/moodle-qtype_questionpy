@@ -244,8 +244,14 @@ body.questionpy-iframe-body .que .content {
     margin: -.3em -.3em;
 }
 
-.qpy-steps-table tr:last-child {
-    font-weight: bold;
+.qpy-steps-table {
+    thead tr th:last-of-type {
+        min-width: 50%;
+    }
+
+    tbody tr:last-child {
+        font-weight: bold;
+    }
 }
 
 .qpy-state-view {
@@ -256,5 +262,12 @@ body.questionpy-iframe-body .que .content {
 
     pre {
         margin: 0;
+    }
+
+    a {
+        float: right;
+        font-size: .8em;
+        font-weight: normal;
+        margin: -.3em -.3em;
     }
 }
