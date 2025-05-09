@@ -125,6 +125,7 @@ echo $OUTPUT->render_from_template('qtype_questionpy/attempt_details', [
     'disable_pretty_url' => $noprettyprint ? null : $disableppurl,
     'enable_pretty_url' => $noprettyprint ? $enableppurl : null,
     'attempt_html' => $attempt->render($options, null),
+    'question_state' => maybe_format_json($question->questionstate),
     'attempt_state' => maybe_format_json($attempt->get_last_qt_var(constants::QT_VAR_ATTEMPT_STATE)),
     'steps' => array_map(
         function ($step, $index) use ($question, $attempt) {
