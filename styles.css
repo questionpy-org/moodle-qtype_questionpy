@@ -254,20 +254,44 @@ body.questionpy-iframe-body .que .content {
     }
 }
 
+.qpy-state-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    > * {
+        flex-basis: 0;
+        flex-grow: 1;
+        max-width: 100%;
+    }
+}
+
 .qpy-state-view {
     border: 1px solid var(--secondary);
     background-color: var(--light);
     padding: 0.5rem;
     margin-bottom: 1rem;
+    overflow: auto;
 
-    pre {
-        margin: 0;
-    }
+    > div {
+        min-width: 100%;
+        width: fit-content;
 
-    a {
-        float: right;
-        font-size: .8em;
-        font-weight: normal;
-        margin: -.3em -.3em;
+        pre {
+            /* Floating the code block left prevents code from colliding with the link. */
+            float: left;
+            overflow: visible;
+            margin: 0;
+        }
+
+        a {
+            position: sticky;
+            right: 0;
+            float: right;
+            font-size: .8em;
+            font-weight: normal;
+            margin: -.3em -.3em;
+        }
     }
 }

@@ -20,7 +20,10 @@
     The main content of the QuestionPy attempt details page.
 
     Context variables required for this template:
+    * disable_pretty_url - URL disabling pretty-printed JSON if it is currently enabled
+    * enable_pretty_url - URL enabling  pretty-printed JSON if it is currently disabled
     * attempt_html - Optional: Rendered attempt
+    * question_state - The QuestionPy question state
     * attempt_state - The QuestionPy attempt state
     * steps - Array of objects, each of which includes:
       * index - Step index, starting at 0
@@ -31,7 +34,10 @@
 
     Example context (json):
     {
+        "disable_pretty_url": "http://localhost:8000/question/type/questionpy/attemptdetails.php?attemptid=78&nopretty=1",
+        "enable_pretty_url": null,
         "attempt_html": "<div>...</div>",
+        "question_state": "{ \"package_name\": \"local.minimal_example\", \"package_version\": \"0.1.0\" }",
         "attempt_state": "{ \"variant\": 1 }",
         "steps": [{
           "index": 0,
@@ -49,18 +55,36 @@
             {{{.}}}
         </section>
     {{/attempt_html}}
-    <section>
-        <h3>{{#str}} attempt_state_qpy, qtype_questionpy {{/str}}</h3>
-        <div class="qpy-state-view">
-            {{#disable_pretty_url}}
-                <a href="{{{.}}}">{{#str}} disable_json_formatting, qtype_questionpy {{/str}}</a>
-            {{/disable_pretty_url}}
-            {{#enable_pretty_url}}
-                <a href="{{{.}}}">{{#str}} enable_json_formatting, qtype_questionpy {{/str}}</a>
-            {{/enable_pretty_url}}
-            <pre class="pre-scrollable"><code>{{ attempt_state }}</code></pre>
-        </div>
-    </section>
+    <div class="qpy-state-container">
+        <section>
+            <h3>{{#str}} question_state, qtype_questionpy {{/str}}</h3>
+            <div class="qpy-state-view">
+                <div class="clearfix">
+                    {{#disable_pretty_url}}
+                        <a href="{{{.}}}">{{#str}} disable_json_formatting, qtype_questionpy {{/str}}</a>
+                    {{/disable_pretty_url}}
+                    {{#enable_pretty_url}}
+                        <a href="{{{.}}}">{{#str}} enable_json_formatting, qtype_questionpy {{/str}}</a>
+                    {{/enable_pretty_url}}
+                    <pre class="pre-scrollable"><code>{{ question_state }}</code></pre>
+                </div>
+            </div>
+        </section>
+        <section>
+            <h3>{{#str}} attempt_state_qpy, qtype_questionpy {{/str}}</h3>
+            <div class="qpy-state-view">
+                <div class="clearfix">
+                    {{#disable_pretty_url}}
+                        <a href="{{{.}}}">{{#str}} disable_json_formatting, qtype_questionpy {{/str}}</a>
+                    {{/disable_pretty_url}}
+                    {{#enable_pretty_url}}
+                        <a href="{{{.}}}">{{#str}} enable_json_formatting, qtype_questionpy {{/str}}</a>
+                    {{/enable_pretty_url}}
+                    <pre class="pre-scrollable"><code>{{ attempt_state }}</code></pre>
+                </div>
+            </div>
+        </section>
+    </div>
     <section>
         <h3>{{#str}} attempt_steps, qtype_questionpy {{/str}}</h3>
         <table class="table qpy-steps-table">
@@ -86,13 +110,16 @@
                     <td>
                         {{#scoring_state}}
                             <div class="qpy-state-view">
-                                {{#disable_pretty_url}}
-                                    <a href="{{{.}}}">{{#str}} disable_json_formatting, qtype_questionpy {{/str}}</a>
-                                {{/disable_pretty_url}}
-                                {{#enable_pretty_url}}
-                                    <a href="{{{.}}}">{{#str}} enable_json_formatting, qtype_questionpy {{/str}}</a>
-                                {{/enable_pretty_url}}
-                                <pre class="pre-scrollable"><code>{{.}}</code></pre>
+                                <div class="clearfix">
+                                    {{#disable_pretty_url}}
+                                        <a href="{{{.}}}">{{#str}}
+                                            disable_json_formatting, qtype_questionpy {{/str}}</a>
+                                    {{/disable_pretty_url}}
+                                    {{#enable_pretty_url}}
+                                        <a href="{{{.}}}">{{#str}} enable_json_formatting, qtype_questionpy {{/str}}</a>
+                                    {{/enable_pretty_url}}
+                                    <pre class="pre-scrollable"><code>{{.}}</code></pre>
+                                </div>
                             </div>
                         {{/scoring_state}}
                         {{^scoring_state}}
