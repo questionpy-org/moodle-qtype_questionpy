@@ -31,6 +31,7 @@ require_once(__DIR__ . '/../../../config.php');
 global $PAGE;
 
 $attemptid = required_param('attemptid', PARAM_INT);
+$noprettyprint = optional_param('nopretty', false, PARAM_BOOL);
 
 $PAGE->set_url('/question/type/questionpy/attemptdetails.php', ['attemptid' => $attemptid]);
 
@@ -93,9 +94,38 @@ $options->qpyattemptdetailslink = question_display_options::HIDDEN;
 $options->readonly = true;
 $options->context = $context;
 
+/**
+ * If the state looks, swims, and quacks like JSON, pretty-print it.
+ *
+ * We technically don't show the exact states because of this, but it makes it much easier to read. For any packages that somehow
+ * manage to use states which are valid JSON, but are not JSON and whitespace-sensitive, there is an opt-out.
+ *
+ * @param string|null $state
+ * @return string|null
+ */
+function maybe_format_json(?string $state): ?string {
+    global $noprettyprint;
+    if (!$noprettyprint && $state && str_starts_with($state, '{') && str_ends_with($state, '}')) {
+        // Assume it's JSON (as most states are) and try to format it.
+        $formatted = json_encode(json_decode($state), JSON_PRETTY_PRINT);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            // Successfully decoded and encoded -> it's JSON!
+            return $formatted;
+        }
+    }
+
+    return $state;
+}
+
+$enableppurl = new moodle_url($PAGE->url);
+$enableppurl->remove_params('nopretty');
+$disableppurl = new moodle_url($PAGE->url, ['nopretty' => true]);
+
 echo $OUTPUT->render_from_template('qtype_questionpy/attempt_details', [
+    'disable_pretty_url' => $noprettyprint ? null : $disableppurl,
+    'enable_pretty_url' => $noprettyprint ? $enableppurl : null,
     'attempt_html' => $attempt->render($options, null),
-    'attempt_state' => $attempt->get_last_qt_var(constants::QT_VAR_ATTEMPT_STATE),
+    'attempt_state' => maybe_format_json($attempt->get_last_qt_var(constants::QT_VAR_ATTEMPT_STATE)),
     'steps' => array_map(
         function ($step, $index) use ($question, $attempt) {
             $restrattempt = new question_attempt_with_restricted_history($attempt, $index, null);
@@ -105,7 +135,7 @@ echo $OUTPUT->render_from_template('qtype_questionpy/attempt_details', [
                 'time' => userdate($step->get_timecreated(), get_string('strftimedatetimeshortaccurate', 'core_langconfig')),
                 'state' => $behaviour->get_state_string(true),
                 'mark' => $restrattempt->format_mark(2) ?? '',
-                'scoring_state' => $restrattempt->get_last_qt_var(constants::QT_VAR_SCORING_STATE),
+                'scoring_state' => maybe_format_json($restrattempt->get_last_qt_var(constants::QT_VAR_SCORING_STATE)),
             ];
         },
         $stepsarray,
