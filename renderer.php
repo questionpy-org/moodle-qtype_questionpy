@@ -213,8 +213,10 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @return string HTML fragment.
      * @throws moodle_exception
      */
-    protected function formulation_controls_feedback_in_iframe(question_attempt $qa, attempt_ui $ui,
-                                                               question_display_options $options, string $autosavehintinputid): string {
+    protected function formulation_controls_feedback_in_iframe(
+        question_attempt $qa, attempt_ui $ui,
+        question_display_options $options, string $autosavehintinputid
+    ): string {
         $renderer = question_ui_renderer::render($ui->formulation, $ui->placeholders, $options, $qa);
 
         $warningshtml = '';

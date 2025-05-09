@@ -35,8 +35,6 @@ $noprettyprint = optional_param('nopretty', false, PARAM_BOOL);
 
 $PAGE->set_url('/question/type/questionpy/attemptdetails.php', ['attemptid' => $attemptid]);
 
-require_login();
-
 global $DB;
 // Get the context ID that owns the quiz (probably a mod_quiz context, but not necessarily).
 $contextid = $DB->get_field_sql('
@@ -51,14 +49,25 @@ if ($contextid === false) {
 }
 
 $context = context::instance_by_id($contextid);
-if ($context === false) {
+if (!$context) {
     throw new \core\exception\coding_exception("Context '$contextid' of attempt '$attemptid' does not exist.");
 }
 
-if ($context instanceof context_module) {
-    $cm = get_fast_modinfo($context->get_course_context()->instanceid)->get_cm($context->instanceid);
-    $PAGE->set_cm($cm);
+$course = null;
+$cm = null;
+if ($context instanceof context_course || $context instanceof context_module || $context instanceof context_block) {
+    $courseid = $context->get_course_context()->instanceid;
+    $modinfo = get_fast_modinfo($courseid);
+    $course = $modinfo->get_course();
+    $PAGE->set_course($course);
+
+    if ($context instanceof context_module) {
+        $cm = $modinfo->get_cm($context->instanceid);
+        $PAGE->set_cm($cm);
+    }
 }
+
+require_login(courseorid: $course, cm: $cm);
 
 if ($context instanceof context_user) {
     // When viewing this page on a preview, the attempt seems to belong to the user context, but going from the preview to the user
