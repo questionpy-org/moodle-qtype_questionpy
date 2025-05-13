@@ -240,7 +240,15 @@ class qtype_questionpy_renderer extends qtype_renderer {
         $this->page->requires->js_call_amd(
             'qtype_questionpy/view_question',
             'init',
-            [$autosavehintinputid, $roles]
+            [
+              $options->readonly,
+              $options->generalfeedback === question_display_options::VISIBLE,
+              $options->feedback === question_display_options::VISIBLE,
+              $options->rightanswer === question_display_options::VISIBLE,
+              $options->correctness === question_display_options::VISIBLE,
+              $autosavehintinputid,
+              $roles,
+            ]
         );
         $this->add_package_js_calls($ui->javascriptcalls, $roles, $options);
 

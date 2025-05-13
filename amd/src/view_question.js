@@ -142,10 +142,23 @@ async function checkConstraints(element) {
  *
  * This function must be called within the iframe.
  *
+ * @param {boolean} readOnly
+ * @param {boolean} showGeneralFeedback
+ * @param {boolean} showSpecificFeedback
+ * @param {boolean} showRightAnswer
+ * @param {boolean} showCorrectness
  * @param {string} autoSaveHintInputId
  * @param {string[]} roles QPy role names that the user has.
  */
-export async function init(autoSaveHintInputId, roles) {
+export async function init(
+    readOnly,
+    showGeneralFeedback,
+    showSpecificFeedback,
+    showRightAnswer,
+    showCorrectness,
+    autoSaveHintInputId,
+    roles
+) {
     // Add change event handlers for soft validation.
     for (const element of document.querySelectorAll(`
         [data-qpy_required], [data-qpy_pattern],
@@ -175,6 +188,11 @@ export async function init(autoSaveHintInputId, roles) {
 
     // Attempt object that is passed to the question package.
     attempt = new Attempt(
+        readOnly,
+        showGeneralFeedback,
+        showSpecificFeedback,
+        showRightAnswer,
+        showCorrectness,
         window.document.getElementById("qpy-formulation"),
         window.document.getElementById("qpy-general-feedback"),
         window.document.getElementById("qpy-specific-feedback"),
@@ -196,6 +214,11 @@ export function getAttempt() {
 }
 
 class Attempt {
+    #readOnly;
+    #showGeneralFeedback;
+    #showSpecificFeedback;
+    #showRightAnswer;
+    #showCorrectness;
     #formulation;
     #generalFeedback;
     #specificFeedback;
@@ -203,18 +226,90 @@ class Attempt {
     #roles;
 
     /**
+     * @param {boolean} readOnly
+     * @param {boolean} showGeneralFeedback
+     * @param {boolean} showSpecificFeedback
+     * @param {boolean} showRightAnswer
+     * @param {boolean} showCorrectness
      * @param {Element} formulationElement
      * @param {?Element} generalFeedbackElement
      * @param {?Element} specificFeedbackElement
      * @param {?Element} rightAnswer
      * @param {string[]} roles
      */
-    constructor(formulationElement, generalFeedbackElement, specificFeedbackElement, rightAnswer, roles) {
+    constructor(
+      readOnly,
+      showGeneralFeedback,
+      showSpecificFeedback,
+      showRightAnswer,
+      showCorrectness,
+      formulationElement,
+      generalFeedbackElement,
+      specificFeedbackElement,
+      rightAnswer,
+      roles
+    ) {
+        this.#readOnly = readOnly;
+        this.#showGeneralFeedback = showGeneralFeedback;
+        this.#showSpecificFeedback = showSpecificFeedback;
+        this.#showRightAnswer = showRightAnswer;
+        this.#showCorrectness = showCorrectness;
         this.#formulation = formulationElement;
         this.#generalFeedback = generalFeedbackElement;
         this.#specificFeedback = specificFeedbackElement;
         this.#rightAnswer = rightAnswer;
         this.#roles = roles;
+    }
+
+    /**
+     * Whether the question should be displayed as a read-only review.
+     *
+     * @returns {boolean}
+     */
+    get readOnly() {
+        return this.#readOnly;
+    }
+
+    /**
+     * Whether the general feedback should be visible.
+     *
+     * This is typically feedback shown to all students after the question
+     * is finished, irrespective of which answer they gave.
+     *
+     * @returns {boolean}
+     */
+    get showGeneralFeedback() {
+        return this.#showGeneralFeedback;
+    }
+
+  /**
+   * Whether the specific feedback should be visible.
+   *
+   * Specific feedback is typically the part of the feedback that changes based on the
+   * answer that the student gave.
+   *
+   * @returns {boolean}
+   */
+    get showSpecificFeedback() {
+        return this.#showSpecificFeedback;
+    }
+
+    /**
+     * Whether the automatically generated display of what the correct answer is should be visible.
+     *
+     * @returns {boolean}
+     */
+    get showRightAnswer() {
+        return this.#showRightAnswer;
+    }
+
+    /**
+     * Whether the student should have what they got right and wrong clearly indicated.
+     *
+     * @returns {boolean}
+     */
+    get showCorrectness() {
+        return this.#showCorrectness;
     }
 
     /**
