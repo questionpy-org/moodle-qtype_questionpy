@@ -26,6 +26,7 @@
 use core\di;
 use qtype_questionpy\constants;
 use qtype_questionpy\qpy_question_display_options;
+use qtype_questionpy\utils;
 
 require_once(__DIR__ . '/../../../config.php');
 global $PAGE;
@@ -137,14 +138,16 @@ echo $OUTPUT->render_from_template('qtype_questionpy/attempt_details', [
     'question_state' => maybe_format_json($question->questionstate),
     'attempt_state' => maybe_format_json($attempt->get_last_qt_var(constants::QT_VAR_ATTEMPT_STATE)),
     'steps' => array_map(
-        function ($step, $index) use ($question, $attempt) {
+        function ($step, $index) use ($attempt, $noprettyprint) {
             $restrattempt = new question_attempt_with_restricted_history($attempt, $index, null);
             $behaviour = $restrattempt->get_behaviour();
+            $response = utils::get_qpy_response($step->get_qt_data());
             return [
                 'index' => $index,
                 'time' => userdate($step->get_timecreated(), get_string('strftimedatetimeshortaccurate', 'core_langconfig')),
                 'state' => $behaviour->get_state_string(true),
                 'mark' => $restrattempt->format_mark(2) ?? '',
+                'response' => $response !== null ? json_encode($response, $noprettyprint ? 0 : JSON_PRETTY_PRINT) : null,
                 'scoring_state' => maybe_format_json($restrattempt->get_last_qt_var(constants::QT_VAR_SCORING_STATE)),
             ];
         },
