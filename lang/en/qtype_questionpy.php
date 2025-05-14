@@ -70,6 +70,7 @@ $string['render_warning_invalid_value_preserved'] = 'You may set the field to a 
 $string['render_warnings_hint_contact_teachers'] = 'If you believe this to be in error, contact your teachers. They will also see this notice and may decide to override whichever score you receive.';
 $string['request_error'] = 'The {$a->requestmethod} request to "{$a->uri}" failed with the error code "{$a->errorcode}" and'
     . ' status code {$a->statuscode} ({$a->reasonphrase}).';
+$string['response'] = 'Response';
 $string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
 $string['scoring_state'] = 'QuestionPy Scoring State';
 $string['search_all_header'] = 'All ({$a})';

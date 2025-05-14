@@ -30,6 +30,7 @@
       * time - User-readable step creation date + time
       * state - The stringified Moodle question_state
       * mark - Formatted mark at the step, or null if none
+      * response - The response submitted at this step, if any
       * scoring_state - The scoring state at this step
 
     Example context (json):
@@ -44,6 +45,7 @@
           "time": "28/04/25, 16:26:35",
           "state": "Not yet answered",
           "mark": "1.00",
+          "scoring_state": "{ \"key\": \"value\" }",
           "scoring_state": "{ \"key\": \"value\" }"
         }]
     }
@@ -88,12 +90,15 @@
     <section>
         <h3>{{#str}} attempt_steps, qtype_questionpy {{/str}}</h3>
         <table class="table qpy-steps-table">
+            <colgroup span="4">
+            <colgroup span="2">
             <thead>
             <tr>
                 <th scope="col">{{#str}} attempt_step_no, qtype_questionpy {{/str}}</th>
-                <th scope="col">{{#str}} none {{/str}}</th>
+                <th scope="col">{{#str}} timecreated {{/str}}</th>
                 <th scope="col">{{#str}} attempt_state_moodle, qtype_questionpy {{/str}}</th>
                 <th scope="col">{{#str}} mark, qtype_questionpy {{/str}}</th>
+                <th scope="col">{{#str}} response, qtype_questionpy {{/str}}</th>
                 <th scope="col">{{#str}} scoring_state, qtype_questionpy {{/str}}</th>
             </tr>
             </thead>
@@ -106,6 +111,25 @@
                     <td>
                         {{mark}}
                         {{^mark}}<em>{{#str}} none {{/str}}</em>{{/mark}}
+                    </td>
+                    <td>
+                        {{#response}}
+                            <div class="qpy-state-view">
+                                <div class="clearfix">
+                                    {{#disable_pretty_url}}
+                                        <a href="{{{.}}}">{{#str}}
+                                            disable_json_formatting, qtype_questionpy {{/str}}</a>
+                                    {{/disable_pretty_url}}
+                                    {{#enable_pretty_url}}
+                                        <a href="{{{.}}}">{{#str}} enable_json_formatting, qtype_questionpy {{/str}}</a>
+                                    {{/enable_pretty_url}}
+                                    <pre class="pre-scrollable"><code>{{.}}</code></pre>
+                                </div>
+                            </div>
+                        {{/response}}
+                        {{^response}}
+                            <em>{{#str}} none {{/str}}</em>
+                        {{/response}}
                     </td>
                     <td>
                         {{#scoring_state}}
