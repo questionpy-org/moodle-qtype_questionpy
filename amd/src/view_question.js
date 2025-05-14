@@ -149,6 +149,7 @@ async function checkConstraints(element) {
  * @param {boolean} showCorrectness
  * @param {string} autoSaveHintInputId
  * @param {string[]} roles QPy role names that the user has.
+ * @param {string} lms
  */
 export async function init(
     readOnly,
@@ -157,7 +158,8 @@ export async function init(
     showRightAnswer,
     showCorrectness,
     autoSaveHintInputId,
-    roles
+    roles,
+    lms,
 ) {
     // Add change event handlers for soft validation.
     for (const element of document.querySelectorAll(`
@@ -197,7 +199,8 @@ export async function init(
         window.document.getElementById("qpy-general-feedback"),
         window.document.getElementById("qpy-specific-feedback"),
         window.document.getElementById("qpy-right-answer"),
-        roles
+        roles,
+        lms,
     );
 }
 
@@ -224,6 +227,7 @@ class Attempt {
     #specificFeedback;
     #rightAnswer;
     #roles;
+    #lms;
 
     /**
      * @param {boolean} readOnly
@@ -236,6 +240,7 @@ class Attempt {
      * @param {?Element} specificFeedbackElement
      * @param {?Element} rightAnswer
      * @param {string[]} roles
+     * @param {string} lms
      */
     constructor(
       readOnly,
@@ -247,7 +252,8 @@ class Attempt {
       generalFeedbackElement,
       specificFeedbackElement,
       rightAnswer,
-      roles
+      roles,
+      lms,
     ) {
         this.#readOnly = readOnly;
         this.#showGeneralFeedback = showGeneralFeedback;
@@ -259,6 +265,7 @@ class Attempt {
         this.#specificFeedback = specificFeedbackElement;
         this.#rightAnswer = rightAnswer;
         this.#roles = roles;
+        this.#lms = lms;
     }
 
     /**
@@ -356,6 +363,15 @@ class Attempt {
      */
     get userRoles() {
         return this.#roles;
+    }
+
+  /**
+   * The current LMS in which the question is viewed.
+   *
+   * @returns {string}
+   */
+    get lms() {
+        return this.#lms;
     }
 }
 
