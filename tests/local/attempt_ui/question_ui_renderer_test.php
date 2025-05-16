@@ -247,34 +247,6 @@ final class question_ui_renderer_test extends \advanced_testcase {
     }
 
     /**
-     * Tests that validation attributes from input(-like) elements are replaced so as not to prevent submission.
-     *
-     * @return void
-     * @throws coding_exception
-     * @covers \qtype_questionpy\local\attempt_ui\question_ui_renderer
-     */
-    public function test_should_soften_validations(): void {
-        $input = file_get_contents(__DIR__ . '/question_uis/validations.xhtml');
-        $qa = $this->create_question_attempt_stub();
-
-        $result = question_ui_renderer::render($input, [], new \question_display_options(), $qa);
-
-        $this->assert_html_string_equals_html_string(<<<EXPECTED
-        <div xmlns="http://www.w3.org/1999/xhtml">
-            <input aria-required="true" data-qpy_required="data-qpy_required"/>
-            <input data-qpy_pattern="^[a-z]+$"/>
-            <input data-qpy_minlength="5"/>
-            <input data-qpy_minlength="10"/>
-            <input aria-valuemin="17" data-qpy_min="17"/>
-            <input aria-valuemax="42" data-qpy_max="42"/>
-            <input aria-required="true" data-qpy_required="data-qpy_required" data-qpy_pattern="^[a-z]+$"
-                   data-qpy_minlength="5" data-qpy_maxlength="10"
-                   aria-valuemin="17" data-qpy_min="17" aria-valuemax="42" data-qpy_max="42"/>
-        </div>
-        EXPECTED, $result->html);
-    }
-
-    /**
      * Tests that submit and reset buttons (which would also affect other questions) are turned into simple ones.
      *
      * @throws coding_exception

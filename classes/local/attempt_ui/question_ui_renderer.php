@@ -127,7 +127,6 @@ class question_ui_renderer {
 
             // Modify standard HTML.
             $renderer->set_input_values_and_readonly($attempt);
-            $renderer->soften_validation();
             $renderer->defuse_buttons();
 
             $renderer->add_styles();
@@ -427,55 +426,6 @@ class question_ui_renderer {
                 $element = new DOMText($rawvalue);
             }
             $pi->parentNode->replaceChild($element, $pi);
-        }
-    }
-
-    /**
-     * Replaces the HTML attributes `pattern`, `required`, `minlength`, `maxlength`, `min, `max` so that submission is
-     * not prevented.
-     *
-     * The standard attributes are replaced with `data-qpy_X`, which are then evaluated in JS.
-     *
-     * @return void
-     */
-    private function soften_validation(): void {
-        /** @var DOMElement $element */
-        foreach ($this->xpath->query('//xhtml:input[@pattern]') as $element) {
-            $pattern = $element->getAttribute('pattern');
-            $element->removeAttribute('pattern');
-            $element->setAttribute('data-qpy_pattern', $pattern);
-        }
-
-        foreach ($this->xpath->query('(//xhtml:input | //xhtml:select | //xhtml:textarea)[@required]') as $element) {
-            $element->removeAttribute('required');
-            $element->setAttribute('data-qpy_required', 'data-qpy_required');
-            $element->setAttribute('aria-required', 'true');
-        }
-
-        foreach ($this->xpath->query('(//xhtml:input | //xhtml:textarea)[@minlength]') as $element) {
-            $minlength = $element->getAttribute('minlength');
-            $element->removeAttribute('minlength');
-            $element->setAttribute('data-qpy_minlength', $minlength);
-        }
-
-        foreach ($this->xpath->query('(//xhtml:input | //xhtml:textarea)[@maxlength]') as $element) {
-            $maxlength = $element->getAttribute('maxlength');
-            $element->removeAttribute('maxlength');
-            $element->setAttribute('data-qpy_maxlength', $maxlength);
-        }
-
-        foreach ($this->xpath->query('//xhtml:input[@min]') as $element) {
-            $min = $element->getAttribute('min');
-            $element->removeAttribute('min');
-            $element->setAttribute('data-qpy_min', $min);
-            $element->setAttribute('aria-valuemin', $min);
-        }
-
-        foreach ($this->xpath->query('//xhtml:input[@max]') as $element) {
-            $max = $element->getAttribute('max');
-            $element->removeAttribute('max');
-            $element->setAttribute('data-qpy_max', $max);
-            $element->setAttribute('aria-valuemax', $max);
         }
     }
 
