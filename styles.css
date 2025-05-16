@@ -245,17 +245,16 @@ body.questionpy-iframe-body .que .content {
 }
 
 .qpy-steps-table {
-    :is(th, td) {
-        /* Customizing column widths is a pain, but this at least gives some more space to the code blocks. */
-        :nth-child(-n + 4) {
-            /* First 4 cells of each row */
-            max-width: max-content;
-        }
+    /* Customizing column widths is a pain, but this at least gives some more space to the code blocks. */
 
-        td:has(.qpy-state-view) {
-            /* Any cell containing a code block */
-            min-width: 30%;
-        }
+    :is(th, td):nth-child(-n + 4) {
+        /* First 4 cells of each row */
+        max-width: max-content;
+    }
+
+    td:has(.qpy-state-view) {
+        /* Any cell containing a code block */
+        min-width: 30%;
     }
 
     tbody tr:last-child {
