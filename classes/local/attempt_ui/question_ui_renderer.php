@@ -438,8 +438,8 @@ class question_ui_renderer {
         /** @var DOMElement $element */
         foreach (
             $this->xpath->query("
-                //xhtml:input[@type != 'checkbox' and @type != 'radio' and
-                              @type != 'button' and @type != 'submit' and @type != 'reset']
+                //xhtml:input[not(@type) or (@type != 'checkbox' and @type != 'radio' and
+                              @type != 'button' and @type != 'submit' and @type != 'reset')]
                 | //xhtml:select | //xhtml:textarea
                 ") as $element
         ) {
