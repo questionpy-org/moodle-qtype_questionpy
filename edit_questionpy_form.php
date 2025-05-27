@@ -70,6 +70,22 @@ class qtype_questionpy_edit_form extends question_edit_form {
         parent::__construct($submiturl, $question, $category, $contexts, $formeditable);
     }
 
+
+    /**
+     * Returns the question state of the stored question if possible.
+     *
+     * If the question is being edited and the package (version) was changed, no question state is returned.
+     *
+     * @param string $packagehash
+     * @return string|null
+     */
+    private function get_question_state(string $packagehash): ?string {
+        if (isset($this->question->qpy_id) && $this->question->qpy_package_hash === $packagehash) {
+            return $this->question->qpy_state;
+        }
+        return null;
+    }
+
     /**
      * Adds package upload element to form.
      *
@@ -153,7 +169,8 @@ class qtype_questionpy_edit_form extends question_edit_form {
         }
 
         // Render question edit form.
-        $response = $this->api->package($packagehash, $file)->get_question_edit_form($this->question->qpy_state ?? null);
+        $state = $this->get_question_state($packagehash);
+        $response = $this->api->package($packagehash, $file)->get_question_edit_form($state);
         $context = new root_render_context($this, $mform, 'qpy_form', $response->formdata);
         $response->definition->render_to($context);
 
@@ -350,8 +367,9 @@ class qtype_questionpy_edit_form extends question_edit_form {
             }
 
             // TODO: create a dedicated endpoint?
+            $state = $this->get_question_state($packagehash);
             $this->api->package($packagehash, $package)->create_question(
-                $this->question->qpy_state ?? null,
+                $state,
                 (object) ($data['qpy_form'] ?? [])
             );
         } catch (options_form_validation_error $error) {
