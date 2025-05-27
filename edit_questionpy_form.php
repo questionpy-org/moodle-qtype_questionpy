@@ -392,7 +392,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
                 ]);
             }
             $list = html_writer::alist($listitems);
-            $composederrorstring = get_string('options_form_validation_error_container', 'qtype_questionpy', $list);
+            $composederrorstring = get_string('options_form_validation_error_title', 'qtype_questionpy', $list);
             // Use the 'Question name' input field to view the errors.
             $errors['name'] = $composederrorstring;
         }
