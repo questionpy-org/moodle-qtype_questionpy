@@ -19,11 +19,50 @@ import {resetFormDirtyState} from 'core_form/changechecker';
 import Notification from 'core/notification';
 import {favouritePackage} from 'qtype_questionpy/utils';
 
+
+/**
+ * This functions handles switching to the search container page.
+ *
+ * @param {Event} event
+ */
+function switchToSearchContainer(event) {
+    const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
+
+    event.preventDefault();
+
+    // We want to reduce the amount of unnecessary data exchange.
+    const qpyElements = document.querySelectorAll('[name^="qpy_"]:not(input[name="qpy_package_source"])');
+    for (const qpyElement of qpyElements) {
+        qpyElement.disabled = true;
+    }
+
+    // When unselecting, view the search container, even if the current package was uploaded.
+    const packageSource = document.querySelector('input[name="qpy_package_source"]');
+    packageSource.value = 'search';
+
+    packageSelected.value = false;
+    packageSelected.disabled = false;
+
+    // We do not want any form checking when changing a package.
+    resetFormDirtyState(event.target);
+
+    event.target.form.submit();
+}
+
+/**
+ * This function is called by the <code>package_not_available</code>-template and initializes the button to change the
+ * package.
+ *
+ * @param {HTMLButtonElement} button
+ */
+export function initChangePackageButton(button) {
+    button.addEventListener("click", switchToSearchContainer);
+}
 /**
  * This function is called by the <code>package_selection</code>-template and initializes the action button.
  *
- * When the package is changed, this function enables the hidden form element <code>qpy_package_changed</code> and
- * submits the form. Since <code>qpy_package_changed</code> is registered as a no-submit button, it prevents the form
+ * When the package is changed, this function enables the hidden form element <code>qpy_package_selected</code> and
+ * submits the form. Since <code>qpy_package_selected</code> is registered as a no-submit button, it prevents the form
  * data from being saved to the question, while still re-rendering the form with access to the new selected package
  * hash.
  *
@@ -31,34 +70,13 @@ import {favouritePackage} from 'qtype_questionpy/utils';
  * @param {boolean} selected
  */
 export function initActionButton(card, selected) {
-    const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
-
     if (selected) {
         // Initialize the button to change the package.
         const changeButton = card.getElementsByClassName("qpy-version-selection-button")[0];
-        changeButton.addEventListener("click", (e) => {
-            e.preventDefault();
-
-            // We want to reduce the amount of unnecessary data exchange.
-            const qpyElements = document.querySelectorAll('[name^="qpy_"]:not(input[name="qpy_package_source"])');
-            for (const qpyElement of qpyElements) {
-                qpyElement.disabled = true;
-            }
-
-            // When unselecting, view the search container, even if the current package was uploaded.
-            const packageSource = document.querySelector('input[name="qpy_package_source"]');
-            packageSource.value = 'search';
-
-            packageSelected.value = false;
-            packageSelected.disabled = false;
-
-            // We do not want any form checking when changing a package.
-            resetFormDirtyState(changeButton);
-
-            e.target.form.submit();
-        });
+        changeButton.addEventListener("click", switchToSearchContainer);
     } else {
         const packageHash = document.querySelector('input[name="qpy_package_hash"]');
+        const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
         const selectedHash = card.getElementsByClassName("qpy-version-selection")[0];
         const selectButton = card.getElementsByClassName("qpy-version-selection-button")[0];
 

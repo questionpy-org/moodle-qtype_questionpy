@@ -50,6 +50,8 @@ $string['open_website'] = 'Open website';
 $string['options_form_validation_error_element'] = '{$a->name}: {$a->error}';
 $string['options_form_validation_error_title'] = 'The following errors occurred while validating the form and could not'
     . ' be mapped to an input element: {$a}';
+$string['package_hash'] = 'Hash';
+$string['package_identifier'] = 'Identifier';
 $string['package_not_found'] = 'The requested package {$a->packagehash} does not exist.';
 $string['packages_subheading'] = 'Packages';
 $string['pluginname'] = 'QuestionPy';
@@ -90,8 +92,14 @@ $string['selection_custom_package_header'] = 'Custom Package';
 $string['selection_custom_package_text'] = 'This package version was uploaded by a user and might not appear in the package'
     . ' search.';
 $string['selection_no_icon'] = 'Could not load the icon.';
+$string['selection_package_cannot_be_used'] = 'The selected package cannot be used anymore.';
+$string['selection_package_invalid'] = 'Please select or upload a valid package.';
+$string['selection_package_list_outdated'] = 'Please contact an administrator as the package list is not up to date.';
 $string['selection_package_no_longer_in_database_header'] = 'Discontinued';
 $string['selection_package_no_longer_in_database_text'] = 'This package version is no longer available through the package search.';
+$string['selection_package_not_available'] = 'Package is not available.';
+$string['selection_package_not_usable'] = 'Package cannot be used.';
+$string['selection_questions_with_package_unusable'] = 'Questions using this package will not work.';
 $string['selection_required'] = 'Please select a package.';
 $string['selection_title'] = 'Select QuestionPy Package';
 $string['selection_title_selected'] = 'Selected Package';
