@@ -26,6 +26,7 @@ use core\di;
 use core_question\local\bank\question_edit_contexts;
 use GuzzleHttp\Exception\GuzzleException;
 use qtype_questionpy\constants;
+use qtype_questionpy\exception\error_code;
 use qtype_questionpy\exception\options_form_validation_error;
 use qtype_questionpy\exception\request_error;
 use qtype_questionpy\local\api\api;
@@ -84,6 +85,63 @@ class qtype_questionpy_edit_form extends question_edit_form {
             return $this->question->qpy_state;
         }
         return null;
+    }
+
+    /**
+     * Adds alert to the form to warn that the selected package is not available on the application server.
+     *
+     * This differs from {@see definition_package_missing_from_db_and_server} because the package is still stored in the database
+     * and is therefore also available through the package search container.
+     *
+     * @param MoodleQuickForm $mform
+     * @return void
+     * @throws moodle_exception
+     */
+    private function definition_package_missing_from_server(MoodleQuickForm $mform): void {
+        global $OUTPUT;
+
+        // Create a group which contains the alert - the group is used to simplify the styling.
+        $group[] = $mform->createElement('html', $OUTPUT->render_from_template(
+            'qtype_questionpy/package/package_missing_from_server',
+            [],
+        ));
+        $mform->addGroup($group, '');
+
+        $mform->addElement('hidden', 'qpy_package_invalid', true);
+        $mform->setType('qpy_package_invalid', PARAM_BOOL);
+    }
+
+    /**
+     * Adds alert to the form to warn that the selected package is not stored in the database and is not available on the
+     * application server.
+     *
+     * @param MoodleQuickForm $mform
+     * @param string $hash
+     * @return void
+     * @throws moodle_exception
+     */
+    private function definition_package_missing_from_db_and_server(MoodleQuickForm $mform, string $hash): void {
+        global $DB, $OUTPUT;
+
+        // The current package is in use if the current question is saved and its package hash matches the hash of the selected
+        // package.
+        $packageinuse = isset($this->question->qpy_id) && $this->question->qpy_package_hash == $hash;
+
+        $identifier = null;
+        if ($packageinuse) {
+            // We want to show as much information of the package as possible.
+            $identifier = $DB->get_field('qtype_questionpy', 'packageidentifier', ['id' => $this->question->qpy_id]);
+        }
+
+        // Create a group which contains the alert - the group is used to simplify the styling.
+        $group[] = $mform->createElement('html', $OUTPUT->render_from_template(
+            'qtype_questionpy/package/package_missing_from_db_and_server',
+            ['hash' => $hash, 'identifier' => $identifier, 'inuse' => $packageinuse],
+        ));
+        $mform->addGroup($group, '', get_string('selection_title_selected', 'qtype_questionpy'));
+
+        $mform->addElement('hidden', 'qpy_package_invalid', true);
+        $mform->setType('qpy_package_invalid', PARAM_BOOL);
     }
 
     /**
@@ -152,7 +210,8 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $packagearray['islocal'] = !is_null($file);
         $packagearray['isfavourite'] = $isfavourite;
         $packagearray['ismarkableasfavourite'] = !is_null($isfavourite);
-        $group = [];
+
+        // Create a group which contains the package element - the group is used to simplify the styling.
         $group[] = $mform->createElement(
             'html',
             $OUTPUT->render_from_template('qtype_questionpy/package/package_selection', $packagearray)
@@ -169,13 +228,22 @@ class qtype_questionpy_edit_form extends question_edit_form {
         }
 
         // Render question edit form.
-        $state = $this->get_question_state($packagehash);
-        $response = $this->api->package($packagehash, $file)->get_question_edit_form($state);
-        $context = new root_render_context($this, $mform, 'qpy_form', $response->formdata);
-        $response->definition->render_to($context);
+        try {
+            $state = $this->get_question_state($packagehash);
+            $questioneditform = $this->api->package($packagehash, $file)->get_question_edit_form($state);
+            $context = new root_render_context($this, $mform, 'qpy_form', $questioneditform->formdata);
+            $questioneditform->definition->render_to($context);
 
-        // Used by set_data.
-        $this->currentdata = $response->formdata;
+            // Used by set_data.
+            $this->currentdata = $questioneditform->formdata;
+        } catch (request_error $error) {
+            if ($error->requesterrorcode !== error_code::package_not_found) {
+                throw $error;
+            }
+            // TODO: log this via an event?
+            // The current package is available via the package search but not on the application server.
+            $this->definition_package_missing_from_server($mform);
+        }
     }
 
     /**
@@ -226,23 +294,33 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $mform->setType('qpy_package_source', PARAM_ALPHA);
 
         // Get package version.
-        $packagehash = $this->optional_param('qpy_package_hash', $this->question->qpy_package_hash ?? null, PARAM_ALPHANUM);
+        $packagehash = $this->optional_param('qpy_package_hash', $this->question->qpy_package_hash ?? '', PARAM_ALPHANUM);
         $pkgversion = package_version::get_by_hash($packagehash);
 
-        if ($pkgversion) {
-            $package = package::get_by_version($pkgversion->id);
-            // Get favourite status.
-            $usercontext = context_user::instance($USER->id);
-            $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
-            $isfavourite = $ufservice->favourite_exists('qtype_questionpy', 'package', $package->id, $usercontext);
-            $version = $pkgversion->version;
-        } else {
-            $package = $this->api->get_package_info($packagehash);
-            $isfavourite = null;
-            $version = $package->version;
+        if (is_null($pkgversion)) {
+            // The package was once available via the package search but not anymore.
+            try {
+                // Maybe the package is still available or cached on the application server.
+                $package = $this->api->get_package_info($packagehash);
+                $this->definition_package_settings($mform, $package, $packagehash, $package->version);
+            } catch (request_error $error) {
+                if ($error->requesterrorcode !== error_code::package_not_found) {
+                    throw $error;
+                }
+                // The package is also not available on the application server.
+                $this->definition_package_missing_from_db_and_server($mform, $packagehash);
+            }
+            return;
         }
 
-        $this->definition_package_settings($mform, $package, $packagehash, $version, $isfavourite);
+        $package = package::get_by_version($pkgversion->id);
+
+        // Get favourite status.
+        $usercontext = context_user::instance($USER->id);
+        $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
+        $isfavourite = $ufservice->favourite_exists('qtype_questionpy', 'package', $package->id, $usercontext);
+
+        $this->definition_package_settings($mform, $package, $packagehash, $pkgversion->version, $isfavourite);
     }
 
     /**
@@ -322,7 +400,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // While not a button, we need a way of telling moodle not to save the submitted data to the question when the
         // package has simply been changed. The hidden element is enabled from JS when a package is selected or changed.
         $mform->registerNoSubmitButton('qpy_package_selected');
-        $mform->addElement('hidden', 'qpy_package_selected', !empty($hash), ['disabled' => 'disabled']);
+        $mform->addElement('hidden', 'qpy_package_selected', $selected, ['disabled' => 'disabled']);
         $mform->setType('qpy_package_selected', PARAM_BOOL);
     }
 
@@ -339,6 +417,10 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $question->questiontext = '.';
 
         $question->qpy_form = $this->currentdata;
+
+        // We do not want to populate these fields based on the stored data.
+        $question->qpy_package_hash = $this->currentdata['qpy_package_hash'] ?? $this->currentdata['qpy_package_file_hash'] ?? '';
+        $question->qpy_package_selected = $this->currentdata['qpy_package_selected'] ?? false;
 
         parent::set_data($question);
     }
@@ -411,6 +493,13 @@ class qtype_questionpy_edit_form extends question_edit_form {
     private function validate_selected_package(array $data, array &$errors): stored_file|null {
         global $USER;
 
+        // Check if the current package is valid.
+        $invalid = $this->optional_param('qpy_package_invalid', false, PARAM_BOOL);
+        if ($invalid) {
+            $errors['qpy_package_container'] = get_string('selection_package_invalid', 'qtype_questionpy');
+            return null;
+        }
+
         $source = $data['qpy_package_source'] ?? null;
         if ($source == 'search' && empty($data['qpy_package_hash'])) {
             $errors['qpy_package_container'] = get_string('required');
@@ -446,6 +535,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
+
         $package = $this->validate_selected_package($data, $errors);
         if ($data['qpy_package_selected']) {
             // The options form of a package is being submitted.
