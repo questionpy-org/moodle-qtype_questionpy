@@ -184,6 +184,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
                     $lastresponse
                 );
             $this->update_attempt($attempt);
+            $this->errorduringload = false;
         } catch (Throwable $t) {
             $this->errorduringload = true;
             // Trigger error event.
@@ -200,8 +201,6 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $event->trigger();
             debugging($event->get_description(), backtrace: $t->getTrace());
         }
-
-        $this->errorduringload = false;
     }
 
     /**
