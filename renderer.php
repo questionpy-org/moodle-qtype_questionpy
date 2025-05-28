@@ -55,8 +55,8 @@ class qtype_questionpy_renderer extends qtype_renderer {
      */
     private function render_error(): string {
         return $this->output->render_from_template('qtype_questionpy/render_error', [
-            'message' => 'There was an error attempting to view the question.',
-            'info' => 'Please contact an administrator.',
+            'message' => get_string('render_error_message', 'qtype_questionpy'),
+            'info' => get_string('contact_administrator', 'qtype_questionpy'),
         ]);
     }
 
