@@ -84,11 +84,16 @@ export function initUploadForm() {
     const packageFile = document.querySelector('input[name="qpy_package_file"]');
     const packageSelected = document.querySelector('input[name="qpy_package_selected"]');
     packageFile.addEventListener("change", (e) => {
-        packageSelected.value = true;
-        packageSelected.removeAttribute("disabled");
-        // We do not want any form checking when uploading a package.
-        resetFormDirtyState(packageFile);
-        e.target.form.submit();
+        // Delay form submission to ensure that the package is uploaded before submitting.
+        setTimeout(() => {
+            packageSelected.value = true;
+            packageSelected.removeAttribute("disabled");
+
+            // We do not want any form checking when uploading a package.
+            resetFormDirtyState(packageFile);
+
+            e.target.form.submit();
+        }, 100);
     });
 }
 
