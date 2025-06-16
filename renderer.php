@@ -89,19 +89,17 @@ class qtype_questionpy_renderer extends qtype_renderer {
             };
             $iframesrc = $this->get_iframe_document($options->context, $question, $formulationcb);
 
-            // A hidden input field is used to tell the quiz autosaver that the user changed their question answer
-            // in the iframe. The value is increased by one every time. The autosaver detects this modification and will
-            // save all answers.
             $iframeid = $questiondivid . '-iframe';
-            $autosavehintname = 'qpy-autosave-' . $questiondivid;
-            $this->page->requires->js_call_amd(
-                'qtype_questionpy/view_question',
-                'addIframeFormDataOnSubmit',
-                [$iframeid, $qa->get_field_prefix() . constants::QT_VAR_RESPONSE]
-            );
+
+            if (!$options->readonly) {
+                $this->page->requires->js_call_amd(
+                    'qtype_questionpy/view_question',
+                    'addIframeFormDataOnSubmit',
+                    [$iframeid, $qa->get_field_prefix() . constants::QT_VAR_RESPONSE]
+                );
+            }
 
             $result = '';
-
             if (
                 ($options->qpyattemptdetailslink ?? question_display_options::VISIBLE) === question_display_options::VISIBLE
                 && has_capability(constants::ROLE_VIEW_DETAILS, $options->context)
@@ -113,6 +111,11 @@ class qtype_questionpy_renderer extends qtype_renderer {
                 $result .= "<a class='qpy-details-link' href='{$detailsurl->out()}' target='_blank'>"
                     . get_string('attempt_detail_link', 'qtype_questionpy') . '</a>';
             }
+
+            // A hidden input field is used to tell the quiz autosaver that the user changed their question answer
+            // in the iframe. The value is increased by one every time. The autosaver detects this modification and will
+            // save all answers.
+            $autosavehintname = 'qpy-autosave-' . $questiondivid;
 
             $result .= <<<EOA
                 <input type="hidden" name="{$autosavehintname}" id="{$autosavehintid}" value="0">
