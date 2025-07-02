@@ -63,6 +63,7 @@ function validateInput(element) {
  * @param {boolean} showCorrectness
  * @param {string} responseId
  * @param {string[]} roles QPy role names that the user has.
+ * @param {object} data Dynamic data.
  * @param {Number} environmentVersion
  */
 export async function init(
@@ -73,6 +74,7 @@ export async function init(
     showCorrectness,
     responseId,
     roles,
+    data,
     environmentVersion,
 ) {
     for (const element of document.querySelectorAll(`
@@ -89,6 +91,12 @@ export async function init(
         form.addEventListener("submit", event => {
             event.preventDefault();
             window.frameElement.closest("form").submit();
+        });
+
+        // Since we cannot directly access the attempt object from outside the iframe, we set the `data` field here.
+        form.addEventListener("formdata", event => {
+            const data = Object.fromEntries(attempt.data);
+            event.formData.set("data", JSON.stringify(data));
         });
 
         // Modify a field in the main form in order to tell the Quiz's autosaver that the user changed an answer.
@@ -113,6 +121,7 @@ export async function init(
         window.document.getElementById("qpy-specific-feedback"),
         window.document.getElementById("qpy-right-answer"),
         roles,
+        Object.entries(data),
         environmentVersion,
     );
 }
@@ -128,6 +137,41 @@ export function getAttempt() {
     }
     return attempt;
 }
+
+
+class DynamicDataMap extends Map {
+    /**
+     * @param {Iterable} iterable
+     * @param {() => void} onChange
+     */
+    constructor(iterable, onChange) {
+        super(iterable);
+        this.onChange = onChange;
+    }
+
+    set(key, value) {
+        super.set(key, value);
+        if (this.onChange) {
+            // `this.onChange` is not defined when the constructor sets values.
+            this.onChange();
+        }
+        return this;
+    }
+
+    delete(key) {
+        const deleted = super.delete(key);
+        if (deleted) {
+            this.onChange();
+        }
+        return deleted;
+    }
+
+    clear() {
+        super.clear();
+        this.onChange();
+    }
+}
+
 
 /**
  * Contains information about the current environment.
@@ -178,6 +222,7 @@ class Attempt {
     #specificFeedback;
     #rightAnswer;
     #roles;
+    #data;
     #environment;
 
     /**
@@ -191,6 +236,7 @@ class Attempt {
      * @param {?Element} specificFeedbackElement
      * @param {?Element} rightAnswer
      * @param {string[]} roles
+     * @param {Iterable} data
      * @param {Number} environmentVersion
      */
     constructor(
@@ -204,6 +250,7 @@ class Attempt {
         specificFeedbackElement,
         rightAnswer,
         roles,
+        data,
         environmentVersion,
     ) {
         this.#readOnly = readOnly;
@@ -216,6 +263,11 @@ class Attempt {
         this.#specificFeedback = specificFeedbackElement;
         this.#rightAnswer = rightAnswer;
         this.#roles = roles;
+
+        // We also want the autosaver to act when dynamic data was changed.
+        const callback = () => this.formulationElement.dispatchEvent(new Event("change"));
+        this.#data = new DynamicDataMap(data, callback);
+
         this.#environment = new AttemptEnvironment("Moodle", environmentVersion);
     }
 
@@ -317,6 +369,21 @@ class Attempt {
     }
 
     /**
+     * Get the map used to store dynamic data.
+     *
+     * @note
+     * The keys should be of type `string`.
+     * The values can have a depth of 16 and will be serialized to JSON by using `JSON.stringify` and therefore follow
+     * the conversion rules of this function. This also means that the keys of (nested) objects will be converted to
+     * strings.
+     *
+     * @returns {Map<string, any>}
+     */
+    get data() {
+        return this.#data;
+    }
+
+    /**
      * Get information about the current environment.
      *
      * @returns {AttemptEnvironment}
@@ -341,6 +408,13 @@ function createJsonFromFormData(form) {
             iframeObject[name] = values;
         }
     }
+
+    if (iframeObject.data) {
+        iframeObject.data = JSON.parse(iframeObject.data);
+    } else {
+        window.console.warn("The form data field 'data' is missing in the question iframe form.");
+    }
+
     return JSON.stringify(iframeObject);
 }
 

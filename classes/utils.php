@@ -137,13 +137,16 @@ class utils {
             return null;
         }
 
-        $response = json_decode($responsestr, depth: 16);
+        // We want to ensure that dynamic data with a depth of 16 can be used.
+        // Since the `data` field if part of the response object, we need to accept a recursion depth of 16 + 2 = 18.
+        $response = json_decode($responsestr, depth: 18);
         if (json_last_error() != JSON_ERROR_NONE) {
             throw new coding_exception('Could not decode response JSON: ' . json_last_error_msg());
         }
         if (!is_object($response)) {
             throw new coding_exception('Expected response JSON to be an object, got: ' . gettype($response));
         }
+
         return $response;
     }
 }

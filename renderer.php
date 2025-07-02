@@ -29,6 +29,7 @@ use qtype_questionpy\local\api\js_module_call;
 use qtype_questionpy\local\attempt_ui\question_ui_renderer;
 use qtype_questionpy\qpy_question_display_options;
 use qtype_questionpy\static_file_service;
+use qtype_questionpy\utils;
 
 /**
  * Generates the output for QuestionPy questions.
@@ -255,6 +256,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
                 $options->correctness === question_display_options::VISIBLE,
                 $qpyresponseid,
                 $roles,
+                utils::get_qpy_response($qa)->data ?? (object)[],
                 intval($CFG->branch),
             ]
         );
