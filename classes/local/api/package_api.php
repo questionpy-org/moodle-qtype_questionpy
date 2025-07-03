@@ -64,7 +64,9 @@ class package_api {
      * @throws moodle_exception
      */
     public function get_question_edit_form(?string $questionstate): question_edit_form_response {
-        $options['multipart'] = $this->transform_to_multipart([], $questionstate);
+        global $PAGE;
+
+        $options['multipart'] = $this->transform_to_multipart(['context' => $PAGE->context->id], $questionstate);
         $response = $this->post_and_maybe_retry('/options', $options);
         return api_utils::convert_response_to_class($response, question_edit_form_response::class);
     }
@@ -80,11 +82,12 @@ class package_api {
      * @throws moodle_exception
      */
     public function create_question(?string $currentstate, object $formdata): question_response {
+        global $PAGE;
+
         $options['multipart'] = $this->transform_to_multipart(
             [
                 'form_data' => $formdata,
-                // TODO: Send an actual context.
-                'context' => 1,
+                'context' => $PAGE->context->id,
             ],
             $currentstate,
         );
@@ -104,7 +107,15 @@ class package_api {
      * @throws moodle_exception
      */
     public function start_attempt(string $questionstate, int $variant): attempt_started {
-        $options['multipart'] = $this->transform_to_multipart(['variant' => $variant], $questionstate);
+        global $PAGE;
+
+        $options['multipart'] = $this->transform_to_multipart(
+            [
+                'variant' => $variant,
+                'context' => $PAGE->context->id,
+            ],
+            $questionstate,
+        );
         $response = $this->post_and_maybe_retry('/attempt/start', $options);
         return api_utils::convert_response_to_class($response, attempt_started::class);
     }
@@ -123,11 +134,14 @@ class package_api {
      */
     public function view_attempt(string $questionstate, string $attemptstate, ?string $scoringstate = null,
                                  ?object $response = null): attempt {
+        global $PAGE;
+
         $options['multipart'] = $this->transform_to_multipart(
             [
                 'attempt_state' => $attemptstate,
                 'scoring_state' => $scoringstate,
                 'response' => $response,
+                'context' => $PAGE->context->id,
             ],
             $questionstate,
         );
@@ -149,12 +163,15 @@ class package_api {
      */
     public function score_attempt(string $questionstate, string $attemptstate, ?string $scoringstate,
                                   object $response): attempt_scored {
+        global $PAGE;
+
         $options['multipart'] = $this->transform_to_multipart(
             [
                 'attempt_state' => $attemptstate,
                 'scoring_state' => $scoringstate,
                 'response' => $response,
                 'generate_hint' => false,
+                'context' => $PAGE->context->id,
             ],
             $questionstate
         );
