@@ -83,19 +83,21 @@ class qtype_questionpy_renderer extends qtype_renderer {
 
         try {
             $questiondivid = $qa->get_outer_question_div_unique_id();
-            $autosavehintid = $questiondivid . '-autosave';
-            $formulationcb = function (qtype_questionpy_renderer $renderer) use ($qa, $question, $options, $autosavehintid) {
-                return $renderer->formulation_controls_feedback_in_iframe($qa, $question->ui, $options, $autosavehintid);
+            $qpyresponseid = $questiondivid . '-qpy-response';
+            $formulationcb = function (qtype_questionpy_renderer $renderer) use ($qa, $question, $options, $qpyresponseid) {
+                return $renderer->formulation_controls_feedback_in_iframe($qa, $question->ui, $options, $qpyresponseid);
             };
             $iframesrc = $this->get_iframe_document($options->context, $question, $formulationcb);
 
             $iframeid = $questiondivid . '-iframe';
 
+            $qpyresponsename = $qa->get_field_prefix() . constants::QT_VAR_RESPONSE;
+
             if (!$options->readonly) {
                 $this->page->requires->js_call_amd(
                     'qtype_questionpy/view_question',
                     'addIframeFormDataOnSubmit',
-                    [$iframeid, $qa->get_field_prefix() . constants::QT_VAR_RESPONSE]
+                    [$iframeid, $qpyresponsename]
                 );
             }
 
@@ -112,13 +114,13 @@ class qtype_questionpy_renderer extends qtype_renderer {
                     . get_string('attempt_detail_link', 'qtype_questionpy') . '</a>';
             }
 
-            // A hidden input field is used to tell the quiz autosaver that the user changed their question answer
-            // in the iframe. The value is increased by one every time. The autosaver detects this modification and will
-            // save all answers.
-            $autosavehintname = 'qpy-autosave-' . $questiondivid;
-
+            // When the user changes their answer within the iframe, the value of the following hidden input field gets updated.
+            // The quiz autosaver detects this modification and will save all answers.
+            // This hidden field must exist in the outer form for the autosaver to work properly as it relies on the
+            // `HTMLFormElement.elements` attribute.
+            $lastqpyresponse = s($qa->get_last_qt_var(constants::QT_VAR_RESPONSE) ?? '{}');
             $result .= <<<EOA
-                <input type="hidden" name="{$autosavehintname}" id="{$autosavehintid}" value="0">
+                <input type="hidden" name="{$qpyresponsename}" id="{$qpyresponseid}" value="{$lastqpyresponse}">
                 <iframe id="{$iframeid}" srcdoc="{$iframesrc}"></iframe>
             EOA;
 
@@ -212,13 +214,13 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @param question_attempt $qa the question attempt to display.
      * @param attempt_ui $ui
      * @param question_display_options $options controls what should and should not be displayed.
-     * @param string $autosavehintinputid
+     * @param string $qpyresponseid
      * @return string HTML fragment.
      * @throws moodle_exception
      */
     protected function formulation_controls_feedback_in_iframe(
         question_attempt $qa, attempt_ui $ui,
-        question_display_options $options, string $autosavehintinputid
+        question_display_options $options, string $qpyresponseid
     ): string {
         $renderer = question_ui_renderer::render($ui->formulation, $ui->placeholders, $options, $qa);
 
@@ -249,7 +251,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
               $options->feedback === question_display_options::VISIBLE,
               $options->rightanswer === question_display_options::VISIBLE,
               $options->correctness === question_display_options::VISIBLE,
-              $autosavehintinputid,
+              $qpyresponseid,
               $roles,
             ]
         );
