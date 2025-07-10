@@ -222,6 +222,8 @@ class qtype_questionpy_renderer extends qtype_renderer {
         question_attempt $qa, attempt_ui $ui,
         question_display_options $options, string $qpyresponseid
     ): string {
+        global $CFG;
+
         $renderer = question_ui_renderer::render($ui->formulation, $ui->placeholders, $options, $qa);
 
         $warningshtml = '';
@@ -246,13 +248,14 @@ class qtype_questionpy_renderer extends qtype_renderer {
             'qtype_questionpy/view_question',
             'init',
             [
-              $options->readonly,
-              $options->generalfeedback === question_display_options::VISIBLE,
-              $options->feedback === question_display_options::VISIBLE,
-              $options->rightanswer === question_display_options::VISIBLE,
-              $options->correctness === question_display_options::VISIBLE,
-              $qpyresponseid,
-              $roles,
+                $options->readonly,
+                $options->generalfeedback === question_display_options::VISIBLE,
+                $options->feedback === question_display_options::VISIBLE,
+                $options->rightanswer === question_display_options::VISIBLE,
+                $options->correctness === question_display_options::VISIBLE,
+                $qpyresponseid,
+                $roles,
+                intval($CFG->branch),
             ]
         );
         $this->add_package_js_calls($ui->javascriptcalls, $roles, $options);

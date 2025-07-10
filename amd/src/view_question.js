@@ -63,6 +63,7 @@ function validateInput(element) {
  * @param {boolean} showCorrectness
  * @param {string} responseId
  * @param {string[]} roles QPy role names that the user has.
+ * @param {Number} environmentVersion
  */
 export async function init(
     readOnly,
@@ -71,7 +72,8 @@ export async function init(
     showRightAnswer,
     showCorrectness,
     responseId,
-    roles
+    roles,
+    environmentVersion,
 ) {
     for (const element of document.querySelectorAll(`
         [required], [pattern],
@@ -110,7 +112,8 @@ export async function init(
         window.document.getElementById("qpy-general-feedback"),
         window.document.getElementById("qpy-specific-feedback"),
         window.document.getElementById("qpy-right-answer"),
-        roles
+        roles,
+        environmentVersion,
     );
 }
 
@@ -126,6 +129,44 @@ export function getAttempt() {
     return attempt;
 }
 
+/**
+ * Contains information about the current environment.
+ */
+class AttemptEnvironment {
+    #name;
+    #version;
+
+    /**
+     * @param {String} name
+     * @param {Number} version
+     */
+    constructor(name, version) {
+        this.#name = name;
+        this.#version = version;
+    }
+
+    /**
+     * Get the name of the current environment.
+     *
+     * @returns {String}
+     */
+    get name() {
+        return this.#name;
+    }
+
+    /**
+     * Get the version of the current environment.
+     *
+     * To make versions trivially comparable, a number is returned. Make sure to check how these are mapped for the
+     * different environments. The higher the number, the more recent the version.
+     *
+     * @returns {Number}
+     */
+    get version() {
+        return this.#version;
+    }
+}
+
 class Attempt {
     #readOnly;
     #showGeneralFeedback;
@@ -137,6 +178,7 @@ class Attempt {
     #specificFeedback;
     #rightAnswer;
     #roles;
+    #environment;
 
     /**
      * @param {boolean} readOnly
@@ -149,6 +191,7 @@ class Attempt {
      * @param {?Element} specificFeedbackElement
      * @param {?Element} rightAnswer
      * @param {string[]} roles
+     * @param {Number} environmentVersion
      */
     constructor(
         readOnly,
@@ -160,7 +203,8 @@ class Attempt {
         generalFeedbackElement,
         specificFeedbackElement,
         rightAnswer,
-        roles
+        roles,
+        environmentVersion,
     ) {
         this.#readOnly = readOnly;
         this.#showGeneralFeedback = showGeneralFeedback;
@@ -172,6 +216,7 @@ class Attempt {
         this.#specificFeedback = specificFeedbackElement;
         this.#rightAnswer = rightAnswer;
         this.#roles = roles;
+        this.#environment = new AttemptEnvironment("Moodle", environmentVersion);
     }
 
     /**
@@ -269,6 +314,15 @@ class Attempt {
      */
     get userRoles() {
         return this.#roles;
+    }
+
+    /**
+     * Get information about the current environment.
+     *
+     * @returns {AttemptEnvironment}
+     */
+    get environment() {
+        return this.#environment;
     }
 }
 
