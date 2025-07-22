@@ -16,6 +16,7 @@
  */
 
 import "theme_boost/bootstrap/popover";
+import {throttle} from "core/utils";
 
 /**
  * @type {?Attempt} Attempt object that is passed to the question package.
@@ -60,7 +61,7 @@ function validateInput(element) {
  * @param {boolean} showSpecificFeedback
  * @param {boolean} showRightAnswer
  * @param {boolean} showCorrectness
- * @param {string} autoSaveHintInputId
+ * @param {string} responseId
  * @param {string[]} roles QPy role names that the user has.
  */
 export async function init(
@@ -69,7 +70,7 @@ export async function init(
     showSpecificFeedback,
     showRightAnswer,
     showCorrectness,
-    autoSaveHintInputId,
+    responseId,
     roles
 ) {
     for (const element of document.querySelectorAll(`
@@ -89,11 +90,12 @@ export async function init(
         });
 
         // Modify a field in the main form in order to tell the Quiz's autosaver that the user changed an answer.
-        const autoSaveHintElement = parent.document.getElementById(autoSaveHintInputId);
-        if (autoSaveHintElement) {
-            form.addEventListener("change", function() {
-                autoSaveHintElement.value = parseInt(autoSaveHintElement.value) + 1;
-            });
+        const responseElement = parent.document.getElementById(responseId);
+        if (responseElement) {
+            // We throttle here, as `JSON.stringify` might affect the performance.
+            form.addEventListener("change", throttle(() => {
+                responseElement.value = createJsonFromFormData(form);
+            }, 250));
         }
     }
 
@@ -271,6 +273,24 @@ class Attempt {
 }
 
 /**
+ * Creates JSON from the FormData of the given form.
+ *
+ * @param {HTMLFormElement} form
+ * @returns {string}
+ */
+function createJsonFromFormData(form) {
+    const iframeFormData = new FormData(form);
+    const iframeObject = Object.fromEntries(iframeFormData);
+    for (const name of iframeFormData.keys()) {
+        const values = iframeFormData.getAll(name);
+        if (values.length > 1) {
+            iframeObject[name] = values;
+        }
+    }
+    return JSON.stringify(iframeObject);
+}
+
+/**
  * JSON-encodes and adds the question's form data located in the iframe to the main form when it is submitted.
  *
  * This function must be called outside the iframe, on the parent window.
@@ -292,14 +312,9 @@ export function addIframeFormDataOnSubmit(iframeId, responseFieldName) {
             window.console.error("Could not find form in question iframe " + iframeId);
             return;
         }
-        const iframeFormData = new FormData(iframeForm);
-        const iframeObject = Object.fromEntries(iframeFormData);
-        for (const name of iframeFormData.keys()) {
-            const values = iframeFormData.getAll(name);
-            if (values.length > 1) {
-                iframeObject[name] = values;
-            }
-        }
-        event.formData.append(responseFieldName, JSON.stringify(iframeObject));
+        // Since we are throttling the updating process of the response element on a change, it might happen that the
+        // value is outdated - this is why we get the data again.
+        const jsonFormData = createJsonFromFormData(iframeForm);
+        event.formData.set(responseFieldName, jsonFormData);
     });
 }
