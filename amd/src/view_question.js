@@ -63,7 +63,7 @@ function validateInput(element) {
  * @param {boolean} showCorrectness
  * @param {string} responseId
  * @param {string[]} roles QPy role names that the user has.
- * @param {object} data Dynamic data.
+ * @param {Object.<string, any>} data Dynamic data.
  * @param {Number} environmentVersion
  */
 export async function init(
@@ -95,8 +95,7 @@ export async function init(
 
         // Since we cannot directly access the attempt object from outside the iframe, we set the `data` field here.
         form.addEventListener("formdata", event => {
-            const data = Object.fromEntries(attempt.data);
-            event.formData.set("data", JSON.stringify(data));
+            event.formData.set("data", JSON.stringify(attempt.data));
         });
 
         // Modify a field in the main form in order to tell the Quiz's autosaver that the user changed an answer.
@@ -121,7 +120,7 @@ export async function init(
         window.document.getElementById("qpy-specific-feedback"),
         window.document.getElementById("qpy-right-answer"),
         roles,
-        Object.entries(data),
+        data,
         environmentVersion,
     );
 }
@@ -138,40 +137,33 @@ export function getAttempt() {
     return attempt;
 }
 
-
-class DynamicDataMap extends Map {
-    /**
-     * @param {Iterable} iterable
-     * @param {() => void} onChange
-     */
-    constructor(iterable, onChange) {
-        super(iterable);
-        this.onChange = onChange;
-    }
-
-    set(key, value) {
-        super.set(key, value);
-        if (this.onChange) {
-            // `this.onChange` is not defined when the constructor sets values.
-            this.onChange();
-        }
-        return this;
-    }
-
-    delete(key) {
-        const deleted = super.delete(key);
-        if (deleted) {
-            this.onChange();
-        }
-        return deleted;
-    }
-
-    clear() {
-        super.clear();
-        this.onChange();
-    }
+/**
+ * Creates a proxy which fires the given callback when the properties of the object are modified.
+ *
+ * @template T, U
+ * @param {Object.<T, U>} obj
+ * @param {() => void} onChange
+ * @returns {Object.<T, U>}
+ */
+function createChangeNotifyingProxy(obj, onChange) {
+    return new Proxy(obj, {
+        set(target, propertyKey, newValue, receiver) {
+            const success = Reflect.set(target, propertyKey, newValue, receiver);
+            onChange();
+            return success;
+        },
+        defineProperty(target, propertyKey, attributes) {
+            const success = Reflect.defineProperty(target, propertyKey, attributes);
+            onChange();
+            return success;
+        },
+        deleteProperty(target, propertyKey) {
+            const success = Reflect.deleteProperty(target, propertyKey);
+            onChange();
+            return success;
+        },
+    });
 }
-
 
 /**
  * Contains information about the current environment.
@@ -236,7 +228,7 @@ class Attempt {
      * @param {?Element} specificFeedbackElement
      * @param {?Element} rightAnswer
      * @param {string[]} roles
-     * @param {Iterable} data
+     * @param {Object.<string, any>} data
      * @param {Number} environmentVersion
      */
     constructor(
@@ -266,7 +258,7 @@ class Attempt {
 
         // We also want the autosaver to act when dynamic data was changed.
         const callback = () => this.formulationElement.dispatchEvent(new Event("change"));
-        this.#data = new DynamicDataMap(data, callback);
+        this.#data = createChangeNotifyingProxy(data, callback);
 
         this.#environment = new AttemptEnvironment("Moodle", environmentVersion);
     }
@@ -369,15 +361,16 @@ class Attempt {
     }
 
     /**
-     * Get the map used to store dynamic data.
+     * Get the object used to store dynamic data.
      *
      * @note
-     * The keys should be of type `string`.
-     * The values can have a depth of 16 and will be serialized to JSON by using `JSON.stringify` and therefore follow
-     * the conversion rules of this function. This also means that the keys of (nested) objects will be converted to
+     * This object will be serialized to JSON by using `JSON.stringify` and therefore follows the conversion
+     * rules of this function. This also means that the keys of (nested) objects will be converted to
      * strings.
      *
-     * @returns {Map<string, any>}
+     * The depth of the object should not exceed 16.
+     *
+     * @returns {Object.<string, any>}
      */
     get data() {
         return this.#data;
