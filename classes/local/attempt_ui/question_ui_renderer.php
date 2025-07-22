@@ -282,6 +282,12 @@ class question_ui_renderer {
                 continue;
             }
 
+            if ($name === 'data') {
+                // The name 'data' is reserved for storing dynamic data and is not related to an input element.
+                debugging('The name of an input element cannot be "data".');
+                continue;
+            }
+
             // Get the last saved value.
             $lastvalue = $lastresponse->{$name} ?? null;
             if (is_null($lastvalue)) {

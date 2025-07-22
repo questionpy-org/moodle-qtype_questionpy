@@ -63,6 +63,7 @@ function validateInput(element) {
  * @param {boolean} showCorrectness
  * @param {string} responseId
  * @param {string[]} roles QPy role names that the user has.
+ * @param {Object.<string, any>} data Dynamic data.
  * @param {Number} environmentVersion
  */
 export async function init(
@@ -73,6 +74,7 @@ export async function init(
     showCorrectness,
     responseId,
     roles,
+    data,
     environmentVersion,
 ) {
     for (const element of document.querySelectorAll(`
@@ -89,6 +91,11 @@ export async function init(
         form.addEventListener("submit", event => {
             event.preventDefault();
             window.frameElement.closest("form").submit();
+        });
+
+        // Since we cannot directly access the attempt object from outside the iframe, we set the `data` field here.
+        form.addEventListener("formdata", event => {
+            event.formData.set("data", JSON.stringify(attempt.data));
         });
 
         // Modify a field in the main form in order to tell the Quiz's autosaver that the user changed an answer.
@@ -113,6 +120,7 @@ export async function init(
         window.document.getElementById("qpy-specific-feedback"),
         window.document.getElementById("qpy-right-answer"),
         roles,
+        data,
         environmentVersion,
     );
 }
@@ -127,6 +135,34 @@ export function getAttempt() {
         throw new Error("Attempt not initialized");
     }
     return attempt;
+}
+
+/**
+ * Creates a proxy which fires the given callback when the properties of the object are modified.
+ *
+ * @template T, U
+ * @param {Object.<T, U>} obj
+ * @param {() => void} onChange
+ * @returns {Object.<T, U>}
+ */
+function createChangeNotifyingProxy(obj, onChange) {
+    return new Proxy(obj, {
+        set(target, propertyKey, newValue, receiver) {
+            const success = Reflect.set(target, propertyKey, newValue, receiver);
+            onChange();
+            return success;
+        },
+        defineProperty(target, propertyKey, attributes) {
+            const success = Reflect.defineProperty(target, propertyKey, attributes);
+            onChange();
+            return success;
+        },
+        deleteProperty(target, propertyKey) {
+            const success = Reflect.deleteProperty(target, propertyKey);
+            onChange();
+            return success;
+        },
+    });
 }
 
 /**
@@ -178,6 +214,7 @@ class Attempt {
     #specificFeedback;
     #rightAnswer;
     #roles;
+    #data;
     #environment;
 
     /**
@@ -191,6 +228,7 @@ class Attempt {
      * @param {?Element} specificFeedbackElement
      * @param {?Element} rightAnswer
      * @param {string[]} roles
+     * @param {Object.<string, any>} data
      * @param {Number} environmentVersion
      */
     constructor(
@@ -204,6 +242,7 @@ class Attempt {
         specificFeedbackElement,
         rightAnswer,
         roles,
+        data,
         environmentVersion,
     ) {
         this.#readOnly = readOnly;
@@ -216,6 +255,11 @@ class Attempt {
         this.#specificFeedback = specificFeedbackElement;
         this.#rightAnswer = rightAnswer;
         this.#roles = roles;
+
+        // We also want the autosaver to act when dynamic data was changed.
+        const callback = () => this.formulationElement.dispatchEvent(new Event("change"));
+        this.#data = createChangeNotifyingProxy(data, callback);
+
         this.#environment = new AttemptEnvironment("Moodle", environmentVersion);
     }
 
@@ -317,6 +361,22 @@ class Attempt {
     }
 
     /**
+     * Get the object used to store dynamic data.
+     *
+     * @note
+     * This object will be serialized to JSON by using `JSON.stringify` and therefore follows the conversion
+     * rules of this function. This also means that the keys of (nested) objects will be converted to
+     * strings.
+     *
+     * The depth of the object should not exceed 16.
+     *
+     * @returns {Object.<string, any>}
+     */
+    get data() {
+        return this.#data;
+    }
+
+    /**
      * Get information about the current environment.
      *
      * @returns {AttemptEnvironment}
@@ -341,6 +401,13 @@ function createJsonFromFormData(form) {
             iframeObject[name] = values;
         }
     }
+
+    if (iframeObject.data) {
+        iframeObject.data = JSON.parse(iframeObject.data);
+    } else {
+        window.console.warn("The form data field 'data' is missing in the question iframe form.");
+    }
+
     return JSON.stringify(iframeObject);
 }
 
