@@ -278,8 +278,13 @@ class question_ui_renderer {
             }
 
             $name = $element->getAttribute('name');
-            if (!$name || $name === 'data') {
+            if (!$name) {
+                continue;
+            }
+
+            if ($name === 'data') {
                 // The name 'data' is reserved for storing dynamic data and is not related to an input element.
+                debugging('The name of an input element cannot be "data".');
                 continue;
             }
 
