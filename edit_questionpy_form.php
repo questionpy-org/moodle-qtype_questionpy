@@ -418,9 +418,18 @@ class qtype_questionpy_edit_form extends question_edit_form {
 
         $question->qpy_form = $this->currentdata;
 
-        // We do not want to populate these fields based on the stored data.
-        $question->qpy_package_hash = $this->currentdata['qpy_package_hash'] ?? $this->currentdata['qpy_package_file_hash'] ?? '';
-        $question->qpy_package_selected = $this->currentdata['qpy_package_selected'] ?? false;
+        // When changing the package of a stored question, we do not want the package hash to be set in the form.
+        // Saving the question would return us to the question edit form with the package selected.
+        // Instead, we want to stay on the package selection page and show a "Required" message, indicating that a
+        // package must be selected before saving a question.
+        // The parameter `qpy_package_selected` is only present when a package was either selected or unselected.
+        // When calling the `optional_param` method while creating or editing a question, the default value `true`
+        // will be returned. This is not correct for the first case, but since `$question->qpy_package_hash` is not
+        // present when creating a new question, it does not matter.
+        $selected = $this->optional_param('qpy_package_selected', true, PARAM_BOOL);
+        if (!$selected) {
+            unset($question->qpy_package_hash);
+        }
 
         parent::set_data($question);
     }
