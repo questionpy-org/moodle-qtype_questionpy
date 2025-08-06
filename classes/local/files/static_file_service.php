@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy;
+namespace qtype_questionpy\local\files;
 
 use coding_exception;
 use dml_exception;
+use GuzzleHttp\Exception\GuzzleException;
 use invalid_dataroot_permissions;
 use moodle_url;
+use qtype_questionpy\exception\request_error;
 use qtype_questionpy\local\api\api;
+use qtype_questionpy\package_file_service;
 use qtype_questionpy_question;
 
 /**
@@ -51,7 +54,7 @@ class static_file_service {
     }
 
     /**
-     * Gets and serves the given static file from the QPy server and dies afterwards.
+     * Downloads the given static file to a temporary path and returns path and mime type.
      *
      * TODO: Cache the file.
      *
@@ -62,8 +65,10 @@ class static_file_service {
      * @param int $contextid
      * @return array{ 0: string, 1: string }|null array of temporary file path and mime type or null of the file wasn't
      *                                            found
+     * @throws GuzzleException
      * @throws coding_exception
      * @throws dml_exception
+     * @throws request_error
      * @throws invalid_dataroot_permissions
      */
     public function download_public_static_file(string $packagehash, string $namespace, string $shortname, string $path,

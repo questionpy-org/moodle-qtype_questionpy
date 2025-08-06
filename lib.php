@@ -23,7 +23,7 @@
  */
 
 use core\di;
-use qtype_questionpy\static_file_service;
+use qtype_questionpy\local\files\static_file_service;
 
 /**
  * Checks file access for QuestionPy questions.
