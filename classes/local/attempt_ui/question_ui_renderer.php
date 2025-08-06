@@ -26,7 +26,7 @@ use DOMProcessingInstruction;
 use DOMText;
 use DOMXPath;
 use qtype_questionpy\constants;
-use qtype_questionpy\static_file_service;
+use qtype_questionpy\local\files\static_file_service;
 use qtype_questionpy\utils;
 use qtype_questionpy_question;
 use question_attempt;

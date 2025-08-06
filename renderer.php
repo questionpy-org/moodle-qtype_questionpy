@@ -27,8 +27,8 @@ use qtype_questionpy\local\api\attempt_ui;
 use qtype_questionpy\local\api\feedback_type;
 use qtype_questionpy\local\api\js_module_call;
 use qtype_questionpy\local\attempt_ui\question_ui_renderer;
+use qtype_questionpy\local\files\static_file_service;
 use qtype_questionpy\qpy_question_display_options;
-use qtype_questionpy\static_file_service;
 use qtype_questionpy\utils;
 
 /**
