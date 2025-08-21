@@ -19,6 +19,7 @@ namespace qtype_questionpy\local\package;
 use dml_exception;
 use moodle_exception;
 use qtype_questionpy\last_used_service;
+use qtype_questionpy\local\api\package_type;
 use qtype_questionpy\local\array_converter\array_converter;
 
 /**
@@ -43,7 +44,7 @@ class package extends package_base {
      * @param string $shortname
      * @param string $namespace
      * @param array $name
-     * @param string $type
+     * @param package_type $type
      * @param string|null $author
      * @param string|null $url
      * @param array|null $languages
@@ -52,7 +53,7 @@ class package extends package_base {
      * @param string|null $license
      * @param array|null $tags
      */
-    public function __construct(int $id, string $shortname, string $namespace, array $name, string $type,
+    public function __construct(int $id, string $shortname, string $namespace, array $name, package_type $type,
                                 ?string $author = null, ?string $url = null, ?array $languages = null,
                                 ?array $description = null, ?string $icon = null, ?string $license = null,
                                 ?array $tags = null) {

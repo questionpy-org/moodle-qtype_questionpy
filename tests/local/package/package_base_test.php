@@ -16,6 +16,8 @@
 
 namespace qtype_questionpy\local\package;
 
+use qtype_questionpy\local\api\package_type;
+
 /**
  * Unit tests for the questionpy package_base class.
  *
@@ -32,7 +34,7 @@ final class package_base_test extends \advanced_testcase {
      */
     public function test_get_localized_name(): void {
         $name = ['en' => 'english_name', 'de' => 'german_name', 'fr' => 'french_name'];
-        $package = new package_base('shortname', 'default', $name, 'question');
+        $package = new package_base('shortname', 'default', $name, package_type::questiontype);
 
         // Every language in package exists in preferred language.
         $languages = ['en', 'de', 'fr'];
@@ -48,7 +50,7 @@ final class package_base_test extends \advanced_testcase {
 
         // Preferred language and fallback language in package does not exist.
         $name = ['de' => 'german_name', 'fr' => 'french_name'];
-        $package = new package_base('shortname', 'default', $name, 'question');
+        $package = new package_base('shortname', 'default', $name, package_type::questiontype);
         $this->assertEquals($name['de'], $package->get_localized_name($languages));
     }
 
@@ -64,7 +66,7 @@ final class package_base_test extends \advanced_testcase {
             'shortname',
             'default',
             ['en' => 'english_name'],
-            'question',
+            package_type::questiontype,
             'author',
             'url',
             [],
@@ -89,7 +91,7 @@ final class package_base_test extends \advanced_testcase {
             'shortname',
             'default',
             ['en' => 'english_name'],
-            'question',
+            package_type::questiontype,
             'author',
             'url',
             [],
@@ -103,7 +105,7 @@ final class package_base_test extends \advanced_testcase {
             'shortname',
             'default',
             ['en' => 'english_name'],
-            'question',
+            package_type::questiontype,
             'author',
             'url',
             [],
@@ -117,7 +119,7 @@ final class package_base_test extends \advanced_testcase {
             'shortname',
             'default',
             ['en' => 'english_name'],
-            'question',
+            package_type::questiontype,
             'author',
             'url',
             [],

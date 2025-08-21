@@ -34,13 +34,15 @@ class attempt_started extends attempt {
     /**
      * Initializes a new instance.
      *
+     * @param string $lang
      * @param int $variant
      * @param attempt_ui $ui
      * @param string $attemptstate
      * @param array $packagedependencies
      */
-    public function __construct(int $variant, attempt_ui $ui, string $attemptstate, array $packagedependencies) {
-        parent::__construct($variant, $ui, $packagedependencies);
+    public function __construct(string $lang, int $variant, attempt_ui $ui, string $attemptstate, array $packagedependencies) {
+        parent::__construct($lang, $variant, $ui, $packagedependencies);
+
         $this->attemptstate = $attemptstate;
     }
 }
