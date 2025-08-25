@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\local\api;
 
+use qtype_questionpy\local\array_converter\attributes\array_element_class;
 use qtype_questionpy\local\array_converter\attributes\array_key;
 use qtype_questionpy\local\form\qpy_form;
 
@@ -34,6 +35,11 @@ class question_edit_form_response {
     /** @var array */
     #[array_key('form_data')]
     public array $formdata;
+
+    /** @var package_dependency[] */
+    #[array_key('package_dependencies')]
+    #[array_element_class(package_dependency::class)]
+    public array $packagedependencies;
 
     /**
      * Initialize a new question response.

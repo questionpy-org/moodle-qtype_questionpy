@@ -59,9 +59,9 @@ class attempt_ui {
     #[array_element_class(attempt_file::class)]
     public array $files = [];
 
-    /** @var string specifics TBD */
+    /** @var cache_control specifics TBD */
     #[array_key('cache_control')]
-    public string $cachecontrol = 'PRIVATE_CACHE';
+    public cache_control $cachecontrol = cache_control::no_cache;
 
     /**
      * Initializes a new instance.

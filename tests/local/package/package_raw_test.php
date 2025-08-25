@@ -17,6 +17,7 @@
 namespace qtype_questionpy\local\package;
 
 use moodle_exception;
+use qtype_questionpy\local\api\package_type;
 use qtype_questionpy\local\array_converter\array_converter;
 
 defined('MOODLE_INTERNAL') || die;
@@ -45,7 +46,7 @@ final class package_raw_test extends \advanced_testcase {
                     'namespace' => 'namespace',
                     'name' => [],
                     'version' => '1.0.0',
-                    'type' => 'question',
+                    'type' => package_type::questiontype->value,
                 ],
             ],
             'Maximal package data' => [
@@ -55,7 +56,7 @@ final class package_raw_test extends \advanced_testcase {
                     'namespace' => 'namespace',
                     'name' => [],
                     'version' => '1.0.0',
-                    'type' => 'question',
+                    'type' => package_type::questiontype->value,
 
                     'author' => 'author',
                     'url' => 'url',
@@ -73,7 +74,7 @@ final class package_raw_test extends \advanced_testcase {
                     'namespace' => 'namespace',
                     'name' => [],
                     'version' => '1.0.0',
-                    'type' => 'question',
+                    'type' => package_type::questiontype->value,
                     'tags' => ['tag1', 'tag2'],
                 ],
             ],
@@ -84,7 +85,7 @@ final class package_raw_test extends \advanced_testcase {
                     'namespace' => 'namespace',
                     'name' => ['en' => 'en_name'],
                     'version' => '1.0.0',
-                    'type' => 'question',
+                    'type' => package_type::questiontype->value,
                     'languages' => ['en'],
                     'description' => ['en' => 'en_description'],
                 ],
@@ -96,7 +97,7 @@ final class package_raw_test extends \advanced_testcase {
                     'namespace' => 'namespace',
                     'name' => ['en' => 'en_name', 'de' => 'de_name', 'fr' => 'fr_name'],
                     'version' => '1.0.0',
-                    'type' => 'question',
+                    'type' => package_type::questiontype->value,
                     'languages' => ['en', 'de', 'fr'],
                     'description' => ['en' => 'en_description', 'de' => 'de_description', 'fr' => 'fr_description'],
                 ],
@@ -108,7 +109,7 @@ final class package_raw_test extends \advanced_testcase {
                     'namespace' => 'namespace',
                     'name' => ['en' => 'en_name', 'de' => 'de_name', 'fr' => 'fr_name'],
                     'version' => '1.0.0',
-                    'type' => 'question',
+                    'type' => package_type::questiontype->value,
                     'languages' => ['en', 'de', 'fr'],
                     'description' => ['en' => 'en_description', 'de' => 'de_description', 'fr' => 'fr_description'],
                     'tags' => ['tag1', 'tag2'],

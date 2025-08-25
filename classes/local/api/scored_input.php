@@ -14,29 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\exception;
+namespace qtype_questionpy\local\api;
 
-// phpcs:ignore moodle.Commenting.InlineComment.DocBlock
+
 /**
- * Possible request error codes.
+ * Scored input.
  *
  * @package    qtype_questionpy
  * @author     Jan Britz
  * @copyright  2025 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-enum error_code: string {
-    case package_permission_error = 'PACKAGE_PERMISSION_ERROR';
-    case queue_waiting_timeout = 'QUEUE_WAITING_TIMEOUT';
-    case worker_timeout = 'WORKER_TIMEOUT';
-    case out_of_memory = 'OUT_OF_MEMORY';
-    case invalid_attempt_state = 'INVALID_ATTEMPT_STATE';
-    case invalid_question_state = 'INVALID_QUESTION_STATE';
-    case invalid_package = 'INVALID_PACKAGE';
-    case invalid_request = 'INVALID_REQUEST';
-    case invalid_options_form = 'INVALID_OPTIONS_FORM';
-    case package_error = 'PACKAGE_ERROR';
-    case package_not_found = 'PACKAGE_NOT_FOUND';
-    case callback_api_error = 'CALLBACK_API_ERROR';
-    case server_error = 'SERVER_ERROR';
+class scored_input {
+    /** @var scored_input_state */
+    public scored_input_state $state;
+
+    /** @var float|null */
+    public ?float $score = null;
 }

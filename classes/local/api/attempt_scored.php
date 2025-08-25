@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\local\api;
 
+use qtype_questionpy\local\array_converter\attributes\array_element_class;
 use qtype_questionpy\local\array_converter\attributes\array_key;
 
 /**
@@ -29,27 +30,42 @@ use qtype_questionpy\local\array_converter\attributes\array_key;
 class attempt_scored extends attempt {
     /** @var string|null */
     #[array_key('scoring_state')]
-    public ?string $scoringstate;
+    public ?string $scoringstate = null;
 
     /** @var scoring_code */
     #[array_key('scoring_code')]
     public scoring_code $scoringcode;
 
     /** @var float|null */
-    public ?float $score = null;
+    public ?float $score;
+
+    /** @var float|null */
+    #[array_key('score_adjusted')]
+    public ?float $scoreadjusted;
+
+    /** @var array<string, scored_input> */
+    #[array_key('scored_inputs')]
+    #[array_element_class(scored_input::class)]
+    public ?array $scoredinputs = [];
+
+    /** @var array<string, scored_subquestion> */
+    #[array_key('scored_subquestions')]
+    #[array_element_class(scored_subquestion::class)]
+    public ?array $scoredsubquestions;
 
     /**
      * Initializes a new instance.
      *
+     * @param string $lang
      * @param int $variant
      * @param attempt_ui $ui
      * @param scoring_code $scoringcode
      * @param string|null $scoringstate
      * @param package_dependency[] $packagedependencies
      */
-    public function __construct(int $variant, attempt_ui $ui, scoring_code $scoringcode, ?string $scoringstate,
+    public function __construct(string $lang, int $variant, attempt_ui $ui, scoring_code $scoringcode, ?string $scoringstate,
                                 array $packagedependencies) {
-        parent::__construct($variant, $ui, $packagedependencies);
+        parent::__construct($lang, $variant, $ui, $packagedependencies);
 
         $this->scoringstate = $scoringstate;
         $this->scoringcode = $scoringcode;

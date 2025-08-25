@@ -25,6 +25,7 @@
 namespace qtype_questionpy;
 
 use moodle_exception;
+use qtype_questionpy\local\api\package_type;
 use qtype_questionpy\local\array_converter\array_converter;
 use qtype_questionpy\local\form\conditions\does_not_equal;
 use qtype_questionpy\local\form\conditions\equals;
@@ -63,7 +64,7 @@ function package_versions_info_provider(?array $packageinfo = null, ?array $vers
             'en' => 'en: My Name',
             'de' => 'de: My Name',
         ],
-        'type' => 'questiontype',
+        'type' => package_type::questiontype->value,
         'author' => 'John Doe',
         'url' => 'https://www.example.com/',
         'languages' => ['en', 'de'],

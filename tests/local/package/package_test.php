@@ -17,6 +17,7 @@
 namespace qtype_questionpy\local\package;
 
 use moodle_exception;
+use qtype_questionpy\local\api\package_type;
 use function qtype_questionpy\package_versions_info_provider;
 
 defined('MOODLE_INTERNAL') || die;
@@ -146,8 +147,8 @@ final class package_test extends \advanced_testcase {
      * @return void
      */
     public function test_difference_from(): void {
-        $package1 = new package(0, 'shortname', 'namespace', [], 'type', 'author', 'url', ['en', 'de']);
-        $package2 = new package(1, 'shortname', 'namespace', [], 'type', 'author', 'url', ['de', 'en']);
+        $package1 = new package(0, 'shortname', 'namespace', [], package_type::questiontype, 'author', 'url', ['en', 'de']);
+        $package2 = new package(1, 'shortname', 'namespace', [], package_type::questiontype, 'author', 'url', ['de', 'en']);
 
         $difference = $package1->difference_from($package2);
         $this->assertEmpty($difference);

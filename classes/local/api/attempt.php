@@ -27,7 +27,7 @@ use qtype_questionpy\local\array_converter\attributes\array_key;
  * @copyright  2023 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class attempt {
+class attempt extends localized {
     /** @var int */
     public int $variant;
 
@@ -42,11 +42,14 @@ class attempt {
     /**
      * Initializes a new instance.
      *
+     * @param string $lang
      * @param int $variant
      * @param attempt_ui $ui
      * @param package_dependency[] $packagedependencies
      */
-    public function __construct(int $variant, attempt_ui $ui, array $packagedependencies) {
+    public function __construct(string $lang, int $variant, attempt_ui $ui, array $packagedependencies) {
+        parent::__construct($lang);
+
         $this->variant = $variant;
         $this->ui = $ui;
         $this->packagedependencies = $packagedependencies;

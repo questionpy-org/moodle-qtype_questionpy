@@ -17,6 +17,7 @@
 namespace qtype_questionpy\local\package;
 
 use moodle_exception;
+use qtype_questionpy\local\api\package_type;
 use qtype_questionpy\local\array_converter\array_converter;
 use qtype_questionpy\local\array_converter\attributes\array_alias;
 use qtype_questionpy\local\array_converter\attributes\array_key;
@@ -47,9 +48,9 @@ class package_base {
     public readonly array $name;
 
     /**
-     * @var string package type
+     * @var package_type package type
      */
-    public readonly string $type;
+    public readonly package_type $type;
 
     /**
      * @var string|null package author
@@ -92,7 +93,7 @@ class package_base {
      * @param string $shortname
      * @param string $namespace
      * @param array $name
-     * @param string $type
+     * @param package_type $type
      * @param string|null $author
      * @param string|null $url
      * @param array|null $languages
@@ -101,7 +102,7 @@ class package_base {
      * @param string|null $license
      * @param array|null $tags
      */
-    public function __construct(string $shortname, string $namespace, array $name, string $type,
+    public function __construct(string $shortname, string $namespace, array $name, package_type $type,
                                 ?string $author = null, ?string $url = null, ?array $languages = null,
                                 ?array $description = null, ?string $icon = null, ?string $license = null,
                                 ?array $tags = null) {

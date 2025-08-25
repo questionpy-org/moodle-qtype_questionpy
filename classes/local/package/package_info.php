@@ -72,7 +72,7 @@ class package_info extends package_base {
         $id = $DB->insert_record('qtype_questionpy_package', [
             'shortname' => $this->shortname,
             'namespace' => $this->namespace,
-            'type' => $this->type,
+            'type' => $this->type->value,
             'author' => $this->author,
             'url' => $this->url,
             'icon' => $this->icon,
@@ -123,7 +123,7 @@ class package_info extends package_base {
         $transaction = $DB->start_delegated_transaction();
         $DB->update_record('qtype_questionpy_package', [
             'id' => $id,
-            'type' => $this->type,
+            'type' => $this->type->value,
             'author' => $this->author,
             'url' => $this->url,
             'icon' => $this->icon,

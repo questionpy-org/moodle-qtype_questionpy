@@ -25,7 +25,9 @@ use dml_exception;
 use moodle_exception;
 use qtype_questionpy\local\api\api;
 use qtype_questionpy\local\api\package_api;
+use qtype_questionpy\local\api\package_type;
 use qtype_questionpy\local\api\question_response;
+use qtype_questionpy\local\api\scoring_method;
 use qtype_questionpy\local\array_converter\array_converter;
 use qtype_questionpy\local\package\package;
 use qtype_questionpy\local\package\package_raw;
@@ -119,7 +121,7 @@ final class question_service_test extends \advanced_testcase {
             ->expects($this->once())
             ->method('create_question')
             ->with($oldstate, (object) $formdata)
-            ->willReturn(new question_response($newstate, ''));
+            ->willReturn(new question_response('en', $newstate, scoring_method::automatically_scorable));
 
         $this->questionservice->upsert_question(
             (object)[
@@ -157,7 +159,7 @@ final class question_service_test extends \advanced_testcase {
             ->expects($this->once())
             ->method('create_question')
             ->with($oldstate, (object) $formdata)
-            ->willReturn(new question_response($oldstate, ''));
+            ->willReturn(new question_response('en', $oldstate, scoring_method::automatically_scorable));
 
         $this->questionservice->upsert_question(
             (object)[
@@ -200,7 +202,7 @@ final class question_service_test extends \advanced_testcase {
             ->expects($this->once())
             ->method('create_question')
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, ''));
+            ->willReturn(new question_response('en', $newstate, scoring_method::automatically_scorable));
 
         $this->questionservice->upsert_question(
             (object)[
@@ -228,7 +230,13 @@ final class question_service_test extends \advanced_testcase {
         $hash = hash('sha256', rand());
         $rawpackage = array_converter::from_array(
             package_raw::class,
-            ['package_hash' => $hash, 'short_name' => 'sn', 'namespace' => 'ns', 'name' => ['en' => 'name'], 'type' => 'X']
+            [
+                'package_hash' => $hash,
+                'short_name' => 'sn',
+                'namespace' => 'ns',
+                'name' => ['en' => 'name'],
+                'type' => package_type::questiontype->value,
+            ],
         );
 
         // Retrieve the package data from the application serve.
@@ -245,7 +253,7 @@ final class question_service_test extends \advanced_testcase {
             ->expects($this->once())
             ->method('create_question')
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, ''));
+            ->willReturn(new question_response('en', $newstate, scoring_method::automatically_scorable));
 
         $this->questionservice->upsert_question(
             (object)[
@@ -285,7 +293,7 @@ final class question_service_test extends \advanced_testcase {
             ->expects($this->once())
             ->method('create_question')
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, ''));
+            ->willReturn(new question_response('en', $newstate, scoring_method::automatically_scorable));
 
         $this->questionservice->upsert_question(
             (object)[
@@ -327,7 +335,7 @@ final class question_service_test extends \advanced_testcase {
             ->expects($this->exactly(2))
             ->method('create_question')
             ->with(null, (object) $formdata)
-            ->willReturn(new question_response($newstate, ''));
+            ->willReturn(new question_response('en', $newstate, scoring_method::automatically_scorable));
 
         $this->questionservice->upsert_question(
             (object)[
