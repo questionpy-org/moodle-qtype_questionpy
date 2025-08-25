@@ -245,21 +245,31 @@ class qtype_questionpy_renderer extends qtype_renderer {
         );
 
         $roles = $renderer->get_user_roles();
-        $this->page->requires->js_call_amd(
-            'qtype_questionpy/view_question',
-            'init',
-            [
-                $options->readonly,
-                $options->generalfeedback === question_display_options::VISIBLE,
-                $options->feedback === question_display_options::VISIBLE,
-                $options->rightanswer === question_display_options::VISIBLE,
-                $options->correctness === question_display_options::VISIBLE,
-                $qpyresponseid,
-                $roles,
-                utils::get_qpy_response($qa)->data ?? (object)[],
-                intval($CFG->branch),
-            ]
-        );
+
+        $errorlevels = error_reporting();
+        try {
+            // FIXME: This ignores the "too much data" warning emitted by js_call_amd as a quick fix, we should look into passing
+            // the response another way later on.
+            error_reporting($errorlevels & ~E_USER_NOTICE);
+            $this->page->requires->js_call_amd(
+                'qtype_questionpy/view_question',
+                'init',
+                [
+                    $options->readonly,
+                    $options->generalfeedback === question_display_options::VISIBLE,
+                    $options->feedback === question_display_options::VISIBLE,
+                    $options->rightanswer === question_display_options::VISIBLE,
+                    $options->correctness === question_display_options::VISIBLE,
+                    $qpyresponseid,
+                    $roles,
+                    utils::get_qpy_response($qa)->data ?? (object)[],
+                    intval($CFG->branch),
+                ]
+            );
+        } finally {
+            error_reporting($errorlevels);
+        }
+
         $this->add_package_js_calls($ui->javascriptcalls, $roles, $options);
 
         return $this->render_from_template('qtype_questionpy/iframe_question_content', [
