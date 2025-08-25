@@ -25,12 +25,14 @@
 $string['attempt_detail_heading'] = 'QuestionPy Details for Attempt {$a}';
 $string['attempt_detail_link'] = 'QuestionPy-specific details';
 $string['attempt_does_not_exist'] = 'The attempt does not exist anymore.';
+$string['attempt_maximize'] = 'Maximize this question';
 $string['attempt_not_questionpy'] = 'This is not an attempt at a QuestionPy question, but at a \'{$a}\' question.';
 $string['attempt_preview'] = 'Preview';
 $string['attempt_state_moodle'] = 'Moodle Attempt State';
 $string['attempt_state_qpy'] = 'QuestionPy Attempt State';
 $string['attempt_step_no'] = 'Step #';
 $string['attempt_steps'] = 'Attempt Steps';
+$string['attempt_unmaximize'] = 'Return this question to its normal size';
 $string['change_package'] = 'Change';
 $string['contact_administrator'] = 'Please contact an administrator.';
 $string['disable_json_formatting'] = 'Disable JSON formatting';

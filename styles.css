@@ -29,8 +29,51 @@
     border: 0;
     padding: 0;
     width: 100%;
-    height: 0;
+    height: 100%;
     display: block; /* Remove space that is reserved below inline elements for descender characters (y, q, g). */
+}
+
+
+.qpy-extra-actions {
+    /* Lifted from STACK's question dashboard link. */
+    float: right;
+    font-size: .8em;
+    margin: .3em -.3em;
+
+    & > :not(:last-child) {
+        margin-right: 1em;
+    }
+}
+
+.qpy-unmaximize-button {
+    display: none;
+}
+
+.qpy-outer-maximized {
+    /* TODO: Create a separate container which will be maximized instead of using the formulation so we don't need to
+        use !important. */
+    position: fixed !important;
+    box-sizing: border-box;
+    width: 100vw;
+    height: 100vw;
+    top: 0;
+    left: 0;
+    background-color: var(--bs-body-bg);
+    z-index: 1000000;
+    padding: 0 !important;
+
+    & .qpy-maximize-button {
+        display: none;
+    }
+
+    & .qpy-unmaximize-button {
+        display: revert;
+    }
+}
+
+html:has(.qpy-outer-maximized) {
+    /* When there is maximized content, hide the scrollbar belonging to what's underneath. */
+    overflow-y: hidden;
 }
 
 body.questionpy-iframe-body {
@@ -235,13 +278,6 @@ body.questionpy-iframe-body .que .content {
 .qpy-show-more .collapse > :last-child {
     padding-bottom: 0;
     margin-bottom: 0;
-}
-
-.qpy-details-link {
-    /* Lifted from STACK's question dashboard link. */
-    float: right;
-    font-size: .8em;
-    margin: -.3em -.3em;
 }
 
 .qpy-steps-table {

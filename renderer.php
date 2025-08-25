@@ -103,16 +103,37 @@ class qtype_questionpy_renderer extends qtype_renderer {
             }
 
             $result = '';
-            if (
-                ($options->qpyattemptdetailslink ?? question_display_options::VISIBLE) === question_display_options::VISIBLE
-                && has_capability(constants::ROLE_VIEW_DETAILS, $options->context)
-            ) {
-                $detailsurl = new moodle_url(
-                    '/question/type/questionpy/attemptdetails.php',
-                    ['attemptid' => $qa->get_database_id()]
-                );
-                $result .= "<a class='qpy-details-link' href='{$detailsurl->out()}' target='_blank'>"
-                    . get_string('attempt_detail_link', 'qtype_questionpy') . '</a>';
+
+            $showdetailslink = ($options->qpyattemptdetailslink ?? question_display_options::VISIBLE) === question_display_options::VISIBLE
+                && has_capability(constants::ROLE_VIEW_DETAILS, $options->context);
+            $showmaximizebutton = true;
+            if ($showdetailslink || $showmaximizebutton) {
+                $result .= '<span class="qpy-extra-actions">';
+
+                if ($showdetailslink) {
+                    $detailsurl = new moodle_url(
+                        '/question/type/questionpy/attemptdetails.php',
+                        ['attemptid' => $qa->get_database_id()]
+                    );
+                    $result .= "<a href='{$detailsurl->out()}' target='_blank'>"
+                        . get_string('attempt_detail_link', 'qtype_questionpy') . '</a>';
+                }
+
+                if ($showmaximizebutton) {
+                    $maximizebuttonid = $questiondivid . '-maximize';
+                    $unmaximizebuttonid = $questiondivid . '-unmaximize';
+                    $result .= "<a id='{$maximizebuttonid}' class='qpy-maximize-button' href='#'><i class='fa fa-maximize'></i>"
+                        . get_string('attempt_maximize', 'qtype_questionpy') . '</a>';
+                    $result .= "<a id='{$unmaximizebuttonid}' class='qpy-unmaximize-button' href='#'><i class='fa fa-minimize'></i>"
+                        . get_string('attempt_unmaximize', 'qtype_questionpy') . '</a>';
+                    $this->page->requires->js_call_amd(
+                        'qtype_questionpy/view_question',
+                        'addMaximizeEventHandlers',
+                        [$maximizebuttonid, $unmaximizebuttonid, $iframeid]
+                    );
+                }
+
+                $result .= '</span>';
             }
 
             // When the user changes their answer within the iframe, the value of the following hidden input field gets updated.
@@ -407,9 +428,9 @@ EOD;
 
         // Resize iframe when content height changes.
         const resize = function() {
-            if (window.frameElement) {
+            // If the question is maximized, we don't care how large its content is, the container is always as large as it can be.
+            if (window.frameElement && window.frameElement.closest(".qpy-outer-maximized") == null) {
                 window.frameElement.style.height = document.body.scrollHeight + 'px';
-                window.frameElement.style.width = '100%';
             }
         };
         resize();

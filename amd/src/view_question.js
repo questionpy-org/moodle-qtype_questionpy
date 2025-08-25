@@ -439,3 +439,27 @@ export function addIframeFormDataOnSubmit(iframeId, responseFieldName) {
         event.formData.set(responseFieldName, jsonFormData);
     });
 }
+
+export function addMaximizeEventHandlers(maximizeButtonId, unmaximizeButtonId, iframeId) {
+    const maximizeButton = window.document.getElementById(maximizeButtonId);
+    const unmaximizeButton = window.document.getElementById(unmaximizeButtonId);
+    const iframe = window.document.getElementById(iframeId);
+    const formulation = iframe.closest(".formulation");
+
+    maximizeButton.addEventListener("click", (event) => {
+        event.preventDefault();
+
+        formulation.classList.add("qpy-outer-maximized");
+        // Remove the inline height set by the ResizeObserver.
+        iframe.style.removeProperty("height");
+
+        // Style the iframe body "inside".
+        iframe.contentWindow?.document?.body?.classList?.add("qpy-maximized");
+    });
+
+    unmaximizeButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        formulation.classList.remove("qpy-outer-maximized");
+        iframe.contentWindow?.document?.body?.classList?.remove("qpy-maximized");
+    });
+}
