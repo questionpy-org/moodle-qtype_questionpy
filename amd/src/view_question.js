@@ -123,6 +123,11 @@ export async function init(
         data,
         environmentVersion,
     );
+
+    // TODO: The package's main.js sets the attempt it is given in the iframe, so this shouldn't be necessary.
+    //       Rarely, that doesn't work though. This might require more research, but I suppose it might make sense to
+    //       set a window property either way.
+    window.attempt = attempt;
 }
 
 /**
@@ -440,6 +445,15 @@ export function addIframeFormDataOnSubmit(iframeId, responseFieldName) {
     });
 }
 
+/**
+ * Adds click handlers for the maximize and unmaximize buttons.
+ *
+ * This function must be called outside the iframe, on the parent window.
+ *
+ * @param {string} maximizeButtonId
+ * @param {string} unmaximizeButtonId
+ * @param {string} iframeId
+ */
 export function addMaximizeEventHandlers(maximizeButtonId, unmaximizeButtonId, iframeId) {
     const maximizeButton = window.document.getElementById(maximizeButtonId);
     const unmaximizeButton = window.document.getElementById(unmaximizeButtonId);
