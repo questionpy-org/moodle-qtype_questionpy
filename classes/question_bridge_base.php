@@ -85,11 +85,11 @@ abstract class question_bridge_base {
 
         if (in_array('course_id', $requestedattributes)) {
             $coursecontext = $this->context->get_course_context(false);
-            $lmsattributes['course_id'] = ($coursecontext) ? intval($coursecontext->instanceid) : null;
+            $lmsattributes['course_id'] = $coursecontext ? $coursecontext->instanceid : null;
         }
 
         if (in_array('attempt_id', $requestedattributes)) {
-            $lmsattributes['attempt_id'] = (int) $this->attempt->get_database_id();
+            $lmsattributes['attempt_id'] = $this->attempt->get_database_id();
         }
 
         $lmsattributes += $this->get_additional_lms_attributes($requestedattributes);
