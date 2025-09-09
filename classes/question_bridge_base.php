@@ -18,6 +18,7 @@ namespace qtype_questionpy;
 
 use core\context;
 use core\exception\coding_exception;
+use core\exception\moodle_exception;
 use core_user\fields;
 
 /**
@@ -253,6 +254,10 @@ abstract class question_bridge_base {
      */
     public static function create(\question_attempt $attempt): self {
         global $DB;
+
+        if ($attempt->get_database_id() === null || !is_numeric($attempt->get_usage_id())) {
+            throw new moodle_exception('attempt_not_saved', 'qtype_questionpy');
+        }
 
         $usage = $DB->get_record('question_usages', ['id' => $attempt->get_usage_id()], '*', MUST_EXIST);
         $context = context::instance_by_id($usage->contextid);

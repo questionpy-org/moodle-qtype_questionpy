@@ -26,6 +26,7 @@ $string['attempt_detail_heading'] = 'QuestionPy Details for Attempt {$a}';
 $string['attempt_detail_link'] = 'QuestionPy-specific details';
 $string['attempt_does_not_exist'] = 'The attempt does not exist anymore.';
 $string['attempt_not_questionpy'] = 'This is not an attempt at a QuestionPy question, but at a \'{$a}\' question.';
+$string['attempt_not_saved'] = 'The attempt has not yet been saved to the database.';
 $string['attempt_preview'] = 'Preview';
 $string['attempt_state_moodle'] = 'Moodle Attempt State';
 $string['attempt_state_qpy'] = 'QuestionPy Attempt State';
