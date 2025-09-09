@@ -29,6 +29,7 @@ use qtype_questionpy\local\api\attempt_ui;
 use qtype_questionpy\local\api\package_dependency;
 use qtype_questionpy\local\api\scoring_code;
 use qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor;
+use qtype_questionpy\question_bridge_base;
 use qtype_questionpy\utils;
 
 /**
@@ -64,6 +65,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
     /** @var qbehaviour_questionpy|null $behaviour */
     public ?qbehaviour_questionpy $behaviour = null;
+
+    /** @var question_bridge_base|null $bridge bridge to get additional information about an attempt */
+    public ?question_bridge_base $bridge = null;
 
     /**
      * Initialize a new question. Called from {@see qtype_questionpy::make_question_instance()}.
@@ -410,5 +414,30 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         question_engine::load_behaviour_class('questionpy');
         $delegate = parent::make_behaviour($qa, $preferredbehaviour);
         return new qbehaviour_questionpy($qa, $preferredbehaviour, $delegate);
+    }
+
+    /**
+     * Get the QuestionPy bridge used to retrieve additional information about an attempt.
+     *
+     * @return question_bridge_base
+     */
+    public function get_bridge(): question_bridge_base {
+        if ($this->bridge === null) {
+            $this->bridge = question_bridge_base::create($this->get_behaviour()->get_qa());
+        }
+        return $this->bridge;
+    }
+
+    /**
+     * Explicitly set the bridge to use for this question.
+     *
+     * The plugin that uses this question may call this method so the bridge object does not need to fetch
+     * some data again from the database.
+     *
+     * @param question_bridge_base $bridge
+     * @return void
+     */
+    public function set_bridge(question_bridge_base $bridge): void {
+        $this->bridge = $bridge;
     }
 }
