@@ -74,7 +74,7 @@ final class question_service_test extends \advanced_testcase {
     public function test_get_question_should_load_package_and_state(): void {
         $pvi = package_versions_info_provider();
         $pvi->upsert();
-        [$statestr, $qpyid] = $this->setup_question($pvi->versions[0]->hash);
+        [$statestr, $qpyid, $questiondata] = $this->setup_question($pvi->versions[0]->hash);
 
         $result = $this->questionservice->get_question(1);
 
@@ -84,6 +84,7 @@ final class question_service_test extends \advanced_testcase {
                 'qpy_package_hash' => $pvi->versions[0]->hash,
                 'qpy_state' => $statestr,
                 'qpy_is_local' => '0',
+                'qpy_question_data' => $questiondata,
             ],
             $result
         );
@@ -438,7 +439,7 @@ final class question_service_test extends \advanced_testcase {
         ';
 
         $response = new question_response('en', $statestr, scoring_method::automatically_scorable);
-        $questiondata = question_data::from_question_response($response);
+        $questiondata = question_data::from_question_response($response)->to_json();
 
         global $DB;
         $qpyid = $DB->insert_record('qtype_questionpy', [
@@ -447,10 +448,10 @@ final class question_service_test extends \advanced_testcase {
             'pkgversionhash' => $pkgversionhash,
             'islocal' => false,
             'state' => $statestr,
-            'questiondata' => $questiondata->to_json(),
+            'questiondata' => $questiondata,
         ]);
 
-        return [$statestr, $qpyid];
+        return [$statestr, $qpyid, $questiondata];
     }
 
     /**

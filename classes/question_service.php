@@ -90,8 +90,9 @@ class question_service {
         }
         $result->qpy_id = $record->id;
         $result->qpy_package_hash = $record->pkgversionhash;
-        $result->qpy_state = $record->state;
         $result->qpy_is_local = $record->islocal;
+        $result->qpy_state = $record->state;
+        $result->qpy_question_data = $record->questiondata;
         return $result;
     }
 
