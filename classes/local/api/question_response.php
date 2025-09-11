@@ -73,11 +73,18 @@ class question_response extends localized {
      * @param string $lang
      * @param string $state new question state
      * @param scoring_method $scoringmethod
+     * @param lms_permissions|null $lmspermissions
      */
-    public function __construct(string $lang, string $state, scoring_method $scoringmethod) {
+    public function __construct(
+        string $lang,
+        string $state,
+        scoring_method $scoringmethod,
+        ?lms_permissions $lmspermissions = null
+    ) {
         parent::__construct($lang);
 
         $this->state = $state;
         $this->scoringmethod = $scoringmethod;
+        $this->lmspermissions = $lmspermissions;
     }
 }

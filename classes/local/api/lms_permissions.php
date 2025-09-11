@@ -28,4 +28,13 @@ namespace qtype_questionpy\local\api;
 class lms_permissions {
     /** @var string[] */
     public array $attributes = [];
+
+    /**
+     * Constructs {@see lms_permissions}.
+     *
+     * @param array $attributes
+     */
+    public function __construct(array $attributes) {
+        $this->attributes = $attributes;
+    }
 }

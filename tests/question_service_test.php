@@ -24,8 +24,10 @@ use coding_exception;
 use dml_exception;
 use moodle_exception;
 use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\api\lms_permissions;
 use qtype_questionpy\local\api\package_api;
 use qtype_questionpy\local\api\package_type;
+use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\local\api\question_response;
 use qtype_questionpy\local\api\scoring_method;
 use qtype_questionpy\local\array_converter\array_converter;
@@ -396,11 +398,37 @@ final class question_service_test extends \advanced_testcase {
     }
 
     /**
+     * Tests methods of {@see question_data}.
+     *
+     * @throws moodle_exception
+     * @covers \qtype_questionpy\local\api\question_data::from_question_response
+     * @covers \qtype_questionpy\local\api\question_data::to_json
+     * @covers \qtype_questionpy\local\api\question_data::from_json
+     */
+    public function test_extra_question_data(): void {
+        $attributes = ['attempt_id', 'group_id', 'user_id'];
+        $permissions = new lms_permissions($attributes);
+
+        $response = new question_response(
+            'en',
+            '{}',
+            scoring_method::automatically_scorable,
+            $permissions,
+        );
+        $data = question_data::from_question_response($response);
+        $this->assertEquals($attributes, $data->permissions->attributes);
+
+        $json = $data->to_json();
+        $back = question_data::from_json($json);
+        $this->assertObjectEquals($data, $back);
+    }
+
+    /**
      * Inserts a question using the given package into the DB and returns the state string and question id.
      *
      * @param string $pkgversionhash package version hash
      * @return array[string, int]
-     * @throws dml_exception
+     * @throws moodle_exception
      */
     private function setup_question(string $pkgversionhash): array {
         $statestr = '
@@ -409,6 +437,9 @@ final class question_service_test extends \advanced_testcase {
         }
         ';
 
+        $response = new question_response('en', $statestr, scoring_method::automatically_scorable);
+        $questiondata = question_data::from_question_response($response);
+
         global $DB;
         $qpyid = $DB->insert_record('qtype_questionpy', [
             'id' => 1,
@@ -416,6 +447,7 @@ final class question_service_test extends \advanced_testcase {
             'pkgversionhash' => $pkgversionhash,
             'islocal' => false,
             'state' => $statestr,
+            'questiondata' => $questiondata->to_json(),
         ]);
 
         return [$statestr, $qpyid];
@@ -437,7 +469,7 @@ final class question_service_test extends \advanced_testcase {
         $record = current($records);
 
         $this->assertEquals((string) $id, $record->questionid);
-        $this->assertEquals((string) $pkgversionhash, $record->pkgversionhash);
+        $this->assertEquals($pkgversionhash, $record->pkgversionhash);
         $this->assertEquals($state, $record->state);
     }
 }

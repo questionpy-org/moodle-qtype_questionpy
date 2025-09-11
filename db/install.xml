@@ -29,6 +29,7 @@
         <FIELD NAME="pkgversionhash" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="islocal" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="state" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="questiondata" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON encoded"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" />

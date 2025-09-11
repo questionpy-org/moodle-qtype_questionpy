@@ -19,6 +19,7 @@ namespace qtype_questionpy;
 use dml_exception;
 use moodle_exception;
 use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\local\package\package;
 use qtype_questionpy\local\package\package_version;
 use stdClass;
@@ -153,6 +154,8 @@ class question_service {
             (object)$question->qpy_form
         );
 
+        $questiondata = question_data::from_question_response($response);
+
         if ($existingrecord) {
             // Question record already exists, update it if necessary.
             $update = ['id' => $existingrecord->id];
@@ -163,6 +166,11 @@ class question_service {
 
             if ($existingrecord->state !== $response->state) {
                 $update['state'] = $response->state;
+            }
+
+            $existingquestiondata = question_data::from_json($existingrecord->questiondata);
+            if (!$existingquestiondata->equals($questiondata)) {
+                $update['questiondata'] = $questiondata->to_json();
             }
 
             if (count($update) > 1) {
@@ -178,6 +186,7 @@ class question_service {
                 'pkgversionhash' => $question->qpy_package_hash,
                 'islocal' => $islocal,
                 'state' => $response->state,
+                'questiondata' => $questiondata->to_json(),
             ]);
             if ($islocal) {
                 if (isset($question->qpy_package_path_name_hash)) {
