@@ -17,6 +17,7 @@
 namespace qtype_questionpy\local\array_converter;
 
 use coding_exception;
+use DateTimeInterface;
 use moodle_exception;
 use qtype_questionpy\local\array_converter\attributes\array_alias;
 use qtype_questionpy\local\array_converter\attributes\array_element_class;
@@ -111,6 +112,9 @@ class array_converter {
         }
         if ($instance instanceof \UnitEnum) {
             throw new coding_exception('Only backed enums are supported.');
+        }
+        if ($instance instanceof DateTimeInterface) {
+            return $instance->format(DateTimeInterface::ATOM);
         }
         if (is_scalar($instance) || $instance === null) {
             return $instance;
@@ -207,7 +211,7 @@ class array_converter {
      * @throws moodle_exception if a value in the raw array cannot be converted to the type of the matching property
      */
     private static function set_properties(ReflectionClass $reflect, converter_config $config,
-        object $instance, array &$raw): void {
+                                           object $instance, array &$raw): void {
         $properties = $reflect->getProperties();
         foreach ($properties as $property) {
             if ($property->isStatic()) {
@@ -294,6 +298,10 @@ class array_converter {
                     debuginfo: "The value is not a valid member of enum '$typehint'"
                 );
             }
+        }
+
+        if (is_subclass_of($typehint, DateTimeInterface::class)) {
+            return new $typehint($value);
         }
 
         if (!is_array($value)) {
