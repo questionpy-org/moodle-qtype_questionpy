@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\local\form\context;
 
+use Closure;
 use core\uuid;
 
 /**
@@ -32,6 +33,12 @@ class root_render_context extends mform_render_context {
 
     /** @var callable can be set from tests to supply mock UUIDs */
     public $uuidgen = [uuid::class, 'generate'];
+
+    /** @var (Closure(array&): void)[] $onexportcallbacks */
+    public array $onexportcallbacks = [];
+
+    /** @var (Closure(array&): void)[] $onimportcallbacks */
+    public array $onimportcallbacks = [];
 
     /**
      * Get a unique and deterministic integer for use in generated element names and IDs.
@@ -61,5 +68,32 @@ class root_render_context extends mform_render_context {
      */
     public function generate_uuid(): string {
         return ($this->uuidgen)();
+    }
+
+    /**
+     * Mutate data before it is exported from the form.
+     *
+     * This is called by {@see question_edit_form::get_data()} and {@see question_edit_form::get_submitted_data()}. The resulting
+     * data might be saved by {@see question_service::upsert_question()} or validated as a draft.
+     *
+     * The callback is given the entire question data and should mutate the parts relevant to it.
+     *
+     * @param Closure(array&): void $onexport Callback that receives form data by reference for export conversion
+     * @return void
+     */
+    public function on_export(Closure $onexport): void {
+        $this->onexportcallbacks[] = $onexport;
+    }
+
+    /**
+     * Mutate data from the QPy server before it is added to the mform in {@see question_edit_form::set_data()}.
+     *
+     * The callback is given the entire question data and should mutate the parts relevant to it.
+     *
+     * @param Closure(array&): void $onimport Callback that receives form data by reference for import conversion
+     * @return void
+     */
+    public function on_import(Closure $onimport): void {
+        $this->onimportcallbacks[] = $onimport;
     }
 }

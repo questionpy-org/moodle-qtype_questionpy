@@ -16,10 +16,13 @@
 
 namespace qtype_questionpy\local\form\context;
 
+use Closure;
 use core\uuid;
 use moodleform;
 use MoodleQuickForm;
 use qtype_questionpy\local\form\qpy_renderable;
+use qtype_questionpy\question_service;
+use question_edit_form;
 
 /**
  * Abstracts away the differences in rendering elements in a group and outside of a group.
@@ -40,41 +43,37 @@ use qtype_questionpy\local\form\qpy_renderable;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class render_context {
-    /** @var moodleform target {@see moodleform} instance, such as {@see \qtype_questionpy_edit_form} */
-    public moodleform $moodleform;
-    /**
-     * @var MoodleQuickForm target {@see MoodleQuickForm} instance, as passed to
-     *                      {@see \question_edit_form::definition_inner}
-     */
-    public MoodleQuickForm $mform;
-
-    /** @var string prefix for rendered element names */
-    public string $prefix;
-
-    /** @var array the current form data */
-    public array $data;
-
     /**
      * Initializes a new render context.
      *
-     * @param moodleform $moodleform  target {@see moodleform} instance, such as {@see \qtype_questionpy_edit_form}
-     * @param MoodleQuickForm $mform  target {@see MoodleQuickForm} instance, as passed to
+     * @param question_edit_form $moodleform target {@see question_edit_form} instance, such as {@see \qtype_questionpy_edit_form}
+     * @param MoodleQuickForm $mform target {@see MoodleQuickForm} instance, as passed to
      *                                {@see \question_edit_form::definition_inner}
-     * @param string $prefix          prefix for the names of elements in this context
-     * @param array $data             the current form data (as of last save)
+     * @param string $prefix prefix for the names of elements in this context
+     * @param array $data the current form data as of last save, in {@see self::register_rich_conversion() QPy server format}
      */
-    public function __construct(moodleform $moodleform, MoodleQuickForm $mform, string $prefix, array $data) {
-        $this->moodleform = $moodleform;
-        $this->mform = $mform;
-        $this->prefix = $prefix;
-        $this->data = $data;
+    public function __construct(
+        /** @var moodleform target {@see moodleform} instance, such as {@see \qtype_questionpy_edit_form} */
+        public question_edit_form $moodleform,
+        /**
+         * @var MoodleQuickForm target {@see MoodleQuickForm} instance, as passed to
+         *                      {@see \question_edit_form::definition_inner}
+         */
+        public MoodleQuickForm $mform,
+        /** @var object the current question being edited */
+        public readonly object $question,
+        /** @var string prefix for rendered element names */
+        public string $prefix,
+        /** @var array the current form data as of last save, in {@see self::register_rich_conversion() QPy server format} */
+        public array $data
+    ) {
     }
 
     /**
      * Create, add and return an element.
      *
-     * @param string $type   the type name of the element, as per the Moodle docs.
-     * @param string $name   the name of the generated form element.
+     * @param string $type the type name of the element, as per the Moodle docs.
+     * @param string $name the name of the generated form element.
      * @param mixed ...$args remaining arguments specific to the element type.
      * @return object the created element. Really an instance of {@see \HTML_QuickForm_element}, but the return type of
      *                       {@see MoodleQuickForm::addElement} is also an object.
@@ -94,7 +93,7 @@ abstract class render_context {
     /**
      * Sets the default of an element which has been (or will be) added independently.
      *
-     * @param string $name   the name of the target element.
+     * @param string $name the name of the target element.
      * @param mixed $default default value for the element.
      * @see MoodleQuickForm::setDefault
      */
@@ -105,14 +104,14 @@ abstract class render_context {
      *
      * Must be called *after* the element was added using {@see add_element}.
      *
-     * @param string $name            the name of the target element.
-     * @param string|null $message    message to display for invalid data.
-     * @param string $type            rule type, use getRegisteredRules() to get types.
-     * @param string|null $format     required for extra rule data.
+     * @param string $name the name of the target element.
+     * @param string|null $message message to display for invalid data.
+     * @param string $type rule type, use getRegisteredRules() to get types.
+     * @param string|null $format required for extra rule data.
      * @param string|null $validation where to perform validation: "server", "client".
-     * @param bool $reset             client-side validation: reset the form element to its original value if there is
+     * @param bool $reset client-side validation: reset the form element to its original value if there is
      *                                an error?
-     * @param bool $force             force the rule to be applied, even if the target form element does not exist.
+     * @param bool $force force the rule to be applied, even if the target form element does not exist.
      * @see MoodleQuickForm::addRule
      */
     abstract public function add_rule(string $name, ?string $message, string $type, ?string $format = null,
@@ -122,9 +121,9 @@ abstract class render_context {
      * Adds a condition which will disable the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param string $dependency  absolute name of the element which is depended on
-     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
-     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
+     * @param string $dependency absolute name of the element which is depended on
+     * @param string $operator one of a fixed set of conditions, as in {@see MoodleQuickForm::disabledIf}
+     * @param mixed $value for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see MoodleQuickForm::disabledIf
      */
     abstract public function disable_if(string $dependant, string $dependency, string $operator, $value = null): void;
@@ -133,9 +132,9 @@ abstract class render_context {
      * Adds a condition which will hide the named element if met.
      *
      * @param string $dependant name of the element which has the dependency on another element
-     * @param string $dependency  absolute name of the element which is depended on
-     * @param string $operator  one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
-     * @param mixed $value      for conditions requiring it, the value to compare with. Ignored otherwise.
+     * @param string $dependency absolute name of the element which is depended on
+     * @param string $operator one of a fixed set of conditions, as in {@see MoodleQuickForm::hideIf}
+     * @param mixed $value for conditions requiring it, the value to compare with. Ignored otherwise.
      * @see MoodleQuickForm::hideIf
      */
     abstract public function hide_if(string $dependant, string $dependency, string $operator, $value = null): void;
@@ -220,4 +219,27 @@ abstract class render_context {
      * @return string
      */
     abstract public function generate_uuid(): string;
+
+    /**
+     * Mutate data before it is exported from the form.
+     *
+     * This is called by {@see question_edit_form::get_data()} and {@see question_edit_form::get_submitted_data()}. The resulting
+     * data might be saved by {@see question_service::upsert_question()} or validated as a draft.
+     *
+     * The callback is given the entire question data and should mutate the parts relevant to it.
+     *
+     * @param Closure(array&): void $onexport Callback that receives form data by reference for export conversion
+     * @return void
+     */
+    abstract public function on_export(Closure $onexport): void;
+
+    /**
+     * Mutate data from the QPy server before it is added to the mform in {@see question_edit_form::set_data()}.
+     *
+     * The callback is given the entire question data and should mutate the parts relevant to it.
+     *
+     * @param Closure(array&): void $onimport Callback that receives form data by reference for import conversion
+     * @return void
+     */
+    abstract public function on_import(Closure $onimport): void;
 }

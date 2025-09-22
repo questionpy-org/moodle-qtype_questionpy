@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\local\form\context;
 
+use Closure;
 use qtype_questionpy\utils;
 
 /**
@@ -43,6 +44,7 @@ class section_render_context extends mform_render_context {
         parent::__construct(
             $parent->moodleform,
             $parent->mform,
+            $parent->question,
             $parent->mangle_name($name),
             utils::array_get_nested($parent->data, $name) ?? []
         );
@@ -77,5 +79,32 @@ class section_render_context extends mform_render_context {
      */
     public function generate_uuid(): string {
         return $this->parent->generate_uuid();
+    }
+
+    /**
+     * Mutate data before it is exported from the form.
+     *
+     * This is called by {@see question_edit_form::get_data()} and {@see question_edit_form::get_submitted_data()}. The resulting
+     * data might be saved by {@see question_service::upsert_question()} or validated as a draft.
+     *
+     * The callback is given the entire question data and should mutate the parts relevant to it.
+     *
+     * @param Closure(array&): void $onexport Callback that receives form data by reference for export conversion
+     * @return void
+     */
+    public function on_export(Closure $onexport): void {
+        $this->parent->on_export($onexport);
+    }
+
+    /**
+     * Mutate data from the QPy server before it is added to the mform in {@see question_edit_form::set_data()}.
+     *
+     * The callback is given the entire question data and should mutate the parts relevant to it.
+     *
+     * @param Closure(array&): void $onimport Callback that receives form data by reference for import conversion
+     * @return void
+     */
+    public function on_import(Closure $onimport): void {
+        $this->parent->on_import($onimport);
     }
 }

@@ -131,3 +131,6 @@ $string['total_packages'] = '{$a->packages} packages with a total of {$a->versio
 $string['unmark_as_favourite'] = 'Favourite';
 $string['upload_not_permitted'] = 'You do not have permission to upload QuestionPy packages.';
 $string['version_is_already_stored_error'] = 'The package version was already stored by the current user.';
+$string['wysiwyg_editor_unknown_format'] = 'The package is trying to use markup in the format \'{$a}\', but that format is not '
+    . 'recognized. Causes for this could be a switch to an incompatible version of the QuestionPy Moodle plugin, or a bug in the '
+    . 'QuestionPy package itself.';
