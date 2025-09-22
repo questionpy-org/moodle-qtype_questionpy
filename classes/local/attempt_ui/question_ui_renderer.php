@@ -585,7 +585,7 @@ class question_ui_renderer {
         assert($question instanceof qtype_questionpy_question);
 
         return preg_replace_callback(
-            constants::QPY_URL_PATTERN,
+            constants::QPY_STATIC_URL_PATTERN,
             function (array $match) use ($question) {
                 return static_file_service::reify_qpy_url($match[0], $question);
             },

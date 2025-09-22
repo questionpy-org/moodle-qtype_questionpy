@@ -53,7 +53,7 @@ class utils {
      * @param string $key
      * @return mixed
      */
-    public static function array_get_nested(array $array, string $key) {
+    public static function array_get_nested(array $array, string $key): mixed {
         // Explode a $name like qpy_form[abc][def] into an array ["qpy_form", "abc", "def"].
         $parts = explode('[', str_replace(']', '', $key));
 
@@ -69,17 +69,17 @@ class utils {
     }
 
     /**
-     * Given a key such as `abc[def]`, returns an array `[ "abc" => [ "def" => $value ] ]`.
+     * Given a key such as `abc[def]`, sets `$array['abc']['def'] = $value`, creating missing arrays along the way.
      *
+     * @param array $array
      * @param string $key
      * @param mixed $value
-     * @return array
+     * @return void
      */
-    public static function array_create_nested(string $key, $value): array {
+    public static function array_set_nested(array &$array, string $key, mixed $value): void {
         // Explode a $name like qpy_form[abc][def] into an array ["qpy_form", "abc", "def"].
         $parts = explode('[', str_replace(']', '', $key));
 
-        $array = [];
         $current = &$array;
         foreach ($parts as $key) {
             if (!is_array($current)) {
@@ -88,7 +88,18 @@ class utils {
             $current = &$current[$key];
         }
         $current = $value;
+    }
 
+    /**
+     * Given a key such as `abc[def]`, returns an array `[ "abc" => [ "def" => $value ] ]`.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @return array
+     */
+    public static function array_create_nested(string $key, mixed $value): array {
+        $array = [];
+        self::array_set_nested($array, $key, $value);
         return $array;
     }
 

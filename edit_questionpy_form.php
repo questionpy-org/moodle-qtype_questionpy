@@ -45,10 +45,18 @@ use qtype_questionpy\utils;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_questionpy_edit_form extends question_edit_form {
-    /** @var array current form data set in {@see definition_inner} and added to the question in {@see set_data}. */
+    /**
+     * @var array Current form data returned by the QPy server when the form was retrieved. Set in {@see definition_inner} and
+     *            added to the question in {@see set_data}.
+     */
     private array $currentdata = [];
+
+    /** @var root_render_context|null */
+    private ?root_render_context $lastrendercontext = null;
+
     /** @var package_file_service */
     private package_file_service $packagefileservice;
+
     /** @var api */
     private api $api;
 
@@ -231,11 +239,18 @@ class qtype_questionpy_edit_form extends question_edit_form {
         try {
             $state = $this->get_question_state($packagehash);
             $questioneditform = $this->api->package($packagehash, $file)->get_question_edit_form($state);
-            $context = new root_render_context($this, $mform, 'qpy_form', $questioneditform->formdata);
+            $context = new root_render_context(
+                moodleform: $this,
+                mform: $mform,
+                question: $this->question,
+                prefix: 'qpy_form',
+                data: $questioneditform->formdata
+            );
             $questioneditform->definition->render_to($context);
 
             // Used by set_data.
             $this->currentdata = $questioneditform->formdata;
+            $this->lastrendercontext = $context;
         } catch (request_error $error) {
             if ($error->requesterrorcode !== error_code::package_not_found) {
                 throw $error;
@@ -405,6 +420,61 @@ class qtype_questionpy_edit_form extends question_edit_form {
     }
 
     /**
+     * Applies all the conversions registered using {@see render_context::on_export()}, mutating the array in-place.
+     *
+     * @param array $data
+     * @return void
+     */
+    private function apply_on_export_callbacks(array &$data): void {
+        // Repetition elements may produce numeric arrays with gaps. We want them to become JSON arrays, so we reindex.
+        // Form element names may not begin with a digit, so this won't accidentally change them.
+        // TODO: Change this to make use of the new rich conversion abstraction.
+        if (!empty($data['qpy_form'])) {
+            utils::reindex_integer_arrays($data['qpy_form']);
+        }
+
+        foreach ($this->lastrendercontext->onexportcallbacks as $onexportcallback) {
+            $onexportcallback($data);
+        }
+    }
+
+    /**
+     * Return submitted data if properly submitted or returns NULL if validation fails or
+     * if there is no submitted data.
+     *
+     * note: $slashed param removed
+     *
+     * @return stdClass|null submitted data; NULL if not valid or not submitted or cancelled
+     */
+    public function get_data(): ?object {
+        $data = parent::get_data();
+        if ($data === null) {
+            return null;
+        }
+
+        $array = (array)$data;
+        $this->apply_on_export_callbacks($array);
+        return (object)$array;
+    }
+
+    /**
+     * Return submitted data without validation or NULL if there is no submitted data.
+     * note: $slashed param removed
+     *
+     * @return stdClass|null submitted data; NULL if not submitted
+     */
+    public function get_submitted_data(): ?object {
+        $data = parent::get_submitted_data();
+        if ($data === null) {
+            return null;
+        }
+
+        $array = (array)$data;
+        $this->apply_on_export_callbacks($array);
+        return (object)$array;
+    }
+
+    /**
      * Load in existing data as form defaults. Usually new entry defaults are stored directly in
      * form definition (new entry form); this function is used to load in data where values
      * already exist and data is being edited (edit entry form).
@@ -416,7 +486,24 @@ class qtype_questionpy_edit_form extends question_edit_form {
         // to define a default value to satisfy the base methods in question_edit_form.
         $question->questiontext = '.';
 
-        $question->qpy_form = $this->currentdata;
+        if (isset($question->qpy_form)) {
+            debugging("Question data somehow already has qpy_form, but we haven't added it yet.", DEBUG_DEVELOPER);
+        }
+
+        if ($this->lastrendercontext) {
+            // Convert the form data returned from the server to Moodle format and add to the question data.
+            $arrayforconversions = [
+                'qpy_form' => $this->currentdata,
+            ];
+
+            foreach ($this->lastrendercontext->onimportcallbacks as $onimportcallback) {
+                $onimportcallback($arrayforconversions);
+            }
+
+            foreach ($arrayforconversions as $key => $value) {
+                $question->{$key} = $value;
+            }
+        }
 
         // When changing the package of a stored question, we do not want the package hash to be set in the form.
         // Saving the question would return us to the question edit form with the package selected.
@@ -449,19 +536,14 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $errorswithnoelement = [];
 
         try {
-            $packagehash = $data['qpy_package_hash'] ?? $data['qpy_package_file_hash'];
-
-            // Repetition elements may produce numeric arrays with gaps. We want them to become JSON arrays, so we reindex.
-            // Form element names may not begin with a digit, so this won't accidentally change them.
-            if (!empty($data['qpy_form'])) {
-                utils::reindex_integer_arrays($data['qpy_form']);
-            }
+            $this->apply_on_export_callbacks($data);
 
             // TODO: create a dedicated endpoint?
+            $packagehash = $data['qpy_package_hash'] ?? $data['qpy_package_file_hash'];
             $state = $this->get_question_state($packagehash);
             $this->api->package($packagehash, $package)->create_question(
                 $state,
-                (object) ($data['qpy_form'] ?? [])
+                (object)($data['qpy_form'] ?? [])
             );
         } catch (options_form_validation_error $error) {
             foreach ($error->errors as $field => $error) {

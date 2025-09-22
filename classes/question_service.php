@@ -16,10 +16,12 @@
 
 namespace qtype_questionpy;
 
+use coding_exception;
 use dml_exception;
 use moodle_exception;
 use qtype_questionpy\local\api\api;
 use qtype_questionpy\local\api\question_data;
+use qtype_questionpy\local\files\options_file_service;
 use qtype_questionpy\local\package\package;
 use qtype_questionpy\local\package\package_version;
 use stdClass;
@@ -33,21 +35,21 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class question_service {
-    /** @var api */
-    private api $api;
-
-    /** @var package_file_service */
-    private package_file_service $packagefileservice;
-
     /**
      * Initializes the instance to use the given {@see api}.
      *
      * @param api $api
      * @param package_file_service $packagefileservice
+     * @param options_file_service $ofs
      */
-    public function __construct(api $api, package_file_service $packagefileservice) {
-        $this->api = $api;
-        $this->packagefileservice = $packagefileservice;
+    public function __construct(
+        /** @var api */
+        private readonly api $api,
+        /** @var package_file_service */
+        private readonly package_file_service $packagefileservice,
+        /** @var options_file_service */
+        private readonly options_file_service $ofs
+    ) {
     }
 
     /** @var string table containing our question data, 0-1 record per question */
@@ -82,7 +84,7 @@ class question_service {
                 limitnum: 1,
             );
             if (!$files) {
-                throw new \coding_exception(
+                throw new coding_exception(
                     "No local package version file with hash '{$record->pkgversionhash}' was found despite being referenced" .
                     " by question {$questionid}"
                 );
@@ -106,6 +108,10 @@ class question_service {
      */
     public function upsert_question(object $question): void {
         global $DB;
+
+        if (!$question->id) {
+            throw new coding_exception('Question ID is required to upsert QuestionPy-specific data');
+        }
 
         if (!isset($question->qpy_form)) {
             // This happens when the package defines an empty options form, which we do want to support.
@@ -175,12 +181,12 @@ class question_service {
             }
 
             if (count($update) > 1) {
-                $DB->update_record(self::QUESTION_TABLE, (object) $update);
+                $DB->update_record(self::QUESTION_TABLE, (object)$update);
             }
         } else {
             $islocal = $question->qpy_package_source === 'upload';
             // Insert a new record with the question state only containing the options.
-            $questionid = $DB->insert_record(self::QUESTION_TABLE, [
+            $qpyid = $DB->insert_record(self::QUESTION_TABLE, [
                 'questionid' => $question->id,
                 // TODO: retrieve the identifier directly from the package?
                 'packageidentifier' => "@{$pkgversionnamespace}/{$pkgversionshortname}",
@@ -192,7 +198,7 @@ class question_service {
             if ($islocal) {
                 if (isset($question->qpy_package_path_name_hash)) {
                     $filestorage->create_file_from_storedfile([
-                        'itemid' => $questionid,
+                        'itemid' => $qpyid,
                     ], $file);
                 } else {
                     // Get draft file and store the file.
@@ -201,10 +207,17 @@ class question_service {
                         $question->context->id,
                         'qtype_questionpy',
                         'package',
-                        $questionid
+                        $qpyid
                     );
                 }
             }
+        }
+
+        // Save the draft area files belonging to the question.
+        // file_upload_element and wysiwyg_editor_element add to qpy_options_draftitems.
+        global $USER;
+        foreach ($question->qpy_options_draftitems as $draftitemid) {
+            $this->ofs->save_draft_area_files($question->context->id, $question->id, $USER->id, $draftitemid);
         }
     }
 
