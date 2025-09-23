@@ -37,9 +37,6 @@ class constants {
     /** @var string */
     public const QT_VAR_RESPONSE = 'qpy_response';
 
-    // The first two path segments are namespace and short name, and so more restrictive.
-    /** @var string */
-    public const QPY_STATIC_URL_PATTERN = ';qpy://static((?:/[a-z_][a-z0-9_]{0,126}){2}(?:/[\w\-@:%+.~=]+)+);';
     /** @var string */
     public const QPY_OPTIONS_URL_PATTERN = ';qpy://options/(?P<fileref>[a-zA-Z0-9\-_=]{1,64});';
 

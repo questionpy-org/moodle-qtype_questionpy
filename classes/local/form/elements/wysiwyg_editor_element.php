@@ -46,11 +46,12 @@ class wysiwyg_editor_element extends form_element {
     /** @var false Whether to allow subdirs in the media manager. A constant for now. */
     private const SUBDIRS = false;
 
+    /** @var string[] Maps Moodle's format constants to what {@see wysiwyg_editor_data} expects. */
     private const FORMAT_MAP = [
-        FORMAT_HTML => "html",
-        FORMAT_MARKDOWN => "markdown",
-        FORMAT_PLAIN => "plain",
-        FORMAT_MOODLE => "moodle",
+        FORMAT_HTML => 'html',
+        FORMAT_MARKDOWN => 'markdown',
+        FORMAT_PLAIN => 'plain',
+        FORMAT_MOODLE => 'moodle',
     ];
 
     /**
@@ -58,6 +59,7 @@ class wysiwyg_editor_element extends form_element {
      *
      * @param string $name
      * @param string $label
+     * @param bool $includehtml
      */
     public function __construct(
         /** @var string */
@@ -65,8 +67,8 @@ class wysiwyg_editor_element extends form_element {
         /** @var string */
         public string $label,
         /** @var bool */
-        #[array_key("include_html")]
-        public bool   $includehtml = false
+        #[array_key('include_html')]
+        public bool $includehtml = false
     ) {
     }
 
@@ -113,8 +115,8 @@ class wysiwyg_editor_element extends form_element {
                 return;
             }
 
-            $markup = $mydata["text"];
-            $format = $mydata["format"];
+            $markup = $mydata['text'];
+            $format = $mydata['format'];
             $html = null;
 
             // If the format isn't HTML but $includehtml is passed, we need to convert the markup to HTML.
@@ -122,11 +124,11 @@ class wysiwyg_editor_element extends form_element {
             // do this _before_ replacing URLs.
             if ($format != FORMAT_HTML && $this->includehtml) {
                 $html = format_text($markup, $format, options: [
-                    "context" => $context->moodleform->context,
+                    'context' => $context->moodleform->context,
                     // We leave cleaning to when the content is output. (Placeholder values are cleaned by default, for instance.)
-                    "noclean" => true,
+                    'noclean' => true,
                     // If filter is true (default), format_text replaces draftfile URLs with brokenfile.
-                    "filter" => false,
+                    'filter' => false,
                 ]);
             }
 
@@ -151,8 +153,8 @@ class wysiwyg_editor_element extends form_element {
             $resultdata = new wysiwyg_editor_data(
                 markup: $markup,
                 markupformat: $mappedformat,
-                html: $html,
-                files: $metadatabyname
+                files: $metadatabyname,
+                html: $html
             );
 
             // At this time, we don't know whether the question will be saved or the draft validated etc., and we don't know the

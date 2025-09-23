@@ -23,7 +23,8 @@
  */
 
 use core\di;
-use qtype_questionpy\local\files\static_file_service;
+use GuzzleHttp\Exception\GuzzleException;
+use qtype_questionpy\local\files\qpy_url_resolver;
 
 /**
  * Checks file access for QuestionPy questions.
@@ -35,6 +36,7 @@ use qtype_questionpy\local\files\static_file_service;
  * @param bool $forcedownload whether or not force download
  * @param array $options additional options affecting the file serving
  * @throws moodle_exception
+ * @throws GuzzleException
  * @package  qtype_questionpy
  * @category files
  */
@@ -42,34 +44,6 @@ function qtype_questionpy_pluginfile($course, $cm, $context, $filearea, $args, $
     global $CFG;
     require_once($CFG->libdir . '/questionlib.php');
 
-    if ($filearea !== 'static') {
-        // TODO: Support static-private files.
-        send_file_not_found();
-    }
-
-    $staticfileservice = di::get(static_file_service::class);
-
-    [$packagehash, $namespace, $shortname] = $args;
-    $path = implode('/', array_slice($args, 3));
-
-    [$filepath, $mimetype] = $staticfileservice->download_public_static_file(
-        $packagehash,
-        $namespace,
-        $shortname,
-        $path,
-        $context->id,
-    );
-    if (is_null($filepath)) {
-        send_file_not_found();
-    }
-
-    /* Set a lifetime of 1 year, i.e. effectively never expire. Since the package hash is part of the URL, cache busting
-       is automatic. */
-    send_file(
-        $filepath,
-        basename($path),
-        lifetime: 31536000,
-        mimetype: $mimetype,
-        options: ['immutable' => true, 'cacheability' => 'public']
-    );
+    di::get(qpy_url_resolver::class)->serve_pluginfile($context, $filearea, $args);
+    die();
 }
