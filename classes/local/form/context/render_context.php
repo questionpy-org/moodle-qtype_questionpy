@@ -18,6 +18,7 @@ namespace qtype_questionpy\local\form\context;
 
 use Closure;
 use core\uuid;
+use moodle_exception;
 use moodleform;
 use MoodleQuickForm;
 use qtype_questionpy\local\form\qpy_renderable;
@@ -242,4 +243,28 @@ abstract class render_context {
      * @return void
      */
     abstract public function on_import(Closure $onimport): void;
+
+
+    /**
+     * If the form data already contains a draft item id under the given name, return it. Otherwise, return an unused one.
+     *
+     * This is usually done by file_get_submitted_draft_itemid, but that doesn't support the editor itself being nested.
+     *
+     * @param string $itemidname
+     * @return array<int, bool> [$draftitemid, $isnew]
+     * @throws moodle_exception
+     */
+    public function get_draft_area_for_upload(string $itemidname): array {
+        $draftitemid = $this->moodleform->optional_param($itemidname, null, PARAM_INT);
+        if ($draftitemid === null) {
+            $draftitemid = file_get_unused_draft_itemid();
+            $isnew = true;
+        } else {
+            // There's already a draft area, which means it must already have been prepared.
+            // If we were to try to prepare it again, we would either recreate deleted files or run into unique key violations.
+            $isnew = false;
+        }
+
+        return [$draftitemid, $isnew];
+    }
 }
