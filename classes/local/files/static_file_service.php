@@ -17,6 +17,7 @@
 namespace qtype_questionpy\local\files;
 
 use coding_exception;
+use core\exception\moodle_exception;
 use dml_exception;
 use GuzzleHttp\Exception\GuzzleException;
 use invalid_dataroot_permissions;
@@ -36,7 +37,7 @@ use qtype_questionpy_question;
  * @copyright  2024 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class static_file_service {
+class static_file_service implements handles_qpy_url_type {
     /** @var api */
     private readonly api $api;
 
@@ -90,24 +91,16 @@ class static_file_service {
     }
 
     /**
-     * Converts a QPy-URI such as `qpy://static/acme/great_package/css/styles.css` to a functioning pluginfile URL.
+     * Converts a QPy-URL to a functioning pluginfile URL.
      *
-     * @param string $qpyurl
+     * This method isn't passed the entire URL, but everything after the `qpy://<type>/` prefix. The slash between type and path
+     * isn't included in `$path`. See also {@see qpy_url_resolver::QPY_URL_PATTERN}.
+     *
+     * @param string $path
      * @param qtype_questionpy_question $question
-     * @return moodle_url|false
-     * @throws coding_exception
+     * @return string
      */
-    public static function reify_qpy_url(string $qpyurl, qtype_questionpy_question $question): string|false {
-        $result = preg_match(constants::QPY_URL_PATTERN, $qpyurl, $matches);
-
-        if ($result === 0) {
-            return false;
-        }
-        if ($result === false) {
-            throw new coding_exception('Regex error while parsing QPy URL');
-        }
-
-        $path = $matches[1];
+    public function resolve_qpy_url(string $path, qtype_questionpy_question $question): string {
         return moodle_url::make_pluginfile_url(
             $question->contextid,
             'qtype_questionpy',
@@ -116,5 +109,49 @@ class static_file_service {
             '/' . $question->packagehash . dirname($path) . '/',
             basename($path)
         )->out();
+    }
+
+    /**
+     * Serves a plugin file belonging to this implementation.
+     *
+     * The arguments are passed directly from {@see qtype_questionpy_pluginfile}.
+     *
+     * This method never returns.
+     *
+     * @param object $context
+     * @param array $args
+     * @return never
+     * @throws GuzzleException
+     * @throws moodle_exception
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_dataroot_permissions
+     * @throws request_error
+     */
+    public function serve_pluginfile(object $context, array $args): never {
+        [$packagehash, $namespace, $shortname] = $args;
+        $path = implode('/', array_slice($args, 3));
+
+        [$filepath, $mimetype] = $this->download_public_static_file(
+            $packagehash,
+            $namespace,
+            $shortname,
+            $path,
+            $context->id,
+        );
+        if (is_null($filepath)) {
+            send_file_not_found();
+        }
+
+        /* Set a lifetime of 1 year, i.e. effectively never expire. Since the package hash is part of the URL, cache busting
+           is automatic. */
+        send_file(
+            $filepath,
+            basename($path),
+            lifetime: 31536000,
+            mimetype: $mimetype,
+            options: ['immutable' => true, 'cacheability' => 'public']
+        );
+        die();
     }
 }

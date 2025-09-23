@@ -363,7 +363,7 @@ EOD;
     private function get_package_css_links(array $cssfiles, qtype_questionpy_question $question): string {
         $elements = [];
         foreach (array_unique($cssfiles) as $uri) {
-            $converted = static_file_service::reify_qpy_url($uri, $question);
+            $converted = static_file_service::resolve_qpy_url($uri, $question);
             if ($converted) {
                 $uri = $converted;
             } else if (str_starts_with($uri, 'qpy://')) {

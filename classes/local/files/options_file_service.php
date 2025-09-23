@@ -18,10 +18,11 @@ namespace qtype_questionpy\local\files;
 
 use coding_exception;
 use context_user;
-use core\context;
 use DateTimeImmutable;
 use file_exception;
 use moodle_exception;
+use moodle_url;
+use qtype_questionpy_question;
 use stored_file;
 use stored_file_creation_exception;
 
@@ -33,7 +34,7 @@ use stored_file_creation_exception;
  * @copyright  2025 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class options_file_service {
+class options_file_service implements handles_qpy_url_type {
     // TODO: Support subdirectories.
 
     // TODO: When a file is deleted while editing a question, we do not currently delete it from the permanent file area (it just
@@ -41,7 +42,7 @@ class options_file_service {
     // previous question versions remain functional _if_ they still exist.
 
     /** @var string */
-    private const FILEAREA_UPLOADS = 'options';
+    public const FILEAREA_UPLOADS = 'options';
 
     /**
      * Saves all the files in the given draft item to the permanent file area for the given question.
@@ -181,5 +182,50 @@ class options_file_service {
      */
     public static function create_qpy_url(string $fileref): string {
         return "qpy://options/$fileref";
+    }
+
+    /**
+     * Converts a QPy-URL to a functioning pluginfile URL.
+     *
+     * This method isn't passed the entire URL, but everything after the `qpy://<type>/` prefix. The slash between type and path
+     * isn't included in `$path`. See also {@see qpy_url_resolver::QPY_URL_PATTERN}.
+     *
+     * @param string $path
+     * @param qtype_questionpy_question $question
+     * @return string
+     */
+    public function resolve_qpy_url(string $path, qtype_questionpy_question $question): string {
+        if (!$question->id) {
+            debugging("Can't generate URL for file belonging to a non-saved question.");
+            return new moodle_url('/brokenfile.php');
+        }
+
+        return moodle_url::make_pluginfile_url(
+            $question->contextid,
+            'qtype_questionpy',
+            self::FILEAREA_UPLOADS,
+            $question->id,
+            '/',
+            $path
+        )->out();
+    }
+
+    /**
+     * Serves a plugin file belonging to this implementation.
+     *
+     * The arguments are passed directly from {@see qtype_questionpy_pluginfile}.
+     *
+     * This method never returns.
+     *
+     * @param object $context
+     * @param array $args
+     * @return never
+     * @throws coding_exception
+     */
+    public function serve_pluginfile(object $context, array $args): never {
+        [$questionid, $fileref] = $args;
+        $file = $this->get_saved_file($context->id, $questionid, $fileref);
+        send_stored_file($file);
+        die();
     }
 }

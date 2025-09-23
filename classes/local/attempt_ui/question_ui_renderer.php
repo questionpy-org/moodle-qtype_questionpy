@@ -17,6 +17,7 @@
 namespace qtype_questionpy\local\attempt_ui;
 
 use coding_exception;
+use core\di;
 use DOMAttr;
 use DOMDocument;
 use DOMElement;
@@ -25,8 +26,9 @@ use DOMNode;
 use DOMProcessingInstruction;
 use DOMText;
 use DOMXPath;
+use moodle_exception;
 use qtype_questionpy\constants;
-use qtype_questionpy\local\files\static_file_service;
+use qtype_questionpy\local\files\qpy_url_resolver;
 use qtype_questionpy\utils;
 use qtype_questionpy_question;
 use question_attempt;
@@ -75,7 +77,9 @@ class question_ui_renderer {
         /** @var DOMXPath $xpath */
         private readonly DOMXPath $xpath,
         /** @var question_display_options $options */
-        private readonly question_display_options $options
+        private readonly question_display_options $options,
+        /** @var qpy_url_resolver $urlresolver */
+        private readonly qpy_url_resolver $urlresolver
     ) {
     }
 
@@ -89,10 +93,15 @@ class question_ui_renderer {
      * @return question_ui_renderer object containing {@see question_ui_renderer::$html rendered html} and
      *                              {@see question_ui_renderer::$warnings emitted warnings}.
      * @throws coding_exception
+     * @throws moodle_exception
      */
     public static function render(string $xml, array $placeholders, question_display_options $options,
                                   question_attempt $attempt): static {
-        $xml = static::replace_qpy_urls($xml, $attempt);
+        $question = $attempt->get_question();
+        assert($question instanceof qtype_questionpy_question);
+
+        $urlresolver = di::get(qpy_url_resolver::class);
+        $xml = $urlresolver->replace_qpy_urls($xml, $question);
 
         $doc = new DOMDocument();
         $doc->preserveWhiteSpace = false;
@@ -103,7 +112,7 @@ class question_ui_renderer {
         $xpath->registerNamespace('xhtml', constants::NAMESPACE_XHTML);
         $xpath->registerNamespace('qpy', constants::NAMESPACE_QPY);
 
-        $renderer = new static($doc, $xpath, $options);
+        $renderer = new static($doc, $xpath, $options, $urlresolver);
         $renderer->populate_duplicate_field_names();
 
         $nextseed = mt_rand();
@@ -133,7 +142,7 @@ class question_ui_renderer {
 
             // We don't want to support QPy elements (and attributes, etc.) in placeholder expansions, so we resolve
             // them after replacing QPy elements.
-            $renderer->resolve_placeholders($placeholders);
+            $renderer->resolve_placeholders($placeholders, $question);
         } finally {
             // I'm not sure whether it is strictly necessary to reset the PRNG seed here, but it feels safer.
             // Resetting it to its original state would be ideal, but that doesn't seem to be possible.
@@ -398,8 +407,10 @@ class question_ui_renderer {
      *
      * @param array $placeholders
      * @return void
+     * @throws coding_exception
+     * @throws moodle_exception
      */
-    private function resolve_placeholders(array $placeholders): void {
+    private function resolve_placeholders(array $placeholders, qtype_questionpy_question $question): void {
         /** @var DOMProcessingInstruction $pi */
         foreach (iterator_to_array($this->xpath->query("//processing-instruction('p')")) as $pi) {
             $parts = preg_split('/\s+/', trim($pi->data));
@@ -412,24 +423,27 @@ class question_ui_renderer {
                 continue;
             }
 
-            $rawvalue = $placeholders[$key];
+            $value = $placeholders[$key];
+            // TODO: Should we _always_ resolve URLs in placeholders?
+            $value = $this->urlresolver->replace_qpy_urls($value, $question);
+
             if (strtolower($cleanoption) === 'clean') {
                 // Allow HTML, but clean using Moodle's clean_text to prevent XSS.
-                $element = dom_utils::html_to_fragment($this->xml, clean_text($rawvalue));
+                $element = dom_utils::html_to_fragment($this->xml, clean_text($value));
                 if (!$element) {
                     debugging('clean_text produced invalid HTML');
                     // Replace with empty fragment so we just remove the PI.
                     $element = $this->xml->createDocumentFragment();
                 }
             } else if (strtolower($cleanoption) === 'noclean') {
-                $element = dom_utils::html_to_fragment($this->xml, $rawvalue, LIBXML_NOERROR);
+                $element = dom_utils::html_to_fragment($this->xml, $value, LIBXML_NOERROR);
             } else {
                 if (strtolower($cleanoption) !== 'plain') {
                     debugging("Unrecognized placeholder cleaning option: '$cleanoption', using 'plain'");
                 }
                 // Treat the value as plain text and don't allow any kind of markup.
                 // Since we're adding a text node, the DOM handles escaping for us.
-                $element = new DOMText($rawvalue);
+                $element = new DOMText($value);
             }
             $pi->parentNode->replaceChild($element, $pi);
         }
@@ -573,27 +587,6 @@ class question_ui_renderer {
     }
 
     /**
-     * Replaces QPy-URIs such as `qpy:acme/great_package/static/css/styles.css` with functioning pluginfile URLs.
-     *
-     * @param string $input
-     * @param question_attempt $attempt
-     * @return string
-     * @throws coding_exception
-     */
-    private static function replace_qpy_urls(string $input, question_attempt $attempt): string {
-        $question = $attempt->get_question();
-        assert($question instanceof qtype_questionpy_question);
-
-        return preg_replace_callback(
-            constants::QPY_STATIC_URL_PATTERN,
-            function (array $match) use ($question) {
-                return static_file_service::reify_qpy_url($match[0], $question);
-            },
-            $input
-        );
-    }
-
-    /**
      * Collects form input names that can appear multiple times in the `FormData` of the current question form.
      *
      * The names are stored in {@see question_ui_renderer::$unmappableduplicatefieldnames} and
@@ -719,8 +712,8 @@ class question_ui_renderer {
      * @param question_attempt $attempt
      * @return invalid_option_warning[]
      * @throws coding_exception
-     * @see extract_available_options
      * @throws \core\exception\coding_exception
+     * @see extract_available_options
      */
     private function check_for_and_preserve_unknown_options(array $availableoptsinfobyname, question_attempt $attempt): array {
         $response = utils::get_qpy_response($attempt);
