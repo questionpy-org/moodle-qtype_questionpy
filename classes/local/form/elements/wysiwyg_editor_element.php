@@ -93,16 +93,7 @@ class wysiwyg_editor_element extends form_element {
         );
         $context->set_type($this->name, PARAM_RAW);
 
-        // This is usually done by file_get_submitted_draft_itemid, but that doesn't support the editor itself being nested.
-        $draftitemid = $context->moodleform->optional_param($element->getName() . '[itemid]', null, PARAM_INT);
-        if ($draftitemid === null) {
-            $draftitemid = file_get_unused_draft_itemid();
-            $draftareaprepared = false;
-        } else {
-            // There's already a draft area, which means it must already have been prepared.
-            // If we were to try to prepare it again, we would either recreate deleted files, or run into unique key violations.
-            $draftareaprepared = true;
-        }
+        [$draftitemid, $newdraftarea] = $context->get_draft_area_for_upload($element->getName() . '[itemid]');
 
         $context->set_default($this->name, [
             'format' => FORMAT_HTML,
@@ -165,7 +156,7 @@ class wysiwyg_editor_element extends form_element {
             utils::array_set_nested($alldata, $element->getName(), array_converter::to_array($resultdata));
         });
 
-        $context->on_import(function (array &$alldata) use ($element, $context, $draftitemid, $draftareaprepared) {
+        $context->on_import(function (array &$alldata) use ($element, $context, $draftitemid, $newdraftarea) {
             $myrawdata = utils::array_get_nested($alldata, $element->getName());
             if (!$myrawdata) {
                 return;
@@ -175,7 +166,7 @@ class wysiwyg_editor_element extends form_element {
             $mydata = array_converter::from_array(wysiwyg_editor_data::class, $myrawdata);
 
             global $USER;
-            if ($mydata->files && !$draftareaprepared) {
+            if ($mydata->files && !$newdraftarea) {
                 $questionid = $context->question->id ?? null;
                 if ($questionid === null) {
                     throw new \core\exception\coding_exception("We're loading a question, but its ID is unset.");

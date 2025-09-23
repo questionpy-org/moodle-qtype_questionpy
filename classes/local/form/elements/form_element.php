@@ -39,6 +39,7 @@ use qtype_questionpy\local\form\qpy_renderable;
     'textarea' => text_area_element::class,
     'id' => generated_id_element::class,
     'wysiwyg_editor' => wysiwyg_editor_element::class,
+    'file_upload' => file_upload_element::class,
 ], fallbackvariant: fallback_element::class)]
 abstract class form_element implements qpy_renderable {
 }
