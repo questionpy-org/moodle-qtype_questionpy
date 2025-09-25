@@ -70,6 +70,7 @@ class question_ui_renderer {
      * @param DOMDocument $xml XML document to operate on
      * @param DOMXPath $xpath
      * @param question_display_options $options
+     * @param qpy_url_resolver $urlresolver
      */
     private function __construct(
         /** @var DOMDocument $xml */
@@ -406,8 +407,8 @@ class question_ui_renderer {
      * near the end (after {@see clean_up()}).
      *
      * @param array $placeholders
+     * @param qtype_questionpy_question $question
      * @return void
-     * @throws coding_exception
      * @throws moodle_exception
      */
     private function resolve_placeholders(array $placeholders, qtype_questionpy_question $question): void {

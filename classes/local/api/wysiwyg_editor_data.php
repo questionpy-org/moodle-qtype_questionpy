@@ -35,8 +35,8 @@ class wysiwyg_editor_data {
      *
      * @param string $markup The markup content
      * @param string $markupformat The format of the markup
+     * @param file_metadata[] $files Associated files
      * @param string|null $html The HTML content. Can be null but may be required by the package.
-     * @param array<string, file_metadata> $files Associated files
      */
     public function __construct(
         /** @var string $markup */
@@ -45,14 +45,14 @@ class wysiwyg_editor_data {
         /** @var string $markupformat */
         #[array_key('markup_format')]
         public string $markupformat,
-        /** @var string|null $html */
-        #[array_key('html')]
-        public ?string $html = null,
         /** @var array<string, file_metadata> $files */
         #[array_key('files')]
         #[array_element_class(file_metadata::class)]
         #[array_to_object]
         public array $files = [],
+        /** @var string|null $html */
+        #[array_key('html')]
+        public ?string $html = null,
     ) {
     }
 }

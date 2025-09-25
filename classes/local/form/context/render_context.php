@@ -47,11 +47,12 @@ abstract class render_context {
     /**
      * Initializes a new render context.
      *
-     * @param question_edit_form $moodleform target {@see question_edit_form} instance, such as {@see \qtype_questionpy_edit_form}
-     * @param MoodleQuickForm $mform target {@see MoodleQuickForm} instance, as passed to
-     *                                {@see \question_edit_form::definition_inner}
-     * @param string $prefix prefix for the names of elements in this context
-     * @param array $data the current form data as of last save, in {@see self::register_rich_conversion() QPy server format}
+     * @param question_edit_form $moodleform Target {@see question_edit_form} instance, such as {@see \qtype_questionpy_edit_form}
+     * @param MoodleQuickForm $mform Target {@see MoodleQuickForm} instance, as passed to
+     *                               {@see \question_edit_form::definition_inner}
+     * @param object $question The current question being edited
+     * @param string $prefix Prefix for the names of elements in this context
+     * @param array $data The current form data as of last save, in {@see self::register_rich_conversion() QPy server format}
      */
     public function __construct(
         /** @var moodleform target {@see moodleform} instance, such as {@see \qtype_questionpy_edit_form} */
@@ -61,7 +62,7 @@ abstract class render_context {
          *                      {@see \question_edit_form::definition_inner}
          */
         public MoodleQuickForm $mform,
-        /** @var object the current question being edited */
+        /** @var object The current question being edited */
         public readonly object $question,
         /** @var string prefix for rendered element names */
         public string $prefix,
@@ -229,7 +230,7 @@ abstract class render_context {
      *
      * The callback is given the entire question data and should mutate the parts relevant to it.
      *
-     * @param Closure(array&): void $onexport Callback that receives form data by reference for export conversion
+     * @param Closure $onexport Callback that receives form data by reference for export conversion
      * @return void
      */
     abstract public function on_export(Closure $onexport): void;
@@ -239,7 +240,7 @@ abstract class render_context {
      *
      * The callback is given the entire question data and should mutate the parts relevant to it.
      *
-     * @param Closure(array&): void $onimport Callback that receives form data by reference for import conversion
+     * @param Closure $onimport Callback that receives form data by reference for import conversion
      * @return void
      */
     abstract public function on_import(Closure $onimport): void;
