@@ -92,7 +92,7 @@ class options_file_service implements handles_qpy_url_type {
      *
      * @param int $contextid Context id of the question (NOT the draft area).
      * @param int $questionid
-     * @param array<string, file_metadata> $metadata
+     * @param array $metadata array of {@see file_metadata} by filename
      * @param int $userid
      * @param int $draftitemid
      * @throws file_exception

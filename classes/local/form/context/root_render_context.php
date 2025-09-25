@@ -78,7 +78,7 @@ class root_render_context extends mform_render_context {
      *
      * The callback is given the entire question data and should mutate the parts relevant to it.
      *
-     * @param Closure(array&): void $onexport Callback that receives form data by reference for export conversion
+     * @param Closure $onexport Callback that receives form data by reference for export conversion
      * @return void
      */
     public function on_export(Closure $onexport): void {
@@ -90,7 +90,7 @@ class root_render_context extends mform_render_context {
      *
      * The callback is given the entire question data and should mutate the parts relevant to it.
      *
-     * @param Closure(array&): void $onimport Callback that receives form data by reference for import conversion
+     * @param Closure $onimport Callback that receives form data by reference for import conversion
      * @return void
      */
     public function on_import(Closure $onimport): void {
