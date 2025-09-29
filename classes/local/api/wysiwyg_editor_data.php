@@ -18,7 +18,6 @@ namespace qtype_questionpy\local\api;
 
 use qtype_questionpy\local\array_converter\attributes\array_element_class;
 use qtype_questionpy\local\array_converter\attributes\array_key;
-use qtype_questionpy\local\array_converter\attributes\array_to_object;
 use qtype_questionpy\local\files\file_metadata;
 
 /**
@@ -45,10 +44,9 @@ class wysiwyg_editor_data {
         /** @var string $markupformat */
         #[array_key('markup_format')]
         public string $markupformat,
-        /** @var array<string, file_metadata> $files */
+        /** @var file_metadata[] $files */
         #[array_key('files')]
         #[array_element_class(file_metadata::class)]
-        #[array_to_object]
         public array $files = [],
         /** @var string|null $html */
         #[array_key('html')]

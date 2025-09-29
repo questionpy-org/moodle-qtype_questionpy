@@ -71,7 +71,7 @@ class options_file_service implements handles_qpy_url_type {
         $draftfiles = $fs->get_area_files(context_user::instance($userid)->id, 'user', 'draft', $draftitemid, includedirs: false);
         foreach ($draftfiles as $draftfile) {
             $fileref = qpy_file_ref::from_stored_file($draftfile);
-            // If the user didn't modify/remove the file, it would already be saved and the file ref not changed.
+            // If the file ref already exists, the user just didn't modify/remove the file.
             if (!in_array(strval($fileref), $existingfilerefs)) {
                 $fs->create_file_from_storedfile([
                     'component' => 'qtype_questionpy',
@@ -86,34 +86,36 @@ class options_file_service implements handles_qpy_url_type {
     }
 
     /**
-     * Populates the given draft area with files listed in `$metadata` and stored in the permanent question file area.
+     * Populates the given draft area with files listed in `$filemetas` and stored in the permanent question file area.
      *
      * (The inverse of {@see save_draft_area_files}.)
      *
      * @param int $contextid Context id of the question (NOT the draft area).
      * @param int $questionid
-     * @param array $metadata array of {@see file_metadata} by filename
+     * @param file_metadata[] $filemetas
      * @param int $userid
      * @param int $draftitemid
      * @throws file_exception
      * @throws stored_file_creation_exception
      * @throws coding_exception
      */
-    public function prepare_draft_area(int $contextid, int $questionid, array $metadata, int $userid, int $draftitemid): void {
+    public function prepare_draft_area(int $contextid, int $questionid, array $filemetas, int $userid, int $draftitemid): void {
         $fs = get_file_storage();
         $files = $fs->get_area_files($contextid, 'qtype_questionpy', self::FILEAREA_UPLOADS, $questionid, includedirs: false);
 
-        foreach ($metadata as $mfilename => $filemetadata) {
+        foreach ($filemetas as $filemetadata) {
             $matchingfiles = array_filter($files, fn($file) => $file->get_filename() === $filemetadata->fileref);
             if (!$matchingfiles) {
-                debugging("Options file '$mfilename' with file_ref '$filemetadata->fileref' could be found in storage.");
+                debugging("Options file '$filemetadata->filename' with file_ref '$filemetadata->fileref' could not be found in "
+                    . 'storage.');
                 continue;
             }
 
             $count = count($matchingfiles);
             if ($count > 1) {
                 // This would mean that the file area contains two files with the same filename, which I'm not sure is possible.
-                debugging("Options file '$mfilename' has ambiguous file_ref '$filemetadata->fileref' which matches $count files.");
+                debugging("Options file '$filemetadata->filename' has ambiguous file_ref '$filemetadata->fileref' which matches "
+                    . "$count files.");
             }
 
             $file = reset($matchingfiles);
@@ -124,7 +126,7 @@ class options_file_service implements handles_qpy_url_type {
                 'itemid' => $draftitemid,
                 'contextid' => context_user::instance($userid)->id,
                 'filepath' => '/',
-                'filename' => $mfilename,
+                'filename' => $filemetadata->filename,
             ], $file);
         }
     }
@@ -134,7 +136,7 @@ class options_file_service implements handles_qpy_url_type {
      *
      * @param int $userid
      * @param int $draftitemid
-     * @return array<string, file_metadata>
+     * @return file_metadata[]
      * @throws moodle_exception
      * @throws coding_exception
      */
@@ -145,7 +147,8 @@ class options_file_service implements handles_qpy_url_type {
         $metadata = [];
         foreach ($files as $file) {
             $fileref = qpy_file_ref::from_stored_file($file);
-            $metadata[$file->get_filename()] = new file_metadata(
+            $metadata[] = new file_metadata(
+                filename: $file->get_filename(),
                 fileref: $fileref,
                 uploadedat: DateTimeImmutable::createFromFormat('U', $file->get_timemodified()),
                 mimetype: $file->get_mimetype()

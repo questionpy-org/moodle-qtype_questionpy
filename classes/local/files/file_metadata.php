@@ -31,11 +31,14 @@ class file_metadata {
     /**
      * Trivial constructor.
      *
+     * @param string $filename
      * @param string $fileref
      * @param DateTimeImmutable $uploadedat
      * @param string $mimetype
      */
     public function __construct(
+        /** @var string $filename */
+        public string $filename,
         /** @var string $fileref */
         #[array_key('file_ref')]
         public string $fileref,

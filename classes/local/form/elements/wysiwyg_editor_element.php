@@ -128,13 +128,13 @@ class wysiwyg_editor_element extends form_element {
             file_remove_editor_orphaned_files($mydata);
 
             global $USER;
-            /** @var array<string, file_metadata> $metadatabyname */
-            $metadatabyname = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
+            /** @var file_metadata[] $filemetas */
+            $filemetas = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
 
             // Since we had to format_text before URL replacement, we need to do it to both $markup and $html :(.
-            $markup = self::replace_draftfile_urls_with_qpy_urls($markup, $metadatabyname, $draftitemid);
+            $markup = self::replace_draftfile_urls_with_qpy_urls($markup, $filemetas, $draftitemid);
             if ($html) {
-                $html = self::replace_draftfile_urls_with_qpy_urls($html, $metadatabyname, $draftitemid);
+                $html = self::replace_draftfile_urls_with_qpy_urls($html, $filemetas, $draftitemid);
             }
 
             $mappedformat = self::FORMAT_MAP[$format] ?? null;
@@ -145,7 +145,7 @@ class wysiwyg_editor_element extends form_element {
             $resultdata = new wysiwyg_editor_data(
                 markup: $markup,
                 markupformat: $mappedformat,
-                files: $metadatabyname,
+                files: $filemetas,
                 html: $html
             );
 
@@ -177,13 +177,13 @@ class wysiwyg_editor_element extends form_element {
                 $ofs->prepare_draft_area($context->question->contextid, $questionid, $mydata->files, $USER->id, $draftitemid);
             }
 
-            $filenamebyfileref = array_flip(array_map(fn($fmeta) => $fmeta->fileref, $mydata->files));
+            $filenamebyfileref = array_column($mydata->files, 'filename', 'fileref');
 
             $replacedtext = preg_replace_callback(
                 constants::QPY_OPTIONS_URL_PATTERN,
                 function (array $match) use ($draftitemid, $filenamebyfileref) {
                     $filename = $filenamebyfileref[strtolower($match['fileref'])] ?? null;
-                    if (!$filename) {
+                    if ($filename === null) {
                         debugging("Editor text contains QPy URL for nonexistent options file: '$match[0]'");
                         return $match[0];
                     }
@@ -212,12 +212,14 @@ class wysiwyg_editor_element extends form_element {
      * In a similar manner to {@see file_rewrite_urls_to_pluginfile()}, this method rewrites draftfile URLs to `qpy://options/...`.
      *
      * @param string $text
-     * @param array $metadatabyname As returned by {@see options_file_service::get_qpy_files_metadata_from_draftitem()}.
+     * @param array $files As returned by {@see options_file_service::get_qpy_files_metadata_from_draftitem()}.
      * @param int $draftitemid
      * @return string
      */
-    private static function replace_draftfile_urls_with_qpy_urls(string $text, array $metadatabyname, int $draftitemid): string {
+    private static function replace_draftfile_urls_with_qpy_urls(string $text, array $files, int $draftitemid): string {
         global $USER;
+
+        $filesbyname = array_column($files, null, 'filename');
 
         $draftfileurls = extract_draft_file_urls_from_text($text);
         $expectedparts = [
@@ -236,7 +238,7 @@ class wysiwyg_editor_element extends form_element {
                 }
             }
 
-            $fileref = $metadatabyname[$draftfileurl['filename']]->fileref ?? null;
+            $fileref = $filesbyname[$draftfileurl['filename']]->fileref ?? null;
             if (!$fileref) {
                 debugging("Editor text contains draftfile link to nonexistent file {$draftfileurl['filename']}.", DEBUG_DEVELOPER);
                 continue;
