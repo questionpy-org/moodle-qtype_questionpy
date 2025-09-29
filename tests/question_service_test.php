@@ -23,6 +23,7 @@ require_once(__DIR__ . '/data_provider.php');
 use coding_exception;
 use dml_exception;
 use moodle_exception;
+use phpunit_compat;
 use qtype_questionpy\local\api\api;
 use qtype_questionpy\local\api\lms_permissions;
 use qtype_questionpy\local\api\package_api;
@@ -35,6 +36,8 @@ use qtype_questionpy\local\files\options_file_service;
 use qtype_questionpy\local\package\package;
 use qtype_questionpy\local\package\package_raw;
 use stdClass;
+
+require_once(__DIR__ . '/phpunit_compat.php');
 
 /**
  * Unit tests for {@see question_service}.
@@ -385,6 +388,12 @@ final class question_service_test extends \advanced_testcase {
         $this->assertGreaterThan($oldrecord->timeused, $newrecord->timeused);
     }
 
+    /**
+     * Tests {@see question_service::upsert_question()} calls {@see options_file_service::save_draft_area_files()}.
+     *
+     * @covers \qtype_questionpy\question_service::upsert_question
+     * @throws moodle_exception
+     */
     public function test_upsert_question_should_save_draft_files(): void {
         global $PAGE;
 
@@ -399,12 +408,7 @@ final class question_service_test extends \advanced_testcase {
         $matcher = $this->exactly(2);
         $this->ofs->expects($matcher)
             ->method('save_draft_area_files')
-            ->with($PAGE->context->id, 42, $USER->id, $this->callback(function ($draftid) use($matcher) {
-                return match ($matcher->numberOfInvocations()) {
-                    1 => $draftid == 1234,
-                    2 => $draftid == 2345,
-                };
-            }));
+            ->with($PAGE->context->id, 42, $USER->id, phpunit_compat::consecutively($matcher, 1234, 2345));
 
         $this->questionservice->upsert_question(
             (object)[
