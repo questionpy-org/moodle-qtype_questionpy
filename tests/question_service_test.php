@@ -31,6 +31,7 @@ use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\local\api\question_response;
 use qtype_questionpy\local\api\scoring_method;
 use qtype_questionpy\local\array_converter\array_converter;
+use qtype_questionpy\local\files\options_file_service;
 use qtype_questionpy\local\package\package;
 use qtype_questionpy\local\package\package_raw;
 use stdClass;
@@ -53,6 +54,9 @@ final class question_service_test extends \advanced_testcase {
     /** @var question_service */
     private question_service $questionservice;
 
+    /** @var options_file_service */
+    private options_file_service $ofs;
+
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();
@@ -61,8 +65,10 @@ final class question_service_test extends \advanced_testcase {
         $this->api->method('package')
             ->willReturn($this->packageapi);
 
+        $this->ofs = $this->createMock(options_file_service::class);
+
         $packagefileservice = new package_file_service();
-        $this->questionservice = new question_service($this->api, $packagefileservice);
+        $this->questionservice = new question_service($this->api, $packagefileservice, $this->ofs);
     }
 
     /**
@@ -377,6 +383,38 @@ final class question_service_test extends \advanced_testcase {
         );
         $this->assertTimeCurrent($newrecord->timeused);
         $this->assertGreaterThan($oldrecord->timeused, $newrecord->timeused);
+    }
+
+    public function test_upsert_question_should_save_draft_files(): void {
+        global $PAGE;
+
+        $pvi = package_versions_info_provider();
+        $pvi->upsert();
+
+        $this->packageapi
+            ->method('create_question')
+            ->willReturn(new question_response('en', '{}', scoring_method::automatically_scorable));
+
+        global $USER;
+        $matcher = $this->exactly(2);
+        $this->ofs->expects($matcher)
+            ->method('save_draft_area_files')
+            ->with($PAGE->context->id, 42, $USER->id, $this->callback(function ($draftid) use($matcher) {
+                return match ($matcher->numberOfInvocations()) {
+                    1 => $draftid == 1234,
+                    2 => $draftid == 2345,
+                };
+            }));
+
+        $this->questionservice->upsert_question(
+            (object)[
+                'id' => 42,
+                'qpy_package_hash' => $pvi->versions[0]->hash,
+                'qpy_package_source' => 'search',
+                'context' => $PAGE->context,
+                'qpy_options_draftitems' => [1234, 2345],
+            ]
+        );
     }
 
     /**
