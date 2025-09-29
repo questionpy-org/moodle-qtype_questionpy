@@ -18,6 +18,7 @@ namespace qtype_questionpy\local\form\elements;
 
 use coding_exception;
 use context_user;
+use core\context;
 use core\di;
 use moodle_exception;
 use moodle_url;
@@ -88,7 +89,7 @@ class wysiwyg_editor_element extends form_element {
             [
                 'maxfiles' => EDITOR_UNLIMITED_FILES,
                 'subdirs' => self::SUBDIRS,
-                'context' => $context->moodleform->context,
+                'context' => context::instance_by_id($context->question->contextid),
             ]
         );
         $context->set_type($this->name, PARAM_RAW);
@@ -115,7 +116,7 @@ class wysiwyg_editor_element extends form_element {
             // do this _before_ replacing URLs.
             if ($format != FORMAT_HTML && $this->includehtml) {
                 $html = format_text($markup, $format, options: [
-                    'context' => $context->moodleform->context,
+                    'context' => context::instance_by_id($context->question->contextid),
                     // We leave cleaning to when the content is output. (Placeholder values are cleaned by default, for instance.)
                     'noclean' => true,
                     // If filter is true (default), format_text replaces draftfile URLs with brokenfile.
@@ -173,7 +174,7 @@ class wysiwyg_editor_element extends form_element {
                 }
 
                 $ofs = di::get(options_file_service::class);
-                $ofs->prepare_draft_area($context->moodleform->context->id, $questionid, $mydata->files, $USER->id, $draftitemid);
+                $ofs->prepare_draft_area($context->question->contextid, $questionid, $mydata->files, $USER->id, $draftitemid);
             }
 
             $filenamebyfileref = array_flip(array_map(fn($fmeta) => $fmeta->fileref, $mydata->files));

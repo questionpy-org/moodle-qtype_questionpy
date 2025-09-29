@@ -23,6 +23,7 @@ require_once($CFG->libdir . '/formslib.php');
 
 use qtype_questionpy\local\form\context\root_render_context;
 use qtype_questionpy\local\form\qpy_renderable;
+use stdClass;
 
 /**
  * Stub {@see \moodleform} implementation for tests.
@@ -54,7 +55,11 @@ class test_moodleform extends \moodleform {
      * Output can be retrieved using {@see render}, which calls this method.
      */
     protected function definition() {
-        $context = new root_render_context($this, $this->_form, 'qpy_form', []);
+        global $PAGE;
+        $question = (object) [
+            'contextid' => $PAGE->context->id,
+        ];
+        $context = new root_render_context($this, $this->_form, $question, 'qpy_form', []);
         $context->uuidgen = fn() => '24daab97-7eeb-422d-a2f3-f4e770fb11f6';
         $this->element->render_to($context);
     }
