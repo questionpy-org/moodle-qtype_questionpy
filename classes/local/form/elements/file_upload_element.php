@@ -123,7 +123,7 @@ class file_upload_element extends form_element {
                 }
 
                 $ofs = di::get(options_file_service::class);
-                $ofs->prepare_draft_area($context->moodleform->context->id, $questionid, $files, $USER->id, $draftitemid);
+                $ofs->prepare_draft_area($context->question->contextid, $questionid, $files, $USER->id, $draftitemid);
             }
 
             utils::array_set_nested($alldata, $element->getName(), $draftitemid);

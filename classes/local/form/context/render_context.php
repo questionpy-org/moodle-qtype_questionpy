@@ -47,7 +47,9 @@ abstract class render_context {
     /**
      * Initializes a new render context.
      *
-     * @param question_edit_form $moodleform Target {@see question_edit_form} instance, such as {@see \qtype_questionpy_edit_form}
+     * @param moodleform $moodleform The target {@see moodleform} instance. In reality, this is a
+     *                               {@see \qtype_questionpy_edit_form}, but a raw {@see moodleform} is much easier to
+     *                               produce in unit tests).
      * @param MoodleQuickForm $mform Target {@see MoodleQuickForm} instance, as passed to
      *                               {@see \question_edit_form::definition_inner}
      * @param object $question The current question being edited
@@ -55,8 +57,11 @@ abstract class render_context {
      * @param array $data The current form data as of last save, in {@see self::register_rich_conversion() QPy server format}
      */
     public function __construct(
-        /** @var moodleform target {@see moodleform} instance, such as {@see \qtype_questionpy_edit_form} */
-        public question_edit_form $moodleform,
+        /**
+         * @var moodleform The target {@see moodleform} instance. In reality, this is a {@see \qtype_questionpy_edit_form}, but a
+         * raw {@see moodleform} is much easier to produce in unit tests).
+         */
+        public moodleform $moodleform,
         /**
          * @var MoodleQuickForm target {@see MoodleQuickForm} instance, as passed to
          *                      {@see \question_edit_form::definition_inner}
