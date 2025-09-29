@@ -92,8 +92,8 @@ class file_upload_element extends form_element {
             }
 
             global $USER;
-            /** @var array<string, file_metadata> $metadatabyname */
-            $metadatabyname = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
+            /** @var file_metadata[] $filemetas */
+            $filemetas = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
 
             // At this time, we don't know whether the question will be saved or the draft validated etc., and we don't know the
             // question id, so we don't save the draft files ourselves. But we do need to let question_service know which draft
@@ -103,7 +103,7 @@ class file_upload_element extends form_element {
             utils::array_set_nested(
                 $alldata,
                 $element->getName(),
-                $metadatabyname ? array_converter::to_array($metadatabyname) : new stdClass()
+                array_converter::to_array($filemetas)
             );
         });
 
