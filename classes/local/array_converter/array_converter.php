@@ -24,8 +24,13 @@ use qtype_questionpy\local\array_converter\attributes\array_element_class;
 use qtype_questionpy\local\array_converter\attributes\array_key;
 use qtype_questionpy\local\array_converter\attributes\array_polymorphic;
 use ReflectionClass;
+use ReflectionEnum;
 use ReflectionException;
 use ReflectionNamedType;
+use ReflectionType;
+use ReflectionUnionType;
+use TypeError;
+use ValueError;
 
 /**
  * Utility class allowing the easy conversion between objects and plain arrays.
@@ -63,10 +68,10 @@ class array_converter {
                 // Deserialization target is a specific variant.
                 if ($discriminator !== null && $discriminator !== $expected) {
                     // If the wrong discriminator is given, it is an error.
-                    throw new moodle_exception(
-                        'cannotgetdata',
-                        'error',
-                        debuginfo: "Expected '$config->discriminator' value '$expected', but got '$discriminator'"
+                    throw new conversion_exception(
+                        'array',
+                        $class,
+                        "Expected '$config->discriminator' value '$expected', but got '$discriminator'"
                     );
                 }
                 // If either no discriminator or the correct one for the variant is given, we continue as normal.
@@ -79,7 +84,7 @@ class array_converter {
                         debugging($message . " Using fallback variant '$config->fallbackvariant'.");
                         $class = $config->fallbackvariant;
                     } else {
-                        throw new moodle_exception('cannotgetdata', 'error', debuginfo: $message);
+                        throw new conversion_exception('array', $class, $message);
                     }
                 }
 
@@ -100,18 +105,19 @@ class array_converter {
     }
 
     /**
-     * Converts class instances to plain arrays, and leaves scalar values untouched.
+     * Converts class instances to plain arrays and leaves scalar values untouched.
      *
      * @param mixed $instance value to convert
      * @return array|bool|float|int|string|null resulting 'plain value'
      * @throws coding_exception
+     * @throws conversion_exception
      */
-    public static function to_array($instance) {
+    public static function to_array(mixed $instance): mixed {
         if ($instance instanceof \BackedEnum) {
             return $instance->value;
         }
         if ($instance instanceof \UnitEnum) {
-            throw new coding_exception('Only backed enums are supported.');
+            throw new conversion_exception(get_class($instance), 'array', 'Only backed enums are supported.');
         }
         if ($instance instanceof DateTimeInterface) {
             return $instance->format(DateTimeInterface::ATOM);
@@ -185,10 +191,10 @@ class array_converter {
                 } else if ($parameter->isOptional() && $parameter->isDefaultValueAvailable()) {
                     $args[] = $parameter->getDefaultValue();
                 } else if (!$parameter->isVariadic()) {
-                    throw new moodle_exception(
-                        'cannotgetdata',
-                        'error',
-                        debuginfo: "No value provided for required field '$parameter->name' of '{$reflect->getName()}'"
+                    throw new conversion_exception(
+                        'array',
+                        $reflect->getName(),
+                        "No value provided for required field '$parameter->name' of '{$reflect->getName()}'"
                     );
                 }
             }
@@ -263,8 +269,8 @@ class array_converter {
      * If an instance of an existing class is expected, the raw array is converted using {@see self::from_array()}.
      * Otherwise, an exception is thrown.
      *
-     * @param ReflectionNamedType|null $type target type if known. Null otherwise, in which case the value will not be
-     *                                       converted
+     * @param ReflectionType|null $type target type if known. Null otherwise, in which case the value will not be
+     *                                  converted
      * @param converter_config $config
      * @param string $propname name of the property the value belongs to, for looking up in
      *                                       {@see converter_config::$elementclasses}
@@ -272,8 +278,8 @@ class array_converter {
      * @return mixed
      * @throws moodle_exception if the value cannot be converted to the given type
      */
-    private static function convert_to_required_type(?ReflectionNamedType $type, converter_config $config,
-                                                     string $propname, $value) {
+    private static function convert_to_required_type(?ReflectionType $type, converter_config $config,
+                                                     string $propname, mixed $value): mixed {
         if (!$type) {
             // For untyped properties / parameters, no conversion is done.
             return $value;
@@ -282,21 +288,37 @@ class array_converter {
             return null;
         }
 
+        if ($type instanceof ReflectionUnionType) {
+            // Try to convert to any of the union members.
+            foreach ($type->getTypes() as $unionmember) {
+                try {
+                    return self::convert_to_required_type($unionmember, $config, $propname, $value);
+                } catch (conversion_exception) {
+                    continue;
+                }
+            }
+
+            throw new conversion_exception(gettype($value), strval($type), 'Could not convert to any of the union members.');
+        }
+
+        if (!($type instanceof ReflectionNamedType)) {
+            // The only remaining option is a ReflectionIntersectionType, which we don't use.
+            $typeclass = get_class($type);
+            throw new conversion_exception(gettype($value), strval($type), "No support for $typeclass.");
+        }
+
         $typehint = $type->getName();
 
         if (enum_exists($typehint)) {
-            $enum = new \ReflectionEnum($typehint);
+            $enum = new ReflectionEnum($typehint);
             if (!$enum->isBacked()) {
-                throw new coding_exception('Only backed enums are supported.');
+                throw new conversion_exception(gettype($value), $typehint, 'Only backed enums are supported.');
             }
+
             try {
                 return call_user_func([$typehint, 'from'], $value);
-            } catch (\TypeError | \ValueError) {
-                throw new moodle_exception(
-                    'cannotgetdata',
-                    'error',
-                    debuginfo: "The value is not a valid member of enum '$typehint'"
-                );
+            } catch (TypeError | ValueError) {
+                throw new conversion_exception(gettype($value), $typehint, "'$value' is not a valid member of enum '$typehint'");
             }
         }
 
@@ -304,12 +326,7 @@ class array_converter {
             return new $typehint($value);
         }
 
-        if (!is_array($value)) {
-            // For other scalar properties / parameters, no conversion is done.
-            return $value;
-        }
-
-        if ($typehint === 'array') {
+        if (is_array($value) && $typehint === 'array') {
             $elementclass = $config->elementclasses[$propname] ?? null;
             if ($elementclass) {
                 // Convert each element to the required class.
@@ -322,16 +339,16 @@ class array_converter {
             }
         }
 
-        if (class_exists($typehint)) {
+        if (is_array($value) && class_exists($typehint)) {
             return self::from_array($typehint, $value);
         }
 
-        $actualtype = gettype($value);
-        throw new moodle_exception(
-            'cannotgetdata',
-            'error',
-            debuginfo: "Cannot convert value of type '$actualtype' to type '$typehint'"
-        );
+        if (in_array($typehint, ['int', 'float', 'string', 'bool']) && is_scalar($value)) {
+            // For other scalar properties / parameters, no conversion is done. We let PHP type juggle.
+            return $value;
+        }
+
+        throw new conversion_exception(gettype($value), $typehint, 'No support for this type combination.');
     }
 
     /**
