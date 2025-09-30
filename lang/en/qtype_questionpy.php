@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['array_converter_cannot_convert'] = 'Invalid data: Cannot convert {$a->actualtype} to type \'{$a->typehint}\'';
 $string['attempt_detail_heading'] = 'QuestionPy Details for Attempt {$a}';
 $string['attempt_detail_link'] = 'QuestionPy-specific details';
 $string['attempt_does_not_exist'] = 'The attempt does not exist anymore.';
