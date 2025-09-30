@@ -88,8 +88,8 @@ class qtype_questionpy extends question_type {
      * @param int $contextid the context this question belongs to.
      * @throws moodle_exception
      */
-    public function delete_question($questionid, $contextid) {
-        question_service::delete_question($questionid);
+    public function delete_question($questionid, $contextid): void {
+        $this->questionservice->delete_question($questionid, $contextid);
         parent::delete_question($questionid, $contextid);
     }
 

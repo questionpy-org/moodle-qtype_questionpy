@@ -86,6 +86,18 @@ class options_file_service implements handles_qpy_url_type {
     }
 
     /**
+     * Deletes all files in the permanent file area of the given question.
+     *
+     * @param int $contextid
+     * @param int $questionid
+     * @return void
+     */
+    public function delete_all_saved_files_belonging_to_question(int $contextid, int $questionid): void {
+        $fs = get_file_storage();
+        $fs->delete_area_files($contextid, 'qtype_questionpy', self::FILEAREA_UPLOADS, $questionid);
+    }
+
+    /**
      * Populates the given draft area with files listed in `$filemetas` and stored in the permanent question file area.
      *
      * (The inverse of {@see save_draft_area_files}.)

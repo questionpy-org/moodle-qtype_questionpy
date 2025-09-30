@@ -432,10 +432,10 @@ final class question_service_test extends \advanced_testcase {
         $pvi->upsert();
         $this->setup_question($pvi->versions[0]->hash);
 
-        global $DB;
+        global $DB, $PAGE;
         $this->assertEquals(1, $DB->count_records('qtype_questionpy'));
 
-        question_service::delete_question(1);
+        $this->questionservice->delete_question(1, $PAGE->context->id);
 
         $this->assertEquals(0, $DB->count_records('qtype_questionpy'));
     }
