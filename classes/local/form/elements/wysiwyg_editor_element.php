@@ -61,6 +61,8 @@ class wysiwyg_editor_element extends form_element {
      * @param string $name
      * @param string $label
      * @param bool $includehtml
+     * @param file_upload_options|disabled_sentinel|null $fileuploads `null` means no limits (but the default ones),
+     *  {@see disabled_sentinel::disabled} means no file uploads at all.
      */
     public function __construct(
         /** @var string */
@@ -69,7 +71,10 @@ class wysiwyg_editor_element extends form_element {
         public string $label,
         /** @var bool */
         #[array_key('include_html')]
-        public bool $includehtml = false
+        public bool $includehtml = false,
+        /** @var file_upload_options|disabled_sentinel|null (null means default/no limits, disabled means no file uploads at all) */
+        #[array_key('file_uploads')]
+        public file_upload_options|disabled_sentinel|null $fileuploads = null,
     ) {
     }
 
@@ -80,6 +85,18 @@ class wysiwyg_editor_element extends form_element {
      * @throws moodle_exception
      */
     public function render_to(render_context $context): void {
+        $uploadsoptions = match ($this->fileuploads) {
+            disabled_sentinel::disabled => [
+                'enable_filemanagement' => false,
+            ],
+            default => [
+                'subdirs' => self::SUBDIRS,
+                'maxfiles' => $this->fileuploads->maxfiles ?? EDITOR_UNLIMITED_FILES,
+                'maxbytes' => $this->fileuploads->maxbytesperfile ?? FILE_AREA_MAX_BYTES_UNLIMITED,
+                'areamaxbytes' => $this->fileuploads->maxbytestotal ?? FILE_AREA_MAX_BYTES_UNLIMITED,
+            ]
+        };
+
         /** @var MoodleQuickForm_editor $element */
         $element = $context->add_element(
             'editor',
@@ -87,9 +104,8 @@ class wysiwyg_editor_element extends form_element {
             $context->contextualize($this->label),
             null,
             [
-                'maxfiles' => EDITOR_UNLIMITED_FILES,
-                'subdirs' => self::SUBDIRS,
                 'context' => context::instance_by_id($context->question->contextid),
+                ...$uploadsoptions,
             ]
         );
         $context->set_type($this->name, PARAM_RAW);
@@ -124,17 +140,26 @@ class wysiwyg_editor_element extends form_element {
                 ]);
             }
 
-            // Remove all draft files that aren't referenced in the markup.
-            file_remove_editor_orphaned_files($mydata);
+            if ($this->fileuploads === disabled_sentinel::disabled) {
+                $filemetas = [];
+            } else {
+                // Remove all draft files that aren't referenced in the markup.
+                file_remove_editor_orphaned_files($mydata);
 
-            global $USER;
-            /** @var file_metadata[] $filemetas */
-            $filemetas = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
+                global $USER;
+                /** @var file_metadata[] $filemetas */
+                $filemetas = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
 
-            // Since we had to format_text before URL replacement, we need to do it to both $markup and $html :(.
-            $markup = self::replace_draftfile_urls_with_qpy_urls($markup, $filemetas, $draftitemid);
-            if ($html) {
-                $html = self::replace_draftfile_urls_with_qpy_urls($html, $filemetas, $draftitemid);
+                // Since we had to format_text before URL replacement, we need to do it to both $markup and $html :(.
+                $markup = self::replace_draftfile_urls_with_qpy_urls($markup, $filemetas, $draftitemid);
+                if ($html) {
+                    $html = self::replace_draftfile_urls_with_qpy_urls($html, $filemetas, $draftitemid);
+                }
+
+                // At this time, we don't know whether the question will be saved or the draft validated etc., and we don't know the
+                // question id, so we don't save the draft files ourselves. But we do need to let question_service know which draft
+                // items are used so it can save their contents.
+                $alldata['qpy_options_draftitems'][] = $draftitemid;
             }
 
             $mappedformat = self::FORMAT_MAP[$format] ?? null;
@@ -149,11 +174,6 @@ class wysiwyg_editor_element extends form_element {
                 html: $html
             );
 
-            // At this time, we don't know whether the question will be saved or the draft validated etc., and we don't know the
-            // question id, so we don't save the draft files ourselves. But we do need to let question_service know which draft
-            // items are used so it can save their contents.
-            $alldata['qpy_options_draftitems'][] = $draftitemid;
-
             utils::array_set_nested($alldata, $element->getName(), array_converter::to_array($resultdata));
         });
 
@@ -165,32 +185,35 @@ class wysiwyg_editor_element extends form_element {
 
             /** @var wysiwyg_editor_data $mydata */
             $mydata = array_converter::from_array(wysiwyg_editor_data::class, $myrawdata);
+            $processedmarkup = $mydata->markup;
 
-            global $USER;
-            if ($mydata->files && !$newdraftarea) {
-                $questionid = $context->question->id ?? null;
-                if ($questionid === null) {
-                    throw new \core\exception\coding_exception("We're loading a question, but its ID is unset.");
+            if ($this->fileuploads !== disabled_sentinel::disabled && $mydata->files) {
+                global $USER;
+                if ($newdraftarea) {
+                    $questionid = $context->question->id ?? null;
+                    if ($questionid === null) {
+                        throw new \core\exception\coding_exception("We're loading a question, but its ID is unset.");
+                    }
+
+                    $ofs = di::get(options_file_service::class);
+                    $ofs->prepare_draft_area($context->question->contextid, $questionid, $mydata->files, $USER->id, $draftitemid);
                 }
 
-                $ofs = di::get(options_file_service::class);
-                $ofs->prepare_draft_area($context->question->contextid, $questionid, $mydata->files, $USER->id, $draftitemid);
+                $filenamebyfileref = array_column($mydata->files, 'filename', 'fileref');
+
+                $processedmarkup = preg_replace_callback(
+                    constants::QPY_OPTIONS_URL_PATTERN,
+                    function (array $match) use ($draftitemid, $filenamebyfileref) {
+                        $filename = $filenamebyfileref[strtolower($match['fileref'])] ?? null;
+                        if ($filename === null) {
+                            debugging("Editor text contains QPy URL for nonexistent options file: '$match[0]'");
+                            return $match[0];
+                        }
+                        return moodle_url::make_draftfile_url($draftitemid, '/', $filename);
+                    },
+                    $processedmarkup
+                );
             }
-
-            $filenamebyfileref = array_column($mydata->files, 'filename', 'fileref');
-
-            $replacedtext = preg_replace_callback(
-                constants::QPY_OPTIONS_URL_PATTERN,
-                function (array $match) use ($draftitemid, $filenamebyfileref) {
-                    $filename = $filenamebyfileref[strtolower($match['fileref'])] ?? null;
-                    if ($filename === null) {
-                        debugging("Editor text contains QPy URL for nonexistent options file: '$match[0]'");
-                        return $match[0];
-                    }
-                    return moodle_url::make_draftfile_url($draftitemid, '/', $filename);
-                },
-                $mydata->markup
-            );
 
             $format = array_search($mydata->markupformat, self::FORMAT_MAP);
             if ($format === false) {
@@ -199,7 +222,7 @@ class wysiwyg_editor_element extends form_element {
             }
 
             utils::array_set_nested($alldata, $element->getName(), [
-                'text' => $replacedtext,
+                'text' => $processedmarkup,
                 'format' => $format,
                 'itemid' => $draftitemid,
             ]);
