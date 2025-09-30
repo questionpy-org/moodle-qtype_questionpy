@@ -40,6 +40,8 @@ use stdClass;
 class file_upload_element extends form_element {
     use form_help;
 
+    use file_upload_options_trait;
+
     /** @var false Whether to allow subdirs. */
     private const SUBDIRS = false;
 
@@ -48,20 +50,12 @@ class file_upload_element extends form_element {
      *
      * @param string $name
      * @param string $label
-     * @param int $minfiles
-     * @param int|null $maxfiles
      */
     public function __construct(
         /** @var string */
         public string $name,
         /** @var string */
         public string $label,
-        /** @var int */
-        #[array_key('min_files')]
-        public int $minfiles = 0,
-        /** @var int|null */
-        #[array_key('max_files')]
-        public ?int $maxfiles = null,
     ) {
     }
 
@@ -75,8 +69,10 @@ class file_upload_element extends form_element {
         /** @var MoodleQuickForm_filemanager $element */
         $element = $context->add_element('filemanager', $this->name, $context->contextualize($this->label), null, [
             'subdirs' => self::SUBDIRS,
-            'maxfiles' => $this->maxfiles,
+            'maxfiles' => $this->maxfiles ?? EDITOR_UNLIMITED_FILES,
             // MoodleQuickForm_filemanager doesn't offer a minfiles option, so we leave that to the QPy-side validation.
+            'maxbytes' => $this->maxbytesperfile ?? FILE_AREA_MAX_BYTES_UNLIMITED,
+            'areamaxbytes' => $this->maxbytestotal ?? FILE_AREA_MAX_BYTES_UNLIMITED,
         ]);
 
         $context->set_type($this->name, PARAM_RAW);
