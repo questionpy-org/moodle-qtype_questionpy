@@ -31,12 +31,16 @@ class file_metadata {
     /**
      * Trivial constructor.
      *
+     * @param string $path Starting and ending in `/`.
      * @param string $filename
      * @param string $fileref
      * @param DateTimeImmutable $uploadedat
      * @param string $mimetype
+     * @param int $size In bytes.
      */
     public function __construct(
+        /** @var string $path Starting and ending in `/`. */
+        public string $path,
         /** @var string $filename */
         public string $filename,
         /** @var string $fileref */
@@ -48,6 +52,8 @@ class file_metadata {
         /** @var string $mimetype */
         #[array_key('mime_type')]
         public string $mimetype,
+        /** @var int $size In bytes. */
+        public int $size,
     ) {
     }
 }

@@ -32,25 +32,19 @@ class wysiwyg_editor_data {
     /**
      * Initialize a new WYSIWYG editor data instance.
      *
-     * @param string $markup The markup content
-     * @param string $markupformat The format of the markup
+     * @param string $text The markup content
+     * @param string $textformat The format of the markup
      * @param file_metadata[] $files Associated files
-     * @param string|null $html The HTML content. Can be null but may be required by the package.
      */
     public function __construct(
-        /** @var string $markup */
-        #[array_key('markup')]
-        public string $markup,
-        /** @var string $markupformat */
-        #[array_key('markup_format')]
-        public string $markupformat,
+        /** @var string $text */
+        public string $text,
+        /** @var string $textformat */
+        #[array_key('_textformat')]
+        public string $textformat,
         /** @var file_metadata[] $files */
-        #[array_key('files')]
         #[array_element_class(file_metadata::class)]
         public array $files = [],
-        /** @var string|null $html */
-        #[array_key('html')]
-        public ?string $html = null,
     ) {
     }
 }

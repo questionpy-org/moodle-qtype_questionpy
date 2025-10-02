@@ -60,21 +60,16 @@ class wysiwyg_editor_element extends form_element {
      *
      * @param string $name
      * @param string $label
-     * @param bool $includehtml
-     * @param file_upload_options|disabled_sentinel|null $fileuploads `null` means no limits (but the default ones),
-     *  {@see disabled_sentinel::disabled} means no file uploads at all.
+     * @param file_upload_options|null $fileuploads (`null` disables uploads altogether)
      */
     public function __construct(
         /** @var string */
         public string $name,
         /** @var string */
         public string $label,
-        /** @var bool */
-        #[array_key('include_html')]
-        public bool $includehtml = false,
-        /** @var file_upload_options|disabled_sentinel|null (null means default/no limits, disabled means no file uploads at all) */
+        /** @var file_upload_options|null (`null` disables uploads altogether) */
         #[array_key('file_uploads')]
-        public file_upload_options|disabled_sentinel|null $fileuploads = null,
+        public file_upload_options|null $fileuploads = new file_upload_options(),
     ) {
     }
 
@@ -86,10 +81,11 @@ class wysiwyg_editor_element extends form_element {
      */
     public function render_to(render_context $context): void {
         $uploadsoptions = match ($this->fileuploads) {
-            disabled_sentinel::disabled => [
+            null => [
                 'enable_filemanagement' => false,
             ],
             default => [
+                // MoodleQuickForm_editor doesn't offer a minfiles option, so we leave that to the QPy-side validation.
                 'subdirs' => self::SUBDIRS,
                 'maxfiles' => $this->fileuploads->maxfiles ?? EDITOR_UNLIMITED_FILES,
                 'maxbytes' => $this->fileuploads->maxbytesperfile ?? FILE_AREA_MAX_BYTES_UNLIMITED,
@@ -123,24 +119,11 @@ class wysiwyg_editor_element extends form_element {
                 return;
             }
 
-            $markup = $mydata['text'];
+            $text = $mydata['text'];
             $format = $mydata['format'];
-            $html = null;
 
-            // If the format isn't HTML but $includehtml is passed, we need to convert the markup to HTML.
-            // Although we specify 'noclean' below, $CFG->forceclean may override us. Since cleaning would remove qpy:// URLs, we
-            // do this _before_ replacing URLs.
-            if ($format != FORMAT_HTML && $this->includehtml) {
-                $html = format_text($markup, $format, options: [
-                    'context' => context::instance_by_id($context->question->contextid),
-                    // We leave cleaning to when the content is output. (Placeholder values are cleaned by default, for instance.)
-                    'noclean' => true,
-                    // If filter is true (default), format_text replaces draftfile URLs with brokenfile.
-                    'filter' => false,
-                ]);
-            }
-
-            if ($this->fileuploads === disabled_sentinel::disabled) {
+            if (!$this->fileuploads) {
+                // Uploads are disabled.
                 $filemetas = [];
             } else {
                 // Remove all draft files that aren't referenced in the markup.
@@ -150,11 +133,7 @@ class wysiwyg_editor_element extends form_element {
                 /** @var file_metadata[] $filemetas */
                 $filemetas = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
 
-                // Since we had to format_text before URL replacement, we need to do it to both $markup and $html :(.
-                $markup = self::replace_draftfile_urls_with_qpy_urls($markup, $filemetas, $draftitemid);
-                if ($html) {
-                    $html = self::replace_draftfile_urls_with_qpy_urls($html, $filemetas, $draftitemid);
-                }
+                $text = self::replace_draftfile_urls_with_qpy_urls($text, $filemetas, $draftitemid);
 
                 // At this time, we don't know whether the question will be saved or the draft validated etc., and we don't know the
                 // question id, so we don't save the draft files ourselves. But we do need to let question_service know which draft
@@ -168,10 +147,9 @@ class wysiwyg_editor_element extends form_element {
             }
 
             $resultdata = new wysiwyg_editor_data(
-                markup: $markup,
-                markupformat: $mappedformat,
+                text: $text,
+                textformat: $mappedformat,
                 files: $filemetas,
-                html: $html
             );
 
             utils::array_set_nested($alldata, $element->getName(), array_converter::to_array($resultdata));
@@ -185,9 +163,9 @@ class wysiwyg_editor_element extends form_element {
 
             /** @var wysiwyg_editor_data $mydata */
             $mydata = array_converter::from_array(wysiwyg_editor_data::class, $myrawdata);
-            $processedmarkup = $mydata->markup;
+            $text = $mydata->text;
 
-            if ($this->fileuploads !== disabled_sentinel::disabled && $mydata->files) {
+            if ($this->fileuploads && $mydata->files) {
                 global $USER;
                 if ($newdraftarea) {
                     $questionid = $context->question->id ?? null;
@@ -201,7 +179,7 @@ class wysiwyg_editor_element extends form_element {
 
                 $filenamebyfileref = array_column($mydata->files, 'filename', 'fileref');
 
-                $processedmarkup = preg_replace_callback(
+                $text = preg_replace_callback(
                     constants::QPY_OPTIONS_URL_PATTERN,
                     function (array $match) use ($draftitemid, $filenamebyfileref) {
                         $filename = $filenamebyfileref[strtolower($match['fileref'])] ?? null;
@@ -211,18 +189,18 @@ class wysiwyg_editor_element extends form_element {
                         }
                         return moodle_url::make_draftfile_url($draftitemid, '/', $filename);
                     },
-                    $processedmarkup
+                    $text
                 );
             }
 
-            $format = array_search($mydata->markupformat, self::FORMAT_MAP);
+            $format = array_search($mydata->textformat, self::FORMAT_MAP);
             if ($format === false) {
                 // TODO: This blocks the entire question edit form, it would be much better to show an error for this element only.
-                throw new moodle_exception('wysiwyg_editor_unknown_format', 'qtype_questionpy', a: $mydata->markupformat);
+                throw new moodle_exception('wysiwyg_editor_unknown_format', 'qtype_questionpy', a: $mydata->textformat);
             }
 
             utils::array_set_nested($alldata, $element->getName(), [
-                'text' => $processedmarkup,
+                'text' => $text,
                 'format' => $format,
                 'itemid' => $draftitemid,
             ]);
