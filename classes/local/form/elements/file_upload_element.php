@@ -66,6 +66,8 @@ class file_upload_element extends form_element {
      * @throws moodle_exception
      */
     public function render_to(render_context $context): void {
+        global $PAGE, $CFG;
+
         /** @var MoodleQuickForm_filemanager $element */
         $element = $context->add_element('filemanager', $this->name, $context->contextualize($this->label), null, [
             'subdirs' => self::SUBDIRS,
@@ -88,8 +90,16 @@ class file_upload_element extends form_element {
             }
 
             global $USER;
+            $ofs = di::get(options_file_service::class);
             /** @var file_metadata[] $filemetas */
-            $filemetas = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
+            $filemetas = $ofs->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
+            $ofs->check_upload_restrictions(
+                $this,
+                $context->question->contextid,
+                $context->question->id ?? null,
+                $draftitemid,
+                $filemetas
+            );
 
             // At this time, we don't know whether the question will be saved or the draft validated etc., and we don't know the
             // question id, so we don't save the draft files ourselves. But we do need to let question_service know which draft

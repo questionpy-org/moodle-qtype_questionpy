@@ -80,6 +80,13 @@ class wysiwyg_editor_element extends form_element {
      * @throws moodle_exception
      */
     public function render_to(render_context $context): void {
+        global $PAGE, $CFG;
+
+        $coursemaxbytes = 0;
+        if (!empty($PAGE->course->maxbytes)) {
+            $coursemaxbytes = $PAGE->course->maxbytes;
+        }
+
         $uploadsoptions = match ($this->fileuploads) {
             null => [
                 'enable_filemanagement' => false,
@@ -130,8 +137,16 @@ class wysiwyg_editor_element extends form_element {
                 file_remove_editor_orphaned_files($mydata);
 
                 global $USER;
+                $ofs = di::get(options_file_service::class);
                 /** @var file_metadata[] $filemetas */
-                $filemetas = di::get(options_file_service::class)->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
+                $filemetas = $ofs->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
+                $ofs->check_upload_restrictions(
+                    $this->fileuploads,
+                    $context->question->contextid,
+                    $context->question->id ?? null,
+                    $draftitemid,
+                    $filemetas
+                );
 
                 $text = self::replace_draftfile_urls_with_qpy_urls($text, $filemetas, $draftitemid);
 
