@@ -40,10 +40,6 @@ use stored_file_creation_exception;
 class options_file_service implements handles_qpy_url_type {
     // TODO: Support subdirectories.
 
-    // TODO: When a file is deleted while editing a question, we do not currently delete it from the permanent file area (it just
-    // gets hidden because it's removed from the metadata). We probably should do so in the future, but we must make sure that
-    // previous question versions remain functional _if_ they still exist.
-
     /** @var string */
     public const FILEAREA_UPLOADS = 'options';
 
