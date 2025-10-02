@@ -17,11 +17,14 @@
 namespace qtype_questionpy\local\files;
 
 use coding_exception;
+use context;
 use context_user;
 use DateTimeImmutable;
 use file_exception;
 use moodle_exception;
 use moodle_url;
+use qtype_questionpy\local\form\elements\file_upload_element;
+use qtype_questionpy\local\form\elements\file_upload_options;
 use qtype_questionpy_question;
 use stored_file;
 use stored_file_creation_exception;
@@ -43,6 +46,7 @@ class options_file_service implements handles_qpy_url_type {
 
     /** @var string */
     public const FILEAREA_UPLOADS = 'options';
+
 
     /**
      * Saves all the files in the given draft item to the permanent file area for the given question.
@@ -168,7 +172,83 @@ class options_file_service implements handles_qpy_url_type {
                 size: $file->get_filesize(),
             );
         }
+
         return $metadata;
+    }
+
+    /**
+     * Checks that `maxfiles`, `maxbytestotal` and `maxbytesperfile` (or whatever the LMS overrides it with) are fulfilled.
+     *
+     * Breaking any of the three by accident should be impossible through UI design or checked by earlier parts of the Moodle code.
+     * It might be possible if intentional, so we also check it here, but just throw unhelpful {@see coding_exception}s.
+     *
+     * `minfiles` is _not_ checked. Since that option isn't really security-relevant, it's left to the package/SDK.
+     *
+     * @param file_upload_options|file_upload_element $options
+     * @param int $contextid
+     * @param int|null $questionid Question being edited, or `null` if a new question is being created.
+     * @param int $draftitemid
+     * @param file_metadata[] $draftfilemetas
+     * @return void An exception is thrown if the restrictions are not fulfilled.
+     * @throws coding_exception
+     */
+    public function check_upload_restrictions(
+        file_upload_options|file_upload_element $options,
+        int $contextid, ?int $questionid, int $draftitemid, array $draftfilemetas
+    ): void {
+        global $CFG;
+        $fs = get_file_storage();
+
+        if ($options->maxfiles !== null && count($draftfilemetas) > $options->maxfiles) {
+            throw new coding_exception("Draft area $draftitemid exceeds limit of $options->maxfiles files.");
+        }
+
+        if (file_is_draft_area_limit_reached($draftitemid, $options->maxbytestotal ?? FILE_AREA_MAX_BYTES_UNLIMITED)) {
+            throw new coding_exception("Draft area $draftitemid exceeds limit of $options->maxbytestotal bytes.");
+        }
+
+        $coursemaxbytes = 0;
+        if (!empty($PAGE->course->maxbytes)) {
+            $coursemaxbytes = $PAGE->course->maxbytes;
+        }
+
+        $effectivemaxbytes = get_user_max_upload_file_size(
+            context::instance_by_id($contextid),
+            $CFG->maxbytes,
+            $coursemaxbytes,
+            $options->maxbytesperfile ?? FILE_AREA_MAX_BYTES_UNLIMITED
+        );
+
+        if ($effectivemaxbytes === USER_CAN_IGNORE_FILE_SIZE_LIMITS) {
+            // No need to check then.
+            return;
+        }
+
+        $existingfiles = $questionid ? $fs->get_area_files(
+            $contextid,
+            'qtype_questionpy',
+            self::FILEAREA_UPLOADS,
+            $questionid,
+            includedirs: false
+        ) : [];
+        $existingfilerefs = array_map(fn($file) => $file->get_filename(), $existingfiles);
+
+        foreach ($draftfilemetas as $draftfilemeta) {
+            if (in_array($draftfilemeta->fileref, $existingfilerefs)) {
+                // The file (a file with the same content and metadata) had already been successfully uploaded.
+                // The current user might have changed its path or filename or even moved it to a different upload element, but
+                // since the original uploader must've been allowed to upload it, we don't check whether the current user would be
+                // allowed to upload it again.
+                // TODO: Catch when a file is copied/moved by the package to a different element with a lower file size limit.
+                // That would probably need to happen at import (when loading the form data from the package), not here.
+                continue;
+            }
+
+            if ($draftfilemeta->size > $effectivemaxbytes) {
+                throw new coding_exception("File '{$draftfilemeta->path}{$draftfilemeta->filename}' exceeds limit of"
+                    . " $effectivemaxbytes bytes.");
+            }
+        }
     }
 
     /**
