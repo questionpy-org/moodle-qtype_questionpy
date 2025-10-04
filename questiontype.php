@@ -88,6 +88,18 @@ class qtype_questionpy extends question_type {
     }
 
     /**
+     * If the quetsion type uses files in responses, then this method should
+     * return an array of all the response variables that might have corresponding
+     * files. For example, the essay qtype returns array('attachments', 'answers').
+     *
+     * @return array response variable names that may have associated files.
+     */
+    public function response_file_areas(): array {
+        // Despite the name, this method should return the qt vars that have file areas, not the areas themselves.
+        return [constants::QT_VAR_ATTEMPT_FILES];
+    }
+
+    /**
      * Deletes the question-type specific data when a question is deleted.
      *
      * @param int $questionid the question being deleted.

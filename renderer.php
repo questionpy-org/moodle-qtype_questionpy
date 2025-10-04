@@ -83,10 +83,23 @@ class qtype_questionpy_renderer extends qtype_renderer {
         }
 
         try {
+            /** @var array<string, int>|null $uploaddraftareas */
+            $uploaddraftareas = null;
+
             $questiondivid = $qa->get_outer_question_div_unique_id();
             $qpyresponseid = $questiondivid . '-qpy-response';
-            $formulationcb = function (qtype_questionpy_renderer $renderer) use ($qa, $question, $options, $qpyresponseid) {
-                return $renderer->formulation_controls_feedback_in_iframe($qa, $question->ui, $options, $qpyresponseid);
+            $formulationcb = function (qtype_questionpy_renderer $renderer)
+                                use ($qa, $question, $options, $qpyresponseid, &$uploaddraftareas) {
+                $quirenderer = question_ui_renderer::render($question->ui->formulation, $question->ui->placeholders, $options, $qa);
+                $uploaddraftareas = $quirenderer->draftareas;
+
+                return $renderer->formulation_controls_feedback_in_iframe(
+                    $qa,
+                    $question->ui,
+                    $quirenderer,
+                    $options,
+                    $qpyresponseid
+                );
             };
             $iframesrc = $this->get_iframe_document($options->context, $question, $formulationcb);
 
@@ -124,6 +137,23 @@ class qtype_questionpy_renderer extends qtype_renderer {
                 <input type="hidden" name="{$qpyresponsename}" id="{$qpyresponseid}" value="{$lastqpyresponse}">
                 <iframe id="{$iframeid}" srcdoc="{$iframesrc}"></iframe>
             EOA;
+
+            if ($uploaddraftareas === null) {
+                throw new coding_exception('$uploaddraftareas was not set');
+            }
+            if (count($uploaddraftareas) > 0) {
+                $result .= html_writer::empty_tag('input', [
+                    'type' => 'hidden',
+                    'name' => $qa->get_field_prefix() . constants::FORM_DRAFT_AREAS,
+                    'value' => json_encode($uploaddraftareas, JSON_FORCE_OBJECT),
+                ]);
+                $combineddraftareaid = file_get_unused_draft_itemid();
+                $result .= html_writer::empty_tag('input', [
+                    'type' => 'hidden',
+                    'name' => $qa->get_field_prefix() . constants::QT_VAR_ATTEMPT_FILES,
+                    'value' => $combineddraftareaid,
+                ]);
+            }
 
             return $result;
         } catch (Throwable $t) {
@@ -218,18 +248,17 @@ class qtype_questionpy_renderer extends qtype_renderer {
      *
      * @param question_attempt $qa the question attempt to display.
      * @param attempt_ui $ui
+     * @param question_ui_renderer $renderer Render result.
      * @param question_display_options $options controls what should and should not be displayed.
      * @param string $qpyresponseid
      * @return string HTML fragment.
      * @throws moodle_exception
      */
     protected function formulation_controls_feedback_in_iframe(
-        question_attempt $qa, attempt_ui $ui,
+        question_attempt $qa, attempt_ui $ui, question_ui_renderer $renderer,
         question_display_options $options, string $qpyresponseid
     ): string {
         global $CFG;
-
-        $renderer = question_ui_renderer::render($ui->formulation, $ui->placeholders, $options, $qa);
 
         $warningshtml = '';
         if ($renderer->warnings) {

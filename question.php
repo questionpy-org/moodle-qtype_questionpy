@@ -246,6 +246,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public function get_expected_data(): array|string {
         return [
             constants::QT_VAR_RESPONSE => PARAM_RAW_TRIMMED,
+            constants::QT_VAR_ATTEMPT_FILES => question_attempt::PARAM_FILES,
         ];
     }
 
@@ -315,7 +316,18 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws \core\exception\coding_exception
      */
     public function is_same_response(array $prevresponse, array $newresponse): bool {
-        return utils::get_qpy_response($prevresponse) == utils::get_qpy_response($newresponse);
+        if (utils::get_qpy_response($prevresponse) != utils::get_qpy_response($newresponse)) {
+            return false;
+        }
+
+        // We compare the hashes question_file_saver generates over all files.
+        $prevfilehash = strval($prevresponse[constants::QT_VAR_ATTEMPT_FILES] ?? '');
+        $newfilehash = strval($newresponse[constants::QT_VAR_ATTEMPT_FILES] ?? '');
+        if ($prevfilehash !== $newfilehash) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

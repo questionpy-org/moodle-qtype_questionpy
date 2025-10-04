@@ -51,7 +51,7 @@ class dom_utils {
      *
      * @param DOMDocument $doc target document which the fragment should belong to
      * @param string $html
-     * @param int $options
+     * @param int $options Additional flags for {@see DOMDocument::loadHTML()}.
      * @return DOMDocumentFragment|false fragment on success (or ignored errors), false on failure
      * @see DOMDocumentFragment::appendXML() the XML equivalent is provided by PHP, but not HTML :(
      */
