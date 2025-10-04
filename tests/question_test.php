@@ -29,6 +29,7 @@ use qtype_questionpy\local\api\question_response;
 use qtype_questionpy\local\api\scoring_method;
 use qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor;
 use qtype_questionpy_question;
+use question_attempt;
 use question_bank;
 use question_engine;
 use question_state;
@@ -214,10 +215,13 @@ final class question_test extends \advanced_testcase {
      * @covers \qtype_questionpy_question::get_expected_data
      * @throws coding_exception
      */
-    public function test_get_expected_data_should_return_qpy_response(): void {
+    public function test_get_expected_data(): void {
         $question = $this->create_question();
 
-        $this->assertEquals([constants::QT_VAR_RESPONSE => PARAM_RAW_TRIMMED], $question->get_expected_data());
+        $this->assertEquals([
+            constants::QT_VAR_RESPONSE => PARAM_RAW_TRIMMED,
+            constants::QT_VAR_ATTEMPT_FILES => question_attempt::PARAM_FILES,
+        ], $question->get_expected_data());
     }
 
     /**

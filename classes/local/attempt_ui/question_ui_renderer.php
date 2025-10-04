@@ -17,6 +17,7 @@
 namespace qtype_questionpy\local\attempt_ui;
 
 use coding_exception;
+use context;
 use core\di;
 use DOMAttr;
 use DOMDocument;
@@ -26,13 +27,17 @@ use DOMNode;
 use DOMProcessingInstruction;
 use DOMText;
 use DOMXPath;
+use file_exception;
+use form_filemanager;
 use moodle_exception;
 use qtype_questionpy\constants;
+use qtype_questionpy\local\files\attempt_file_service;
 use qtype_questionpy\local\files\qpy_url_resolver;
 use qtype_questionpy\utils;
 use qtype_questionpy_question;
 use question_attempt;
 use question_display_options;
+use stored_file_creation_exception;
 
 /**
  * Parses the question UI XML, transforms it, and renders it to HTML.
@@ -48,6 +53,9 @@ class question_ui_renderer {
 
     /** @var string $html resulting rendered html */
     public string $html;
+
+    /** @var array<string, int> Mapping of input names to draft item ids.  */
+    public array $draftareas = [];
 
     /** @var invalid_option_warning[] $warnings warnings emitted during rendering */
     public array $warnings;
@@ -129,6 +137,8 @@ class question_ui_renderer {
             $renderer->hide_if_role();
             $renderer->shuffle_contents();
             $renderer->format_floats();
+
+            $renderer->render_file_uploads($attempt);
 
             $availableoptions = $renderer->extract_available_options();
 
@@ -265,6 +275,63 @@ class question_ui_renderer {
             }
 
             $indexelement->parentNode->replaceChild(new DOMText($indexstr), $indexelement);
+        }
+    }
+
+    /**
+     * Replaces all the `<qpy:file-upload/>`-elements with Moodle file managers, preparing them with their last submitted files.
+     *
+     * @param question_attempt $attempt
+     * @throws file_exception
+     * @throws stored_file_creation_exception
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
+    private function render_file_uploads(question_attempt $attempt): void {
+        /** @var DOMElement $element */
+        foreach (iterator_to_array($this->xpath->query('//qpy:file-upload')) as $element) {
+            $name = $element->getAttribute('name');
+            if (!$name) {
+                debugging('qpy:file-upload without a name');
+                continue;
+            }
+
+            $maxfiles = $element->getAttribute('max_files');
+            $maxfiles = $maxfiles === '' ? EDITOR_UNLIMITED_FILES : intval($maxfiles);
+
+            $maxbytes = $element->getAttribute('max_bytes_per_file');
+            $maxbytes = $maxbytes === '' ? FILE_AREA_MAX_BYTES_UNLIMITED : intval($maxbytes);
+
+            $areamaxbytes = $element->getAttribute('max_bytes_total');
+            $areamaxbytes = $areamaxbytes === '' ? FILE_AREA_MAX_BYTES_UNLIMITED : intval($areamaxbytes);
+
+            // Re: "global $PAGE cannot be used in renderers" - We're not _that_ kind of a renderer.
+            // phpcs:disable moodle.PHP.ForbiddenGlobalUse.BadGlobal
+            global $CFG, $PAGE, $USER;
+            require_once($CFG->libdir . '/form/filemanager.php');
+
+            $draftitemid = file_get_unused_draft_itemid();
+            $afs = di::get(attempt_file_service::class);
+            $afs->prepare_draft_area($this->options->context->id, $attempt, $name, $USER->id, $draftitemid);
+
+            // TODO: Explain.
+            $this->draftareas[$name] = $draftitemid;
+
+            $fm = new form_filemanager((object)[
+                'itemid' => $draftitemid,
+                'subdirs' => false,
+                'context' => $this->options->context,
+                'maxfiles' => $maxfiles,
+                'maxbytes' => $maxbytes,
+                'areamaxbytes' => $areamaxbytes,
+            ]);
+
+            // phpcs:disable moodle.PHP.ForbiddenGlobalUse.BadGlobal
+            $filesrenderer = $PAGE->get_renderer('core', 'files');
+            $html = $filesrenderer->render($fm);
+            $frag = dom_utils::html_to_fragment($this->xml, $html);
+
+            $element->parentNode->replaceChild($frag, $element);
         }
     }
 

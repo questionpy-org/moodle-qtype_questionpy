@@ -37,6 +37,16 @@ class constants {
     /** @var string */
     public const QT_VAR_RESPONSE = 'qpy_response';
 
+    /** @var string This isn't needed after the action has been processed, so it's not a qt var. */
+    public const FORM_DRAFT_AREAS = 'qpy_draft_areas';
+
+    // The response_ prefix is hardcoded in a few question_attempt(_step) methods. Following that allows us to use some of them.
+    /** @var string */
+    public const FILEAREA_ATTEMPT_FILES = 'response_files';
+    /** @var string */
+    public const QT_VAR_ATTEMPT_FILES = 'files';
+
+
     /** @var string */
     public const FILEAREA_OPTIONS = 'options';
     /** @var string */
