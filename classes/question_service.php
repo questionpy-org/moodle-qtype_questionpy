@@ -225,14 +225,11 @@ class question_service {
      * Deletes all QuestionPy-specific data for the given question.
      *
      * @param int $questionid
-     * @param int $contextid The context this question belongs to.
      * @throws dml_exception
      */
-    public function delete_question(int $questionid, int $contextid) {
+    public function delete_question(int $questionid) {
         global $DB;
         $DB->delete_records(self::QUESTION_TABLE, ['questionid' => $questionid]);
         // TODO: Also delete packages when they are no longer used by any question.
-
-        $this->ofs->delete_all_saved_files_belonging_to_question($contextid, $questionid);
     }
 }

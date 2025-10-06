@@ -38,6 +38,11 @@ class constants {
     public const QT_VAR_RESPONSE = 'qpy_response';
 
     /** @var string */
+    public const FILEAREA_OPTIONS = 'options';
+    /** @var string */
+    public const FILEAREA_STATIC = 'static';
+
+    /** @var string */
     public const QPY_OPTIONS_URL_PATTERN = ';qpy://options/(?P<fileref>[a-zA-Z0-9\-_=]{1,64});';
 
     /** @var string */

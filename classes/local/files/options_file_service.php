@@ -23,6 +23,7 @@ use DateTimeImmutable;
 use file_exception;
 use moodle_exception;
 use moodle_url;
+use qtype_questionpy\constants;
 use qtype_questionpy\local\form\elements\file_upload_element;
 use qtype_questionpy\local\form\elements\file_upload_options;
 use qtype_questionpy_question;
@@ -39,10 +40,6 @@ use stored_file_creation_exception;
  */
 class options_file_service implements handles_qpy_url_type {
     // TODO: Support subdirectories.
-
-    /** @var string */
-    public const FILEAREA_UPLOADS = 'options';
-
 
     /**
      * Saves all the files in the given draft item to the permanent file area for the given question.
@@ -61,7 +58,7 @@ class options_file_service implements handles_qpy_url_type {
         $existingfiles = $fs->get_area_files(
             $contextid,
             'qtype_questionpy',
-            self::FILEAREA_UPLOADS,
+            constants::FILEAREA_OPTIONS,
             $questionid,
             includedirs: false
         );
@@ -86,18 +83,6 @@ class options_file_service implements handles_qpy_url_type {
     }
 
     /**
-     * Deletes all files in the permanent file area of the given question.
-     *
-     * @param int $contextid
-     * @param int $questionid
-     * @return void
-     */
-    public function delete_all_saved_files_belonging_to_question(int $contextid, int $questionid): void {
-        $fs = get_file_storage();
-        $fs->delete_area_files($contextid, 'qtype_questionpy', self::FILEAREA_UPLOADS, $questionid);
-    }
-
-    /**
      * Populates the given draft area with files listed in `$filemetas` and stored in the permanent question file area.
      *
      * (The inverse of {@see save_draft_area_files}.)
@@ -113,7 +98,7 @@ class options_file_service implements handles_qpy_url_type {
      */
     public function prepare_draft_area(int $contextid, int $questionid, array $filemetas, int $userid, int $draftitemid): void {
         $fs = get_file_storage();
-        $files = $fs->get_area_files($contextid, 'qtype_questionpy', self::FILEAREA_UPLOADS, $questionid, includedirs: false);
+        $files = $fs->get_area_files($contextid, 'qtype_questionpy', constants::FILEAREA_OPTIONS, $questionid, includedirs: false);
 
         foreach ($filemetas as $filemetadata) {
             $matchingfiles = array_filter($files, fn($file) => $file->get_filename() === $filemetadata->fileref);
@@ -223,7 +208,7 @@ class options_file_service implements handles_qpy_url_type {
         $existingfiles = $questionid ? $fs->get_area_files(
             $contextid,
             'qtype_questionpy',
-            self::FILEAREA_UPLOADS,
+            constants::FILEAREA_OPTIONS,
             $questionid,
             includedirs: false
         ) : [];
@@ -258,7 +243,7 @@ class options_file_service implements handles_qpy_url_type {
      */
     public function get_saved_file(int $contextid, int $questionid, string $fileref): ?stored_file {
         $fs = get_file_storage();
-        $files = $fs->get_area_files($contextid, 'qtype_questionpy', self::FILEAREA_UPLOADS, $questionid, includedirs: false);
+        $files = $fs->get_area_files($contextid, 'qtype_questionpy', constants::FILEAREA_OPTIONS, $questionid, includedirs: false);
         foreach ($files as $file) {
             if ($file->get_filename() === $fileref) {
                 return $file;
@@ -296,7 +281,7 @@ class options_file_service implements handles_qpy_url_type {
         return moodle_url::make_pluginfile_url(
             $question->contextid,
             'qtype_questionpy',
-            self::FILEAREA_UPLOADS,
+            constants::FILEAREA_OPTIONS,
             $question->id,
             '/',
             $path

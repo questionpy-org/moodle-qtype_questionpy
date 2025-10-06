@@ -23,7 +23,9 @@
  */
 
 use core\di;
+use qtype_questionpy\constants;
 use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\files\options_file_service;
 use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\package_file_service;
 use qtype_questionpy\question_service;
@@ -50,6 +52,9 @@ class qtype_questionpy extends question_type {
     /** @var question_service */
     private question_service $questionservice;
 
+    /** @var options_file_service */
+    private options_file_service $ofs;
+
     /**
      * Initializes the instance. Called by Moodle.
      */
@@ -58,6 +63,7 @@ class qtype_questionpy extends question_type {
         $this->api = di::get(api::class);
         $this->packagefileservice = di::get(package_file_service::class);
         $this->questionservice = di::get(question_service::class);
+        $this->ofs = di::get(options_file_service::class);
     }
 
     /**
@@ -89,7 +95,7 @@ class qtype_questionpy extends question_type {
      * @throws moodle_exception
      */
     public function delete_question($questionid, $contextid): void {
-        $this->questionservice->delete_question($questionid, $contextid);
+        $this->questionservice->delete_question($questionid);
         parent::delete_question($questionid, $contextid);
     }
 
@@ -117,13 +123,16 @@ class qtype_questionpy extends question_type {
      * @param int $contextid
      * @return void
      */
-    protected function delete_files($questionid, $contextid) {
+    protected function delete_files($questionid, $contextid): void {
         parent::delete_files($questionid, $contextid);
         $this->delete_files_in_answers($questionid, $contextid);
         $this->delete_files_in_hints($questionid, $contextid);
 
         $fs = get_file_storage();
         $fs->delete_area_files($contextid, 'qtype_questionpy', 'package', $questionid);
+
+        $fs1 = get_file_storage();
+        $fs1->delete_area_files($contextid, 'qtype_questionpy', constants::FILEAREA_OPTIONS, $questionid);
     }
 
     /**
