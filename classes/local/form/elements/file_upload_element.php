@@ -16,6 +16,7 @@
 
 namespace qtype_questionpy\local\form\elements;
 
+use core\context;
 use core\di;
 use core\exception\coding_exception;
 use moodle_exception;
@@ -68,12 +69,23 @@ class file_upload_element extends form_element {
     public function render_to(render_context $context): void {
         global $PAGE, $CFG;
 
+        $coursemaxbytes = 0;
+        if (!empty($PAGE->course->maxbytes)) {
+            $coursemaxbytes = $PAGE->course->maxbytes;
+        }
+
         /** @var MoodleQuickForm_filemanager $element */
         $element = $context->add_element('filemanager', $this->name, $context->contextualize($this->label), null, [
+            // MoodleQuickForm_filemanager doesn't offer a minfiles option, so we leave that to the QPy-side validation.
             'subdirs' => self::SUBDIRS,
             'maxfiles' => $this->maxfiles ?? EDITOR_UNLIMITED_FILES,
-            // MoodleQuickForm_filemanager doesn't offer a minfiles option, so we leave that to the QPy-side validation.
-            'maxbytes' => $this->maxbytesperfile ?? FILE_AREA_MAX_BYTES_UNLIMITED,
+            // Moodle applied get_user_max_upload_file_size again, but is inconsistent about it, and more often doesn't hurt.
+            'maxbytes' => get_user_max_upload_file_size(
+                context::instance_by_id($context->question->contextid),
+                $CFG->maxbytes,
+                $coursemaxbytes,
+                $this->fileuploads->maxbytesperfile ?? FILE_AREA_MAX_BYTES_UNLIMITED
+            ),
             'areamaxbytes' => $this->maxbytestotal ?? FILE_AREA_MAX_BYTES_UNLIMITED,
         ]);
 
