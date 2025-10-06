@@ -95,7 +95,13 @@ class wysiwyg_editor_element extends form_element {
                 // MoodleQuickForm_editor doesn't offer a minfiles option, so we leave that to the QPy-side validation.
                 'subdirs' => self::SUBDIRS,
                 'maxfiles' => $this->fileuploads->maxfiles ?? EDITOR_UNLIMITED_FILES,
-                'maxbytes' => $this->fileuploads->maxbytesperfile ?? FILE_AREA_MAX_BYTES_UNLIMITED,
+                // Moodle applied get_user_max_upload_file_size again, but is inconsistent about it, and more often doesn't hurt.
+                'maxbytes' => get_user_max_upload_file_size(
+                    context::instance_by_id($context->question->contextid),
+                    $CFG->maxbytes,
+                    $coursemaxbytes,
+                    $this->fileuploads->maxbytesperfile ?? FILE_AREA_MAX_BYTES_UNLIMITED
+                ),
                 'areamaxbytes' => $this->fileuploads->maxbytestotal ?? FILE_AREA_MAX_BYTES_UNLIMITED,
             ]
         };
