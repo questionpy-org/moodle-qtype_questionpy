@@ -22,6 +22,7 @@ use dml_exception;
 use GuzzleHttp\Exception\GuzzleException;
 use invalid_dataroot_permissions;
 use moodle_url;
+use qtype_questionpy\constants;
 use qtype_questionpy\exception\request_error;
 use qtype_questionpy\local\api\api;
 use qtype_questionpy\package_file_service;
@@ -104,7 +105,7 @@ class static_file_service implements handles_qpy_url_type {
         return moodle_url::make_pluginfile_url(
             $question->contextid,
             'qtype_questionpy',
-            'static',
+            constants::FILEAREA_STATIC,
             null,
             '/' . $question->packagehash . dirname($path) . '/',
             basename($path)

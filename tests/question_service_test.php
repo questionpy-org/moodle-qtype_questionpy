@@ -435,7 +435,7 @@ final class question_service_test extends \advanced_testcase {
         global $DB, $PAGE;
         $this->assertEquals(1, $DB->count_records('qtype_questionpy'));
 
-        $this->questionservice->delete_question(1, $PAGE->context->id);
+        $this->questionservice->delete_question(1);
 
         $this->assertEquals(0, $DB->count_records('qtype_questionpy'));
     }
