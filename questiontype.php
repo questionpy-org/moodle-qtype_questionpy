@@ -114,6 +114,13 @@ class qtype_questionpy extends question_type {
 
         $fs = get_file_storage();
         $fs->move_area_files_to_new_context($oldcontextid, $newcontextid, 'qtype_questionpy', 'package', $questionid);
+        $fs->move_area_files_to_new_context(
+            $oldcontextid,
+            $newcontextid,
+            'qtype_questionpy',
+            constants::FILEAREA_OPTIONS,
+            $questionid
+        );
     }
 
     /**
