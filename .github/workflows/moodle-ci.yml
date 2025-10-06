@@ -79,6 +79,8 @@ jobs:
         run: |
           moodle-plugin-ci add-plugin questionpy-org/moodle-qbehaviour_questionpy --storage extra-plugins
           cd extra-plugins/moodle-qbehaviour_questionpy
+          # The repo is cloned in a way that will only fetch dev, but the commit might not be in dev. 
+          git config --local remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
           # To move to a specific commit, we need to unshallow the repo (i.e. fetch all commits).
           git fetch --unshallow
           git switch --detach "$QBEHAVIOUR_QUESTIONPY_COMMIT"
