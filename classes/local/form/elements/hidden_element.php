@@ -54,7 +54,7 @@ class hidden_element extends form_element {
      */
     public function render_to(render_context $context): void {
         $context->add_element('hidden', $this->name, $this->value);
-        $context->set_type($this->name, PARAM_TEXT);
+        $context->set_type($this->name, PARAM_RAW);
 
         $this->render_conditions($context, $this->name);
     }
