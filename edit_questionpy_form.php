@@ -479,7 +479,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
             foreach ($errorswithnoelement as $element => $error) {
                 $listitems[] = get_string('options_form_validation_error_element', 'qtype_questionpy', [
                     'name' => $element,
-                    'error' => $error,
+                    'error' => s($error),
                 ]);
             }
             $list = html_writer::alist($listitems);
