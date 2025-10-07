@@ -83,7 +83,7 @@ class text_input_element extends form_element {
             $context->contextualize($this->label),
             $attributes
         );
-        $context->set_type($this->name, PARAM_TEXT);
+        $context->set_type($this->name, PARAM_RAW);
 
         if ($this->default) {
             $context->set_default($this->name, $context->contextualize($this->default));
