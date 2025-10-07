@@ -19,8 +19,10 @@ namespace qtype_questionpy\local\files;
 use coding_exception;
 use context_user;
 use file_exception;
+use Generator;
 use qtype_questionpy\constants;
 use question_attempt;
+use stored_file;
 use stored_file_creation_exception;
 
 /**
@@ -81,6 +83,25 @@ class attempt_file_service {
     }
 
     /**
+     * Given a {@see combine_attempt_file_draft_areas combined file area}, yields the files belonging to the given fieldname.
+     *
+     * The yielded files are keyed by their original, unmangled, filename.
+     *
+     * @param array $files
+     * @param string $fieldname
+     * @return Generator<string, stored_file>
+     * @throws coding_exception
+     */
+    public static function filter_combined_files_for_field(array $files, string $fieldname): Generator {
+        foreach ($files as $file) {
+            [$filefieldname, $filename] = self::unmangle_filename($file->get_filename());
+            if ($filefieldname === $fieldname) {
+                yield $filename => $file;
+            }
+        }
+    }
+
+    /**
      * Out of the files belonging to a question attempt, copies the ones that belong to the given fieldname to the given draft area.
      *
      * @param int $contextid The attempt's context (not necessarily the question's). See {@see question_display_options::$context}.
@@ -102,12 +123,7 @@ class attempt_file_service {
         $fs = get_file_storage();
         $allfiles = $qa->get_last_qt_files(constants::QT_VAR_ATTEMPT_FILES, $contextid);
 
-        foreach ($allfiles as $file) {
-            [$filefieldname, $filename] = self::unmangle_filename($file->get_filename());
-            if ($filefieldname !== $fieldname) {
-                continue;
-            }
-
+        foreach (self::filter_combined_files_for_field($allfiles, $fieldname) as $filename => $file) {
             $fs->create_file_from_storedfile([
                 'component' => 'user',
                 'filearea' => 'draft',
