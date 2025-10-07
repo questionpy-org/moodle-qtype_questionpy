@@ -19,12 +19,15 @@ namespace qtype_questionpy\local\attempt_ui;
 use core\context;
 use core\di;
 use core\exception\coding_exception;
+use core\output\core_renderer;
+use core\output\html_writer;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
 use file_exception;
 use form_filemanager;
 use moodle_exception;
+use qtype_questionpy\constants;
 use qtype_questionpy\local\files\attempt_file_service;
 use question_attempt;
 use stored_file_creation_exception;
@@ -100,7 +103,7 @@ class qpy_file_upload {
     }
 
     /**
-     * Renders a Moodle file manager from this `<qpy:file-upload/>`, preparing it with the last submitted files.
+     * Renders this element to a DOMNode.
      *
      * @param question_attempt $qa
      * @param question_ui_renderer $renderer
@@ -111,7 +114,25 @@ class qpy_file_upload {
      * @throws stored_file_creation_exception
      */
     public function render(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
+        if ($renderer->options->readonly) {
+            return $this->render_readonly($qa, $renderer);
+        } else {
+            return $this->render_writable($qa, $renderer);
+        }
+    }
 
+    /**
+     * Renders a Moodle file manager from this `<qpy:file-upload/>`, preparing it with the last submitted files.
+     *
+     * @param question_attempt $qa
+     * @param question_ui_renderer $renderer
+     * @return DOMNode
+     * @throws coding_exception
+     * @throws file_exception
+     * @throws moodle_exception
+     * @throws stored_file_creation_exception
+     */
+    private function render_writable(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
         // Re: "global $PAGE cannot be used in renderers" - We're not _that_ kind of a renderer.
         // phpcs:disable moodle.PHP.ForbiddenGlobalUse.BadGlobal
         global $CFG, $PAGE, $USER;
@@ -137,5 +158,38 @@ class qpy_file_upload {
         $filesrenderer = $PAGE->get_renderer('core', 'files');
         $html = $filesrenderer->render($fm);
         return dom_utils::html_to_fragment($this->doc, $html);
+    }
+
+    /**
+     * Renders a read-only list of the uploaded files, with clickable download links.
+     *
+     * @param question_attempt $qa
+     * @param question_ui_renderer $renderer
+     * @return DOMNode
+     * @throws coding_exception
+     */
+    private function render_readonly(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
+        // Loosely based on qtype_essay_renderer::files_read_only.
+        global $OUTPUT;
+
+        $allfiles = $qa->get_last_qt_files(constants::QT_VAR_ATTEMPT_FILES, $renderer->options->context->id);
+
+        $result = html_writer::start_tag('ul', [
+            'class' => 'list-unstyled m-0',
+        ]);
+        foreach (attempt_file_service::filter_combined_files_for_field($allfiles, $this->name) as $filename => $file) {
+            $result .= html_writer::tag('li', html_writer::link(
+                url: $qa->get_response_file_url($file),
+                text: $OUTPUT->pix_icon(
+                    file_file_icon($file),
+                    get_mimetype_description($file),
+                    'moodle',
+                    ['class' => 'icon']
+                ) . ' ' . s($filename),
+            ));
+        }
+        $result .= html_writer::end_tag('ul');
+
+        return dom_utils::html_to_fragment($this->doc, $result);
     }
 }
