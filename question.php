@@ -27,6 +27,7 @@ use qtype_questionpy\local\api\api;
 use qtype_questionpy\local\api\attempt;
 use qtype_questionpy\local\api\attempt_ui;
 use qtype_questionpy\local\api\package_dependency;
+use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\local\api\scoring_code;
 use qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor;
 use qtype_questionpy\question_bridge_base;
@@ -46,6 +47,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public string $packagehash;
     /** @var string */
     public string $questionstate;
+    /** @var question_data */
+    public question_data $questiondata;
     /** @var stored_file|null */
     private ?stored_file $packagefile;
 
@@ -74,14 +77,18 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *
      * @param string $packagehash
      * @param string $questionstate
+     * @param question_data $questiondata
      * @param stored_file|null $packagefile
      * @param api $api
      */
-    public function __construct(string $packagehash, string $questionstate, ?stored_file $packagefile, api $api) {
+    public function __construct(
+        string $packagehash, string $questionstate, question_data $questiondata, ?stored_file $packagefile, api $api
+    ) {
         parent::__construct();
         $this->api = $api;
         $this->packagehash = $packagehash;
         $this->questionstate = $questionstate;
+        $this->questiondata = $questiondata;
         $this->packagefile = $packagefile;
     }
 
@@ -117,7 +124,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         global $PAGE;
 
         try {
-            $attempt = $this->api->package($this->packagehash, $this->packagefile)->start_attempt($this->questionstate, $variant);
+            $attributes = $this->get_requested_attributes();
+            $attempt = $this->api->package($this->packagehash, $this->packagefile)
+                ->start_attempt($this->questionstate, $variant, $attributes);
 
             $this->attemptstate = $attempt->attemptstate;
             $step->set_qt_var(constants::QT_VAR_ATTEMPT_STATE, $attempt->attemptstate);
@@ -180,9 +189,11 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         /* TODO: This method is also called from question_attempt->regrade and
                  question_attempt->start_question_based_on, where we shouldn't need to get the UI. */
         try {
+            $attributes = $this->get_requested_attributes();
             $attempt = $this->api->package($this->packagehash, $this->packagefile)
                 ->view_attempt(
                     $this->questionstate,
+                    $attributes,
                     $this->attemptstate,
                     $this->scoringstate,
                     $lastresponse
@@ -419,11 +430,15 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     /**
      * Get the QuestionPy bridge used to retrieve additional information about an attempt.
      *
-     * @return question_bridge_base
+     * @throws moodle_exception
+     * @return question_bridge_base|null
      */
-    public function get_bridge(): question_bridge_base {
+    public function get_bridge(): ?question_bridge_base {
         if ($this->bridge === null) {
-            $this->bridge = question_bridge_base::create($this->get_behaviour()->get_qa());
+            $attempt = $this->get_behaviour()->get_qa();
+            if ($attempt->get_database_id() !== null && is_numeric($attempt->get_usage_id())) {
+                $this->bridge = question_bridge_base::create($attempt);
+            }
         }
         return $this->bridge;
     }
@@ -439,5 +454,16 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      */
     public function set_bridge(question_bridge_base $bridge): void {
         $this->bridge = $bridge;
+    }
+
+    /**
+     * Retrieves the requested attributes if any.
+     *
+     * @return array|null
+     * @throws moodle_exception
+     */
+    private function get_requested_attributes(): ?array {
+        $attributes = $this->questiondata->permissions?->attributes;
+        return $attributes ? $this->get_bridge()?->get_attributes($attributes) : null;
     }
 }

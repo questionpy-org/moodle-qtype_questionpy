@@ -106,17 +106,19 @@ class package_api {
      *
      * @param string $questionstate
      * @param int $variant variant which should be started (`1` for questions with only one variant)
+     * @param array|null $attributes
      * @return attempt_started the attempt's state and metadata. Note that the attempt state never changes after the
      *                         attempt has been started.
      * @throws GuzzleException
      * @throws request_error
      * @throws moodle_exception
      */
-    public function start_attempt(string $questionstate, int $variant): attempt_started {
+    public function start_attempt(string $questionstate, int $variant, ?array $attributes): attempt_started {
         $options['multipart'] = $this->transform_to_multipart(
             [
                 'variant' => $variant,
                 'context' => $this->get_context_id(),
+                'lms_provided_attributes' => $attributes,
             ],
             $questionstate,
         );
@@ -128,6 +130,7 @@ class package_api {
      * View a previously created attempt.
      *
      * @param string $questionstate
+     * @param array|null $attributes
      * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
      * @param string|null $scoringstate the last scoring state if this attempt has already been scored
      * @param object|null $response data currently entered by the student
@@ -136,7 +139,7 @@ class package_api {
      * @throws request_error
      * @throws moodle_exception
      */
-    public function view_attempt(string $questionstate, string $attemptstate, ?string $scoringstate = null,
+    public function view_attempt(string $questionstate, ?array $attributes, string $attemptstate, ?string $scoringstate = null,
                                  ?object $response = null): attempt {
         $options['multipart'] = $this->transform_to_multipart(
             [
@@ -144,6 +147,7 @@ class package_api {
                 'scoring_state' => $scoringstate,
                 'response' => $response,
                 'context' => $this->get_context_id(),
+                'lms_provided_attributes' => $attributes,
             ],
             $questionstate,
         );

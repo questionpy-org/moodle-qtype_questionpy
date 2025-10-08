@@ -24,6 +24,9 @@ use qtype_questionpy\event\starting_attempt_failed;
 use qtype_questionpy\event\viewing_attempt_failed;
 use qtype_questionpy\local\api\api;
 use qtype_questionpy\local\api\package_api;
+use qtype_questionpy\local\api\question_data;
+use qtype_questionpy\local\api\question_response;
+use qtype_questionpy\local\api\scoring_method;
 use qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor;
 use qtype_questionpy_question;
 use question_bank;
@@ -76,9 +79,14 @@ final class question_test extends \advanced_testcase {
      */
     private function create_question(): qtype_questionpy_question {
         question_engine::load_behaviour_class('questionpy');
+        $state = 'state';
+        $response = new question_response('en', $state, scoring_method::automatically_scorable);
+        $questiondata = question_data::from_question_response($response);
+
         $question = new qtype_questionpy_question(
             hash('sha256', 'hash'),
-            'state',
+            $state,
+            $questiondata,
             packagefile: null,
             api: $this->api
         );

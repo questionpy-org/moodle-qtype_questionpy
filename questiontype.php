@@ -24,6 +24,7 @@
 
 use core\di;
 use qtype_questionpy\local\api\api;
+use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\package_file_service;
 use qtype_questionpy\question_service;
 
@@ -186,8 +187,9 @@ class qtype_questionpy extends question_type {
         return new qtype_questionpy_question(
             $questiondata->qpy_package_hash,
             $questiondata->qpy_state,
+            question_data::from_json($questiondata->qpy_question_data),
             $packagefile,
-            $this->api
+            $this->api,
         );
     }
 }
