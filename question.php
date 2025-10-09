@@ -264,7 +264,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             return null;
         }
 
-        $correctresponse = $this->metadata->extract()->correctresponse;
+        $correctresponse = $this->metadata->get_correct_response();
         if ($correctresponse === null) {
             return null;
         }
@@ -295,7 +295,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             return !empty($qpyresponse);
         }
 
-        foreach ($this->metadata->extract()->requiredfields as $requiredfield) {
+        foreach ($this->metadata->get_required_fields() as $requiredfield) {
             if (!isset($qpyresponse->{$requiredfield}) || $qpyresponse->{$requiredfield} === '') {
                 return false;
             }

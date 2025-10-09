@@ -37,8 +37,18 @@ class question_ui_metadata_extractor {
     /** @var DOMXPath $xpath */
     private DOMXPath $xpath;
 
-    /** @var question_metadata|null $metadata */
-    private ?question_metadata $metadata = null;
+    /**
+     * @var array|false $correctresponse `false` if not yet extracted, empty array if not set in the XML.
+     * @see \qtype_questionpy_question::get_correct_response()
+     */
+    private array|null|false $correctresponse = false;
+
+    /**
+     * @var string[] $requiredfields `false` if not yet extracted.
+     * @see \question_manually_gradable::is_complete_response()
+     * @see \question_manually_gradable::is_gradable_response()
+     */
+    private array|false $requiredfields = false;
 
     /**
      * Parses the given XML and initializes a new {@see question_ui_metadata_extractor} instance.
@@ -55,37 +65,16 @@ class question_ui_metadata_extractor {
     }
 
     /**
-     * Extracts metadata from the question UI.
+     * Extracts the names of required fields from the question UI XML.
      *
-     * @return question_metadata
+     * @return string[]
      */
-    public function extract(): question_metadata {
-        if (!is_null($this->metadata)) {
-            return $this->metadata;
+    public function get_required_fields(): array {
+        if ($this->requiredfields !== false) {
+            return $this->requiredfields;
         }
 
-        $this->metadata = new question_metadata();
-        /** @var DOMAttr $attr */
-        foreach ($this->xpath->query('//@qpy:correct-response') as $attr) {
-            /** @var DOMElement $element */
-            $element = $attr->ownerElement;
-            $name = $element->getAttribute('name');
-            if (!$name) {
-                continue;
-            }
-
-            if (is_null($this->metadata->correctresponse)) {
-                $this->metadata->correctresponse = [];
-            }
-
-            if ($element->tagName == 'input' && $element->getAttribute('type') == 'radio') {
-                // On radio buttons, we expect the correct option to be marked with correct-response.
-                $radiovalue = $element->getAttribute('value');
-                $this->metadata->correctresponse[$name] = $radiovalue;
-            } else {
-                $this->metadata->correctresponse[$name] = $attr->value;
-            }
-        }
+        $this->requiredfields = [];
 
         /** @var DOMElement $element */
         foreach (
@@ -95,10 +84,47 @@ class question_ui_metadata_extractor {
         ) {
             $name = $element->getAttribute('name');
             if ($name && $element->hasAttribute('required')) {
-                $this->metadata->requiredfields[] = $name;
+                $this->requiredfields[] = $name;
             }
         }
 
-        return $this->metadata;
+        return $this->requiredfields;
+    }
+
+    /**
+     * Returns the correct response for any fields that use the `@qpy:correct-response` attribute, or null if none do.
+     *
+     * @return array<string, string>|null
+     */
+    public function get_correct_response(): ?array {
+        if ($this->correctresponse !== false) {
+            return $this->correctresponse;
+        }
+
+        $this->correctresponse = null;
+
+        /** @var DOMAttr $attr */
+        foreach ($this->xpath->query('//@qpy:correct-response') as $attr) {
+            /** @var DOMElement $element */
+            $element = $attr->ownerElement;
+            $name = $element->getAttribute('name');
+            if (!$name) {
+                continue;
+            }
+
+            if (is_null($this->correctresponse)) {
+                $this->correctresponse = [];
+            }
+
+            if ($element->tagName == 'input' && $element->getAttribute('type') == 'radio') {
+                // On radio buttons, we expect the correct option to be marked with correct-response.
+                $radiovalue = $element->getAttribute('value');
+                $this->correctresponse[$name] = $radiovalue;
+            } else {
+                $this->correctresponse[$name] = $attr->value;
+            }
+        }
+
+        return $this->correctresponse;
     }
 }

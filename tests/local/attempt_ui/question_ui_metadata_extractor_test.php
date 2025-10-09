@@ -29,18 +29,19 @@ final class question_ui_metadata_extractor_test extends \advanced_testcase {
      * Tests that metadata is correctly extracted from the UI's input elements.
      *
      * @covers \qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor
-     * @covers \qtype_questionpy\local\attempt_ui\question_metadata
      */
     public function test_should_extract_correct_metadata(): void {
         $input = file_get_contents(__DIR__ . '/question_uis/metadata.xhtml');
 
         $metadata = new question_ui_metadata_extractor($input);
 
-        $this->assertEquals(new question_metadata([
+        $this->assertEquals([
             'my_number' => '42',
             'my_select' => '1',
             'my_radio' => '2',
             'my_text' => 'Lorem ipsum dolor sit amet.',
-        ], ['my_number']), $metadata->extract());
+        ], $metadata->get_correct_response());
+
+        $this->assertEquals(['my_number'], $metadata->get_required_fields());
     }
 }
