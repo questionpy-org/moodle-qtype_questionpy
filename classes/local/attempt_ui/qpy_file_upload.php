@@ -28,7 +28,7 @@ use file_exception;
 use form_filemanager;
 use moodle_exception;
 use qtype_questionpy\constants;
-use qtype_questionpy\local\files\attempt_file_service;
+use qtype_questionpy\local\files\response_file_service;
 use question_attempt;
 use stored_file_creation_exception;
 
@@ -139,7 +139,7 @@ class qpy_file_upload {
         require_once($CFG->libdir . '/form/filemanager.php');
 
         $draftitemid = file_get_unused_draft_itemid();
-        $afs = di::get(attempt_file_service::class);
+        $afs = di::get(response_file_service::class);
         $afs->prepare_draft_area($renderer->options->context->id, $qa, $this->name, $USER->id, $draftitemid);
 
         // TODO: Explain.
@@ -172,12 +172,12 @@ class qpy_file_upload {
         // Loosely based on qtype_essay_renderer::files_read_only.
         global $OUTPUT;
 
-        $allfiles = $qa->get_last_qt_files(constants::QT_VAR_ATTEMPT_FILES, $renderer->options->context->id);
+        $allfiles = $qa->get_last_qt_files(constants::QT_VAR_RESPONSE_FILES, $renderer->options->context->id);
 
         $result = html_writer::start_tag('ul', [
             'class' => 'list-unstyled m-0',
         ]);
-        foreach (attempt_file_service::filter_combined_files_for_field($allfiles, $this->name) as $filename => $file) {
+        foreach (response_file_service::filter_combined_files_for_field($allfiles, $this->name) as $filename => $file) {
             $result .= html_writer::tag('li', html_writer::link(
                 url: $qa->get_response_file_url($file),
                 text: $OUTPUT->pix_icon(

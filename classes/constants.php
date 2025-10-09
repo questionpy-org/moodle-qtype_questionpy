@@ -42,9 +42,9 @@ class constants {
 
     // The response_ prefix is hardcoded in a few question_attempt(_step) methods. Following that allows us to use some of them.
     /** @var string */
-    public const FILEAREA_ATTEMPT_FILES = 'response_files';
+    public const FILEAREA_RESPONSE_FILES = 'response_files';
     /** @var string */
-    public const QT_VAR_ATTEMPT_FILES = 'files';
+    public const QT_VAR_RESPONSE_FILES = 'files';
 
 
     /** @var string */
