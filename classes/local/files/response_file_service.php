@@ -49,8 +49,8 @@ class response_file_service {
      * @throws stored_file_creation_exception
      */
     public function combine_response_file_draft_areas(array $draftareas, int $targetdraftarea, int $userid): int {
-        // TODO: Confirm that files aren't physically copied when we do this.
         // TODO: Check file size & count restrictions.
+
         if (!$draftareas) {
             return $targetdraftarea;
         }
@@ -58,25 +58,50 @@ class response_file_service {
         $fs = get_file_storage();
         $usercontext = context_user::instance($userid);
 
-        // Copy all draft files to the "permanent" file area and collect their metadata.
-        $draftfiles = $fs->get_area_files(
+        // We get both the input and the existing target draft files at once, for performance.
+        $allfiles = $fs->get_area_files(
             $usercontext->id,
             'user',
             'draft',
-            array_values($draftareas),
+            [...array_values($draftareas), $targetdraftarea],
             includedirs: false
         );
 
-        foreach ($draftfiles as $draftfile) {
+        // Split into existing and input files. In most cases, the page will be reloaded between saves, so we won't use the same
+        // combined draft area twice. When saving via AJAX (such as autosaves), though, we do, so it might not be empty.
+        $inputfiles = [];
+        $existingfiles = [];
+        foreach ($allfiles as $file) {
+            if ($file->get_itemid() == $targetdraftarea) {
+                $existingfiles[$file->get_filename()] = $file;
+            } else {
+                $inputfiles[$file->get_filename()] = $file;
+            }
+        }
+
+        foreach ($inputfiles as $draftfile) {
             $fieldname = array_search($draftfile->get_itemid(), $draftareas);
+            $mangledname = self::mangle_filename($fieldname, $draftfile->get_filename());
+
+            $existingfile = $existingfiles[$mangledname] ?? null;
+            if ($existingfile) {
+                // We could implement smarter merging here, but for now we just delete the existing file.
+                $existingfile->delete();
+                unset($existingfiles[$mangledname]);
+            }
 
             $fs->create_file_from_storedfile([
                 'component' => 'user',
                 'filearea' => 'draft',
                 'itemid' => $targetdraftarea,
                 'contextid' => $usercontext->id,
-                'filename' => self::mangle_filename($fieldname, $draftfile->get_filename()),
+                'filename' => $mangledname,
             ], $draftfile);
+        }
+
+        // Any files remaining now have been removed since the last save.
+        foreach ($existingfiles as $removedfile) {
+            $removedfile->delete();
         }
 
         return $targetdraftarea;
