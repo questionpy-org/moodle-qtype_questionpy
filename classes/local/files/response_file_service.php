@@ -18,9 +18,11 @@ namespace qtype_questionpy\local\files;
 
 use coding_exception;
 use context_user;
+use core\context;
 use file_exception;
 use Generator;
 use qtype_questionpy\constants;
+use qtype_questionpy\local\attempt_ui\qpy_file_upload;
 use question_attempt;
 use stored_file;
 use stored_file_creation_exception;
@@ -105,6 +107,53 @@ class response_file_service {
         }
 
         return $targetdraftarea;
+    }
+
+
+    /**
+     * Validates that the combined draft area follows the limits imposed by the given {@see qpy_file_upload}s.
+     *
+     * @param int $draftareaid
+     * @param qpy_file_upload[] $uploadfields
+     * @param int $userid
+     * @param context $attemptcontext
+     * @return void
+     * @throws coding_exception
+     */
+    public function validate_combined_draft_area(
+        int $draftareaid,
+        array $uploadfields,
+        int $userid,
+        context $attemptcontext
+    ): void {
+        $fs = get_file_storage();
+        $usercontext = context_user::instance($userid);
+
+        $allfiles = $fs->get_area_files(
+            $usercontext->id,
+            'user',
+            'draft',
+            $draftareaid,
+            includedirs: false
+        );
+
+        /** @var array<string, array<string, stored_file>> $filesbyfield */
+        $filesbyfield = [];
+        foreach ($allfiles as $file) {
+            [$fieldname, $filename] = self::unmangle_filename($file->get_filename());
+            $filesbyfield[$fieldname][$filename] = $file;
+        }
+
+        foreach ($filesbyfield as $fieldname => $files) {
+            $uploadfield = $uploadfields[$fieldname] ?? null;
+            if (!$uploadfield) {
+                throw new coding_exception("There were files uploaded for field '$fieldname', but no corresponding upload field "
+                    . 'was found.');
+            }
+
+            $uploadfield->get_limits_in($attemptcontext)
+                ->validate_files($files, "upload field '$fieldname'");
+        }
     }
 
     /**
