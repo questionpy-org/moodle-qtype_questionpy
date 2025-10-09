@@ -96,7 +96,7 @@ class qtype_questionpy extends question_type {
      */
     public function response_file_areas(): array {
         // Despite the name, this method should return the qt vars that have file areas, not the areas themselves.
-        return [constants::QT_VAR_ATTEMPT_FILES];
+        return [constants::QT_VAR_RESPONSE_FILES];
     }
 
     /**

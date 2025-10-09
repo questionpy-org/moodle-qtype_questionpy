@@ -150,7 +150,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
                 $combineddraftareaid = file_get_unused_draft_itemid();
                 $result .= html_writer::empty_tag('input', [
                     'type' => 'hidden',
-                    'name' => $qa->get_field_prefix() . constants::QT_VAR_ATTEMPT_FILES,
+                    'name' => $qa->get_field_prefix() . constants::QT_VAR_RESPONSE_FILES,
                     'value' => $combineddraftareaid,
                 ]);
             }

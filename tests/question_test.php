@@ -220,7 +220,7 @@ final class question_test extends \advanced_testcase {
 
         $this->assertEquals([
             constants::QT_VAR_RESPONSE => PARAM_RAW_TRIMMED,
-            constants::QT_VAR_ATTEMPT_FILES => question_attempt::PARAM_FILES,
+            constants::QT_VAR_RESPONSE_FILES => question_attempt::PARAM_FILES,
         ], $question->get_expected_data());
     }
 

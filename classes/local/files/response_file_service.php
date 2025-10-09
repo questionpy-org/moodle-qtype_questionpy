@@ -33,7 +33,7 @@ use stored_file_creation_exception;
  * @copyright  2025 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class attempt_file_service {
+class response_file_service {
     /** @var string Chosen for being allowed by {@see PARAM_FILE} while being encoded away by {@see urlencode}. */
     private const MANGLE_SEPARATOR = '!';
 
@@ -48,7 +48,7 @@ class attempt_file_service {
      * @throws file_exception
      * @throws stored_file_creation_exception
      */
-    public function combine_attempt_file_draft_areas(array $draftareas, int $targetdraftarea, int $userid): int {
+    public function combine_response_file_draft_areas(array $draftareas, int $targetdraftarea, int $userid): int {
         // TODO: Confirm that files aren't physically copied when we do this.
         // TODO: Check file size & count restrictions.
         if (!$draftareas) {
@@ -83,7 +83,7 @@ class attempt_file_service {
     }
 
     /**
-     * Given a {@see combine_attempt_file_draft_areas combined file area}, yields the files belonging to the given fieldname.
+     * Given a {@see combine_response_file_draft_areas combined file area}, yields the files belonging to the given fieldname.
      *
      * The yielded files are keyed by their original, unmangled, filename.
      *
@@ -121,7 +121,7 @@ class attempt_file_service {
         int $draftitemid
     ): void {
         $fs = get_file_storage();
-        $allfiles = $qa->get_last_qt_files(constants::QT_VAR_ATTEMPT_FILES, $contextid);
+        $allfiles = $qa->get_last_qt_files(constants::QT_VAR_RESPONSE_FILES, $contextid);
 
         foreach (self::filter_combined_files_for_field($allfiles, $fieldname) as $filename => $file) {
             $fs->create_file_from_storedfile([
