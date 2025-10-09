@@ -19,16 +19,14 @@ namespace qtype_questionpy\local\attempt_ui;
 use core\context;
 use core\di;
 use core\exception\coding_exception;
-use core\output\core_renderer;
-use core\output\html_writer;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
 use file_exception;
 use form_filemanager;
 use moodle_exception;
-use qtype_questionpy\constants;
 use qtype_questionpy\local\files\response_file_service;
+use qtype_questionpy_renderer;
 use question_attempt;
 use stored_file_creation_exception;
 
@@ -115,7 +113,11 @@ class qpy_file_upload {
      */
     public function render(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
         if ($renderer->options->readonly) {
-            return $this->render_readonly($qa, $renderer);
+            global $PAGE;
+            /** @var qtype_questionpy_renderer $qpyrenderer */
+            $qpyrenderer = $PAGE->get_renderer('qtype_questionpy');
+            $html = $qpyrenderer->render_readonly_file_view($qa, $this->name, $renderer->options);
+            return dom_utils::html_to_fragment($this->doc, $html);
         } else {
             return $this->render_writable($qa, $renderer);
         }
@@ -158,38 +160,5 @@ class qpy_file_upload {
         $filesrenderer = $PAGE->get_renderer('core', 'files');
         $html = $filesrenderer->render($fm);
         return dom_utils::html_to_fragment($this->doc, $html);
-    }
-
-    /**
-     * Renders a read-only list of the uploaded files, with clickable download links.
-     *
-     * @param question_attempt $qa
-     * @param question_ui_renderer $renderer
-     * @return DOMNode
-     * @throws coding_exception
-     */
-    private function render_readonly(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
-        // Loosely based on qtype_essay_renderer::files_read_only.
-        global $OUTPUT;
-
-        $allfiles = $qa->get_last_qt_files(constants::QT_VAR_RESPONSE_FILES, $renderer->options->context->id);
-
-        $result = html_writer::start_tag('ul', [
-            'class' => 'list-unstyled m-0',
-        ]);
-        foreach (response_file_service::filter_combined_files_for_field($allfiles, $this->name) as $filename => $file) {
-            $result .= html_writer::tag('li', html_writer::link(
-                url: $qa->get_response_file_url($file),
-                text: $OUTPUT->pix_icon(
-                    file_file_icon($file),
-                    get_mimetype_description($file),
-                    'moodle',
-                    ['class' => 'icon']
-                ) . ' ' . s($filename),
-            ));
-        }
-        $result .= html_writer::end_tag('ul');
-
-        return dom_utils::html_to_fragment($this->doc, $result);
     }
 }
