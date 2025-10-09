@@ -22,11 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\output\html_writer;
 use qtype_questionpy\constants;
 use qtype_questionpy\local\api\attempt_ui;
 use qtype_questionpy\local\api\feedback_type;
 use qtype_questionpy\local\api\js_module_call;
 use qtype_questionpy\local\attempt_ui\question_ui_renderer;
+use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy\local\files\static_file_service;
 use qtype_questionpy\qpy_question_display_options;
 use qtype_questionpy\utils;
@@ -559,5 +561,37 @@ EOD;
     public function feedback(question_attempt $qa, question_display_options $options) {
         // We display all feedbacks in the iframe together with the formulation.
         return '';
+    }
+
+    /**
+     * Renders a read-only list of the response files belonging to the given field, with clickable download links.
+     *
+     * @param question_attempt $qa
+     * @param string $fieldname
+     * @param question_display_options $options
+     * @return string
+     * @throws coding_exception
+     */
+    public function render_readonly_file_view(question_attempt $qa, string $fieldname, question_display_options $options): string {
+        // Loosely based on qtype_essay_renderer::files_read_only.
+        $allfiles = $qa->get_last_qt_files(constants::QT_VAR_RESPONSE_FILES, $options->context->id);
+
+        $result = html_writer::start_tag('ul', [
+            'class' => 'list-unstyled m-0',
+        ]);
+        foreach (response_file_service::filter_combined_files_for_field($allfiles, $fieldname) as $filename => $file) {
+            $result .= html_writer::tag('li', html_writer::link(
+                url: $qa->get_response_file_url($file),
+                text: $this->output->pix_icon(
+                    file_file_icon($file),
+                    get_mimetype_description($file),
+                    'moodle',
+                    ['class' => 'icon']
+                ) . ' ' . s($filename),
+            ));
+        }
+        $result .= html_writer::end_tag('ul');
+
+        return $result;
     }
 }
