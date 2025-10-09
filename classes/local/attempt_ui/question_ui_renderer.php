@@ -287,7 +287,7 @@ class question_ui_renderer {
     private function render_custom_elements(question_attempt $qa): void {
         /** @var DOMElement $element */
         foreach (iterator_to_array($this->xpath->query('//qpy:file-upload')) as $element) {
-            $newnode = qpy_file_upload::from_element($element, $this->options->context);
+            $newnode = qpy_file_upload::from_element($element);
             if (!$newnode) {
                 continue;
             }

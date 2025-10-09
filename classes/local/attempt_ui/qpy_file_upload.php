@@ -26,6 +26,7 @@ use file_exception;
 use form_filemanager;
 use moodle_exception;
 use qtype_questionpy\local\files\response_file_service;
+use qtype_questionpy\local\files\validatable_upload_limits;
 use qtype_questionpy_renderer;
 use question_attempt;
 use stored_file_creation_exception;
@@ -41,46 +42,30 @@ use stored_file_creation_exception;
 class qpy_file_upload {
     /**
      * Trivial private constructor. Use {@see from_element()}.
-     * @param DOMDocument $doc
+     * @param DOMElement $element
      * @param string $name
-     * @param int $maxfiles
-     * @param int $maxbytes
-     * @param int $areamaxbytes
      */
     private function __construct(
-        /** @var DOMDocument */
-        private readonly DOMDocument $doc,
+        /** @var DOMElement */
+        private readonly DOMElement $element,
         /** @var string */
-        private readonly string $name,
-        /** @var int */
-        private readonly int $maxfiles,
-        /** @var int */
-        private readonly int $maxbytes,
-        /** @var int */
-        private readonly int $areamaxbytes,
+        public readonly string $name,
     ) {
     }
 
     /**
-     * Creates a new {@see qpy_file_upload} from a given {@see DOMElement}.
+     * Gets the limits that should be validated for the current user in the given context when using this upload field.
      *
-     * @param DOMElement $element
      * @param context $context
-     * @return self|null
+     * @return validatable_upload_limits
      */
-    public static function from_element(DOMElement $element, context $context): ?self {
+    public function get_limits_in(context $context): validatable_upload_limits {
         global $CFG, $PAGE;
 
-        $name = $element->getAttribute('name');
-        if (!$name) {
-            debugging('qpy:file-upload without a name');
-            return null;
-        }
-
-        $maxfiles = $element->getAttribute('max_files');
+        $maxfiles = $this->element->getAttribute('max_files');
         $maxfiles = is_numeric($maxfiles) ? intval($maxfiles) : EDITOR_UNLIMITED_FILES;
 
-        $maxbytes = $element->getAttribute('max_bytes_per_file');
+        $maxbytes = $this->element->getAttribute('max_bytes_per_file');
         $maxbytes = is_numeric($maxbytes) ? intval($maxbytes) : FILE_AREA_MAX_BYTES_UNLIMITED;
         $coursemaxbytes = 0;
         if (!empty($PAGE->course->maxbytes)) {
@@ -88,16 +73,26 @@ class qpy_file_upload {
         }
         $maxbytes = get_user_max_upload_file_size($context, $CFG->maxbytes, $coursemaxbytes, $maxbytes);
 
-        $areamaxbytes = $element->getAttribute('max_bytes_total');
+        $areamaxbytes = $this->element->getAttribute('max_bytes_total');
         $areamaxbytes = is_numeric($areamaxbytes) ? intval($areamaxbytes) : FILE_AREA_MAX_BYTES_UNLIMITED;
 
-        return new static(
-            $element->ownerDocument,
-            $name,
-            $maxfiles,
-            $maxbytes,
-            $areamaxbytes
-        );
+        return new validatable_upload_limits($maxfiles, $maxbytes, $areamaxbytes);
+    }
+
+    /**
+     * Creates a new {@see qpy_file_upload} from a given {@see DOMElement}.
+     *
+     * @param DOMElement $element
+     * @return self|null
+     */
+    public static function from_element(DOMElement $element): ?self {
+        $name = $element->getAttribute('name');
+        if (!$name) {
+            debugging('qpy:file-upload without a name');
+            return null;
+        }
+
+        return new static($element, $name);
     }
 
     /**
@@ -117,7 +112,7 @@ class qpy_file_upload {
             /** @var qtype_questionpy_renderer $qpyrenderer */
             $qpyrenderer = $PAGE->get_renderer('qtype_questionpy');
             $html = $qpyrenderer->render_readonly_file_view($qa, $this->name, $renderer->options);
-            return dom_utils::html_to_fragment($this->doc, $html);
+            return dom_utils::html_to_fragment($this->element->ownerDocument, $html);
         } else {
             return $this->render_writable($qa, $renderer);
         }
@@ -141,24 +136,26 @@ class qpy_file_upload {
         require_once($CFG->libdir . '/form/filemanager.php');
 
         $draftitemid = file_get_unused_draft_itemid();
-        $afs = di::get(response_file_service::class);
-        $afs->prepare_draft_area($renderer->options->context->id, $qa, $this->name, $USER->id, $draftitemid);
+        $rfs = di::get(response_file_service::class);
+        $rfs->prepare_draft_area($renderer->options->context->id, $qa, $this->name, $USER->id, $draftitemid);
 
         // TODO: Explain.
         $renderer->draftareas[$this->name] = $draftitemid;
+
+        $limits = $this->get_limits_in($renderer->options->context);
 
         $fm = new form_filemanager((object)[
             'itemid' => $draftitemid,
             'subdirs' => false,
             'context' => $renderer->options->context,
-            'maxfiles' => $this->maxfiles,
-            'maxbytes' => $this->maxbytes,
-            'areamaxbytes' => $this->areamaxbytes,
+            'maxfiles' => $limits->maxfiles,
+            'maxbytes' => $limits->maxbytes,
+            'areamaxbytes' => $limits->areamaxbytes,
         ]);
 
         // phpcs:disable moodle.PHP.ForbiddenGlobalUse.BadGlobal
         $filesrenderer = $PAGE->get_renderer('core', 'files');
         $html = $filesrenderer->render($fm);
-        return dom_utils::html_to_fragment($this->doc, $html);
+        return dom_utils::html_to_fragment($this->element->ownerDocument, $html);
     }
 }

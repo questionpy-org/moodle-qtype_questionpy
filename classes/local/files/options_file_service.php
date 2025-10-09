@@ -177,6 +177,8 @@ class options_file_service implements handles_qpy_url_type {
         file_upload_options|file_upload_element $options,
         int $contextid, ?int $questionid, int $draftitemid, array $draftfilemetas
     ): void {
+        // TODO: Remove duplication with validatable_upload_limits::validate_files. (By using it.)
+
         global $CFG;
         $fs = get_file_storage();
 
