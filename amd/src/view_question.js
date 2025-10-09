@@ -17,6 +17,8 @@
 
 import "theme_boost/bootstrap/popover";
 import {throttle} from "core/utils";
+import {eventTypes} from "core_form/events";
+import {dispatchEvent} from "core/event_dispatcher";
 
 /**
  * @type {?Attempt} Attempt object that is passed to the question package.
@@ -106,6 +108,21 @@ export async function init(
                 responseElement.value = createJsonFromFormData(form);
             }, 250));
         }
+
+        // Filemanager doesn't use the "change" event, so the above doesn't cover it.
+        // Instead, we "forward" its specific event to the parent DOM.
+        form.addEventListener(eventTypes.uploadChanged, () => {
+            dispatchEvent(
+                eventTypes.uploadChanged,
+                {},
+                window.frameElement.closest("form"),
+                {
+                    bubbles: true,
+                    cancelable: false,
+                    composed: false
+                }
+            );
+        });
     }
 
     // Attempt object that is passed to the question package.
