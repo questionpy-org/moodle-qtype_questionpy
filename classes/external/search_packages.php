@@ -43,11 +43,11 @@ use qtype_questionpy\localizer;
  */
 class search_packages extends external_api {
     /** @var string[] Valid categories. */
-    const CATEGORIES = ['all', 'recentlyused', 'favourites'];
+    public const CATEGORIES = ['all', 'recentlyused', 'favourites'];
     /** @var string[] Valid kinds of sorting. */
-    const SORT = ['alpha', 'date'];
+    public const SORT = ['alpha', 'date'];
     /** @var string[] Valid sorting direction. */
-    const ORDER = ['asc', 'desc'];
+    public const ORDER = ['asc', 'desc'];
 
     /**
      * Used to verify the parameters passed to the service.
