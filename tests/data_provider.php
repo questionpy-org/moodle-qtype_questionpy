@@ -94,7 +94,6 @@ function package_versions_info_provider(?array $packageinfo = null, ?array $vers
         }
     }
 
-
     return array_converter::from_array(package_versions_info::class, ['manifest' => $packageinfo, 'versions' => $versions]);
 }
 
