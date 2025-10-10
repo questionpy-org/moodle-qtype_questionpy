@@ -162,9 +162,10 @@ class qtype_questionpy_renderer extends qtype_renderer {
     protected function get_iframe_document(context $context, qtype_questionpy_question $question, callable $contentcb): string {
         // We know what we are doing here. We are touching these globals on purpose.
         // phpcs:disable moodle.PHP.ForbiddenGlobalUse.BadGlobal
-        global $PAGE, $OUTPUT;
+        global $CFG, $PAGE, $OUTPUT;
         $oldpage = $PAGE;
         $oldoutput = $OUTPUT;
+        $oldclosingtags = $CFG->closingtags ?? '';
 
         // Initialize output buffer.
         // We do this to ensure that any echo, var_dump, etc. statements are included in the iframe contents.
@@ -197,9 +198,12 @@ class qtype_questionpy_renderer extends qtype_renderer {
             echo $this->get_package_css_links($question->ui->cssfiles, $question);
             echo $iframecontents;
             echo $OUTPUT->footer();
+            // The function $OUTPUT->footer stores the HTML closing tags in this global.
+            echo $CFG->closingtags ?? '';
         } finally {
             $PAGE = $oldpage;
             $OUTPUT = $oldoutput;
+            $CFG->closingtags = $oldclosingtags;
         }
         // phpcs:enable
 
