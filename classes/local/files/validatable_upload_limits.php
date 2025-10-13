@@ -50,7 +50,7 @@ class validatable_upload_limits {
     /**
      * Validates these limits for the given files.
      *
-     * @param array<string, stored_file> $files
+     * @param array $files
      * @param string $where String for the error message, describing what sort of files these are.
      * @throws coding_exception
      */
