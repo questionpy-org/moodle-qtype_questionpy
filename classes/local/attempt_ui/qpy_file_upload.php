@@ -62,10 +62,10 @@ class qpy_file_upload {
     public function get_limits_in(context $context): validatable_upload_limits {
         global $CFG, $PAGE;
 
-        $maxfiles = $this->element->getAttribute('max_files');
+        $maxfiles = $this->element->getAttribute('max-files');
         $maxfiles = is_numeric($maxfiles) ? intval($maxfiles) : EDITOR_UNLIMITED_FILES;
 
-        $maxbytes = $this->element->getAttribute('max_bytes_per_file');
+        $maxbytes = $this->element->getAttribute('max-bytes-per-file');
         $maxbytes = is_numeric($maxbytes) ? intval($maxbytes) : FILE_AREA_MAX_BYTES_UNLIMITED;
         $coursemaxbytes = 0;
         if (!empty($PAGE->course->maxbytes)) {
@@ -73,7 +73,7 @@ class qpy_file_upload {
         }
         $maxbytes = get_user_max_upload_file_size($context, $CFG->maxbytes, $coursemaxbytes, $maxbytes);
 
-        $areamaxbytes = $this->element->getAttribute('max_bytes_total');
+        $areamaxbytes = $this->element->getAttribute('max-bytes-total');
         $areamaxbytes = is_numeric($areamaxbytes) ? intval($areamaxbytes) : FILE_AREA_MAX_BYTES_UNLIMITED;
 
         return new validatable_upload_limits($maxfiles, $maxbytes, $areamaxbytes);
