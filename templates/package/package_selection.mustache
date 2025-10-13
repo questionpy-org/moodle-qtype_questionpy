@@ -82,10 +82,11 @@
                         {{#url}}
                             <a class="dropdown-item" href="{{url}}" target="_blank">{{#pix}} i/mnethost {{/pix}}{{#str}} open_website, qtype_questionpy {{/str}}</a>
                         {{/url}}
-                        {{^url}}
-                            {{! TODO: Remove when a menu item is added which is always present - this is only a placeholder. }}
-                            <a class="dropdown-item" href="https://example.com/" target="_blank">{{#pix}} i/mnethost {{/pix}}{{#str}} open_website, qtype_questionpy {{/str}}</a>
-                        {{/url}}
+                        {{^ismarkableasfavourite}}
+                            {{^url}}
+                                <p class="text-center mb-0">{{#str}} no_actions_available, qtype_questionpy {{/str}}</p>
+                            {{/url}}
+                        {{/ismarkableasfavourite}}
                     </div>
                 </div>
             </div>
