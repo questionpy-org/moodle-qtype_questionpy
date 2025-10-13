@@ -84,8 +84,8 @@ body.questionpy-iframe-body .que .content {
 }
 
 .qpy-card {
-    border: 1px solid var(--secondary);
-    background-color: var(--light);
+    border: 1px solid var(--bs-secondary);
+    background-color: var(--bs-light);
     display: flex;
     gap: 10px;
     align-items: stretch;
@@ -297,8 +297,8 @@ body.questionpy-iframe-body .que .content {
 }
 
 .qpy-state-view {
-    border: 1px solid var(--secondary);
-    background-color: var(--light);
+    border: 1px solid var(--bs-secondary);
+    background-color: var(--bs-light);
     padding: 0.5rem;
     margin-bottom: 1rem;
     overflow: auto;

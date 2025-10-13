@@ -65,8 +65,8 @@
                     {{/versions}}
                 </select>
                 <div class="dropdown">
-                    <a role="button" data-toggle="dropdown" aria-expanded="false">
-                        {{#pix}} i/moremenu {{/pix}}
+                    <a class="text-body text-decoration-none" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-ellipsis"></i>
                     </a>
                     <div class="dropdown-menu">
                         {{#ismarkableasfavourite}}
@@ -96,14 +96,14 @@
             {{#isselected}}
                 <div>
                     {{#islocal}}
-                        <span class="badge badge-info user-select-none mr-auto mb-2" data-toggle="tooltip" data-placement="top" data-title="{{#cleanstr}} selection_custom_package_text, qtype_questionpy {{/cleanstr}}">
+                        <span class="badge badge-info user-select-none mr-auto mb-2" data-bs-toggle="tooltip" data-bs-placement="top" data-title="{{#cleanstr}} selection_custom_package_text, qtype_questionpy {{/cleanstr}}">
                             &#9432; {{#str}} selection_custom_package_header, qtype_questionpy {{/str}}
                         </span>
                     {{/islocal}}
                     {{^islocal}}
                         {{^ismarkableasfavourite}}
                             {{! This package was previously in the database. }}
-                            <span class="badge badge-info user-select-none mr-auto mb-2" data-toggle="tooltip" data-placement="top" data-title="{{#cleanstr}} selection_package_no_longer_in_database_text, qtype_questionpy {{/cleanstr}}">
+                            <span class="badge badge-info user-select-none mr-auto mb-2" data-bs-toggle="tooltip" data-placement="top" data-title="{{#cleanstr}} selection_package_no_longer_in_database_text, qtype_questionpy {{/cleanstr}}">
                                 &#9432; {{#str}} selection_package_no_longer_in_database_header, qtype_questionpy {{/str}}
                             </span>
                         {{/ismarkableasfavourite}}
