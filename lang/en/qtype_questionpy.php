@@ -49,6 +49,7 @@ $string['mark_as_favourite'] = 'Favourite';
 $string['max_package_size_kb'] = 'Maximum file size of a QuestionPy package';
 $string['max_package_size_kb_description'] = 'Maximum file size in kB';
 $string['missing_select_option'] = '(the selected option is no longer available)';
+$string['no_actions_available'] = 'No actions available';
 $string['open_website'] = 'Open website';
 $string['options_form_validation_error_element'] = '{$a->name}: {$a->error}';
 $string['options_form_validation_error_title'] = 'The following errors occurred while validating the form and could not'
