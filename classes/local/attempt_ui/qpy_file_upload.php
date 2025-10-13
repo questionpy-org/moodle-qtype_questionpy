@@ -139,7 +139,7 @@ class qpy_file_upload {
         $rfs = di::get(response_file_service::class);
         $rfs->prepare_draft_area($renderer->options->context->id, $qa, $this->name, $USER->id, $draftitemid);
 
-        // TODO: Explain.
+        // This is used to tell the qbehaviour what draft areas to save.
         $renderer->draftareas[$this->name] = $draftitemid;
 
         $limits = $this->get_limits_in($renderer->options->context);
