@@ -369,8 +369,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         global $PAGE;
 
         try {
+            $attributes = $this->get_requested_attributes();
             $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt(
                 $this->questionstate,
+                $attributes,
                 $this->attemptstate,
                 $this->scoringstate,
                 utils::get_qpy_response($response) ?? (object)[]
