@@ -159,6 +159,7 @@ class package_api {
      * Score an attempt.
      *
      * @param string $questionstate
+     * @param array|null $attributes
      * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
      * @param string|null $scoringstate the last scoring state if this attempt had been scored before
      * @param object $response data submitted by the student
@@ -167,7 +168,7 @@ class package_api {
      * @throws request_error
      * @throws moodle_exception
      */
-    public function score_attempt(string $questionstate, string $attemptstate, ?string $scoringstate,
+    public function score_attempt(string $questionstate, ?array $attributes, string $attemptstate, ?string $scoringstate,
                                   object $response): attempt_scored {
         $options['multipart'] = $this->transform_to_multipart(
             [
@@ -176,6 +177,7 @@ class package_api {
                 'response' => $response,
                 'generate_hint' => false,
                 'context' => $this->get_context_id(),
+                'lms_provided_attributes' => $attributes,
             ],
             $questionstate
         );
