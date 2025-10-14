@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\di;
 use core\output\html_writer;
 use qtype_questionpy\constants;
 use qtype_questionpy\local\api\attempt_ui;
@@ -392,11 +393,11 @@ EOD;
      * @throws coding_exception
      */
     private function get_package_css_links(array $cssfiles, qtype_questionpy_question $question): string {
+        $sfs = di::get(static_file_service::class);
         $elements = [];
         foreach (array_unique($cssfiles) as $uri) {
-            $converted = static_file_service::resolve_qpy_url($uri, $question);
-            if ($converted) {
-                $uri = $converted;
+            if (str_starts_with($uri, 'qpy://static/')) {
+                $uri = $sfs->resolve_qpy_url(substr($uri, strlen('qpy://static')), $question);
             } else if (str_starts_with($uri, 'qpy://')) {
                 debugging("Stylesheet URI '$uri' looks like a QPy-URI, but could not be parsed.");
                 continue;

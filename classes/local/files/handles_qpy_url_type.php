@@ -30,7 +30,7 @@ interface handles_qpy_url_type {
     /**
      * Converts a QPy-URL to a functioning pluginfile URL.
      *
-     * This method isn't passed the entire URL, but everything after the `qpy://<type>/` prefix. The slash between type and path
+     * This method isn't passed the entire URL, but everything after the `qpy://<type>` prefix. The slash between type and path
      * isn't included in `$path`. See also {@see qpy_url_resolver::QPY_URL_PATTERN}.
      *
      * @param string $path
