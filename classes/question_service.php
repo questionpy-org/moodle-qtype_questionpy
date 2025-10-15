@@ -139,7 +139,9 @@ class question_service {
                 $pkgversionhash = $pkgversion->hash;
                 $pkgversionnamespace = $package->namespace;
                 $pkgversionshortname = $package->shortname;
-                last_used_service::add($question->context->get_course_context()->id, $package->id);
+                $coursecontext = $question->context->get_course_context(strict: false);
+                $context = $coursecontext ?: $question->context;
+                last_used_service::add($context->id, $package->id);
             } else {
                 $packageinfo = $this->api->get_package_info($question->qpy_package_hash);
                 $pkgversionhash = $packageinfo->hash;
