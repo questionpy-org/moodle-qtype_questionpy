@@ -315,7 +315,7 @@ class search_packages extends external_api {
      * @throws moodle_exception
      */
     private static function create_sql($params): array {
-        global $USER;
+        global $USER, $OUTPUT;
 
         // Order the results.
         $isrecentylusedcategory = $params['category'] === 'recentlyused';
@@ -335,8 +335,12 @@ class search_packages extends external_api {
         $ufservice = \core_favourites\service_factory::get_service_for_user_context($usercontext);
         [$joinfavsql, $joinfavparams] = $ufservice->get_join_sql_by_type('qtype_questionpy', 'package', 'f', 'p.id');
 
+        // When a package does not provide an icon we use the QuestionPy logo as a fallback.
+        $placeholdericon = $OUTPUT->image_url('icon', 'qtype_questionpy')->out();
+        $placeholdericonparam = ['placeholdericon' => $placeholdericon];
+
         // Merge existing parameters.
-        $finalparams = array_merge($joinlangsparams, $wheretagsparams, $wherelikeparams, $joinfavparams);
+        $finalparams = array_merge($joinlangsparams, $wheretagsparams, $wherelikeparams, $joinfavparams, $placeholdericonparam);
 
         // Search through recently used packages if the category is set.
         $selecttimeusedsql = '';
@@ -356,7 +360,8 @@ class search_packages extends external_api {
 
         // Assemble final sql query.
         $finalsql = "
-            SELECT id, short_name, namespace, author, url, icon, license, name, description, isfavourite
+            SELECT id, short_name, namespace, author, url, COALESCE(icon, :placeholdericon) as icon, license, name, description,
+                   isfavourite
             FROM (
                 SELECT DISTINCT p.id, p.shortname AS short_name, p.namespace, p.author, p.url, p.icon, p.license,
                                 $coalescenamesql AS name, $coalescedescsql AS description, p.timecreated $selecttimeusedsql,

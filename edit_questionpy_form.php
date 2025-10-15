@@ -221,6 +221,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $packagearray['islocal'] = !is_null($file);
         $packagearray['isfavourite'] = $isfavourite;
         $packagearray['ismarkableasfavourite'] = !is_null($isfavourite);
+        $packagearray['icon'] ??= $OUTPUT->image_url('icon', 'qtype_questionpy')->out();
 
         // Create a group which contains the package element - the group is used to simplify the styling.
         $group[] = $mform->createElement(
