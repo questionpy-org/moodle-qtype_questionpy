@@ -61,6 +61,7 @@ class qpy_file_upload {
      */
     public function get_limits_in(context $context): validatable_upload_limits {
         global $CFG, $PAGE;
+        require_once($CFG->libdir . '/formslib.php'); // For EDITOR_UNLIMITED_FILES.
 
         $maxfiles = $this->element->getAttribute('max-files');
         $maxfiles = is_numeric($maxfiles) ? intval($maxfiles) : EDITOR_UNLIMITED_FILES;
