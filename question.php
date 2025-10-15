@@ -442,6 +442,29 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     }
 
     /**
+     * Checks whether the user is allowed to be served a particular file.
+     *
+     * @param question_attempt $qa the question attempt being displayed.
+     * @param question_display_options $options the options that control display of the question.
+     * @param string $component the name of the component we are serving files for.
+     * @param string $filearea the name of the file area.
+     * @param array $args the remaining bits of the file path.
+     * @param bool $forcedownload whether the user must be forced to download the file.
+     * @return bool true if the user can access this file.
+     */
+    public function check_file_access($qa, $options, $component, $filearea, $args, $forcedownload) {
+        if ($component == 'question' && $filearea == 'response_files') {
+            // Response files are always visible.
+            // Assuming that the plugin that displays our question already checked if the user
+            // is allowed to see the question attempt.
+            return true;
+        }
+
+        // Parent method is not called, because we do not use questiontext and generalfeedback.
+        return false;
+    }
+
+    /**
      * Get the QuestionPy bridge used to retrieve additional information about an attempt.
      *
      * @throws moodle_exception
