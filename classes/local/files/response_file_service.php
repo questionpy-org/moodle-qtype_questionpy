@@ -21,9 +21,8 @@ use context_user;
 use core\context;
 use file_exception;
 use Generator;
-use qtype_questionpy\constants;
+use moodle_exception;
 use qtype_questionpy\local\attempt_ui\qpy_file_upload;
-use question_attempt;
 use stored_file;
 use stored_file_creation_exception;
 
@@ -176,36 +175,39 @@ class response_file_service {
     }
 
     /**
-     * Out of the files belonging to a question attempt, copies the ones that belong to the given fieldname to the given draft area.
+     * From a draft area containing all response files, copies the ones belonging to the given fieldname to a new draft area.
      *
-     * @param int $contextid The attempt's context (not necessarily the question's). See {@see question_display_options::$context}.
-     * @param question_attempt $qa
      * @param string $fieldname
      * @param int $userid
-     * @param int $draftitemid
+     * @param int $combineddraftitemid
+     * @return int
+     * @throws moodle_exception
      * @throws coding_exception
      * @throws file_exception
      * @throws stored_file_creation_exception
      */
-    public function prepare_draft_area(
-        int $contextid,
-        question_attempt $qa,
+    public function prepare_split_draft_area(
         string $fieldname,
         int $userid,
-        int $draftitemid
-    ): void {
+        int $combineddraftitemid,
+    ): int {
+        $usercontext = context_user::instance($userid);
+        $resultdraftid = file_get_unused_draft_itemid();
+
         $fs = get_file_storage();
-        $allfiles = $qa->get_last_qt_files(constants::QT_VAR_RESPONSE_FILES, $contextid);
+        $allfiles = $fs->get_area_files($usercontext->id, 'user', 'draft', $combineddraftitemid, includedirs: false);
 
         foreach (self::filter_combined_files_for_field($allfiles, $fieldname) as $filename => $file) {
             $fs->create_file_from_storedfile([
                 'component' => 'user',
                 'filearea' => 'draft',
-                'itemid' => $draftitemid,
-                'contextid' => context_user::instance($userid)->id,
+                'itemid' => $resultdraftid,
+                'contextid' => $usercontext->id,
                 'filename' => $filename,
             ], $file);
         }
+
+        return $resultdraftid;
     }
 
     /**
