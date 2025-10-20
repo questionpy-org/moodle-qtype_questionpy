@@ -136,17 +136,18 @@ class qpy_file_upload {
         global $CFG, $PAGE, $USER;
         require_once($CFG->libdir . '/form/filemanager.php');
 
-        $draftitemid = file_get_unused_draft_itemid();
+        $combineddraftitemid = $renderer->prepare_combined_draft_area($qa);
+
         $rfs = di::get(response_file_service::class);
-        $rfs->prepare_draft_area($renderer->options->context->id, $qa, $this->name, $USER->id, $draftitemid);
+        $splitdraftitemid = $rfs->prepare_split_draft_area($this->name, $USER->id, $combineddraftitemid);
 
         // This is used to tell the qbehaviour what draft areas to save.
-        $renderer->draftareas[$this->name] = $draftitemid;
+        $renderer->draftareas[$this->name] = $splitdraftitemid;
 
         $limits = $this->get_limits_in($renderer->options->context);
 
         $fm = new form_filemanager((object)[
-            'itemid' => $draftitemid,
+            'itemid' => $splitdraftitemid,
             'subdirs' => false,
             'context' => $renderer->options->context,
             'maxfiles' => $limits->maxfiles,

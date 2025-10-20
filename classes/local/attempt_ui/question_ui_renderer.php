@@ -69,6 +69,9 @@ class question_ui_renderer {
      */
     public array $mappableduplicatefieldnames = [];
 
+    /** @var int $combineddraftitemid */
+    private int $combineddraftitemid = 0;
+
     /**
      * Private constructor. Use {@see question_ui_renderer::render()}.
      *
@@ -778,5 +781,28 @@ class question_ui_renderer {
             }
         }
         return $warnings;
+    }
+
+    /**
+     * Uses {@see file_prepare_draft_area} (indirectly) to copy all response files to a new draft area.
+     *
+     * We do this because {@see file_prepare_draft_area} does some possibly important and hard-to-rewrite magic concerning the
+     * file source.
+     *
+     * This is done lazily because read-only views won't need a draft area, and at most once because the draft area contains all
+     * field's files. When rendering the upload field, each element calls this method and then copies its own files in to a separate
+     * draft area.
+     *
+     * @param question_attempt $qa
+     * @return int
+     */
+    public function prepare_combined_draft_area(question_attempt $qa): int {
+        if (!$this->combineddraftitemid) {
+            $this->combineddraftitemid = $qa->prepare_response_files_draft_itemid(
+                constants::QT_VAR_RESPONSE_FILES,
+                $this->options->context->id
+            );
+        }
+        return $this->combineddraftitemid;
     }
 }
