@@ -24,6 +24,7 @@ use file_exception;
 use moodle_exception;
 use moodle_url;
 use qtype_questionpy\constants;
+use qtype_questionpy\local\form\context\render_context;
 use qtype_questionpy\local\form\elements\file_upload_element;
 use qtype_questionpy\local\form\elements\file_upload_options;
 use qtype_questionpy_question;
@@ -47,39 +48,43 @@ class options_file_service implements handles_qpy_url_type {
      * @param int $contextid Context id of the question (NOT the draft area).
      * @param int $questionid
      * @param int $userid User whose draft area should be used, which is most likely the current user.
-     * @param int $draftitemid
+     * @param int[] $draftitemids
      * @throws file_exception
      * @throws stored_file_creation_exception
      * @throws coding_exception
+     * @throws moodle_exception
      */
-    public function save_draft_area_files(int $contextid, int $questionid, int $userid, int $draftitemid): void {
+    public function save_draft_area_files(int $contextid, int $questionid, int $userid, array $draftitemids): void {
         $fs = get_file_storage();
+        $usercontext = context_user::instance($userid);
 
-        $existingfiles = $fs->get_area_files(
-            $contextid,
-            'qtype_questionpy',
-            constants::FILEAREA_OPTIONS,
-            $questionid,
-            includedirs: false
-        );
-        $existingfilerefs = array_map(fn($file) => $file->get_filename(), $existingfiles);
+        // We copy the files in all the separate draft areas to one combined draft area first, so that we can use
+        // file_save_draft_area_files, which does some magic concerning the file source.
 
-        // Copy all draft files to the "permanent" file area and collect their metadata.
-        $draftfiles = $fs->get_area_files(context_user::instance($userid)->id, 'user', 'draft', $draftitemid, includedirs: false);
+        $tempcombineddraftarea = file_get_unused_draft_itemid();
+
+        $draftfiles = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemids, includedirs: false);
         foreach ($draftfiles as $draftfile) {
             $fileref = qpy_file_ref::from_stored_file($draftfile);
             // If the file ref already exists, the user just didn't modify/remove the file.
-            if (!in_array(strval($fileref), $existingfilerefs)) {
-                $fs->create_file_from_storedfile([
-                    'component' => 'qtype_questionpy',
-                    'filearea' => 'options',
-                    'itemid' => $questionid,
-                    'contextid' => $contextid,
-                    'filepath' => '/',
-                    'filename' => $fileref,
-                ], $draftfile);
-            }
+            $fs->create_file_from_storedfile([
+                'component' => 'user',
+                'filearea' => 'draft',
+                'itemid' => $tempcombineddraftarea,
+                'contextid' => $usercontext->id,
+                'filepath' => '/',
+                'filename' => $fileref,
+            ], $draftfile);
         }
+
+        // Save the combined draft area the question file area.
+        file_save_draft_area_files(
+            draftitemid: $tempcombineddraftarea,
+            contextid: $contextid,
+            component: 'qtype_questionpy',
+            filearea: constants::FILEAREA_OPTIONS,
+            itemid: $questionid,
+        );
     }
 
     /**
@@ -87,21 +92,33 @@ class options_file_service implements handles_qpy_url_type {
      *
      * (The inverse of {@see save_draft_area_files}.)
      *
-     * @param int $contextid Context id of the question (NOT the draft area).
-     * @param int $questionid
      * @param file_metadata[] $filemetas
      * @param int $userid
-     * @param int $draftitemid
+     * @param int $combineddraftitemid The draft area returned by {@see render_context::prepare_combined_draft_area()}.
+     * @param int $targetdraftitemid The (new, not prepared before) separate draft area belonging to a single form element.
+     * @throws coding_exception
      * @throws file_exception
      * @throws stored_file_creation_exception
-     * @throws coding_exception
      */
-    public function prepare_draft_area(int $contextid, int $questionid, array $filemetas, int $userid, int $draftitemid): void {
+    public function prepare_split_draft_area(
+        array $filemetas,
+        int $userid,
+        int $combineddraftitemid,
+        int $targetdraftitemid
+    ): void {
         $fs = get_file_storage();
-        $files = $fs->get_area_files($contextid, 'qtype_questionpy', constants::FILEAREA_OPTIONS, $questionid, includedirs: false);
+        $usercontext = context_user::instance($userid);
+
+        $combinedfiles = $fs->get_area_files(
+            $usercontext->id,
+            'user',
+            'draft',
+            $combineddraftitemid,
+            includedirs: false
+        );
 
         foreach ($filemetas as $filemetadata) {
-            $matchingfiles = array_filter($files, fn($file) => $file->get_filename() === $filemetadata->fileref);
+            $matchingfiles = array_filter($combinedfiles, fn($file) => $file->get_filename() === $filemetadata->fileref);
             if (!$matchingfiles) {
                 debugging("Options file '$filemetadata->filename' with file_ref '$filemetadata->fileref' could not be found in "
                     . 'storage.');
@@ -120,8 +137,8 @@ class options_file_service implements handles_qpy_url_type {
             $fs->create_file_from_storedfile([
                 'component' => 'user',
                 'filearea' => 'draft',
-                'itemid' => $draftitemid,
-                'contextid' => context_user::instance($userid)->id,
+                'itemid' => $targetdraftitemid,
+                'contextid' => $usercontext->id,
                 'filepath' => '/',
                 'filename' => $filemetadata->filename,
             ], $file);

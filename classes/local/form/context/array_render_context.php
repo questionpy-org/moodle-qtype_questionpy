@@ -18,6 +18,7 @@ namespace qtype_questionpy\local\form\context;
 
 use Closure;
 use HTML_QuickForm_element;
+use moodle_exception;
 use qtype_questionpy\local\form\elements\group_element;
 use qtype_questionpy\utils;
 
@@ -224,5 +225,18 @@ class array_render_context extends render_context {
      */
     public function on_import(Closure $onimport): void {
         $this->parent->on_import($onimport);
+    }
+
+    /**
+     * Uses {@see file_prepare_draft_area} to copy all options files to a new draft area.
+     *
+     * We do this because {@see file_prepare_draft_area} does some possibly important and hard-to-rewrite magic concerning the
+     * file source.
+     *
+     * @return int
+     * @throws moodle_exception
+     */
+    public function prepare_combined_draft_area(): int {
+        return $this->parent->prepare_combined_draft_area();
     }
 }

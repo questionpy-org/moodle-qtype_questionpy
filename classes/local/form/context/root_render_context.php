@@ -18,6 +18,8 @@ namespace qtype_questionpy\local\form\context;
 
 use Closure;
 use core\uuid;
+use moodle_exception;
+use qtype_questionpy\constants;
 
 /**
  * Uppermost render context.
@@ -39,6 +41,9 @@ class root_render_context extends mform_render_context {
 
     /** @var (Closure(array&): void)[] $onimportcallbacks */
     public array $onimportcallbacks = [];
+
+    /** @var int */
+    public int $combineddraftitemid = 0;
 
     /**
      * Get a unique and deterministic integer for use in generated element names and IDs.
@@ -95,5 +100,35 @@ class root_render_context extends mform_render_context {
      */
     public function on_import(Closure $onimport): void {
         $this->onimportcallbacks[] = $onimport;
+    }
+
+    /**
+     * Uses {@see file_prepare_draft_area} to copy all options files to a new draft area.
+     *
+     * We do this because {@see file_prepare_draft_area} does some possibly important and hard-to-rewrite magic concerning the
+     * file source.
+     *
+     * @return int
+     * @throws moodle_exception
+     */
+    public function prepare_combined_draft_area(): int {
+        if ($this->combineddraftitemid) {
+            return $this->combineddraftitemid;
+        }
+        if (!$this->question->id) {
+            // New question -> no files yet.
+            $this->combineddraftitemid = file_get_unused_draft_itemid();
+            return $this->combineddraftitemid;
+        }
+
+        file_prepare_draft_area(
+            draftitemid: $this->combineddraftitemid,
+            contextid: $this->question->contextid,
+            component: 'qtype_questionpy',
+            filearea: constants::FILEAREA_OPTIONS,
+            itemid: $this->question->id
+        );
+
+        return $this->combineddraftitemid;
     }
 }
