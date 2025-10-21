@@ -194,8 +194,9 @@ class wysiwyg_editor_element extends form_element {
                         throw new \core\exception\coding_exception("We're loading a question, but its ID is unset.");
                     }
 
+                    $combineddraftarea = $context->prepare_combined_draft_area();
                     $ofs = di::get(options_file_service::class);
-                    $ofs->prepare_draft_area($context->question->contextid, $questionid, $mydata->files, $USER->id, $draftitemid);
+                    $ofs->prepare_split_draft_area($mydata->files, $USER->id, $combineddraftarea, $draftitemid);
                 }
 
                 $filenamebyfileref = array_column($mydata->files, 'filename', 'fileref');

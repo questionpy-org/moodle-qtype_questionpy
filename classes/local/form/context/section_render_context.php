@@ -17,6 +17,7 @@
 namespace qtype_questionpy\local\form\context;
 
 use Closure;
+use core\exception\moodle_exception;
 use qtype_questionpy\utils;
 
 /**
@@ -106,5 +107,18 @@ class section_render_context extends mform_render_context {
      */
     public function on_import(Closure $onimport): void {
         $this->parent->on_import($onimport);
+    }
+
+    /**
+     * Uses {@see file_prepare_draft_area} to copy all options files to a new draft area.
+     *
+     * We do this because {@see file_prepare_draft_area} does some possibly important and hard-to-rewrite magic concerning the
+     * file source.
+     *
+     * @return int
+     * @throws moodle_exception
+     */
+    public function prepare_combined_draft_area(): int {
+        return $this->parent->prepare_combined_draft_area();
     }
 }

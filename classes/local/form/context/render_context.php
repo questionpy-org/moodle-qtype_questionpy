@@ -273,4 +273,15 @@ abstract class render_context {
 
         return [$draftitemid, $isnew];
     }
+
+    /**
+     * Uses {@see file_prepare_draft_area} to copy all options files to a new draft area.
+     *
+     * We do this because {@see file_prepare_draft_area} does some possibly important and hard-to-rewrite magic concerning the
+     * file source.
+     *
+     * @return int
+     * @throws moodle_exception
+     */
+    abstract public function prepare_combined_draft_area(): int;
 }

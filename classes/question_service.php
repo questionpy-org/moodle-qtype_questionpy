@@ -217,9 +217,10 @@ class question_service {
 
         // Save the draft area files belonging to the question.
         // file_upload_element and wysiwyg_editor_element add to qpy_options_draftitems.
+        $draftitems = array_filter((array) $question->qpy_options_draftitems ?? [], fn($draftitemid) => is_int($draftitemid));
         global $USER;
-        foreach ($question->qpy_options_draftitems ?? [] as $draftitemid) {
-            $this->ofs->save_draft_area_files($question->context->id, $question->id, $USER->id, $draftitemid);
+        if ($draftitems) {
+            $this->ofs->save_draft_area_files($question->context->id, $question->id, $USER->id, $draftitems);
         }
     }
 
