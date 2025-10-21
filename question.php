@@ -337,7 +337,44 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @return string a plain text summary of that response, that could be used in reports.
      */
     public function summarise_response(array $response) {
-        return '';
+        $summary = '';
+
+        $qpyresponse = utils::get_qpy_response($response);
+
+        if ($qpyresponse) {
+            $qpyresponse = get_object_vars($qpyresponse);
+            $dynamicdata = get_object_vars($qpyresponse['data'] ?? (object) []);
+            unset($qpyresponse['data']);
+
+            if ($qpyresponse) {
+                ksort($qpyresponse);
+
+                $summary = 'Form Data:';
+                foreach ($qpyresponse as $key => $value) {
+                    if ($key === 'data') {
+                        continue;
+                    }
+                    $summary .= $key . ': ' . $value . ';';
+                }
+            }
+
+            if ($dynamicdata) {
+                $summary .= 'Dynamic Data:';
+                foreach ($dynamicdata as $key => $value) {
+                    $summary .= $key . ': ' . json_encode($value) . ';';
+                }
+            }
+        }
+
+        $fileloader = $response[constants::QT_VAR_RESPONSE_FILES] ?? null;
+        if ($fileloader) {
+            $summary .= 'Files:';
+            foreach ($fileloader->get_files() as $file) {
+                $summary .= $file->get_filename() . ';';
+            }
+        }
+
+        return $summary ?: '-';
     }
 
     /**
