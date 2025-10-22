@@ -78,6 +78,9 @@ $string['render_warnings_hint_contact_teachers'] = 'If you believe this to be in
 $string['request_error'] = 'The {$a->requestmethod} request to "{$a->uri}" failed with the error code "{$a->errorcode}" and'
     . ' status code {$a->statuscode} ({$a->reasonphrase}).';
 $string['response'] = 'Response';
+$string['response_summary_dynamic_data'] = 'Dynamic Data';
+$string['response_summary_files'] = 'Files';
+$string['response_summary_form_data'] = 'Form Data';
 $string['same_version_different_hash_error'] = 'A package with the same version but different hash already exists.';
 $string['scoring_state'] = 'QuestionPy Scoring State';
 $string['search_all_header'] = 'All ({$a})';
