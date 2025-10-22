@@ -335,6 +335,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      *
      * @param array $response a response, as might be passed to {@see grade_response()}.
      * @return string a plain text summary of that response, that could be used in reports.
+     * @throws moodle_exception
      */
     public function summarise_response(array $response) {
         $summary = '';
@@ -349,7 +350,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             if ($qpyresponse) {
                 ksort($qpyresponse);
 
-                $summary = 'Form Data:';
+                $summary .= get_string('response_summary_form_data', 'qtype_questionpy') . ':';
                 foreach ($qpyresponse as $key => $value) {
                     if ($key === 'data') {
                         continue;
@@ -359,7 +360,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             }
 
             if ($dynamicdata) {
-                $summary .= 'Dynamic Data:';
+                $summary .= get_string('response_summary_dynamic_data', 'qtype_questionpy') . ':';
                 foreach ($dynamicdata as $key => $value) {
                     $summary .= $key . ': ' . json_encode($value) . ';';
                 }
@@ -368,9 +369,9 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
         $fileloader = $response[constants::QT_VAR_RESPONSE_FILES] ?? null;
         if ($fileloader) {
-            $summary .= 'Files:';
+            $summary .= get_string('response_summary_files', 'qtype_questionpy') . ':';
             foreach ($fileloader->get_files() as $file) {
-                $summary .= $file->get_filename() . ';';
+                $summary .= $file->get_filename() . ' (' . display_size($file->get_filesize()) . ');';
             }
         }
 
