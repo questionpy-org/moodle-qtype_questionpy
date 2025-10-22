@@ -348,13 +348,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             unset($qpyresponse['data']);
 
             if ($qpyresponse) {
-                ksort($qpyresponse);
-
                 $summary .= get_string('response_summary_form_data', 'qtype_questionpy') . ':';
+
+                ksort($qpyresponse);
                 foreach ($qpyresponse as $key => $value) {
-                    if ($key === 'data') {
-                        continue;
-                    }
                     $summary .= $key . ': ' . $value . ';';
                 }
             }
