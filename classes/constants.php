@@ -36,6 +36,8 @@ class constants {
     public const QT_VAR_SCORING_STATE = '_scoringstate';
     /** @var string */
     public const QT_VAR_RESPONSE = 'qpy_response';
+    /** @var string */
+    public const QT_VAR_ERROR = '_qpy_error';
 
     /** @var string This isn't needed after the action has been processed, so it's not a qt var. */
     public const FORM_DRAFT_AREAS = 'qpy_draft_areas';
