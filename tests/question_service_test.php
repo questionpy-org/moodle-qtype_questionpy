@@ -23,7 +23,6 @@ require_once(__DIR__ . '/data_provider.php');
 use coding_exception;
 use dml_exception;
 use moodle_exception;
-use phpunit_compat;
 use qtype_questionpy\local\api\api;
 use qtype_questionpy\local\api\lms_permissions;
 use qtype_questionpy\local\api\package_api;
@@ -36,8 +35,6 @@ use qtype_questionpy\local\files\options_file_service;
 use qtype_questionpy\local\package\package;
 use qtype_questionpy\local\package\package_raw;
 use stdClass;
-
-require_once(__DIR__ . '/phpunit_compat.php');
 
 /**
  * Unit tests for {@see question_service}.
@@ -405,10 +402,9 @@ final class question_service_test extends \advanced_testcase {
             ->willReturn(new question_response('en', '{}', scoring_method::automatically_scorable));
 
         global $USER;
-        $matcher = $this->exactly(2);
-        $this->ofs->expects($matcher)
+        $this->ofs->expects($this->once())
             ->method('save_draft_area_files')
-            ->with($PAGE->context->id, 42, $USER->id, phpunit_compat::consecutively($matcher, 1234, 2345));
+            ->with($PAGE->context->id, 42, $USER->id, [1234, 2345]);
 
         $this->questionservice->upsert_question(
             (object)[
