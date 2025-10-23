@@ -23,6 +23,7 @@
  */
 
 use qtype_questionpy\constants;
+use qtype_questionpy\exception\request_error;
 use qtype_questionpy\local\api\api;
 use qtype_questionpy\local\api\attempt;
 use qtype_questionpy\local\api\attempt_ui;
@@ -372,7 +373,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             }
         }
 
-        return $summary ?: '-';
+        return $summary;
     }
 
     /**
@@ -426,6 +427,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             $event = \qtype_questionpy\event\grading_response_failed::create($params);
             $event->trigger();
             debugging($event->get_description(), backtrace: $t->getTrace());
+
+            // Our question behaviour constructs an error message containing this error representation.
+            $error = $t instanceof request_error ? $t->requesterrorcode->value : $t::class . "({$t->getCode()})";
+            $this->get_behaviour()->get_pending_step()->set_qt_var(constants::QT_VAR_ERROR, $error);
 
             // As the server was not able to score the response, we mark this question with manual scoring.
             return [0, question_state::$needsgrading];
