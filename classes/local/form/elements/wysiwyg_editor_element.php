@@ -132,17 +132,22 @@ class wysiwyg_editor_element extends form_element {
                 return;
             }
 
-            $text = $mydata['text'];
+            $text =& $mydata['text'];
             $format = $mydata['format'];
 
             if (!$this->fileuploads) {
                 // Uploads are disabled.
                 $filemetas = [];
             } else {
+                global $USER;
+
+                // When links are pasted from another editor, they still point to that editor's draft area.
+                // File_merge_draft_areas copies the referenced files and rewrites the links.
+                $text = file_merge_draft_areas($draftitemid, context_user::instance($USER->id)->id, $text);
+
                 // Remove all draft files that aren't referenced in the markup.
                 file_remove_editor_orphaned_files($mydata);
 
-                global $USER;
                 $ofs = di::get(options_file_service::class);
                 /** @var file_metadata[] $filemetas */
                 $filemetas = $ofs->get_qpy_files_metadata_from_draftitem($USER->id, $draftitemid);
