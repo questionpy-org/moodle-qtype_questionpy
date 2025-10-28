@@ -220,6 +220,21 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     }
 
     /**
+     * Generate a brief, plain-text, summary of this question. This is used by
+     * various reports. This should show the particular variant of the question
+     * as presented to students. For example, the calculated question type would
+     * fill in the particular numbers that were presented to the student.
+     * This method will return null if such a summary is not possible, or
+     * inappropriate.
+     *
+     * @return string|null a plain text summary of this question.
+     */
+    public function get_question_summary() {
+        // Parent method is not called, because we do not use questiontext.
+        return null;
+    }
+
+    /**
      * Checks that our behaviour has been set, which happens in {@see qbehaviour_questionpy::__construct}.
      *
      * @throws coding_exception
