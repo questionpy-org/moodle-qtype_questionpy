@@ -23,6 +23,7 @@ use DOMElement;
 use DOMNode;
 use file_exception;
 use moodle_exception;
+use moodle_url;
 use MoodleQuickForm_editor;
 use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy\local\files\validatable_upload_limits;
@@ -52,6 +53,8 @@ class qpy_rich_text_editor implements custom_xhtml_element {
      * Trivial private constructor. Use {@see from_element()}.
      * @param DOMElement $element
      * @param string $name
+     * @param bool $required
+     * @param string|null $default
      */
     private function __construct(
         /** @var DOMElement */
@@ -60,6 +63,8 @@ class qpy_rich_text_editor implements custom_xhtml_element {
         public readonly string $name,
         /** @var bool */
         public readonly bool $required,
+        /** @var string */
+        public readonly ?string $default,
     ) {
     }
 
@@ -107,7 +112,9 @@ class qpy_rich_text_editor implements custom_xhtml_element {
 
         $required = $element->hasAttribute('required');
 
-        return new static($element, $name, $required);
+        $default = $element->hasAttribute('default') ? $element->getAttribute('default') : null;
+
+        return new static($element, $name, $required, $default);
     }
 
     /**
@@ -122,20 +129,25 @@ class qpy_rich_text_editor implements custom_xhtml_element {
      * @throws stored_file_creation_exception
      */
     public function render(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
+        // TODO: Maybe separate readonly view?
         $limits = $this->get_limits_in($renderer->options->context);
 
         $alleditorsdata = utils::get_qpy_editors_data($qa);
         $mydata = $alleditorsdata[$this->name] ?? null;
 
         $options = [
-             'context' => $renderer->options->context,
+            'context' => $renderer->options->context,
         ];
         $values = [
-             'text' => $mydata !== null ? $mydata->text : '',
-             'format' => $mydata !== null ? $mydata->format : FORMAT_HTML,
+            'text' => $this->default === null ? '' : s($this->default),
+            'format' => $mydata !== null ? $mydata->format : FORMAT_HTML,
         ];
         if ($limits->maxfiles === 0) {
             $options['enable_filemanagement'] = false;
+
+            if ($mydata !== null) {
+                $values['text'] = $mydata->text;
+            }
         } else {
             $combinedfilearea = $renderer->prepare_combined_draft_area($qa);
             $rfs = di::get(response_file_service::class);
@@ -151,6 +163,14 @@ class qpy_rich_text_editor implements custom_xhtml_element {
             $options['areamaxbytes'] = $limits->areamaxbytes;
 
             $values['itemid'] = $splitdraftitemid;
+
+            if ($mydata !== null) {
+                // Replace the @@PLUGINFILE@@ placeholders with the correct draftfile-URL prefix.
+                // The inverse is done in JS for want of a better place.
+                $prefix = moodle_url::make_draftfile_url($splitdraftitemid, '/', '');
+                assert(str_ends_with($prefix, '/'));
+                $values['text'] = str_replace('@@PLUGINFILE@@/', $prefix, $mydata->text);
+            }
         }
 
         // This will be used by the JS code to separately handle the editor data.
