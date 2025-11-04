@@ -414,16 +414,14 @@ class Attempt {
     }
 }
 
-function buildDraftFileUrlRegex() {
-    const wwwrootWithoutScheme = M.cfg.wwwroot.replace(/^https?:\/\//, "");
-
-    return new RegExp(
-        // Phpcs:disable -- phpcs is massively confused by this.
-        String.raw`https?://${wwwrootWithoutScheme}/draftfile\.php/(?<contextid>\d+)`
-        + String.raw`/user/draft/(?<itemid>\d+)/(?<filename>[^\'\",&<>|\`\s:\\\\]+)`
-        // Phpcs:enable
-    )
-}
+const wwwrootWithoutScheme = M.cfg.wwwroot.replace(/^https?:\/\//, "");
+const draftFileUrlRegex = new RegExp(
+    // Phpcs:disable -- phpcs is massively confused by this.
+    String.raw`https?://${wwwrootWithoutScheme}/draftfile\.php/(?<contextid>\d+)`
+    + String.raw`/user/draft/(?<itemid>\d+)/(?<filename>[^\'\",&<>|\`\s:\\\\]+)`,
+    // Phpcs:enable
+    "g",
+);
 
 /**
  * Creates JSON from the FormData of the given form.
@@ -437,8 +435,6 @@ function collectFormData(form, editorNames) {
 
     const editorData = {};
     for (const name of editorNames) {
-        // TODO: Turn draftfile.php-URLs into @@PLUGINFILE@@-URLs.
-
         const textKey = `${name}[text]`;
         const formatKey = `${name}[format]`;
         const itemidKey = `${name}[itemid]`;
@@ -450,7 +446,7 @@ function collectFormData(form, editorNames) {
 
         // TODO: Handle content pasted from other editors, where the draft item id would be different. We'd probably
         // need to pass the encountered foreign files somewhere and copy them to our area in qbehaviour_questionpy.
-        const replacedText = text.replaceAll(buildDraftFileUrlRegex(), "@@PLUGINFILE@@/$<filename>");
+        const replacedText = text.replaceAll(draftFileUrlRegex, "@@PLUGINFILE@@/$<filename>");
 
         editorData[name] = {text: replacedText};
         iframeFormData.delete(textKey);
