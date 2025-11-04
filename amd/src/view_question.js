@@ -63,7 +63,9 @@ function validateInput(element) {
  * @param {boolean} showSpecificFeedback
  * @param {boolean} showRightAnswer
  * @param {boolean} showCorrectness
- * @param {string} responseId
+ * @param {string} responseId Id of the hidden input containing the JSON-encoded main response.
+ * @param {string} editorsId Id of the hidden input containing the JSON-encoded WYSIWYG editors data.
+ * @param {string[]} editorNames Names of the WYSIWYG editors.
  * @param {string[]} roles QPy role names that the user has.
  * @param {Object.<string, any>} data Dynamic data.
  * @param {Number} environmentVersion
@@ -75,6 +77,8 @@ export async function init(
     showRightAnswer,
     showCorrectness,
     responseId,
+    editorsId,
+    editorNames,
     roles,
     data,
     environmentVersion,
@@ -102,10 +106,17 @@ export async function init(
 
         // Modify a field in the main form in order to tell the Quiz's autosaver that the user changed an answer.
         const responseElement = parent.document.getElementById(responseId);
-        if (responseElement) {
+        const editorsElement = parent.document.getElementById(editorsId);
+        if (responseElement || editorsElement) {
             // We throttle here, as `JSON.stringify` might affect the performance.
             form.addEventListener("change", throttle(() => {
-                responseElement.value = createJsonFromFormData(form);
+                const [responseData, editorsData] = collectFormData(form, editorNames);
+                if (responseElement) {
+                    responseElement.value = responseData;
+                }
+                if (editorsElement) {
+                    editorsElement.value = editorsData;
+                }
             }, 250));
         }
 
@@ -403,29 +414,73 @@ class Attempt {
     }
 }
 
+function buildDraftFileUrlRegex() {
+    const wwwrootWithoutScheme = M.cfg.wwwroot.replace(/^https?:\/\//, "");
+
+    return new RegExp(
+        // Phpcs:disable -- phpcs is massively confused by this.
+        String.raw`https?://${wwwrootWithoutScheme}/draftfile\.php/(?<contextid>\d+)`
+        + String.raw`/user/draft/(?<itemid>\d+)/(?<filename>[^\'\",&<>|\`\s:\\\\]+)`
+        // Phpcs:enable
+    )
+}
+
 /**
  * Creates JSON from the FormData of the given form.
  *
  * @param {HTMLFormElement} form
- * @returns {string}
+ * @param {string[]} editorNames
+ * @returns {[string, string]}
  */
-function createJsonFromFormData(form) {
+function collectFormData(form, editorNames) {
     const iframeFormData = new FormData(form);
-    const iframeObject = Object.fromEntries(iframeFormData);
+
+    const editorData = {};
+    for (const name of editorNames) {
+        // TODO: Turn draftfile.php-URLs into @@PLUGINFILE@@-URLs.
+
+        const textKey = `${name}[text]`;
+        const formatKey = `${name}[format]`;
+        const itemidKey = `${name}[itemid]`;
+
+        const text = iframeFormData.get(textKey);
+        if (text === null) {
+            continue;
+        }
+
+        // TODO: Handle content pasted from other editors, where the draft item id would be different. We'd probably
+        // need to pass the encountered foreign files somewhere and copy them to our area in qbehaviour_questionpy.
+        const replacedText = text.replaceAll(buildDraftFileUrlRegex(), "@@PLUGINFILE@@/$<filename>");
+
+        editorData[name] = {text: replacedText};
+        iframeFormData.delete(textKey);
+
+        const format = iframeFormData.get(formatKey);
+        if (format !== null) {
+            editorData[name].format = format;
+            iframeFormData.delete(formatKey);
+        }
+
+        // The itemid is added by qpy_rich_text_editor to the list that gets sent from outside the iframe.
+        // No need to duplicate it here.
+        iframeFormData.delete(itemidKey);
+    }
+
+    const responseObject = Object.fromEntries(iframeFormData);
     for (const name of iframeFormData.keys()) {
         const values = iframeFormData.getAll(name);
         if (values.length > 1) {
-            iframeObject[name] = values;
+            responseObject[name] = values;
         }
     }
 
-    if (iframeObject.data) {
-        iframeObject.data = JSON.parse(iframeObject.data);
+    if (responseObject.data) {
+        responseObject.data = JSON.parse(responseObject.data);
     } else {
         window.console.warn("The form data field 'data' is missing in the question iframe form.");
     }
 
-    return JSON.stringify(iframeObject);
+    return [JSON.stringify(responseObject), JSON.stringify(editorData)];
 }
 
 /**
@@ -435,8 +490,10 @@ function createJsonFromFormData(form) {
  *
  * @param {string} iframeId - The ID of the question's iframe.
  * @param {string} responseFieldName - The complete field name for the JSON-encoded iframe form data.
+ * @param {string} editorsFieldName - The complete field name for the JSON-encoded WYSIWYG editors data.
+ * @param {string[]} editorNames - The input names that are WYSIWYG editors.
  */
-export function addIframeFormDataOnSubmit(iframeId, responseFieldName) {
+export function addIframeFormDataOnSubmit(iframeId, responseFieldName, editorsFieldName, editorNames) {
     const iframe = window.document.getElementById(iframeId);
     if (iframe === null) {
         window.console.error(`Could not find question iframe ${iframeId}. Cannot save answers.`);
@@ -450,9 +507,11 @@ export function addIframeFormDataOnSubmit(iframeId, responseFieldName) {
             window.console.error("Could not find form in question iframe " + iframeId);
             return;
         }
+
         // Since we are throttling the updating process of the response element on a change, it might happen that the
         // value is outdated - this is why we get the data again.
-        const jsonFormData = createJsonFromFormData(iframeForm);
-        event.formData.set(responseFieldName, jsonFormData);
+        const [responseData, editorsData] = collectFormData(iframeForm, editorNames);
+        event.formData.set(responseFieldName, responseData);
+        event.formData.set(editorsFieldName, editorsData);
     });
 }

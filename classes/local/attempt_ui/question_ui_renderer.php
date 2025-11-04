@@ -54,6 +54,9 @@ class question_ui_renderer {
     /** @var array<string, int> Mapping of input names to draft item ids.  */
     public array $draftareas = [];
 
+    /** @var string[] */
+    public array $editornames = [];
+
     /** @var invalid_option_warning[] $warnings warnings emitted during rendering */
     public array $warnings;
 
@@ -297,6 +300,16 @@ class question_ui_renderer {
 
             $element->parentNode->replaceChild($newnode->render($qa, $this), $element);
         }
+
+        /** @var DOMElement $element */
+        foreach (iterator_to_array($this->xpath->query('//qpy:rich-text-editor')) as $element) {
+            $newnode = qpy_rich_text_editor::from_element($element);
+            if (!$newnode) {
+                continue;
+            }
+
+            $element->parentNode->replaceChild($newnode->render($qa, $this), $element);
+        }
     }
 
     /**
@@ -326,6 +339,11 @@ class question_ui_renderer {
             if ($name === 'data') {
                 // The name 'data' is reserved for storing dynamic data and is not related to an input element.
                 debugging('The name of an input element cannot be "data".');
+                continue;
+            }
+
+            if (in_array($name, $this->editornames)) {
+                // This is a rich text editor, whose value is managed by qpy_rich_text_editor.
                 continue;
             }
 

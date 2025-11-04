@@ -19,27 +19,35 @@ namespace qtype_questionpy\local\attempt_ui;
 use core\context;
 use core\di;
 use core\exception\coding_exception;
-use DOMDocument;
 use DOMElement;
 use DOMNode;
 use file_exception;
-use form_filemanager;
 use moodle_exception;
+use MoodleQuickForm_editor;
 use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy\local\files\validatable_upload_limits;
-use qtype_questionpy_renderer;
+use qtype_questionpy\utils;
 use question_attempt;
 use stored_file_creation_exception;
 
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once($CFG->libdir . '/form/editor.php');
+
 /**
- * Represents a `<qpy:file-upload/>` element in the question UI XML.
+ * Represents a `<qpy:rich-text-editor/>` element in the question UI XML.
  *
  * @package    qtype_questionpy
  * @author     Maximilian Haye
  * @copyright  2025 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class qpy_file_upload implements custom_xhtml_element {
+class qpy_rich_text_editor implements custom_xhtml_element {
+    // The default in MoodleQuickForm_editor.
+    /** @var int */
+    private const RETURN_TYPES = FILE_INTERNAL | FILE_EXTERNAL | FILE_REFERENCE | FILE_CONTROLLED_LINK;
+
     /**
      * Trivial private constructor. Use {@see from_element()}.
      * @param DOMElement $element
@@ -50,6 +58,8 @@ class qpy_file_upload implements custom_xhtml_element {
         private readonly DOMElement $element,
         /** @var string */
         public readonly string $name,
+        /** @var bool */
+        public readonly bool $required,
     ) {
     }
 
@@ -63,8 +73,9 @@ class qpy_file_upload implements custom_xhtml_element {
         global $CFG, $PAGE;
         require_once($CFG->libdir . '/formslib.php'); // For EDITOR_UNLIMITED_FILES.
 
-        $maxfiles = $this->element->getAttribute('max-files');
-        $maxfiles = is_numeric($maxfiles) ? intval($maxfiles) : EDITOR_UNLIMITED_FILES;
+        if ($this->element->hasAttribute('max-files')) {
+            debugging('qpy:rich-text-editor does not support max-files, the attribute is ignored.');
+        }
 
         $maxbytes = $this->element->getAttribute('max-bytes-per-file');
         $maxbytes = is_numeric($maxbytes) ? intval($maxbytes) : FILE_AREA_MAX_BYTES_UNLIMITED;
@@ -77,7 +88,8 @@ class qpy_file_upload implements custom_xhtml_element {
         $areamaxbytes = $this->element->getAttribute('max-bytes-total');
         $areamaxbytes = is_numeric($areamaxbytes) ? intval($areamaxbytes) : FILE_AREA_MAX_BYTES_UNLIMITED;
 
-        return new validatable_upload_limits($maxfiles, $maxbytes, $areamaxbytes);
+        // Moodle's tinymce media plugin hardcodes maxfiles to -1, so we can't place any restrictions here.
+        return new validatable_upload_limits(maxfiles: EDITOR_UNLIMITED_FILES, maxbytes: $maxbytes, areamaxbytes: $areamaxbytes);
     }
 
     /**
@@ -93,30 +105,13 @@ class qpy_file_upload implements custom_xhtml_element {
             return null;
         }
 
-        return new static($element, $name);
+        $required = $element->hasAttribute('required');
+
+        return new static($element, $name, $required);
     }
 
     /**
      * Renders this element to a DOMNode.
-     *
-     * @param question_attempt $qa
-     * @param question_ui_renderer $renderer
-     * @return DOMNode
-     */
-    public function render(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
-        if ($renderer->options->readonly) {
-            global $PAGE;
-            /** @var qtype_questionpy_renderer $qpyrenderer */
-            $qpyrenderer = $PAGE->get_renderer('qtype_questionpy');
-            $html = $qpyrenderer->render_readonly_file_view($qa, $this->name, $renderer->options);
-            return dom_utils::html_to_fragment($this->element->ownerDocument, $html);
-        } else {
-            return $this->render_writable($qa, $renderer);
-        }
-    }
-
-    /**
-     * Renders a Moodle file manager from this `<qpy:file-upload/>`, preparing it with the last submitted files.
      *
      * @param question_attempt $qa
      * @param question_ui_renderer $renderer
@@ -126,34 +121,50 @@ class qpy_file_upload implements custom_xhtml_element {
      * @throws moodle_exception
      * @throws stored_file_creation_exception
      */
-    private function render_writable(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
-        // Re: "global $PAGE cannot be used in renderers" - We're not _that_ kind of a renderer.
-        // phpcs:disable moodle.PHP.ForbiddenGlobalUse.BadGlobal
-        global $CFG, $PAGE, $USER;
-        require_once($CFG->libdir . '/form/filemanager.php');
-
-        $combineddraftitemid = $renderer->prepare_combined_draft_area($qa);
-
-        $rfs = di::get(response_file_service::class);
-        $splitdraftitemid = $rfs->prepare_split_draft_area($this->name, $USER->id, $combineddraftitemid);
-
-        // This is used to tell the qbehaviour what draft areas to save.
-        $renderer->draftareas[$this->name] = $splitdraftitemid;
-
+    public function render(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
         $limits = $this->get_limits_in($renderer->options->context);
 
-        $fm = new form_filemanager((object)[
-            'itemid' => $splitdraftitemid,
-            'subdirs' => false,
-            'context' => $renderer->options->context,
-            'maxfiles' => $limits->maxfiles,
-            'maxbytes' => $limits->maxbytes,
-            'areamaxbytes' => $limits->areamaxbytes,
-        ]);
+        $alleditorsdata = utils::get_qpy_editors_data($qa);
+        $mydata = $alleditorsdata[$this->name] ?? null;
 
-        // phpcs:disable moodle.PHP.ForbiddenGlobalUse.BadGlobal
-        $filesrenderer = $PAGE->get_renderer('core', 'files');
-        $html = $filesrenderer->render($fm);
-        return dom_utils::html_to_fragment($this->element->ownerDocument, $html);
+        $options = [
+             'context' => $renderer->options->context,
+        ];
+        $values = [
+             'text' => $mydata !== null ? $mydata->text : '',
+             'format' => $mydata !== null ? $mydata->format : FORMAT_HTML,
+        ];
+        if ($limits->maxfiles === 0) {
+            $options['enable_filemanagement'] = false;
+        } else {
+            $combinedfilearea = $renderer->prepare_combined_draft_area($qa);
+            $rfs = di::get(response_file_service::class);
+            global $USER;
+            $splitdraftitemid = $rfs->prepare_split_draft_area($this->name, $USER->id, $combinedfilearea);
+
+            // This is used to tell the qbehaviour what draft areas to save.
+            $renderer->draftareas[$this->name] = $splitdraftitemid;
+
+            $options['subdirs'] = false;
+            $options['maxfiles'] = $limits->maxfiles;
+            $options['maxbytes'] = $limits->maxbytes;
+            $options['areamaxbytes'] = $limits->areamaxbytes;
+
+            $values['itemid'] = $splitdraftitemid;
+        }
+
+        // This will be used by the JS code to separately handle the editor data.
+        $renderer->editornames[] = $this->name;
+
+        $meditor = new MoodleQuickForm_editor(
+            elementName: $this->name,
+            elementLabel: null,
+            options: $options
+        );
+        $meditor->_generateId();
+
+        $meditor->setValue($values);
+
+        return dom_utils::html_to_fragment($this->element->ownerDocument, $meditor->toHtml());
     }
 }

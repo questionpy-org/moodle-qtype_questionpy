@@ -158,20 +158,7 @@ class options_file_service implements handles_qpy_url_type {
         $fs = get_file_storage();
         $files = $fs->get_area_files(context_user::instance($userid)->id, 'user', 'draft', $draftitemid, includedirs: false);
 
-        $metadata = [];
-        foreach ($files as $file) {
-            $fileref = qpy_file_ref::from_stored_file($file);
-            $metadata[] = new file_metadata(
-                path: $file->get_filepath(),
-                filename: $file->get_filename(),
-                fileref: $fileref,
-                uploadedat: DateTimeImmutable::createFromFormat('U', $file->get_timemodified()),
-                mimetype: $file->get_mimetype(),
-                size: $file->get_filesize(),
-            );
-        }
-
-        return $metadata;
+        return array_map(fn($file) => file_metadata::from_stored_file($file), $files);
     }
 
     /**

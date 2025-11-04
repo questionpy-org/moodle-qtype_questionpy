@@ -30,7 +30,10 @@ use qtype_questionpy\local\api\attempt_ui;
 use qtype_questionpy\local\api\package_dependency;
 use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\local\api\scoring_code;
+use qtype_questionpy\local\api\wysiwyg_editor_data;
 use qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor;
+use qtype_questionpy\local\files\file_metadata;
+use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy\question_bridge_base;
 use qtype_questionpy\utils;
 
@@ -44,6 +47,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     // Properties which do not change between attempts.
     /** @var api */
     private api $api;
+    /** @var response_file_service */
+    private response_file_service $rfs;
     /** @var string */
     public string $packagehash;
     /** @var string */
@@ -81,12 +86,19 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @param question_data $questiondata
      * @param stored_file|null $packagefile
      * @param api $api
+     * @param response_file_service $rfs
      */
     public function __construct(
-        string $packagehash, string $questionstate, question_data $questiondata, ?stored_file $packagefile, api $api
+        string $packagehash,
+        string $questionstate,
+        question_data $questiondata,
+        ?stored_file $packagefile,
+        api $api,
+        response_file_service $rfs
     ) {
         parent::__construct();
         $this->api = $api;
+        $this->rfs = $rfs;
         $this->packagehash = $packagehash;
         $this->questionstate = $questionstate;
         $this->questiondata = $questiondata;
@@ -185,19 +197,29 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         $this->attemptstate = $attemptstate;
         $this->scoringstate = $qa->get_last_qt_var(constants::QT_VAR_SCORING_STATE);
 
-        $lastresponse = utils::get_qpy_response($qa);
-
         /* TODO: This method is also called from question_attempt->regrade and
                  question_attempt->start_question_based_on, where we shouldn't need to get the UI. */
         try {
+            $lastresponsestep = $qa->get_last_step_with_qt_var(constants::QT_VAR_RESPONSE);
+            $lastresponse = utils::get_qpy_response($lastresponsestep->get_qt_data());
+
+            $allfiles = $this->rfs->get_all_files_from_qt_data($lastresponsestep->get_qt_data());
+            $editors = utils::get_qpy_editors_data($lastresponsestep->get_qt_data());
+            array_walk(
+                $editors,
+                fn(&$editordata, $editorname) => $editordata = $this->build_wysiwyg_data($editorname, $editordata, $allfiles)
+            );
+
             $attributes = $this->get_requested_attributes();
+
             $attempt = $this->api->package($this->packagehash, $this->packagefile)
                 ->view_attempt(
                     $this->questionstate,
                     $attributes,
                     $this->attemptstate,
                     $this->scoringstate,
-                    $lastresponse
+                    $lastresponse,
+                    $editors,
                 );
             $this->update_attempt($attempt);
             $this->errorduringload = false;
@@ -262,6 +284,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     public function get_expected_data(): array|string {
         return [
             constants::QT_VAR_RESPONSE => PARAM_RAW_TRIMMED,
+            constants::QT_VAR_EDITORS => PARAM_RAW_TRIMMED,
             constants::QT_VAR_RESPONSE_FILES => question_attempt::PARAM_FILES,
         ];
     }
@@ -286,7 +309,7 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         }
 
         return [
-            constants::QT_VAR_RESPONSE => json_encode((object) $correctresponse),
+            constants::QT_VAR_RESPONSE => json_encode((object)$correctresponse),
         ];
     }
 
@@ -336,6 +359,10 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             return false;
         }
 
+        if (utils::get_qpy_editors_data($prevresponse) != utils::get_qpy_editors_data($newresponse)) {
+            return false;
+        }
+
         // We compare the hashes question_file_saver generates over all files.
         $prevfilehash = strval($prevresponse[constants::QT_VAR_RESPONSE_FILES] ?? '');
         $newfilehash = strval($newresponse[constants::QT_VAR_RESPONSE_FILES] ?? '');
@@ -354,13 +381,15 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
      * @throws moodle_exception
      */
     public function summarise_response(array $response) {
+        // TODO: Include WYSIWYG editor data.
+
         $summary = '';
 
         $qpyresponse = utils::get_qpy_response($response);
 
         if ($qpyresponse) {
             $qpyresponse = get_object_vars($qpyresponse);
-            $dynamicdata = get_object_vars($qpyresponse['data'] ?? (object) []);
+            $dynamicdata = get_object_vars($qpyresponse['data'] ?? (object)[]);
             unset($qpyresponse['data']);
 
             if ($qpyresponse) {
@@ -406,6 +435,30 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     }
 
     /**
+     * Joins the raw editor data with the files that belong to it and returns a {@see wysiwyg_editor_data} object.
+     *
+     * @param string $editorname
+     * @param object $rawdata
+     * @param stored_file[] $allfiles
+     * @return wysiwyg_editor_data
+     * @throws coding_exception
+     */
+    private function build_wysiwyg_data(string $editorname, object $rawdata, array $allfiles): wysiwyg_editor_data {
+        $filemetas = [];
+        foreach (response_file_service::filter_combined_files_for_field($allfiles, $editorname) as $filename => $file) {
+            $filemetas[] = file_metadata::from_stored_file($file, overridename: $filename);
+        }
+
+        // TODO: Turn @@PLUGINFILE@@-links into QPy-URLs?
+
+        return new wysiwyg_editor_data(
+            text: $rawdata->text,
+            textformat: $rawdata->format,
+            files: $filemetas,
+        );
+    }
+
+    /**
      * Grade a response to the question, returning a fraction between
      * get_min_fraction() and get_max_fraction(), and the corresponding {@see question_state}
      * right, partial or wrong.
@@ -421,12 +474,21 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
         try {
             $attributes = $this->get_requested_attributes();
+
+            $allfiles = $this->rfs->get_all_files_from_qt_data($response);
+            $editors = utils::get_qpy_editors_data($response);
+            array_walk(
+                $editors,
+                fn(&$editordata, $editorname) => $editordata = $this->build_wysiwyg_data($editorname, $editordata, $allfiles)
+            );
+
             $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt(
                 $this->questionstate,
                 $attributes,
                 $this->attemptstate,
                 $this->scoringstate,
-                utils::get_qpy_response($response) ?? (object)[]
+                utils::get_qpy_response($response) ?? (object)[],
+                $editors
             );
             $this->update_attempt($attemptscored);
         } catch (Throwable $t) {
@@ -522,8 +584,8 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     /**
      * Get the QuestionPy bridge used to retrieve additional information about an attempt.
      *
-     * @throws moodle_exception
      * @return question_bridge_base|null
+     * @throws moodle_exception
      */
     public function get_bridge(): ?question_bridge_base {
         if ($this->bridge === null) {

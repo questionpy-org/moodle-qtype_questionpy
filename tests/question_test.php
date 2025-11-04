@@ -17,6 +17,7 @@
 namespace qtype_questionpy;
 
 use coding_exception;
+use core\di;
 use moodle_exception;
 use qbehaviour_questionpy;
 use qtype_questionpy\event\grading_response_failed;
@@ -28,12 +29,21 @@ use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\local\api\question_response;
 use qtype_questionpy\local\api\scoring_method;
 use qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor;
+use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy_question;
 use question_attempt;
+use question_attempt_step;
 use question_bank;
 use question_engine;
 use question_state;
+use testable_question_attempt;
 use Throwable;
+
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once($CFG->dirroot . '/question/behaviour/questionpy/behaviour.php');
+require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 
 /**
  * Unit tests for the questionpy question class.
@@ -53,6 +63,8 @@ final class question_test extends \advanced_testcase {
      */
     private readonly package_api $packageapi;
 
+    /** @var qbehaviour_questionpy $behaviour */
+    private readonly qbehaviour_questionpy $behaviour;
 
     /**
      * This method is called before each test.
@@ -70,6 +82,8 @@ final class question_test extends \advanced_testcase {
         $this->packageapi = $this->createMock(package_api::class);
         $this->api->method('package')
             ->willReturn($this->packageapi);
+
+        $this->behaviour = $this->createStub(qbehaviour_questionpy::class);
     }
 
     /**
@@ -89,9 +103,10 @@ final class question_test extends \advanced_testcase {
             $state,
             $questiondata,
             packagefile: null,
-            api: $this->api
+            api: $this->api,
+            rfs: $this->createStub(response_file_service::class),
         );
-        $question->behaviour = $this->createStub(qbehaviour_questionpy::class);
+        $question->behaviour = $this->behaviour;
         return $question;
     }
 
@@ -112,7 +127,7 @@ final class question_test extends \advanced_testcase {
 
         // Calling expectExpectation and assertDebuggingCalled seems buggy.
         try {
-            $question->start_attempt(new \question_attempt_step(), 1);
+            $question->start_attempt(new question_attempt_step(), 1);
             $this->fail('An exception should have been thrown.');
         } catch (\Exception $e) {
             $this->assertEquals($exception, $e);
@@ -146,10 +161,13 @@ final class question_test extends \advanced_testcase {
         $this->packageapi->method('view_attempt')->willThrowException($exception);
 
         $question = $this->create_question();
+        $qa = new testable_question_attempt($question, 1);
+        $this->behaviour->method('get_qa')->willReturn($qa);
 
         // Pretend that the question was started successfully.
-        $step = new \question_attempt_step();
+        $step = new question_attempt_step();
         $step->set_qt_var(constants::QT_VAR_ATTEMPT_STATE, 'state');
+        $qa->add_step($step);
 
         $sink = $this->redirectEvents();
         $question->apply_attempt_state($step);
@@ -221,6 +239,7 @@ final class question_test extends \advanced_testcase {
         $this->assertEquals([
             constants::QT_VAR_RESPONSE => PARAM_RAW_TRIMMED,
             constants::QT_VAR_RESPONSE_FILES => question_attempt::PARAM_FILES,
+            constants::QT_VAR_EDITORS => PARAM_RAW_TRIMMED,
         ], $question->get_expected_data());
     }
 

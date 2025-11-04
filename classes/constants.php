@@ -47,7 +47,8 @@ class constants {
     public const FILEAREA_RESPONSE_FILES = 'response_files';
     /** @var string */
     public const QT_VAR_RESPONSE_FILES = 'files';
-
+    /** @var string */
+    public const QT_VAR_EDITORS = 'editors';
 
     /** @var string */
     public const FILEAREA_OPTIONS = 'options';

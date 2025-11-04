@@ -25,8 +25,8 @@
 use core\di;
 use qtype_questionpy\constants;
 use qtype_questionpy\local\api\api;
-use qtype_questionpy\local\files\options_file_service;
 use qtype_questionpy\local\api\question_data;
+use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy\package_file_service;
 use qtype_questionpy\question_service;
 
@@ -44,16 +44,16 @@ require_once($CFG->dirroot . '/question/type/questionpy/question.php');
  */
 class qtype_questionpy extends question_type {
     /** @var api */
-    private api $api;
+    private readonly api $api;
 
     /** @var package_file_service */
-    private package_file_service $packagefileservice;
+    private readonly package_file_service $packagefileservice;
 
     /** @var question_service */
-    private question_service $questionservice;
+    private readonly question_service $questionservice;
 
-    /** @var options_file_service */
-    private options_file_service $ofs;
+    /** @var response_file_service */
+    private readonly response_file_service $rfs;
 
     /**
      * Initializes the instance. Called by Moodle.
@@ -63,7 +63,7 @@ class qtype_questionpy extends question_type {
         $this->api = di::get(api::class);
         $this->packagefileservice = di::get(package_file_service::class);
         $this->questionservice = di::get(question_service::class);
-        $this->ofs = di::get(options_file_service::class);
+        $this->rfs = di::get(response_file_service::class);
     }
 
     /**
@@ -218,6 +218,7 @@ class qtype_questionpy extends question_type {
             question_data::from_json($questiondata->qpy_question_data),
             $packagefile,
             $this->api,
+            $this->rfs,
         );
     }
 }

@@ -22,6 +22,7 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use qtype_questionpy\constants;
+use qtype_questionpy\local\files\validatable_upload_limits;
 
 /**
  * Parses the question UI XML and extracts the metadata.
@@ -50,9 +51,6 @@ class question_ui_metadata_extractor {
      * @see \question_manually_gradable::is_gradable_response()
      */
     private array|false $requiredfields = false;
-
-    /** @var array<string, qpy_file_upload>|false File uploads fields in the XML. */
-    private array|false $fileuploads = false;
 
     /**
      * Parses the given XML and initializes a new {@see question_ui_metadata_extractor} instance.
@@ -91,6 +89,8 @@ class question_ui_metadata_extractor {
                 $this->requiredfields[] = $name;
             }
         }
+
+        // TODO: Include required WYSIWYG editor fields.
 
         return $this->requiredfields;
     }
@@ -134,20 +134,24 @@ class question_ui_metadata_extractor {
 
 
     /**
-     * Returns {@see qpy_file_upload}s for all `<qpy:file-upload/>` elements in the XML, indexed by their name.
+     * Returns limits for all `<qpy:file-upload/>` and `<qpy:rich-text-editor/>` elements in the XML, indexed by their name.
      *
-     * @return array<string, qpy_file_upload>
+     * @param context $attemptcontext
+     * @return array<string, validatable_upload_limits>
      */
-    public function get_upload_limits(): array {
-        if ($this->fileuploads === false) {
-            $this->fileuploads = [];
-            foreach ($this->xpath->query('//qpy:file-upload') as $element) {
-                $upload = qpy_file_upload::from_element($element);
-                $this->fileuploads[$upload->name] = $upload;
-            }
-            return $this->fileuploads;
+    public function get_upload_limits(context $attemptcontext): array {
+        $uploadlimits = [];
+
+        foreach ($this->xpath->query('//qpy:file-upload') as $element) {
+            $upload = qpy_file_upload::from_element($element);
+            $uploadlimits[$upload->name] = $upload->get_limits_in($attemptcontext);
         }
 
-        return $this->correctresponse;
+        foreach ($this->xpath->query('//qpy:rich-text-editor') as $element) {
+            $editor = qpy_rich_text_editor::from_element($element);
+            $uploadlimits[$editor->name] = $editor->get_limits_in($attemptcontext);
+        }
+
+        return $uploadlimits;
     }
 }
