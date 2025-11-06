@@ -45,9 +45,11 @@ require_once($CFG->libdir . '/form/editor.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qpy_rich_text_editor implements custom_xhtml_element {
-    // The default in MoodleQuickForm_editor.
+    // Same as MoodleQuickForm_editor.
     /** @var int */
-    private const RETURN_TYPES = FILE_INTERNAL | FILE_EXTERNAL | FILE_REFERENCE | FILE_CONTROLLED_LINK;
+    private const DEFAULT_ROWS = 15;
+    /** @var int */
+    private const DEFAULT_COLS = 80;
 
     /**
      * Trivial private constructor. Use {@see from_element()}.
@@ -55,6 +57,8 @@ class qpy_rich_text_editor implements custom_xhtml_element {
      * @param string $name
      * @param bool $required
      * @param string|null $default
+     * @param int $rows
+     * @param int $cols
      */
     private function __construct(
         /** @var DOMElement */
@@ -65,6 +69,10 @@ class qpy_rich_text_editor implements custom_xhtml_element {
         public readonly bool $required,
         /** @var string */
         public readonly ?string $default,
+        /** @var int */
+        public readonly int $rows,
+        /** @var int */
+        public readonly int $cols,
     ) {
     }
 
@@ -110,11 +118,14 @@ class qpy_rich_text_editor implements custom_xhtml_element {
             return null;
         }
 
-        $required = $element->hasAttribute('required');
-
-        $default = $element->hasAttribute('default') ? $element->getAttribute('default') : null;
-
-        return new static($element, $name, $required, $default);
+        return new static(
+            $element,
+            $name,
+            required: $element->hasAttribute('required'),
+            default: $element->hasAttribute('default') ? $element->getAttribute('default') : null,
+            rows: $element->getAttribute('initial-rows') ?: self::DEFAULT_ROWS,
+            cols: $element->getAttribute('initial-cols') ?: self::DEFAULT_COLS
+        );
     }
 
     /**
@@ -179,6 +190,10 @@ class qpy_rich_text_editor implements custom_xhtml_element {
         $meditor = new MoodleQuickForm_editor(
             elementName: $this->name,
             elementLabel: null,
+            attributes: [
+                'rows' => $this->rows,
+                'cols' => $this->cols,
+            ],
             options: $options
         );
         $meditor->_generateId();
