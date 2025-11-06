@@ -217,7 +217,17 @@ class response_file_service {
      */
     public static function mangle_filename(string $fieldname, string $filename): string {
         // URL-encoding the fieldname ensures that our separator is the first occurrence of the separator.
-        return urlencode($fieldname) . static::MANGLE_SEPARATOR . $filename;
+        return self::mangled_prefix_for($fieldname) . $filename;
+    }
+
+    /**
+     * Returns the prefix used to mangle filenames belonging to the given field.
+     *
+     * @param string $fieldname The upload field name the file(s) belongs to.
+     * @return string
+     */
+    public static function mangled_prefix_for(string $fieldname): string {
+        return urlencode($fieldname) . static::MANGLE_SEPARATOR;
     }
 
     /**

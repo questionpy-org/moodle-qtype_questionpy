@@ -277,7 +277,7 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @throws coding_exception
      */
     protected function formulation_controls_feedback_in_iframe(
-        question_attempt         $qa, attempt_ui $ui, question_ui_renderer $renderer,
+        question_attempt $qa, attempt_ui $ui, question_ui_renderer $renderer,
         question_display_options $options, string $responseinputid, string $editorsinputid
     ): string {
         global $CFG;
@@ -615,5 +615,57 @@ EOD;
         $result .= html_writer::end_tag('ul');
 
         return $result;
+    }
+
+    /**
+     * Renders a read-only view of content entered into a {@see qpy_rich_text_editor} field.
+     *
+     * @param object|null $editordata
+     * @param int $qubaid
+     * @param int $slot
+     * @param int $stepid
+     * @param string $fieldname
+     * @param question_display_options $options
+     * @param int $rows
+     * @param int $cols
+     * @return string
+     * @throws coding_exception
+     */
+    public function render_readonly_editor_content(
+        ?object $editordata,
+        int $qubaid,
+        int $slot,
+        int $stepid,
+        string $fieldname,
+        question_display_options $options,
+        int $rows,
+        int $cols
+    ): string {
+        // Loosely based on qtype_essay_format_editor_renderer::response_area_read_only.
+
+        $content = '';
+        if ($editordata) {
+            // Replace the @@PLUGINFILE@@ placeholders with the correct pluginfile-URL prefix.
+            // TODO: We use the standard question attempt file serving here, which saves us from having to do access control
+            // ourselves, but also prevents us from using the actual (unmangled) filename when serving.
+            $prefix = moodle_url::make_pluginfile_url(
+                contextid: $options->context->id,
+                component: 'question',
+                area: constants::FILEAREA_RESPONSE_FILES,
+                itemid: null,
+                pathname: "/$qubaid/$slot/$stepid/",
+                filename: response_file_service::mangled_prefix_for($fieldname)
+            );
+            $text = str_replace('@@PLUGINFILE@@/', $prefix, $editordata->text);
+
+            $content = format_text($text, $editordata->format, options: ['para' => false]);
+        }
+
+        return html_writer::tag('div', $content, [
+            'role' => 'textbox',
+            'aria-readonly' => 'true',
+            'class' => 'readonly',
+            'style' => 'min-height: ' . ($rows * 1.5) . 'em;',
+        ]);
     }
 }

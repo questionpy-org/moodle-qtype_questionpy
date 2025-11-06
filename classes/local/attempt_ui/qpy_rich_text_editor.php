@@ -19,15 +19,18 @@ namespace qtype_questionpy\local\attempt_ui;
 use core\context;
 use core\di;
 use core\exception\coding_exception;
+use DOMDocumentFragment;
 use DOMElement;
 use DOMNode;
 use file_exception;
 use moodle_exception;
 use moodle_url;
 use MoodleQuickForm_editor;
+use qtype_questionpy\constants;
 use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy\local\files\validatable_upload_limits;
 use qtype_questionpy\utils;
+use qtype_questionpy_renderer;
 use question_attempt;
 use stored_file_creation_exception;
 
@@ -140,7 +143,43 @@ class qpy_rich_text_editor implements custom_xhtml_element {
      * @throws stored_file_creation_exception
      */
     public function render(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
-        // TODO: Maybe separate readonly view?
+        if ($renderer->options->readonly) {
+            global $PAGE;
+            /** @var qtype_questionpy_renderer $qpyrenderer */
+            $qpyrenderer = $PAGE->get_renderer('qtype_questionpy');
+
+            $responsestep = $qa->get_last_step_with_qt_var(constants::QT_VAR_RESPONSE);
+            $editorsdata = utils::get_qpy_editors_data($responsestep->get_qt_data());
+            $editordata = $editorsdata[$this->name] ?? null;
+
+            $html = $qpyrenderer->render_readonly_editor_content(
+                $editordata,
+                qubaid: $qa->get_usage_id(),
+                slot: $qa->get_slot(),
+                stepid: $responsestep->get_id(),
+                fieldname: $this->name,
+                options: $renderer->options,
+                rows: $this->rows,
+                cols: $this->cols
+            );
+            return dom_utils::html_to_fragment($this->element->ownerDocument, $html);
+        } {
+            return $this->render_writable($renderer, $qa);
+        }
+    }
+
+    /**
+     * Renders an editor using the usual Moodle APIs.
+     *
+     * @param question_ui_renderer $renderer
+     * @param question_attempt $qa
+     * @return DOMDocumentFragment|false|void
+     * @throws coding_exception
+     * @throws file_exception
+     * @throws moodle_exception
+     * @throws stored_file_creation_exception
+     */
+    public function render_writable(question_ui_renderer $renderer, question_attempt $qa) {
         $limits = $this->get_limits_in($renderer->options->context);
 
         $alleditorsdata = utils::get_qpy_editors_data($qa);
