@@ -51,8 +51,6 @@ class response_file_service {
      * @throws stored_file_creation_exception
      */
     public function combine_response_file_draft_areas(array $draftareas, int $targetdraftarea, int $userid): int {
-        // TODO: Check file size & count restrictions.
-
         if (!$draftareas) {
             return $targetdraftarea;
         }
