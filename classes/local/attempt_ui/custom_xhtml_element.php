@@ -20,7 +20,9 @@ namespace qtype_questionpy\local\attempt_ui;
 use core\exception\coding_exception;
 use DOMElement;
 use DOMNode;
+use DOMXPath;
 use file_exception;
+use Iterator;
 use moodle_exception;
 use question_attempt;
 use stored_file_creation_exception;
@@ -34,6 +36,14 @@ use stored_file_creation_exception;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 interface custom_xhtml_element {
+    /**
+     * Finds all matching elements within the provided DOMXPath.
+     *
+     * @param DOMXPath $xpath
+     * @return Iterator<static>
+     */
+    public static function find_all_in(DOMXPath $xpath): Iterator;
+
     /**
      * Parses the given DOMElement if possible.
      *

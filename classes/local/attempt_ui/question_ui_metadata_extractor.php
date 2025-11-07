@@ -40,17 +40,25 @@ class question_ui_metadata_extractor {
     private DOMXPath $xpath;
 
     /**
-     * @var array|false $correctresponse `false` if not yet extracted, empty array if not set in the XML.
+     * @var array|null|false $correctresponse `false` if not yet extracted, null if not set in the XML.
      * @see \qtype_questionpy_question::get_correct_response()
      */
     private array|null|false $correctresponse = false;
 
     /**
-     * @var string[] $requiredfields `false` if not yet extracted.
+     * @var string[]|false $requiredfields `false` if not yet extracted.
      * @see \question_manually_gradable::is_complete_response()
      * @see \question_manually_gradable::is_gradable_response()
      */
     private array|false $requiredfields = false;
+
+    /**
+     * @var string[]|false $requirededitors `false` if not yet extracted.
+     * @see \question_manually_gradable::is_complete_response()
+     * @see \question_manually_gradable::is_gradable_response()
+     */
+    private array|false $requirededitors = false;
+
 
     /**
      * Parses the given XML and initializes a new {@see question_ui_metadata_extractor} instance.
@@ -67,11 +75,11 @@ class question_ui_metadata_extractor {
     }
 
     /**
-     * Extracts the names of required fields from the question UI XML.
+     * Extracts the names of required main response fields from the question UI XML.
      *
      * @return string[]
      */
-    public function get_required_fields(): array {
+    public function get_required_response_fields(): array {
         if ($this->requiredfields !== false) {
             return $this->requiredfields;
         }
@@ -90,9 +98,27 @@ class question_ui_metadata_extractor {
             }
         }
 
-        // TODO: Include required WYSIWYG editor fields.
-
         return $this->requiredfields;
+    }
+
+    /**
+     * Extracts the names of required rich text editors from the question UI XML.
+     *
+     * @return string[]
+     */
+    public function get_required_editors(): array {
+        if ($this->requirededitors !== false) {
+            return $this->requirededitors;
+        }
+
+        $this->requirededitors = [];
+        foreach (qpy_rich_text_editor::find_all_in($this->xpath) as $editor) {
+            if ($editor->required) {
+                $this->requirededitors[] = $editor->name;
+            }
+        }
+
+        return $this->requirededitors;
     }
 
     /**
@@ -132,7 +158,6 @@ class question_ui_metadata_extractor {
         return $this->correctresponse;
     }
 
-
     /**
      * Returns limits for all `<qpy:file-upload/>` and `<qpy:rich-text-editor/>` elements in the XML, indexed by their name.
      *
@@ -142,13 +167,11 @@ class question_ui_metadata_extractor {
     public function get_upload_limits(context $attemptcontext): array {
         $uploadlimits = [];
 
-        foreach ($this->xpath->query('//qpy:file-upload') as $element) {
-            $upload = qpy_file_upload::from_element($element);
+        foreach (qpy_file_upload::find_all_in($this->xpath) as $upload) {
             $uploadlimits[$upload->name] = $upload->get_limits_in($attemptcontext);
         }
 
-        foreach ($this->xpath->query('//qpy:rich-text-editor') as $element) {
-            $editor = qpy_rich_text_editor::from_element($element);
+        foreach (qpy_rich_text_editor::find_all_in($this->xpath) as $editor) {
             $uploadlimits[$editor->name] = $editor->get_limits_in($attemptcontext);
         }
 

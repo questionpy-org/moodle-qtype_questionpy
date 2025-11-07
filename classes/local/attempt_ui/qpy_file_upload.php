@@ -22,8 +22,10 @@ use core\exception\coding_exception;
 use DOMDocument;
 use DOMElement;
 use DOMNode;
+use DOMXPath;
 use file_exception;
 use form_filemanager;
+use Iterator;
 use moodle_exception;
 use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy\local\files\validatable_upload_limits;
@@ -47,7 +49,7 @@ class qpy_file_upload implements custom_xhtml_element {
      */
     private function __construct(
         /** @var DOMElement */
-        private readonly DOMElement $element,
+        public readonly DOMElement $element,
         /** @var string */
         public readonly string $name,
     ) {
@@ -155,5 +157,23 @@ class qpy_file_upload implements custom_xhtml_element {
         $filesrenderer = $PAGE->get_renderer('core', 'files');
         $html = $filesrenderer->render($fm);
         return dom_utils::html_to_fragment($this->element->ownerDocument, $html);
+    }
+
+    /**
+     * Finds all matching elements within the provided DOMXPath.
+     *
+     * @param DOMXPath $xpath
+     * @return Iterator<static>
+     */
+    public static function find_all_in(DOMXPath $xpath): Iterator {
+        /** @var DOMElement $element */
+        foreach ($xpath->query('//qpy:file-upload') as $element) {
+            $upload = self::from_element($element);
+            if (!$upload) {
+                continue;
+            }
+
+            yield $upload;
+        }
     }
 }

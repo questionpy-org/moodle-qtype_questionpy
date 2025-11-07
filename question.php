@@ -334,11 +334,21 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             return !empty($qpyresponse);
         }
 
-        foreach ($this->metadata->get_required_fields() as $requiredfield) {
+        foreach ($this->metadata->get_required_response_fields() as $requiredfield) {
             if (!isset($qpyresponse->{$requiredfield}) || $qpyresponse->{$requiredfield} === '') {
                 return false;
             }
         }
+
+        $editors = utils::get_qpy_editors_data($response);
+        foreach ($this->metadata->get_required_editors() as $requirededitorname) {
+            if (!isset($editors[$requirededitorname]) || $editors[$requirededitorname]->text === '') {
+                return false;
+            }
+        }
+
+        // TODO: Check if file uploads have their min-files satisfied (#220).
+
         return true;
     }
 
