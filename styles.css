@@ -60,6 +60,11 @@ body.questionpy-iframe-body {
     }
 }
 
+.qpy-editor-container.readonly {
+    /* Adopted from .que.essay .qtype_essay_response.readonly. */
+    background-color: var(--bs-white);
+}
+
 /* Make question iframe seamless. */
 body.questionpy-iframe-body .formulation {
     padding: 0;

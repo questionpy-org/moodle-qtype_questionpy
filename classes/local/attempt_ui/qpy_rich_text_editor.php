@@ -24,6 +24,7 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 use file_exception;
+use html_writer;
 use Iterator;
 use moodle_exception;
 use moodle_url;
@@ -145,6 +146,7 @@ class qpy_rich_text_editor implements custom_xhtml_element {
      * @throws stored_file_creation_exception
      */
     public function render(question_attempt $qa, question_ui_renderer $renderer): DOMNode {
+        $html = html_writer::start_div('qpy-editor-container ' . ($renderer->options->readonly ? 'readonly' : ''));
         if ($renderer->options->readonly) {
             global $PAGE;
             /** @var qtype_questionpy_renderer $qpyrenderer */
@@ -154,7 +156,7 @@ class qpy_rich_text_editor implements custom_xhtml_element {
             $editorsdata = utils::get_qpy_editors_data($responsestep->get_qt_data());
             $editordata = $editorsdata[$this->name] ?? null;
 
-            $html = $qpyrenderer->render_readonly_editor_content(
+            $html .= $qpyrenderer->render_readonly_editor_content(
                 $editordata,
                 qubaid: $qa->get_usage_id(),
                 slot: $qa->get_slot(),
@@ -164,10 +166,13 @@ class qpy_rich_text_editor implements custom_xhtml_element {
                 rows: $this->rows,
                 cols: $this->cols
             );
-            return dom_utils::html_to_fragment($this->element->ownerDocument, $html);
-        } {
-            return $this->render_writable($renderer, $qa);
+        } else {
+            $html .= $this->render_writable($renderer, $qa);
         }
+
+        $html .= html_writer::end_div();
+
+        return dom_utils::html_to_fragment($this->element->ownerDocument, $html);
     }
 
     /**
@@ -175,13 +180,13 @@ class qpy_rich_text_editor implements custom_xhtml_element {
      *
      * @param question_ui_renderer $renderer
      * @param question_attempt $qa
-     * @return DOMDocumentFragment|false|void
+     * @return string HTML
      * @throws coding_exception
      * @throws file_exception
      * @throws moodle_exception
      * @throws stored_file_creation_exception
      */
-    public function render_writable(question_ui_renderer $renderer, question_attempt $qa) {
+    public function render_writable(question_ui_renderer $renderer, question_attempt $qa): string {
         $limits = $this->get_limits_in($renderer->options->context);
 
         $alleditorsdata = utils::get_qpy_editors_data($qa);
@@ -241,7 +246,7 @@ class qpy_rich_text_editor implements custom_xhtml_element {
 
         $meditor->setValue($values);
 
-        return dom_utils::html_to_fragment($this->element->ownerDocument, $meditor->toHtml());
+        return $meditor->toHtml();
     }
 
     /**
