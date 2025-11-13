@@ -632,7 +632,7 @@ class qtype_questionpy_edit_form extends question_edit_form {
         $errors = parent::validation($data, $files);
 
         $package = $this->validate_selected_package($data, $errors);
-        if ($data['qpy_package_selected']) {
+        if ($data['qpy_package_selected'] && !($data['qpy_package_invalid'] ?? 0)) {
             // The options form of a package is being submitted.
             $this->validate_options_form($data, $package, $errors);
         }
