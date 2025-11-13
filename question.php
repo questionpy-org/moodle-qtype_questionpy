@@ -518,17 +518,32 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
 
         $editors = [];
         foreach ($raweditors as $editorname => $editordata) {
+            $text = $editordata->text;
             $filemetas = [];
+
             if (isset($filesbyfield[$editorname])) {
+                $filenamestorefs = [];
+
                 foreach ($filesbyfield[$editorname] as $filename => $file) {
-                    $filemetas[] = file_metadata::from_stored_file($file, overridename: $filename);
+                    $filemetas[] = $filemeta = file_metadata::from_stored_file($file, overridename: $filename);
+                    $filenamestorefs[$filename] = $filemeta->fileref;
+                }
+
+                // Filenames may be prefixes of each other, so we replace the longest ones first.
+                uksort($filenamestorefs, fn($a, $b) => strlen($b) - strlen($a));
+                foreach ($filenamestorefs as $filename => $fileref) {
+                    $text = str_replace('@@PLUGINFILE@@/' . $filename, 'qpy://response/' . $fileref, $text);
                 }
             }
 
-            // TODO: Turn @@PLUGINFILE@@-links into QPy-URLs?
+            if (str_contains($text, '@@PLUGINFILE@@')) {
+                debugging('Editor text still contains @@PLUGINFILE@@-placeholders after replacement.');
+                $brokenfile = (new moodle_url('/brokenfile.php'))->out();
+                $text = str_replace('@@PLUGINFILE@@', $brokenfile, $text);
+            }
 
             $editors[$editorname] = new wysiwyg_editor_data(
-                text: $editordata->text,
+                text: $text,
                 textformat: $editordata->format,
                 files: $filemetas,
             );
