@@ -253,7 +253,8 @@ class response_file_service {
      */
     public function get_all_files_from_qt_data(array $response): array {
         $accessor = $response[constants::QT_VAR_RESPONSE_FILES] ?? null;
-        if ($accessor === null) {
+        if ($accessor === null || $accessor === '') {
+            // When empty (i.e. no files), no question_file_loader is created when loading.
             return [];
         }
 
