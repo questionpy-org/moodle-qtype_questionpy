@@ -90,7 +90,7 @@ class radio_group_element extends form_element {
             false
         );
 
-        if ($default) {
+        if ($default !== null) {
             $context->set_default($this->name, $default);
         }
         if ($this->required) {

@@ -22,13 +22,11 @@ use core\exception\coding_exception;
 use moodle_exception;
 use MoodleQuickForm_filemanager;
 use qtype_questionpy\local\array_converter\array_converter;
-use qtype_questionpy\local\array_converter\attributes\array_key;
 use qtype_questionpy\local\files\file_metadata;
 use qtype_questionpy\local\files\options_file_service;
 use qtype_questionpy\local\form\context\render_context;
 use qtype_questionpy\local\form\form_help;
 use qtype_questionpy\utils;
-use stdClass;
 
 /**
  * File upload.
