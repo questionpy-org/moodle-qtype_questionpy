@@ -75,8 +75,8 @@ class checkbox_element extends form_element {
         $element = $context->add_element(
             'advcheckbox',
             $this->name,
-            $context->contextualize($this->leftlabel),
-            $context->contextualize($this->rightlabel),
+            $context->contextualize($this->leftlabel) ?? ' ',
+            $context->contextualize($this->rightlabel) ?? ' ',
         );
 
         if ($this->selected) {
