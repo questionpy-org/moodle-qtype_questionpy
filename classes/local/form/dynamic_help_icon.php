@@ -81,10 +81,10 @@ class dynamic_help_icon implements named_templatable, renderable {
         $data->text = $this->text;
         $data->ltr = !right_to_left();
 
-        if ($this->title) {
-            $data->alt = get_string('helpprefix2', '', trim($this->title, ". \t"));
-        } else {
+        if ($this->title === null) {
             $data->alt = get_string('helpwiththis');
+        } else {
+            $data->alt = get_string('helpprefix2', '', trim($this->title, ". \t"));
         }
 
         return $data;

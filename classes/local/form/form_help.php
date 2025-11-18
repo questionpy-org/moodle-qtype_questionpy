@@ -37,7 +37,7 @@ trait form_help {
      */
     private function render_help(HTML_QuickForm_element $element): void {
         global $OUTPUT;
-        if ($this->help) {
+        if ($this->help !== null) {
             $element->_helpbutton = $OUTPUT->render(new dynamic_help_icon($this->help, $element->getLabel()));
         }
     }

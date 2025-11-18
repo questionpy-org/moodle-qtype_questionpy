@@ -40,7 +40,7 @@ class fallback_element extends form_element {
      */
     public function render_to(render_context $context): void {
         $name = $this->name;
-        if (!$name) {
+        if ($name === null || $name === '') {
             $name = 'qpy_fallback_' . $context->next_unique_int();
         }
 
