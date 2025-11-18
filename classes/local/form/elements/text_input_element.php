@@ -75,7 +75,9 @@ class text_input_element extends form_element {
      * @param render_context $context target context
      */
     public function render_to(render_context $context): void {
-        $attributes = $this->placeholder ? ['placeholder' => $context->contextualize($this->placeholder)] : [];
+        $attributes = $this->placeholder != null
+            ? ['placeholder' => $context->contextualize($this->placeholder)]
+            : [];
 
         $element = $context->add_element(
             get_class($this)::MFORM_ELEMENT,
@@ -85,7 +87,7 @@ class text_input_element extends form_element {
         );
         $context->set_type($this->name, PARAM_RAW);
 
-        if ($this->default) {
+        if ($this->default !== null) {
             $context->set_default($this->name, $context->contextualize($this->default));
         }
         if ($this->required) {
