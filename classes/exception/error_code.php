@@ -27,6 +27,7 @@ namespace qtype_questionpy\exception;
  */
 enum error_code: string {
     case package_permission_error = 'PACKAGE_PERMISSION_ERROR';
+    case package_environment_variables_error = 'PACKAGE_ENVIRONMENT_VARIABLES_ERROR';
     case queue_waiting_timeout = 'QUEUE_WAITING_TIMEOUT';
     case worker_timeout = 'WORKER_TIMEOUT';
     case out_of_memory = 'OUT_OF_MEMORY';
