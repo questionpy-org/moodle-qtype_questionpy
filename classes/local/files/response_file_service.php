@@ -248,7 +248,7 @@ class response_file_service {
      *
      * @param array $response As returned by {@see question_attempt::get_last_qt_data()} and passed to
      *                        {@see qtype_questionpy_question::grade_response()}.
-     * @return stored_file[] Files belonging to the response.
+     * @return stored_file[][] Arrays à la `[$fieldname => [$filename => stored_file]]`.
      * @throws coding_exception
      */
     public function get_all_files_from_qt_data(array $response): array {
@@ -263,6 +263,12 @@ class response_file_service {
             throw new coding_exception("The '$key' qt var exists, but is not an instance of question_response_files.");
         }
 
-        return $accessor->get_files();
+        $filesbyfield = [];
+        foreach ($accessor->get_files() as $file) {
+            [$fieldname, $filename] = self::unmangle_filename($file->get_filename());
+            $filesbyfield[$fieldname][$filename] = $file;
+        }
+
+        return $filesbyfield;
     }
 }

@@ -22,7 +22,6 @@ use qtype_questionpy\local\array_converter\array_converter;
 use qtype_questionpy\local\array_converter\attributes\array_element_class;
 use qtype_questionpy\local\array_converter\attributes\array_key;
 use qtype_questionpy\local\array_converter\conversion_exception;
-use qtype_questionpy\local\files\file_metadata;
 
 /**
  * Data class for WYSIWYG editor data.

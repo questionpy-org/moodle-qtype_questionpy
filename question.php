@@ -32,7 +32,7 @@ use qtype_questionpy\local\api\question_data;
 use qtype_questionpy\local\api\scoring_code;
 use qtype_questionpy\local\api\wysiwyg_editor_data;
 use qtype_questionpy\local\attempt_ui\question_ui_metadata_extractor;
-use qtype_questionpy\local\files\file_metadata;
+use qtype_questionpy\local\api\file_metadata;
 use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy\question_bridge_base;
 use qtype_questionpy\utils;
@@ -201,25 +201,19 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
                  question_attempt->start_question_based_on, where we shouldn't need to get the UI. */
         try {
             $lastresponsestep = $qa->get_last_step_with_qt_var(constants::QT_VAR_RESPONSE);
-            $lastresponse = utils::get_qpy_response($lastresponsestep->get_qt_data());
-
-            $allfiles = $this->rfs->get_all_files_from_qt_data($lastresponsestep->get_qt_data());
-            $editors = utils::get_qpy_editors_data($lastresponsestep->get_qt_data());
-            array_walk(
-                $editors,
-                fn(&$editordata, $editorname) => $editordata = $this->build_wysiwyg_data($editorname, $editordata, $allfiles)
-            );
+            [$lastresponse, $uploads, $editors] = $this->prepare_responses_for_server($lastresponsestep->get_qt_data());
 
             $attributes = $this->get_requested_attributes();
 
             $attempt = $this->api->package($this->packagehash, $this->packagefile)
                 ->view_attempt(
-                    $this->questionstate,
-                    $attributes,
-                    $this->attemptstate,
-                    $this->scoringstate,
-                    $lastresponse,
-                    $editors,
+                    questionstate: $this->questionstate,
+                    attributes: $attributes,
+                    attemptstate: $this->attemptstate,
+                    scoringstate: $this->scoringstate,
+                    response: $lastresponse,
+                    uploads: $uploads,
+                    editors: $editors,
                 );
             $this->update_attempt($attempt);
             $this->errorduringload = false;
@@ -445,30 +439,6 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
     }
 
     /**
-     * Joins the raw editor data with the files that belong to it and returns a {@see wysiwyg_editor_data} object.
-     *
-     * @param string $editorname
-     * @param object $rawdata
-     * @param stored_file[] $allfiles
-     * @return wysiwyg_editor_data
-     * @throws coding_exception
-     */
-    private function build_wysiwyg_data(string $editorname, object $rawdata, array $allfiles): wysiwyg_editor_data {
-        $filemetas = [];
-        foreach (response_file_service::filter_combined_files_for_field($allfiles, $editorname) as $filename => $file) {
-            $filemetas[] = file_metadata::from_stored_file($file, overridename: $filename);
-        }
-
-        // TODO: Turn @@PLUGINFILE@@-links into QPy-URLs?
-
-        return new wysiwyg_editor_data(
-            text: $rawdata->text,
-            textformat: $rawdata->format,
-            files: $filemetas,
-        );
-    }
-
-    /**
      * Grade a response to the question, returning a fraction between
      * get_min_fraction() and get_max_fraction(), and the corresponding {@see question_state}
      * right, partial or wrong.
@@ -485,20 +455,16 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
         try {
             $attributes = $this->get_requested_attributes();
 
-            $allfiles = $this->rfs->get_all_files_from_qt_data($response);
-            $editors = utils::get_qpy_editors_data($response);
-            array_walk(
-                $editors,
-                fn(&$editordata, $editorname) => $editordata = $this->build_wysiwyg_data($editorname, $editordata, $allfiles)
-            );
+            [$qpyresponse, $uploads, $editors] = $this->prepare_responses_for_server($response);
 
             $attemptscored = $this->api->package($this->packagehash, $this->packagefile)->score_attempt(
-                $this->questionstate,
-                $attributes,
-                $this->attemptstate,
-                $this->scoringstate,
-                utils::get_qpy_response($response) ?? (object)[],
-                $editors
+                questionstate: $this->questionstate,
+                attributes: $attributes,
+                attemptstate: $this->attemptstate,
+                scoringstate: $this->scoringstate,
+                response: $qpyresponse ?? (object)[],
+                uploads: $uploads,
+                editors: $editors,
             );
             $this->update_attempt($attemptscored);
         } catch (Throwable $t) {
@@ -535,6 +501,63 @@ class qtype_questionpy_question extends question_graded_automatically_with_count
             scoring_code::invalid_response => question_state::$invalid,
         };
         return [$attemptscored->score, $newqstate];
+    }
+
+    /**
+     * Converts the given QT data to the response, uploads, and editors that are expected by the QuestionPy server.
+     *
+     * @param array $responseqtdata The qt data that is being scored or viewed.
+     * @return array A tuple of `[$response, $uploads, $editors]`.
+     * @throws coding_exception
+     */
+    private function prepare_responses_for_server(array $responseqtdata): array {
+        $lastresponse = utils::get_qpy_response($responseqtdata);
+
+        $filesbyfield = $this->rfs->get_all_files_from_qt_data($responseqtdata);
+        $raweditors = utils::get_qpy_editors_data($responseqtdata);
+
+        $editors = [];
+        foreach ($raweditors as $editorname => $editordata) {
+            $text = $editordata->text;
+            $filemetas = [];
+
+            if (isset($filesbyfield[$editorname])) {
+                $filenamestorefs = [];
+
+                foreach ($filesbyfield[$editorname] as $filename => $file) {
+                    $filemetas[] = $filemeta = file_metadata::from_stored_file($file, overridename: $filename);
+                    $filenamestorefs[$filename] = $filemeta->fileref;
+                }
+
+                // Filenames may be prefixes of each other, so we replace the longest ones first.
+                uksort($filenamestorefs, fn($a, $b) => strlen($b) - strlen($a));
+                foreach ($filenamestorefs as $filename => $fileref) {
+                    $text = str_replace('@@PLUGINFILE@@/' . $filename, 'qpy://response/' . $fileref, $text);
+                }
+            }
+
+            if (str_contains($text, '@@PLUGINFILE@@')) {
+                debugging('Editor text still contains @@PLUGINFILE@@-placeholders after replacement.');
+                $brokenfile = (new moodle_url('/brokenfile.php'))->out();
+                $text = str_replace('@@PLUGINFILE@@', $brokenfile, $text);
+            }
+
+            $editors[$editorname] = new wysiwyg_editor_data(
+                text: $text,
+                textformat: $editordata->format,
+                files: $filemetas,
+            );
+        }
+
+        $uploads = [];
+        // Any files that don't belong to editors must belong to file upload elements.
+        foreach (array_diff_key($filesbyfield, $editors) as $fieldname => $files) {
+            foreach ($files as $filename => $file) {
+                $uploads[$fieldname][] = file_metadata::from_stored_file($file, overridename: $filename);
+            }
+        }
+
+        return [$lastresponse, $uploads, $editors];
     }
 
     /**

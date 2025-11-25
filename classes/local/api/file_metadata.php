@@ -14,11 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace qtype_questionpy\local\files;
+namespace qtype_questionpy\local\api;
 
 use core\exception\coding_exception;
 use DateTimeImmutable;
+use JsonSerializable;
+use qtype_questionpy\local\array_converter\array_converter;
 use qtype_questionpy\local\array_converter\attributes\array_key;
+use qtype_questionpy\local\array_converter\conversion_exception;
+use qtype_questionpy\local\files\qpy_file_ref;
 use stored_file;
 
 /**
@@ -29,7 +33,7 @@ use stored_file;
  * @copyright  2025 TU Berlin, innoCampus {@link https://www.questionpy.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class file_metadata {
+class file_metadata implements JsonSerializable {
     /**
      * Trivial constructor.
      *
@@ -77,5 +81,16 @@ class file_metadata {
             mimetype: $file->get_mimetype(),
             size: $file->get_filesize(),
         );
+    }
+    /**
+     * Specify data which should be serialized to JSON
+     * @link https://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @throws coding_exception
+     * @throws conversion_exception
+     */
+    public function jsonSerialize(): mixed {
+        return array_converter::to_array($this);
     }
 }
