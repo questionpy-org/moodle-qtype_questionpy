@@ -86,35 +86,43 @@ class qtype_questionpy_renderer extends qtype_renderer {
         }
 
         try {
-            /** @var array<string, int>|null $uploaddraftareas */
-            $uploaddraftareas = null;
+            /** @var question_ui_renderer|null $quirenderer */
+            $quirenderer = null;
 
             $questiondivid = $qa->get_outer_question_div_unique_id();
-            $qpyresponseid = $questiondivid . '-qpy-response';
+            $responseinputid = $questiondivid . '-qpy-response';
+            $editorsinputid = $questiondivid . '-qpy-editors';
+
             $formulationcb = function (qtype_questionpy_renderer $renderer)
-                                use ($qa, $question, $options, $qpyresponseid, &$uploaddraftareas) {
+                                use ($qa, $question, $options, $responseinputid, $editorsinputid, &$quirenderer) {
+                // The ::render function must be called within the context of the iframe page.
                 $quirenderer = question_ui_renderer::render($question->ui->formulation, $question->ui->placeholders, $options, $qa);
-                $uploaddraftareas = $quirenderer->draftareas;
 
                 return $renderer->formulation_controls_feedback_in_iframe(
                     $qa,
                     $question->ui,
                     $quirenderer,
                     $options,
-                    $qpyresponseid
+                    $responseinputid,
+                    $editorsinputid,
                 );
             };
             $iframesrc = $this->get_iframe_document($options->context, $question, $formulationcb);
 
             $iframeid = $questiondivid . '-iframe';
 
-            $qpyresponsename = $qa->get_field_prefix() . constants::QT_VAR_RESPONSE;
+            $responsedataname = $qa->get_field_prefix() . constants::QT_VAR_RESPONSE;
+            $editordataname = $qa->get_field_prefix() . constants::QT_VAR_EDITORS;
+
+            if ($quirenderer === null) {
+                throw new coding_exception('$quirenderer was not set');
+            }
 
             if (!$options->readonly) {
                 $this->page->requires->js_call_amd(
                     'qtype_questionpy/view_question',
                     'addIframeFormDataOnSubmit',
-                    [$iframeid, $qpyresponsename]
+                    [$iframeid, $responsedataname, $editordataname, $quirenderer->editornames]
                 );
             }
 
@@ -137,24 +145,33 @@ class qtype_questionpy_renderer extends qtype_renderer {
             // `HTMLFormElement.elements` attribute.
             $lastqpyresponse = s($qa->get_last_qt_var(constants::QT_VAR_RESPONSE) ?? '{}');
             $result .= <<<EOA
-                <input type="hidden" name="{$qpyresponsename}" id="{$qpyresponseid}" value="{$lastqpyresponse}">
+                <input type="hidden" name="{$responsedataname}" id="{$responseinputid}" value="{$lastqpyresponse}">
                 <iframe id="{$iframeid}" srcdoc="{$iframesrc}"></iframe>
             EOA;
 
-            if ($uploaddraftareas === null) {
-                throw new coding_exception('$uploaddraftareas was not set');
-            }
-            if (count($uploaddraftareas) > 0) {
+            if (count($quirenderer->draftareas) > 0) {
+                // This also includes the files for WYSIWYG editors.
+
                 $result .= html_writer::empty_tag('input', [
                     'type' => 'hidden',
                     'name' => $qa->get_field_prefix() . constants::FORM_DRAFT_AREAS,
-                    'value' => json_encode($uploaddraftareas, JSON_FORCE_OBJECT),
+                    'value' => json_encode($quirenderer->draftareas, JSON_FORCE_OBJECT),
                 ]);
                 $combineddraftareaid = file_get_unused_draft_itemid();
                 $result .= html_writer::empty_tag('input', [
                     'type' => 'hidden',
                     'name' => $qa->get_field_prefix() . constants::QT_VAR_RESPONSE_FILES,
                     'value' => $combineddraftareaid,
+                ]);
+            }
+
+            if (count($quirenderer->editornames) > 0) {
+                $lasteditordata = $qa->get_last_qt_var(constants::QT_VAR_EDITORS) ?? '{}';
+
+                $result .= html_writer::empty_tag('input', [
+                    'type' => 'hidden',
+                    'name' => $editordataname,
+                    'value' => $lasteditordata,
                 ]);
             }
 
@@ -253,13 +270,15 @@ class qtype_questionpy_renderer extends qtype_renderer {
      * @param attempt_ui $ui
      * @param question_ui_renderer $renderer Render result.
      * @param question_display_options $options controls what should and should not be displayed.
-     * @param string $qpyresponseid
+     * @param string $responseinputid ID of the input that will generate {@see constants::QT_VAR_RESPONSE}.
+     * @param string $editorsinputid ID of the input that will generate {@see constants::QT_VAR_EDITORS}.
      * @return string HTML fragment.
      * @throws moodle_exception
+     * @throws coding_exception
      */
     protected function formulation_controls_feedback_in_iframe(
         question_attempt $qa, attempt_ui $ui, question_ui_renderer $renderer,
-        question_display_options $options, string $qpyresponseid
+        question_display_options $options, string $responseinputid, string $editorsinputid
     ): string {
         global $CFG;
 
@@ -290,7 +309,9 @@ class qtype_questionpy_renderer extends qtype_renderer {
                 $options->feedback === question_display_options::VISIBLE,
                 $options->rightanswer === question_display_options::VISIBLE,
                 $options->correctness === question_display_options::VISIBLE,
-                $qpyresponseid,
+                $responseinputid,
+                $editorsinputid,
+                $renderer->editornames,
                 $roles,
                 utils::get_qpy_response($qa)->data ?? (object)[],
                 intval($CFG->branch),
@@ -594,5 +615,57 @@ EOD;
         $result .= html_writer::end_tag('ul');
 
         return $result;
+    }
+
+    /**
+     * Renders a read-only view of content entered into a {@see qpy_rich_text_editor} field.
+     *
+     * @param object|null $editordata
+     * @param int $qubaid
+     * @param int $slot
+     * @param int $stepid
+     * @param string $fieldname
+     * @param question_display_options $options
+     * @param int $rows
+     * @param int $cols
+     * @return string
+     * @throws coding_exception
+     */
+    public function render_readonly_editor_content(
+        ?object $editordata,
+        int $qubaid,
+        int $slot,
+        int $stepid,
+        string $fieldname,
+        question_display_options $options,
+        int $rows,
+        int $cols
+    ): string {
+        // Loosely based on qtype_essay_format_editor_renderer::response_area_read_only.
+
+        $content = '';
+        if ($editordata) {
+            // Replace the @@PLUGINFILE@@ placeholders with the correct pluginfile-URL prefix.
+            // TODO: We use the standard question attempt file serving here, which saves us from having to do access control
+            // ourselves, but also prevents us from using the actual (unmangled) filename when serving.
+            $prefix = moodle_url::make_pluginfile_url(
+                contextid: $options->context->id,
+                component: 'question',
+                area: constants::FILEAREA_RESPONSE_FILES,
+                itemid: null,
+                pathname: "/$qubaid/$slot/$stepid/",
+                filename: response_file_service::mangled_prefix_for($fieldname)
+            );
+            $text = str_replace('@@PLUGINFILE@@/', $prefix, $editordata->text);
+
+            $content = format_text($text, $editordata->format, options: ['para' => false]);
+        }
+
+        return html_writer::tag('div', $content, [
+            'role' => 'textbox',
+            'aria-readonly' => 'true',
+            'class' => 'readonly',
+            'style' => 'min-height: ' . ($rows * 1.5) . 'em;',
+        ]);
     }
 }

@@ -27,6 +27,7 @@ use PHPUnit\Framework\MockObject\Stub;
 use qtype_questionpy\constants;
 use qtype_questionpy\local\api\api;
 use qtype_questionpy\local\api\question_data;
+use qtype_questionpy\local\files\response_file_service;
 use qtype_questionpy_question;
 use question_attempt;
 use question_attempt_step;
@@ -515,6 +516,7 @@ final class question_ui_renderer_test extends \advanced_testcase {
             $this->createStub(question_data::class),
             null,
             $this->createStub(api::class),
+            $this->createStub(response_file_service::class)
         );
 
         $step = new question_attempt_step([constants::QT_VAR_RESPONSE => json_encode((object) $lastresponse)]);

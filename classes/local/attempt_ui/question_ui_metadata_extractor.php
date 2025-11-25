@@ -22,6 +22,7 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use qtype_questionpy\constants;
+use qtype_questionpy\local\files\validatable_upload_limits;
 
 /**
  * Parses the question UI XML and extracts the metadata.
@@ -39,20 +40,25 @@ class question_ui_metadata_extractor {
     private DOMXPath $xpath;
 
     /**
-     * @var array|false $correctresponse `false` if not yet extracted, empty array if not set in the XML.
+     * @var array|null|false $correctresponse `false` if not yet extracted, null if not set in the XML.
      * @see \qtype_questionpy_question::get_correct_response()
      */
     private array|null|false $correctresponse = false;
 
     /**
-     * @var string[] $requiredfields `false` if not yet extracted.
+     * @var string[]|false $requiredfields `false` if not yet extracted.
      * @see \question_manually_gradable::is_complete_response()
      * @see \question_manually_gradable::is_gradable_response()
      */
     private array|false $requiredfields = false;
 
-    /** @var array<string, qpy_file_upload>|false File uploads fields in the XML. */
-    private array|false $fileuploads = false;
+    /**
+     * @var string[]|false $requirededitors `false` if not yet extracted.
+     * @see \question_manually_gradable::is_complete_response()
+     * @see \question_manually_gradable::is_gradable_response()
+     */
+    private array|false $requirededitors = false;
+
 
     /**
      * Parses the given XML and initializes a new {@see question_ui_metadata_extractor} instance.
@@ -69,11 +75,11 @@ class question_ui_metadata_extractor {
     }
 
     /**
-     * Extracts the names of required fields from the question UI XML.
+     * Extracts the names of required main response fields from the question UI XML.
      *
      * @return string[]
      */
-    public function get_required_fields(): array {
+    public function get_required_response_fields(): array {
         if ($this->requiredfields !== false) {
             return $this->requiredfields;
         }
@@ -93,6 +99,26 @@ class question_ui_metadata_extractor {
         }
 
         return $this->requiredfields;
+    }
+
+    /**
+     * Extracts the names of required rich text editors from the question UI XML.
+     *
+     * @return string[]
+     */
+    public function get_required_editors(): array {
+        if ($this->requirededitors !== false) {
+            return $this->requirededitors;
+        }
+
+        $this->requirededitors = [];
+        foreach (qpy_rich_text_editor::find_all_in($this->xpath) as $editor) {
+            if ($editor->required) {
+                $this->requirededitors[] = $editor->name;
+            }
+        }
+
+        return $this->requirededitors;
     }
 
     /**
@@ -132,22 +158,23 @@ class question_ui_metadata_extractor {
         return $this->correctresponse;
     }
 
-
     /**
-     * Returns {@see qpy_file_upload}s for all `<qpy:file-upload/>` elements in the XML, indexed by their name.
+     * Returns limits for all `<qpy:file-upload/>` and `<qpy:rich-text-editor/>` elements in the XML, indexed by their name.
      *
-     * @return array<string, qpy_file_upload>
+     * @param context $attemptcontext
+     * @return array<string, validatable_upload_limits>
      */
-    public function get_upload_limits(): array {
-        if ($this->fileuploads === false) {
-            $this->fileuploads = [];
-            foreach ($this->xpath->query('//qpy:file-upload') as $element) {
-                $upload = qpy_file_upload::from_element($element);
-                $this->fileuploads[$upload->name] = $upload;
-            }
-            return $this->fileuploads;
+    public function get_upload_limits(context $attemptcontext): array {
+        $uploadlimits = [];
+
+        foreach (qpy_file_upload::find_all_in($this->xpath) as $upload) {
+            $uploadlimits[$upload->name] = $upload->get_limits_in($attemptcontext);
         }
 
-        return $this->correctresponse;
+        foreach (qpy_rich_text_editor::find_all_in($this->xpath) as $editor) {
+            $uploadlimits[$editor->name] = $editor->get_limits_in($attemptcontext);
+        }
+
+        return $uploadlimits;
     }
 }

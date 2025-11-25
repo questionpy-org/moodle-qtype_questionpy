@@ -134,18 +134,20 @@ class package_api {
      * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
      * @param string|null $scoringstate the last scoring state if this attempt has already been scored
      * @param object|null $response data currently entered by the student
+     * @param array|null $editors
      * @return attempt the attempt's metadata. The state is not returned since it never changes.
      * @throws GuzzleException
-     * @throws request_error
      * @throws moodle_exception
+     * @throws request_error
      */
     public function view_attempt(string $questionstate, ?array $attributes, string $attemptstate, ?string $scoringstate = null,
-                                 ?object $response = null): attempt {
+                                 ?object $response = null, ?array $editors = null): attempt {
         $options['multipart'] = $this->transform_to_multipart(
             [
                 'attempt_state' => $attemptstate,
                 'scoring_state' => $scoringstate,
                 'response' => $response,
+                'editors' => $editors === null ? null : (object) $editors,
                 'context' => $this->get_context_id(),
                 'lms_provided_attributes' => $attributes,
             ],
@@ -163,18 +165,20 @@ class package_api {
      * @param string $attemptstate the attempt state previously returned from {@see start_attempt()}
      * @param string|null $scoringstate the last scoring state if this attempt had been scored before
      * @param object $response data submitted by the student
+     * @param wysiwyg_editor_data[] $editors
      * @return attempt_scored the attempt's metadata. The state is not returned since it never changes.
      * @throws GuzzleException
-     * @throws request_error
      * @throws moodle_exception
+     * @throws request_error
      */
     public function score_attempt(string $questionstate, ?array $attributes, string $attemptstate, ?string $scoringstate,
-                                  object $response): attempt_scored {
+                                  object $response, array $editors): attempt_scored {
         $options['multipart'] = $this->transform_to_multipart(
             [
                 'attempt_state' => $attemptstate,
                 'scoring_state' => $scoringstate,
                 'response' => $response,
+                'editors' => (object) $editors,
                 'generate_hint' => false,
                 'context' => $this->get_context_id(),
                 'lms_provided_attributes' => $attributes,

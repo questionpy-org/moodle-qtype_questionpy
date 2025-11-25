@@ -16,8 +16,10 @@
 
 namespace qtype_questionpy\local\files;
 
+use core\exception\coding_exception;
 use DateTimeImmutable;
 use qtype_questionpy\local\array_converter\attributes\array_key;
+use stored_file;
 
 /**
  * Metadata of a file in the form data sent to and expected from the QPy server.
@@ -55,5 +57,25 @@ class file_metadata {
         /** @var int $size In bytes. */
         public int $size,
     ) {
+    }
+
+    /**
+     * Build from the given {@see stored_file}.
+     *
+     * @param stored_file $file
+     * @param string|null $overridename Use a different filename than the one of the stored file.
+     * @return file_metadata
+     * @throws coding_exception
+     */
+    public static function from_stored_file(stored_file $file, ?string $overridename = null): static {
+        $fileref = qpy_file_ref::from_stored_file($file);
+        return new static(
+            path: $file->get_filepath(),
+            filename: $overridename ?? $file->get_filename(),
+            fileref: $fileref,
+            uploadedat: DateTimeImmutable::createFromFormat('U', $file->get_timemodified()),
+            mimetype: $file->get_mimetype(),
+            size: $file->get_filesize(),
+        );
     }
 }

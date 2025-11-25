@@ -160,4 +160,53 @@ class utils {
 
         return $response;
     }
+
+    /**
+     * Parses the JSON-encoded response data for all WYSIWYG editors from either a specific submission or a question attempt.
+     *
+     * @param question_attempt|array $qa Either the last submission (a.k.a. qt data) or the entire question attempt, in which case
+     *                                   the last submitted response is used.
+     * @return array An associative array of editor names to editor data objects, or an empty array if the last submission
+     *               didn't include any editor data.
+     * @throws coding_exception
+     */
+    public static function get_qpy_editors_data(question_attempt|array $qa): array {
+        if (is_array($qa)) {
+            $str = $qa[constants::QT_VAR_EDITORS] ?? null;
+        } else {
+            // In the unlikely event that the editor is removed between steps, the editors qt var would be missing.
+            // We don't want to use the old editor data in that case, so we choose the step based on the response qt var.
+            $lastresponsestep = $qa->get_last_step_with_qt_var(constants::QT_VAR_RESPONSE);
+            $str = $lastresponsestep->get_qt_var(constants::QT_VAR_EDITORS);
+        }
+
+        if (!$str) {
+            return [];
+        }
+
+        $editors = json_decode($str, depth: 3);
+        if (json_last_error() != JSON_ERROR_NONE) {
+            throw new coding_exception('Could not decode editor data JSON: ' . json_last_error_msg());
+        }
+        if (!is_object($editors)) {
+            throw new coding_exception('Expected editor data JSON to be an object, got: ' . gettype($editors));
+        }
+
+        $editors = (array) $editors;
+
+        foreach ($editors as $editorname => $editordata) {
+            if (!is_object($editordata)) {
+                throw new coding_exception("Expected editor data for '$editorname' to be an object, got: " . gettype($editordata));
+            }
+
+            if (
+                    !isset($editordata->text) || !is_string($editordata->text)
+                    || !isset($editordata->format) || !is_numeric($editordata->format)
+            ) {
+                throw new coding_exception("Editor data for editor '$editorname' has wrong shape.");
+            }
+        }
+
+        return $editors;
+    }
 }

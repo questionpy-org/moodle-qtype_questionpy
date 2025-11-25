@@ -54,6 +54,9 @@ class question_ui_renderer {
     /** @var array<string, int> Mapping of input names to draft item ids.  */
     public array $draftareas = [];
 
+    /** @var string[] */
+    public array $editornames = [];
+
     /** @var invalid_option_warning[] $warnings warnings emitted during rendering */
     public array $warnings;
 
@@ -279,7 +282,7 @@ class question_ui_renderer {
     }
 
     /**
-     * Renders all the `<qpy:file-upload/>`-elements.
+     * Renders all the `<qpy:file-upload/>` and `<qpy:rich-text-editor/>`-elements.
      *
      * @param question_attempt $qa
      * @throws file_exception
@@ -288,14 +291,14 @@ class question_ui_renderer {
      * @throws moodle_exception
      */
     private function render_custom_elements(question_attempt $qa): void {
-        /** @var DOMElement $element */
-        foreach (iterator_to_array($this->xpath->query('//qpy:file-upload')) as $element) {
-            $newnode = qpy_file_upload::from_element($element);
-            if (!$newnode) {
-                continue;
-            }
+        /** @var qpy_file_upload $upload */
+        foreach (iterator_to_array(qpy_file_upload::find_all_in($this->xpath)) as $upload) {
+            $upload->element->parentNode->replaceChild($upload->render($qa, $this), $upload->element);
+        }
 
-            $element->parentNode->replaceChild($newnode->render($qa, $this), $element);
+        /** @var qpy_rich_text_editor $editor */
+        foreach (iterator_to_array(qpy_rich_text_editor::find_all_in($this->xpath)) as $editor) {
+            $editor->element->parentNode->replaceChild($editor->render($qa, $this), $editor->element);
         }
     }
 
@@ -326,6 +329,11 @@ class question_ui_renderer {
             if ($name === 'data') {
                 // The name 'data' is reserved for storing dynamic data and is not related to an input element.
                 debugging('The name of an input element cannot be "data".');
+                continue;
+            }
+
+            if (in_array($name, $this->editornames)) {
+                // This is a rich text editor, whose value is managed by qpy_rich_text_editor.
                 continue;
             }
 

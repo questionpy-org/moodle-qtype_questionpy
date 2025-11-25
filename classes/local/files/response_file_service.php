@@ -18,11 +18,12 @@ namespace qtype_questionpy\local\files;
 
 use coding_exception;
 use context_user;
-use core\context;
 use file_exception;
 use Generator;
 use moodle_exception;
+use qtype_questionpy\constants;
 use qtype_questionpy\local\attempt_ui\qpy_file_upload;
+use question_response_files;
 use stored_file;
 use stored_file_creation_exception;
 
@@ -50,8 +51,6 @@ class response_file_service {
      * @throws stored_file_creation_exception
      */
     public function combine_response_file_draft_areas(array $draftareas, int $targetdraftarea, int $userid): int {
-        // TODO: Check file size & count restrictions.
-
         if (!$draftareas) {
             return $targetdraftarea;
         }
@@ -113,17 +112,15 @@ class response_file_service {
      * Validates that the combined draft area follows the limits imposed by the given {@see qpy_file_upload}s.
      *
      * @param int $draftareaid
-     * @param qpy_file_upload[] $uploadfields
+     * @param validatable_upload_limits[] $limitsbyfield
      * @param int $userid
-     * @param context $attemptcontext
      * @return void
      * @throws coding_exception
      */
     public function validate_combined_draft_area(
         int $draftareaid,
-        array $uploadfields,
-        int $userid,
-        context $attemptcontext
+        array $limitsbyfield,
+        int $userid
     ): void {
         $fs = get_file_storage();
         $usercontext = context_user::instance($userid);
@@ -144,14 +141,13 @@ class response_file_service {
         }
 
         foreach ($filesbyfield as $fieldname => $files) {
-            $uploadfield = $uploadfields[$fieldname] ?? null;
-            if (!$uploadfield) {
+            $fieldlimits = $limitsbyfield[$fieldname] ?? null;
+            if (!$fieldlimits) {
                 throw new coding_exception("There were files uploaded for field '$fieldname', but no corresponding upload field "
                     . 'was found.');
             }
 
-            $uploadfield->get_limits_in($attemptcontext)
-                ->validate_files($files, "upload field '$fieldname'");
+            $fieldlimits->validate_files($files, "upload or editor field '$fieldname'");
         }
     }
 
@@ -219,7 +215,17 @@ class response_file_service {
      */
     public static function mangle_filename(string $fieldname, string $filename): string {
         // URL-encoding the fieldname ensures that our separator is the first occurrence of the separator.
-        return urlencode($fieldname) . static::MANGLE_SEPARATOR . $filename;
+        return self::mangled_prefix_for($fieldname) . $filename;
+    }
+
+    /**
+     * Returns the prefix used to mangle filenames belonging to the given field.
+     *
+     * @param string $fieldname The upload field name the file(s) belongs to.
+     * @return string
+     */
+    public static function mangled_prefix_for(string $fieldname): string {
+        return urlencode($fieldname) . static::MANGLE_SEPARATOR;
     }
 
     /**
@@ -235,5 +241,28 @@ class response_file_service {
         }
         [$urlencfieldname, $filename] = explode(static::MANGLE_SEPARATOR, $filename, 2);
         return [urldecode($urlencfieldname), $filename];
+    }
+
+    /**
+     * On a response (where {@see \question_attempt::get_last_qt_files()} & co. isn't available), gets the files from the response.
+     *
+     * @param array $response As returned by {@see question_attempt::get_last_qt_data()} and passed to
+     *                        {@see qtype_questionpy_question::grade_response()}.
+     * @return stored_file[] Files belonging to the response.
+     * @throws coding_exception
+     */
+    public function get_all_files_from_qt_data(array $response): array {
+        $accessor = $response[constants::QT_VAR_RESPONSE_FILES] ?? null;
+        if ($accessor === null || $accessor === '') {
+            // When empty (i.e. no files), no question_file_loader is created when loading.
+            return [];
+        }
+
+        if (!($accessor instanceof question_response_files)) {
+            $key = constants::QT_VAR_RESPONSE_FILES;
+            throw new coding_exception("The '$key' qt var exists, but is not an instance of question_response_files.");
+        }
+
+        return $accessor->get_files();
     }
 }

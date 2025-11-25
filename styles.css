@@ -47,7 +47,7 @@ body.questionpy-iframe-body {
         top: 4vh !important; /* stylelint-disable-line declaration-no-important */
     }
 
-    &:has(.moodle-dialogue:not(.moodle-dialogue-hidden)) {
+    &:has(.moodle-dialogue:not(.moodle-dialogue-hidden), .modal.show) {
         /* The iframe needs to be taller than the filepicker dialog, or it'll be unusable. */
         @media (max-width: 780px) {
             min-height: 1000px;
@@ -58,6 +58,11 @@ body.questionpy-iframe-body {
             min-height: 700px;
         }
     }
+}
+
+.qpy-editor-container.readonly {
+    /* Adopted from .que.essay .qtype_essay_response.readonly. */
+    background-color: var(--bs-white);
 }
 
 /* Make question iframe seamless. */

@@ -42,6 +42,6 @@ final class question_ui_metadata_extractor_test extends \advanced_testcase {
             'my_text' => 'Lorem ipsum dolor sit amet.',
         ], $metadata->get_correct_response());
 
-        $this->assertEquals(['my_number'], $metadata->get_required_fields());
+        $this->assertEquals(['my_number'], $metadata->get_required_response_fields());
     }
 }
